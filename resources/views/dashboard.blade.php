@@ -1,133 +1,173 @@
 <x-app-layout>
-    <div class="flex flex-col gap-8">
-        <!-- Header Section -->
-        <div class="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
-            <div>
-                <span class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest block mb-1">Overview</span>
-                <h2 class="text-2xl md:text-3xl font-extrabold text-slate-800 dark:text-slate-100 tracking-tight">Dashboard Ringkasan</h2>
+    <!-- Page Header -->
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-end mb-12 gap-4">
+        <div>
+            <h3 class="text-3xl md:text-4xl font-extrabold text-slate-900 dark:text-white mb-2 tracking-tight">
+                {{ !$branchId ? 'Ringkasan Super Admin' : 'Ringkasan Cabang' }}
+            </h3>
+            <p class="text-slate-500 dark:text-slate-400 font-semibold text-sm">
+                {{ !$branchId ? 'Pantau performa seluruh cabang dalam satu ekosistem terpadu.' : 'Pantau performa cabang aktif dan antrean produksi.' }}
+            </p>
+        </div>
+        <div class="flex flex-wrap gap-4">
+            <div class="flex items-center gap-2 bg-white dark:bg-slate-900 px-4 py-2 rounded-lg border border-outline-variant dark:border-slate-800 shadow-sm">
+                <span class="w-2.5 h-2.5 rounded-full bg-[#00C853] animate-pulse"></span>
+                <span class="text-xs font-bold text-slate-700 dark:text-slate-350">System Health: Optimal</span>
             </div>
-            <div class="flex items-center gap-2 text-slate-500 dark:text-slate-400 font-semibold text-sm bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 px-4 py-2.5 rounded-xl shadow-sm">
-                <span class="material-symbols-outlined text-primary text-base">calendar_today</span>
-                <span>{{ now()->translatedFormat('d F Y') }}</span>
+            <div class="flex items-center gap-2 bg-primary-container/10 dark:bg-orange-500/10 px-4 py-2 rounded-lg border border-primary/20 dark:border-orange-500/20">
+                <span class="material-symbols-outlined text-primary text-[18px]">verified</span>
+                <span class="text-xs text-primary font-bold">Premium Subscription Active</span>
             </div>
         </div>
+    </div>
 
-        <!-- Bento Grid Stats -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <!-- Total Revenue -->
-            <x-stat-card 
-                title="Total Pendapatan" 
-                value="Rp {{ number_format($totalRevenue, 0, ',', '.') }}" 
-                icon="account_balance_wallet"
-                description="Akumulasi pendapatan cabang"
-                trend="+8.2%"
-                trendType="success"
-            />
-
-            <!-- Active Orders -->
-            <x-stat-card 
-                title="Antrean Cucian" 
-                value="{{ $activeOrdersCount }} Pesanan" 
-                icon="local_laundry_service"
-                description="Pesanan aktif dalam produksi"
-            />
-
-            <!-- New Customers -->
-            <x-stat-card 
-                title="Pelanggan Baru" 
-                value="{{ $newCustomersCount }}" 
-                icon="person_add"
-                description="Terdaftar bulan ini"
-                trend="+12%"
-                trendType="success"
-            />
-
-            <!-- Active Workshops -->
-            <x-stat-card 
-                title="Stasiun Aktif" 
-                value="{{ $activeWorkshops }}" 
-                icon="precision_manufacturing"
-                description="Workshop beroperasi"
-            />
-        </div>
-
-        <!-- Charts & Recent Activity -->
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <!-- Revenue Chart (2 cols) -->
-            <div class="lg:col-span-2">
-                <x-card title="Grafik Pendapatan Mingguan">
-                    <!-- Dynamic CSS Bar Chart -->
-                    <div class="flex flex-col justify-between h-72 pt-4 relative">
-                        <div class="flex-1 flex items-end justify-between gap-4 h-56 border-b border-slate-100 dark:border-slate-800 pb-2">
-                            @foreach ($weeklyRevenue as $data)
-                                @php
-                                    $heightPercentage = $maxRevenue > 0 ? ($data['amount'] / $maxRevenue) * 100 : 0;
-                                    // Minimum 5% height so empty bars still show slightly
-                                    $heightPercentage = max($heightPercentage, 5);
-                                @endphp
-                                <div class="flex-1 flex flex-col items-center h-full justify-end group relative">
-                                    <!-- Tooltip -->
-                                    <div class="absolute -top-8 bg-slate-900 text-white text-[10px] font-bold py-1 px-2 rounded opacity-0 group-hover:opacity-100 transition-opacity z-10 shadow-lg pointer-events-none whitespace-nowrap">
-                                        Rp {{ number_format($data['amount'], 0, ',', '.') }}
-                                    </div>
-                                    <!-- Bar -->
-                                    <div style="height: {{ $heightPercentage }}%" 
-                                         class="w-full max-w-[40px] rounded-t-lg transition-all duration-300 {{ $data['amount'] > 0 ? 'bg-primary dark:bg-orange-500 hover:bg-orange-600 dark:hover:bg-orange-400 shadow-[0_0_15px_rgba(255,102,0,0.15)]' : 'bg-slate-100 dark:bg-slate-800 hover:bg-slate-200' }}">
-                                    </div>
-                                    <!-- Date label on hover -->
-                                    <span class="text-[9px] text-slate-400 dark:text-slate-500 mt-2 font-bold">{{ $data['date'] }}</span>
-                                </div>
-                            @endforeach
-                        </div>
-                        
-                        <!-- X-Axis Labels -->
-                        <div class="flex justify-between text-xs font-bold text-slate-500 dark:text-slate-400 pt-3">
-                            @foreach ($weeklyRevenue as $data)
-                                <span class="flex-1 text-center {{ $loop->last ? 'text-primary font-extrabold' : '' }}">{{ $data['day'] }}</span>
-                            @endforeach
-                        </div>
-                    </div>
-                </x-card>
+    <!-- Bento Grid Dashboard -->
+    <div class="grid grid-cols-12 gap-6">
+        <!-- Main Chart Card (8 cols) -->
+        <div class="col-span-12 lg:col-span-8 bg-white dark:bg-slate-900 border border-outline-variant dark:border-slate-800 rounded-xl p-8 premium-shadow transition-shadow">
+            <div class="flex justify-between items-center mb-8">
+                <div>
+                    <h4 class="text-lg font-black text-slate-900 dark:text-white">{{ $chartTitle }}</h4>
+                    <p class="text-xs text-slate-400 dark:text-slate-500 font-semibold mt-1">{{ $chartSub }}</p>
+                </div>
+                <select class="bg-slate-50 dark:bg-slate-950 border border-outline-variant dark:border-slate-850 rounded-lg text-xs font-bold px-4 py-2 outline-none focus:border-primary text-slate-650">
+                    <option>Bulan Ini</option>
+                    <option>Kuartal Terakhir</option>
+                </select>
             </div>
-
-            <!-- Recent Activity List (1 col) -->
-            <div>
-                <x-card title="Aktivitas Terkini">
-                    <div class="flex flex-col gap-4 max-h-[320px] overflow-y-auto pr-1">
-                        @if ($recentOrders->isEmpty())
-                            <div class="py-12 text-center">
-                                <span class="material-symbols-outlined text-slate-300 dark:text-slate-700 text-4xl mb-2">history</span>
-                                <p class="text-xs text-slate-400 dark:text-slate-500">Belum ada aktivitas pesanan baru.</p>
+            
+            <div class="h-64 flex items-end justify-between gap-6 px-4 border-b border-outline-variant/30 dark:border-slate-800/50 pb-2">
+                @foreach ($chartData as $data)
+                    @php
+                        $heightPercentage = $maxRevenue > 0 ? ($data['amount'] / $maxRevenue) * 100 : 0;
+                        $heightPercentage = max($heightPercentage, 5); // min 5% height
+                    @endphp
+                    <div class="flex flex-col items-center flex-1 group">
+                        <!-- Bar -->
+                        <div style="height: {{ $heightPercentage }}%" 
+                             class="w-full rounded-t-lg transition-all duration-500 relative cursor-pointer
+                                    {{ $loop->last ? 'bg-primary shadow-[0_0_15px_rgba(255,102,0,0.2)]' : 'bg-primary-container/20 hover:bg-primary-container/40 dark:bg-slate-800 dark:hover:bg-slate-700' }}">
+                            <!-- Tooltip -->
+                            <div class="absolute -top-10 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-[10px] font-extrabold px-2.5 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap shadow-lg z-10">
+                                {{ $data['formatted'] }}
                             </div>
-                        @else
-                            @foreach ($recentOrders as $order)
-                                <div class="flex justify-between items-center p-3 rounded-xl border border-slate-100 dark:border-slate-800 hover:bg-slate-50/50 dark:hover:bg-slate-900/50 transition-all">
-                                    <div class="flex items-center gap-3 overflow-hidden">
-                                        <div class="w-10 h-10 rounded-xl bg-orange-50 dark:bg-slate-800 text-primary dark:text-orange-400 flex items-center justify-center font-bold text-sm shrink-0">
-                                            {{ substr($order->customer?->name ?? 'U', 0, 2) }}
-                                        </div>
-                                        <div class="overflow-hidden">
-                                            <span class="font-bold text-xs text-slate-800 dark:text-slate-200 block truncate">
-                                                #{{ $order->order_number }}
-                                            </span>
-                                            <span class="text-[10px] text-slate-400 block truncate">
-                                                {{ $order->customer?->name ?? 'Pelanggan Umum' }} • Rp {{ number_format($order->total, 0, ',', '.') }}
-                                            </span>
-                                        </div>
-                                    </div>
-                                    <x-badge type="primary" class="text-[10px]">{{ $order->production_status }}</x-badge>
-                                </div>
-                            @endforeach
-                        @endif
+                        </div>
+                        <span class="text-[10px] font-bold mt-4 text-slate-400 dark:text-slate-500 text-center truncate w-full">
+                            {{ $data['label'] }}
+                        </span>
                     </div>
-                    
-                    <x-slot name="footer">
-                        <a href="/production" class="text-xs font-bold text-primary hover:text-primary-hover flex items-center gap-1 justify-center transition-colors">
-                            Lihat Semua Antrean
-                            <span class="material-symbols-outlined text-xs">arrow_forward</span>
-                        </a>
-                    </x-slot>
-                </x-card>
+                @endforeach
+            </div>
+        </div>
+
+        <!-- KPI Side Column (4 cols) -->
+        <div class="col-span-12 lg:col-span-4 flex flex-col gap-6">
+            <div class="bg-slate-900 dark:bg-slate-950 text-white rounded-xl p-8 flex flex-col justify-between h-full relative overflow-hidden">
+                <div class="absolute right-0 bottom-0 opacity-5">
+                    <span class="material-symbols-outlined text-[150px]">point_of_sale</span>
+                </div>
+                <div class="relative z-10">
+                    <span class="text-xs font-bold uppercase tracking-widest text-slate-400">Total Volume Transaksi</span>
+                    <h5 class="text-4xl font-extrabold mt-3 tracking-tight">{{ number_format($totalTransactions, 0, ',', '.') }}</h5>
+                </div>
+                <div class="mt-8 flex items-center gap-2 text-[#00C853] relative z-10">
+                    <span class="material-symbols-outlined text-base">trending_up</span>
+                    <span class="text-xs font-bold">+12.4% vs Bulan Lalu</span>
+                </div>
+            </div>
+
+            <div class="bg-white dark:bg-slate-900 border border-outline-variant dark:border-slate-800 rounded-xl p-6 flex items-center gap-6 premium-shadow transition-shadow">
+                <div class="w-12 h-12 rounded-xl bg-primary-container/10 flex items-center justify-center text-primary dark:text-orange-400 shrink-0">
+                    <span class="material-symbols-outlined text-[32px]">shield_with_heart</span>
+                </div>
+                <div>
+                    <p class="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Subscription Tier</p>
+                    <h6 class="text-base font-extrabold text-slate-800 dark:text-slate-200">Enterprise Gold</h6>
+                </div>
+            </div>
+        </div>
+
+        <!-- System Health Bento Item (4 cols) -->
+        <div class="col-span-12 md:col-span-6 lg:col-span-4 bg-white dark:bg-slate-900 border border-outline-variant dark:border-slate-800 rounded-xl p-8 premium-shadow transition-shadow">
+            <div class="flex justify-between items-start mb-6">
+                <h4 class="text-base font-extrabold text-slate-800 dark:text-slate-200">Kesehatan Server</h4>
+                <span class="material-symbols-outlined text-primary dark:text-orange-400">analytics</span>
+            </div>
+            <div class="space-y-6">
+                <div>
+                    <div class="flex justify-between text-xs font-bold text-slate-600 dark:text-slate-400 mb-2">
+                        <span>API Response Time</span>
+                        <span class="font-extrabold text-slate-900 dark:text-white">42ms</span>
+                    </div>
+                    <div class="w-full bg-slate-100 dark:bg-slate-850 h-1.5 rounded-full overflow-hidden">
+                        <div class="bg-[#00C853] h-full w-[95%]"></div>
+                    </div>
+                </div>
+                <div>
+                    <div class="flex justify-between text-xs font-bold text-slate-600 dark:text-slate-400 mb-2">
+                        <span>Server CPU Load</span>
+                        <span class="font-extrabold text-slate-900 dark:text-white">24%</span>
+                    </div>
+                    <div class="w-full bg-slate-100 dark:bg-slate-850 h-1.5 rounded-full overflow-hidden">
+                        <div class="bg-primary h-full w-[24%]"></div>
+                    </div>
+                </div>
+                <div>
+                    <div class="flex justify-between text-xs font-bold text-slate-600 dark:text-slate-400 mb-2">
+                        <span>Penyimpanan Aset (S3)</span>
+                        <span class="font-extrabold text-slate-900 dark:text-white">1.2TB / 5TB</span>
+                    </div>
+                    <div class="w-full bg-slate-100 dark:bg-slate-850 h-1.5 rounded-full overflow-hidden">
+                        <div class="bg-slate-800 dark:bg-slate-400 h-full w-[30%]"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Subscription Status Bento Item (4 cols) -->
+        <div class="col-span-12 md:col-span-6 lg:col-span-4 bg-white dark:bg-slate-900 border border-outline-variant dark:border-slate-800 rounded-xl p-8 premium-shadow transition-shadow flex flex-col justify-between">
+            <h4 class="text-base font-extrabold text-slate-800 dark:text-slate-200 mb-6">Status Langganan</h4>
+            <div class="p-6 bg-slate-50 dark:bg-slate-950 rounded-xl mb-4 border border-slate-100 dark:border-slate-850">
+                <div class="flex justify-between items-center mb-4">
+                    <span class="text-xs font-bold text-slate-500 dark:text-slate-400">Siklus Penagihan</span>
+                    <span class="text-[10px] font-bold px-2 py-1 bg-primary text-white rounded">Auto-Renew</span>
+                </div>
+                <p class="text-xs font-semibold text-slate-400 mb-1">Pembayaran Berikutnya:</p>
+                <p class="text-xl font-black text-slate-800 dark:text-white">12 Okt 2026</p>
+            </div>
+            <button class="w-full border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-350 py-3 rounded-xl font-bold text-xs hover:bg-slate-50 dark:hover:bg-slate-950 transition-colors">
+                Kelola Billing
+            </button>
+        </div>
+
+        <!-- Activity Log / Latest Transactions (4 cols) -->
+        <div class="col-span-12 lg:col-span-4 bg-white dark:bg-slate-900 border border-outline-variant dark:border-slate-800 rounded-xl p-8 premium-shadow transition-shadow">
+            <h4 class="text-base font-extrabold text-slate-800 dark:text-slate-200 mb-6">Aktivitas Sistem</h4>
+            <div class="space-y-6">
+                <div class="flex gap-4 items-start">
+                    <div class="w-2.5 h-2.5 rounded-full bg-primary mt-1.5 shrink-0"></div>
+                    <div>
+                        <p class="text-xs font-bold text-slate-800 dark:text-slate-200">Payout Berhasil</p>
+                        <p class="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">Rp 12.500.000 ke Cabang Samarinda Central</p>
+                        <span class="text-[9px] text-slate-400 dark:text-slate-500 uppercase font-bold tracking-widest mt-1.5 block">5 Menit Lalu</span>
+                    </div>
+                </div>
+                <div class="flex gap-4 items-start">
+                    <div class="w-2.5 h-2.5 rounded-full bg-[#00C853] mt-1.5 shrink-0"></div>
+                    <div>
+                        <p class="text-xs font-bold text-slate-800 dark:text-slate-200">Integrasi API Baru</p>
+                        <p class="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">Metode Pembayaran QRIS OVO Terhubung</p>
+                        <span class="text-[9px] text-slate-400 dark:text-slate-500 uppercase font-bold tracking-widest mt-1.5 block">2 Jam Lalu</span>
+                    </div>
+                </div>
+                <div class="flex gap-4 items-start">
+                    <div class="w-2.5 h-2.5 rounded-full bg-slate-600 mt-1.5 shrink-0"></div>
+                    <div>
+                        <p class="text-xs font-bold text-slate-800 dark:text-slate-200">Update Inventaris</p>
+                        <p class="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">Pasokan Deterjen Konsentrat Masuk Gudang</p>
+                        <span class="text-[9px] text-slate-400 dark:text-slate-500 uppercase font-bold tracking-widest mt-1.5 block">4 Jam Lalu</span>
+                    </div>
+                </div>
             </div>
         </div>
     </div>

@@ -1,114 +1,121 @@
-<aside class="fixed top-0 left-0 z-40 w-64 h-screen transition-transform -translate-x-full md:translate-x-0 bg-slate-900 border-r border-slate-800 text-slate-400 flex flex-col justify-between"
+<aside class="w-72 h-screen flex flex-col fixed left-0 top-0 bg-white dark:bg-slate-900 border-r border-outline-variant dark:border-slate-800 z-50 transition-transform -translate-x-full md:translate-x-0"
        :class="{ 'translate-x-0': sidebarOpen, '-translate-x-full': !sidebarOpen }"
        id="sidebar-nav">
-    <div>
-        <!-- Brand/Logo Area -->
-        <div class="h-16 flex items-center px-6 border-b border-slate-800 bg-slate-950/20">
-            <span class="text-orange-500 font-black text-xl tracking-wider uppercase flex items-center gap-2">
-                <span class="material-symbols-outlined text-orange-500 text-2xl font-bold">local_laundry_service</span>
-                Istana Laundry
-            </span>
+    <div class="flex flex-col h-full py-6">
+        <!-- Brand / Header -->
+        <div class="px-6 mb-10">
+            <h1 class="text-2xl font-black text-primary dark:text-orange-400 tracking-tighter">Istana Laundry</h1>
+            <p class="text-xs font-bold text-on-surface-variant uppercase tracking-wider">Enterprise Suite</p>
         </div>
 
         <!-- Navigation Links -->
-        <nav class="p-4 space-y-1.5 overflow-y-auto flex-1 h-[calc(100vh-120px)]">
+        <nav class="flex-1 space-y-1 overflow-y-auto px-2">
             <!-- Dashboard -->
-            <a href="/dashboard" class="flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-semibold transition-all hover:bg-slate-800 hover:text-white {{ request()->is('dashboard') ? 'bg-primary text-white shadow-sm' : '' }}">
+            <a href="/dashboard" class="flex items-center gap-3 px-4 py-3 transition-all rounded-lg text-sm font-semibold {{ request()->is('dashboard') ? 'text-primary dark:text-orange-400 bg-primary-container/10 dark:bg-primary-container/20 border-r-4 border-primary font-bold' : 'text-on-surface-variant hover:bg-slate-100 dark:hover:bg-slate-800' }}">
                 <span class="material-symbols-outlined">dashboard</span>
-                Dashboard
+                <span>Dashboard</span>
             </a>
 
             <!-- POS (Cashier) -->
             @if(auth()->user()->hasAnyRole(['Developer', 'Owner', 'Super_Admin', 'Branch_Admin', 'Cashier']))
-                <a href="/pos" class="flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-semibold transition-all hover:bg-slate-800 hover:text-white {{ request()->is('pos*') ? 'bg-primary text-white shadow-sm' : '' }}">
+                <a href="/pos" class="flex items-center gap-3 px-4 py-3 transition-all rounded-lg text-sm font-semibold {{ request()->is('pos*') ? 'text-primary dark:text-orange-400 bg-primary-container/10 dark:bg-primary-container/20 border-r-4 border-primary font-bold' : 'text-on-surface-variant hover:bg-slate-100 dark:hover:bg-slate-800' }}">
                     <span class="material-symbols-outlined">point_of_sale</span>
-                    POS / Kasir
+                    <span>Point of Sale</span>
                 </a>
             @endif
 
             <!-- Production Tracking -->
             @if(auth()->user()->hasAnyRole(['Developer', 'Owner', 'Super_Admin', 'Branch_Admin', 'Workshop_Admin', 'Workshop_Staff']))
-                <a href="/production" class="flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-semibold transition-all hover:bg-slate-800 hover:text-white {{ request()->is('production*') ? 'bg-primary text-white shadow-sm' : '' }}">
+                <a href="/production" class="flex items-center gap-3 px-4 py-3 transition-all rounded-lg text-sm font-semibold {{ request()->is('production*') ? 'text-primary dark:text-orange-400 bg-primary-container/10 dark:bg-primary-container/20 border-r-4 border-primary font-bold' : 'text-on-surface-variant hover:bg-slate-100 dark:hover:bg-slate-800' }}">
                     <span class="material-symbols-outlined">precision_manufacturing</span>
-                    Produksi
+                    <span>Production</span>
                 </a>
             @endif
 
             <!-- Customers (CRM) -->
             @if(auth()->user()->hasAnyRole(['Developer', 'Owner', 'Super_Admin', 'Branch_Admin', 'CS_Marketing']))
-                <a href="/customers" class="flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-semibold transition-all hover:bg-slate-800 hover:text-white {{ request()->is('customers*') ? 'bg-slate-800 text-white' : '' }}">
+                <a href="/customers" class="flex items-center gap-3 px-4 py-3 transition-all rounded-lg text-sm font-semibold {{ request()->is('customers*') ? 'text-primary dark:text-orange-400 bg-primary-container/10 dark:bg-primary-container/20 border-r-4 border-primary font-bold' : 'text-on-surface-variant hover:bg-slate-100 dark:hover:bg-slate-800' }}">
                     <span class="material-symbols-outlined">groups</span>
-                    CRM & Pelanggan
+                    <span>CRM &amp; Loyalty</span>
                 </a>
             @endif
 
             <!-- Promotions -->
             @if(auth()->user()->hasAnyRole(['Developer', 'Owner', 'Super_Admin', 'CS_Marketing']))
-                <a href="/promotions" class="flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-semibold transition-all hover:bg-slate-800 hover:text-white {{ request()->is('promotions*') ? 'bg-slate-800 text-white' : '' }}">
+                <a href="/promotions" class="flex items-center gap-3 px-4 py-3 transition-all rounded-lg text-sm font-semibold {{ request()->is('promotions*') ? 'text-primary dark:text-orange-400 bg-primary-container/10 dark:bg-primary-container/20 border-r-4 border-primary font-bold' : 'text-on-surface-variant hover:bg-slate-100 dark:hover:bg-slate-800' }}">
                     <span class="material-symbols-outlined">campaign</span>
-                    Promosi / Kupon
+                    <span>Promosi / Kupon</span>
                 </a>
             @endif
 
             <!-- Inventory -->
             @if(auth()->user()->hasAnyRole(['Developer', 'Owner', 'Super_Admin', 'Branch_Admin', 'Workshop_Admin']))
-                <a href="/inventory" class="flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-semibold transition-all hover:bg-slate-800 hover:text-white {{ request()->is('inventory*') ? 'bg-slate-800 text-white' : '' }}">
+                <a href="/inventory" class="flex items-center gap-3 px-4 py-3 transition-all rounded-lg text-sm font-semibold {{ request()->is('inventory*') ? 'text-primary dark:text-orange-400 bg-primary-container/10 dark:bg-primary-container/20 border-r-4 border-primary font-bold' : 'text-on-surface-variant hover:bg-slate-100 dark:hover:bg-slate-800' }}">
                     <span class="material-symbols-outlined">inventory_2</span>
-                    Inventori & Stok
+                    <span>Inventory</span>
                 </a>
             @endif
 
             <!-- HR & Payroll -->
             @if(auth()->user()->hasAnyRole(['Developer', 'Owner', 'Super_Admin', 'Finance']))
-                <a href="/hr" class="flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-semibold transition-all hover:bg-slate-800 hover:text-white {{ request()->is('hr*') ? 'bg-slate-800 text-white' : '' }}">
+                <a href="/hr" class="flex items-center gap-3 px-4 py-3 transition-all rounded-lg text-sm font-semibold {{ request()->is('hr*') ? 'text-primary dark:text-orange-400 bg-primary-container/10 dark:bg-primary-container/20 border-r-4 border-primary font-bold' : 'text-on-surface-variant hover:bg-slate-100 dark:hover:bg-slate-800' }}">
                     <span class="material-symbols-outlined">badge</span>
-                    Karyawan & Payroll
+                    <span>HR &amp; Payroll</span>
                 </a>
             @endif
 
             <!-- Fixed Assets -->
             @if(auth()->user()->hasAnyRole(['Developer', 'Owner', 'Super_Admin', 'Finance']))
-                <a href="/assets" class="flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-semibold transition-all hover:bg-slate-800 hover:text-white {{ request()->is('assets*') ? 'bg-slate-800 text-white' : '' }}">
+                <a href="/assets" class="flex items-center gap-3 px-4 py-3 transition-all rounded-lg text-sm font-semibold {{ request()->is('assets*') ? 'text-primary dark:text-orange-400 bg-primary-container/10 dark:bg-primary-container/20 border-r-4 border-primary font-bold' : 'text-on-surface-variant hover:bg-slate-100 dark:hover:bg-slate-800' }}">
                     <span class="material-symbols-outlined">home_work</span>
-                    Aset Tetap
+                    <span>Aset Tetap</span>
                 </a>
             @endif
 
             <!-- Accounting -->
             @if(auth()->user()->hasAnyRole(['Developer', 'Owner', 'Super_Admin', 'Finance']))
-                <a href="/finance" class="flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-semibold transition-all hover:bg-slate-800 hover:text-white {{ request()->is('finance*') ? 'bg-slate-800 text-white' : '' }}">
+                <a href="/finance" class="flex items-center gap-3 px-4 py-3 transition-all rounded-lg text-sm font-semibold {{ request()->is('finance*') ? 'text-primary dark:text-orange-400 bg-primary-container/10 dark:bg-primary-container/20 border-r-4 border-primary font-bold' : 'text-on-surface-variant hover:bg-slate-100 dark:hover:bg-slate-800' }}">
                     <span class="material-symbols-outlined">account_balance_wallet</span>
-                    Keuangan & COA
+                    <span>Keuangan &amp; COA</span>
                 </a>
             @endif
 
             <!-- Audit Logs -->
             @if(auth()->user()->hasRole('Developer'))
-                <a href="/audit-logs" class="flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-semibold transition-all hover:bg-slate-800 hover:text-white {{ request()->is('audit-logs*') ? 'bg-slate-800 text-white' : '' }}">
+                <a href="/audit-logs" class="flex items-center gap-3 px-4 py-3 transition-all rounded-lg text-sm font-semibold {{ request()->is('audit-logs*') ? 'text-primary dark:text-orange-400 bg-primary-container/10 dark:bg-primary-container/20 border-r-4 border-primary font-bold' : 'text-on-surface-variant hover:bg-slate-100 dark:hover:bg-slate-800' }}">
                     <span class="material-symbols-outlined">history_toggle_off</span>
-                    Audit Logs
+                    <span>Audit Logs</span>
                 </a>
             @endif
         </nav>
-    </div>
 
-    <!-- User Profile Footer Section -->
-    <div class="p-4 border-t border-slate-800 bg-slate-950/20">
-        <div class="flex items-center justify-between">
-            <div class="flex items-center gap-3 overflow-hidden">
+        <!-- New Order Shortcut Button -->
+        @if(auth()->user()->hasAnyRole(['Developer', 'Owner', 'Super_Admin', 'Branch_Admin', 'Cashier']))
+            <div class="px-4 mt-auto">
+                <a href="/pos" class="w-full bg-primary hover:bg-orange-600 text-white py-4 rounded-lg font-bold flex items-center justify-center gap-2 transition-all active:scale-95 shadow-md shadow-orange-500/10">
+                    <span class="material-symbols-outlined">add</span>
+                    New Order
+                </a>
+            </div>
+        @endif
+
+        <!-- Footer / Switch Account & Logout -->
+        <div class="mt-6 border-t border-outline-variant dark:border-slate-800 pt-4">
+            <div class="px-4 py-2 flex items-center gap-3 mb-2">
                 <div class="w-9 h-9 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-200 font-bold shrink-0">
                     {{ substr(auth()->user()->name, 0, 2) }}
                 </div>
                 <div class="overflow-hidden">
-                    <span class="block text-xs font-bold text-slate-200 truncate">{{ auth()->user()->name }}</span>
-                    <span class="block text-[10px] text-slate-500 truncate">{{ auth()->user()->getRoleNames()->first() }}</span>
+                    <span class="block text-xs font-bold text-slate-700 dark:text-slate-200 truncate">{{ auth()->user()->name }}</span>
+                    <span class="block text-[10px] text-slate-400 truncate">{{ auth()->user()->getRoleNames()->first() }}</span>
                 </div>
             </div>
-            
+
             <form method="POST" action="{{ route('logout') }}">
                 @csrf
-                <button type="submit" class="text-slate-500 hover:text-rose-500 transition-colors cursor-pointer" title="Sign Out">
-                    <span class="material-symbols-outlined text-xl">logout</span>
+                <button type="submit" class="w-full flex items-center gap-3 px-4 py-3 text-slate-500 hover:text-red-500 transition-colors cursor-pointer">
+                    <span class="material-symbols-outlined">logout</span>
+                    <span class="text-sm font-semibold">Logout</span>
                 </button>
             </form>
         </div>

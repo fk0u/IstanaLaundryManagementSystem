@@ -23,19 +23,34 @@
             [x-cloak] { display: none !important; }
         </style>
     </head>
-    <body class="font-sans antialiased bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-200 h-full transition-colors duration-200">
+    <body class="font-sans antialiased bg-surface dark:bg-slate-950 text-on-surface dark:text-slate-200 h-full transition-colors duration-200">
         <!-- Sidebar Navigation -->
         <x-sidebar />
 
         <!-- Content Area Wrapper -->
-        <div class="md:pl-64 flex flex-col min-h-screen">
+        <div class="md:pl-72 flex flex-col min-h-screen">
             <!-- Top Navigation Bar -->
             <x-topbar />
 
             <!-- Page Main Content -->
-            <main class="flex-1 p-6 md:p-8">
+            <main class="flex-1 p-6 md:p-10 max-w-[1400px] mx-auto w-full">
                 {{ $slot }}
             </main>
         </div>
+
+        <script>
+            // Micro-interactions for premium elements
+            document.addEventListener('DOMContentLoaded', () => {
+                document.querySelectorAll('.premium-shadow').forEach(card => {
+                    card.addEventListener('mouseenter', () => {
+                        card.style.transform = 'translateY(-4px)';
+                        card.style.transition = 'transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)';
+                    });
+                    card.addEventListener('mouseleave', () => {
+                        card.style.transform = 'translateY(0px)';
+                    });
+                });
+            });
+        </script>
     </body>
 </html>

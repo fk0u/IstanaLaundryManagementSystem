@@ -39,6 +39,7 @@ Route::get('/dashboard', function () {
     $activeOrdersCount = $ordersQuery->where('production_status', '!=', 'DIAMBIL')->count();
     $newCustomersCount = $customersQuery->where('created_at', '>=', now()->startOfMonth())->count();
     $activeWorkshops = $workshopsQuery->where('is_active', true)->count();
+    $totalTransactions = $ordersQuery->count();
 
     // Latest 5 orders
     $recentOrders = \App\Models\Order::query();
@@ -50,36 +51,51 @@ Route::get('/dashboard', function () {
         ->take(5)
         ->get();
 
-    // Weekly revenue data (last 7 days)
-    $weeklyRevenue = [];
-    for ($i = 6; $i >= 0; $i--) {
-        $date = now()->subDays($i);
-        $dayName = $date->format('D');
-        
-        $dayRevenueQuery = \App\Models\Order::query()->whereDate('created_at', $date->toDateString());
-        if ($branchId) {
-            $dayRevenueQuery->where('branch_id', $branchId);
+    // Branch revenue comparison or Weekly revenue data for chart
+    $chartData = [];
+    if (!$branchId) {
+        // Global: compare all branches
+        $branches = \App\Models\Branch::all();
+        foreach ($branches as $branch) {
+            $revenue = \App\Models\Order::where('branch_id', $branch->id)->sum('total');
+            $chartData[] = [
+                'label' => $branch->name,
+                'amount' => $revenue,
+                'formatted' => 'Rp ' . number_format($revenue / 1000, 0, ',', '.') . 'K',
+            ];
         }
-        $dayRevenue = $dayRevenueQuery->sum('total');
-        
-        $weeklyRevenue[] = [
-            'day' => $dayName,
-            'amount' => $dayRevenue,
-            'date' => $date->format('d M'),
-        ];
+        $chartTitle = "Komparasi Pendapatan Cabang";
+        $chartSub = "Total akumulasi pendapatan per cabang (Rupiah)";
+    } else {
+        // Scoped branch: show last 7 days daily revenue trend
+        for ($i = 6; $i >= 0; $i--) {
+            $date = now()->subDays($i);
+            $revenue = \App\Models\Order::where('branch_id', $branchId)->whereDate('created_at', $date->toDateString())->sum('total');
+            $chartData[] = [
+                'label' => $date->format('D'),
+                'amount' => $revenue,
+                'formatted' => 'Rp ' . number_format($revenue / 1000, 0, ',', '.') . 'K',
+            ];
+        }
+        $chartTitle = "Tren Pendapatan Mingguan";
+        $chartSub = "Data 7 hari terakhir (Rupiah)";
     }
 
     // Find max revenue for chart scaling
-    $maxRevenue = collect($weeklyRevenue)->max('amount') ?: 1000;
+    $maxRevenue = collect($chartData)->max('amount') ?: 1000;
 
     return view('dashboard', compact(
         'totalRevenue', 
         'activeOrdersCount', 
         'newCustomersCount', 
         'activeWorkshops', 
+        'totalTransactions',
         'recentOrders',
-        'weeklyRevenue',
-        'maxRevenue'
+        'chartData',
+        'chartTitle',
+        'chartSub',
+        'maxRevenue',
+        'branchId'
     ));
 })->middleware(['auth', 'verified', 'branch.scope'])->name('dashboard');
 
