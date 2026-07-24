@@ -1,0 +1,107 @@
+<x-app-layout>
+    <div class="flex flex-col gap-6">
+        <x-page-header title="Customer Relationship Management (CRM)" :breadcrumbs="['CRM' => '/customers']" />
+
+        @if (session('success'))
+            <x-alert type="success" :message="session('success')" class="mb-4" />
+        @endif
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            <!-- Customer List Table (8 cols) -->
+            <div class="lg:col-span-8">
+                <x-card title="Daftar Pelanggan">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-xs border-collapse">
+                            <thead>
+                                <tr class="border-b border-slate-100 dark:border-slate-800 text-slate-400 font-bold uppercase tracking-wider">
+                                    <th class="py-3 px-4">Nama / Kode</th>
+                                    <th class="py-3 px-4">Kontak</th>
+                                    <th class="py-3 px-4">Loyalty Tier</th>
+                                    <th class="py-3 px-4">Poin</th>
+                                    <th class="py-3 px-4">Cabang</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-50 dark:divide-slate-850">
+                                @forelse($customers as $customer)
+                                    <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-900/30 transition-colors">
+                                        <td class="py-4 px-4">
+                                            <span class="font-bold text-slate-800 dark:text-slate-200 block text-sm">{{ $customer->name }}</span>
+                                            <span class="text-[10px] text-slate-400 font-mono block mt-0.5">{{ $customer->member_code }}</span>
+                                        </td>
+                                        <td class="py-4 px-4 text-slate-600 dark:text-slate-400">
+                                            <span class="block font-semibold">{{ $customer->phone }}</span>
+                                            <span class="block text-[10px]">{{ $customer->email ?? '-' }}</span>
+                                        </td>
+                                        <td class="py-4 px-4">
+                                            @php
+                                                $tierColors = [
+                                                    'Bronze' => 'gray',
+                                                    'Silver' => 'info',
+                                                    'Gold' => 'primary',
+                                                    'Platinum' => 'success'
+                                                ];
+                                                $badgeType = $tierColors[$customer->loyalty_tier] ?? 'gray';
+                                            @endphp
+                                            <x-badge :type="$badgeType">{{ $customer->loyalty_tier }}</x-badge>
+                                        </td>
+                                        <td class="py-4 px-4 font-bold text-slate-800 dark:text-slate-200">
+                                            {{ number_format($customer->loyalty_points) }} pts
+                                        </td>
+                                        <td class="py-4 px-4 text-slate-500">
+                                            {{ $customer->branch?->name ?? 'Global' }}
+                                        </td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="5" class="py-12 text-center text-slate-400">Belum ada pelanggan terdaftar.</td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="mt-4">
+                        {{ $customers->links() }}
+                    </div>
+                </x-card>
+            </div>
+
+            <!-- Register New Customer Form (4 cols) -->
+            <div class="lg:col-span-4">
+                <x-card title="Daftar Pelanggan Baru">
+                    <form action="{{ route('customers.store') }}" method="POST" class="space-y-4">
+                        @csrf
+                        <div class="flex flex-col gap-1.5">
+                            <label for="name" class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Nama Lengkap</label>
+                            <input type="text" id="name" name="name" required placeholder="Masukkan nama pelanggan..."
+                                   class="w-full h-11 px-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all">
+                        </div>
+
+                        <div class="flex flex-col gap-1.5">
+                            <label for="phone" class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Nomor Handphone</label>
+                            <input type="text" id="phone" name="phone" required placeholder="Contoh: 08123456789..."
+                                   class="w-full h-11 px-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all">
+                        </div>
+
+                        <div class="flex flex-col gap-1.5">
+                            <label for="email" class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Email (Opsional)</label>
+                            <input type="email" id="email" name="email" placeholder="Contoh: pelanggan@gmail.com..."
+                                   class="w-full h-11 px-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all">
+                        </div>
+
+                        <div class="flex flex-col gap-1.5">
+                            <label for="address" class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Alamat Tinggal</label>
+                            <textarea id="address" name="address" placeholder="Tulis alamat rumah..." rows="3"
+                                      class="w-full p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all"></textarea>
+                        </div>
+
+                        <button type="submit" class="w-full h-12 bg-primary hover:bg-primary-hover text-white font-bold rounded-xl text-xs flex items-center justify-center gap-2 transition-all active:scale-[0.98] cursor-pointer shadow-sm">
+                            <span class="material-symbols-outlined">person_add</span>
+                            Daftarkan Pelanggan
+                        </button>
+                    </form>
+                </x-card>
+            </div>
+        </div>
+    </div>
+</x-app-layout>
