@@ -1,0 +1,122 @@
+<?php
+
+namespace App\Services\CRM;
+
+use App\Models\Customer;
+use App\Models\Order;
+use App\Models\LoyaltyPointLog;
+
+class LoyaltyService
+{
+    /**
+     * Award points to customer based on order total.
+     * Ratio: 1 point per Rp 1,000.
+     *
+     * @param Order $order
+     * @return LoyaltyPointLog|null
+     */
+    public function awardPoints(Order $order): ?LoyaltyPointLog
+    {
+        if (!$order->customer_id) {
+            return null;
+        }
+
+        $customer = $order->customer;
+        $pointsEarned = floor($order->total / 1000);
+
+        if ($pointsEarned <= 0) {
+            return null;
+        }
+
+        $balanceBefore = $customer->loyalty_points;
+        $balanceAfter = $balanceBefore + $pointsEarned;
+
+        $customer->update([
+            'loyalty_points' => $balanceAfter,
+            'total_spent' => $customer->total_spent + $order->total,
+            'transaction_count' => $customer->transaction_count + 1,
+            'last_transaction_at' => now(),
+        ]);
+
+        $log = LoyaltyPointLog::create([
+            'customer_id' => $customer->id,
+            'order_id' => $order->id,
+            'points' => $pointsEarned,
+            'type' => 'earn',
+            'balance_after' => $balanceAfter,
+            'description' => "Poin didapat dari order #{$order->order_number}",
+        ]);
+
+        $this->checkTierUpgrade($customer);
+
+        return $log;
+    }
+
+    /**
+     * Redeem loyalty points for order discount.
+     * Ratio: 1 point = Rp 1 discount.
+     *
+     * @param Customer $customer
+     * @param int $points
+     * @param Order|null $order
+     * @return LoyaltyPointLog
+     */
+    public function redeemPoints(Customer $customer, int $points, ?Order $order = null): LoyaltyPointLog
+    {
+        if ($customer->loyalty_points < $points) {
+            throw new \InvalidArgumentException('Saldo poin tidak mencukupi.');
+        }
+
+        $balanceBefore = $customer->loyalty_points;
+        $balanceAfter = $balanceBefore - $points;
+
+        $customer->update([
+            'loyalty_points' => $balanceAfter,
+        ]);
+
+        $log = LoyaltyPointLog::create([
+            'customer_id' => $customer->id,
+            'order_id' => $order?->id,
+            'points' => -$points,
+            'type' => 'redeem',
+            'balance_after' => $balanceAfter,
+            'description' => $order ? "Poin digunakan untuk potongan order #{$order->order_number}" : "Penukaran poin",
+        ]);
+
+        $this->checkTierUpgrade($customer);
+
+        return $log;
+    }
+
+    /**
+     * Check and update customer loyalty tier based on current points.
+     * Bronze < 1000
+     * Silver 1000 - 4999
+     * Gold 5000 - 9999
+     * Platinum >= 10000
+     *
+     * @param Customer $customer
+     * @return void
+     */
+    public function checkTierUpgrade(Customer $customer): void
+    {
+        $points = $customer->loyalty_points;
+        $newTier = 'Bronze';
+
+        if ($points >= 10000) {
+            $newTier = 'Platinum';
+        } elseif ($points >= 5000) {
+            $newTier = 'Gold';
+        } elseif ($points >= 1000) {
+            $newTier = 'Silver';
+        }
+
+        if ($customer->loyalty_tier !== $newTier) {
+            $customer->update([
+                'loyalty_tier' => $newTier,
+            ]);
+            
+            // Optional: log or trigger event
+        }
+    }
+}

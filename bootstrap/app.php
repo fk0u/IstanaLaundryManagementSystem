@@ -13,6 +13,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
             'branch.scope' => \App\Http\Middleware\BranchScopeMiddleware::class,
+            'role.redirect' => \App\Http\Middleware\RedirectBasedOnRole::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

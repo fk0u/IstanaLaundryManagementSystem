@@ -24,9 +24,80 @@ class AuthenticatedSessionController extends Controller
      */
     public function store(LoginRequest $request): RedirectResponse
     {
-        $request->authenticate();
+        // 1. Rate limiter check (IP limit 10 attempts/min)
+        $ipThrottleKey = 'login_ip:' . $request->ip();
+        if (\Illuminate\Support\Facades\RateLimiter::tooManyAttempts($ipThrottleKey, 10)) {
+            $seconds = \Illuminate\Support\Facades\RateLimiter::availableIn($ipThrottleKey);
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'email' => "Terlalu banyak percobaan masuk dari IP Anda. Silakan coba lagi dalam {$seconds} detik.",
+            ]);
+        }
+
+        $email = $request->input('email');
+        $user = \App\Models\User::where('email', $email)->first();
+
+        // 2. Check DB lockout (15 minutes)
+        if ($user && $user->locked_until && $user->locked_until->isFuture()) {
+            $minutes = $user->locked_until->diffInMinutes(now()) + 1;
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'email' => "Akun Anda terkunci karena terlalu banyak kesalahan sandi. Silakan coba lagi dalam {$minutes} menit.",
+            ]);
+        }
+
+        // 3. Authenticate
+        try {
+            $request->authenticate();
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            // Failed login attempt
+            \Illuminate\Support\Facades\RateLimiter::hit($ipThrottleKey, 60);
+
+            if ($user) {
+                $user->increment('login_attempts');
+                if ($user->login_attempts >= 5) {
+                    $user->update([
+                        'locked_until' => now()->addMinutes(15),
+                    ]);
+
+                    // Audit log: Lockout
+                    app(\App\Services\AuditLogService::class)->log('lockout', $user);
+                } else {
+                    // Audit log: Failed login
+                    app(\App\Services\AuditLogService::class)->log('failed_login', $user);
+                }
+            }
+
+            throw $e;
+        }
+
+        // Success login
+        \Illuminate\Support\Facades\RateLimiter::clear($ipThrottleKey);
+
+        $user = Auth::user();
+        $user->update([
+            'login_attempts' => 0,
+            'locked_until' => null,
+            'last_login_at' => now(),
+        ]);
+
+        // Audit log: Success login
+        app(\App\Services\AuditLogService::class)->log('login', $user);
 
         $request->session()->regenerate();
+
+        // Redirect based on primary role
+        if ($user->hasRole(['Developer', 'Owner', 'Super_Admin'])) {
+            return redirect()->intended('/dashboard');
+        } elseif ($user->hasRole('Branch_Admin')) {
+            return redirect()->intended('/branches');
+        } elseif ($user->hasRole('Cashier')) {
+            return redirect()->intended('/pos');
+        } elseif ($user->hasRole(['Workshop_Admin', 'Workshop_Staff'])) {
+            return redirect()->intended('/production');
+        } elseif ($user->hasRole('Finance')) {
+            return redirect()->intended('/finance');
+        } elseif ($user->hasRole('CS_Marketing')) {
+            return redirect()->intended('/customers');
+        }
 
         return redirect()->intended(route('dashboard', absolute: false));
     }
@@ -36,6 +107,11 @@ class AuthenticatedSessionController extends Controller
      */
     public function destroy(Request $request): RedirectResponse
     {
+        $user = Auth::user();
+        if ($user) {
+            app(\App\Services\AuditLogService::class)->log('logout', $user);
+        }
+
         Auth::guard('web')->logout();
 
         $request->session()->invalidate();

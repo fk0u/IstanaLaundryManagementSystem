@@ -17,4 +17,15 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
+// POS & Production Scoped Routes
+Route::middleware(['auth', 'branch.scope'])->group(function () {
+    // POS (Kasir)
+    Route::get('/pos', [\App\Http\Controllers\POSController::class, 'index'])->name('pos.index');
+    Route::post('/pos', [\App\Http\Controllers\POSController::class, 'store'])->name('pos.store');
+
+    // Production Tracking
+    Route::get('/production', [\App\Http\Controllers\ProductionController::class, 'index'])->name('production.index');
+    Route::post('/production/update/{id}', [\App\Http\Controllers\ProductionController::class, 'updateStatus'])->name('production.update');
+});
+
 require __DIR__.'/auth.php';
