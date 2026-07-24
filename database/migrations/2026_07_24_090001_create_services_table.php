@@ -11,13 +11,15 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('workshops', function (Blueprint $table) {
+        Schema::create('services', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('branch_id')->constrained('branches')->onDelete('cascade');
             $table->string('name');
-            $table->text('address')->nullable();
+            $table->enum('type', ['kilogram', 'satuan', 'kategori']);
+            $table->string('unit', 20); // kg / pcs / set
+            $table->decimal('base_price', 12, 2);
+            $table->integer('est_duration_hours')->default(24);
+            $table->text('description')->nullable();
             $table->boolean('is_active')->default(true)->index();
-            $table->softDeletes();
             $table->timestamps();
         });
     }
@@ -27,6 +29,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('workshops');
+        Schema::dropIfExists('services');
     }
 };

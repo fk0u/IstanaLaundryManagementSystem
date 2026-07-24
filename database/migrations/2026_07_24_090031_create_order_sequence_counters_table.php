@@ -11,14 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('workshops', function (Blueprint $table) {
+        Schema::create('order_sequence_counters', function (Blueprint $table) {
             $table->id();
             $table->foreignId('branch_id')->constrained('branches')->onDelete('cascade');
-            $table->string('name');
-            $table->text('address')->nullable();
-            $table->boolean('is_active')->default(true)->index();
-            $table->softDeletes();
+            $table->char('year_month', 6);
+            $table->integer('last_sequence')->default(0);
             $table->timestamps();
+
+            $table->unique(['branch_id', 'year_month'], 'uk_sequence_branch_ym');
         });
     }
 
@@ -27,6 +27,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('workshops');
+        Schema::dropIfExists('order_sequence_counters');
     }
 };

@@ -11,14 +11,17 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('workshops', function (Blueprint $table) {
+        Schema::create('payrolls', function (Blueprint $table) {
             $table->id();
             $table->foreignId('branch_id')->constrained('branches')->onDelete('cascade');
-            $table->string('name');
-            $table->text('address')->nullable();
-            $table->boolean('is_active')->default(true)->index();
-            $table->softDeletes();
+            $table->tinyInteger('month');
+            $table->smallInteger('year');
+            $table->enum('status', ['draft', 'processed', 'paid'])->default('draft');
+            $table->timestamp('processed_at')->nullable();
+            $table->foreignId('created_by')->constrained('users')->onDelete('cascade');
             $table->timestamps();
+
+            $table->unique(['branch_id', 'month', 'year'], 'uk_payroll_branch_period');
         });
     }
 
@@ -27,6 +30,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('workshops');
+        Schema::dropIfExists('payrolls');
     }
 };

@@ -11,13 +11,15 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('workshops', function (Blueprint $table) {
+        Schema::create('inventory_items', function (Blueprint $table) {
             $table->id();
             $table->foreignId('branch_id')->constrained('branches')->onDelete('cascade');
-            $table->string('name');
-            $table->text('address')->nullable();
-            $table->boolean('is_active')->default(true)->index();
-            $table->softDeletes();
+            $table->string('name', 100);
+            $table->string('sku', 50)->unique();
+            $table->string('category', 50)->nullable();
+            $table->string('unit', 20);
+            $table->decimal('min_stock', 10, 3)->default(0);
+            $table->decimal('current_stock', 10, 3)->default(0);
             $table->timestamps();
         });
     }
@@ -27,6 +29,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('workshops');
+        Schema::dropIfExists('inventory_items');
     }
 };

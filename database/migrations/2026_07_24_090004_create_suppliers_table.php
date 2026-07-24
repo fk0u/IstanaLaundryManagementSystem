@@ -11,13 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('workshops', function (Blueprint $table) {
+        Schema::create('suppliers', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('branch_id')->constrained('branches')->onDelete('cascade');
             $table->string('name');
+            $table->string('phone', 20)->nullable();
+            $table->string('email', 100)->nullable();
             $table->text('address')->nullable();
+            $table->string('npwp', 25)->nullable();
             $table->boolean('is_active')->default(true)->index();
-            $table->softDeletes();
             $table->timestamps();
         });
     }
@@ -27,6 +28,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('workshops');
+        Schema::dropIfExists('suppliers');
     }
 };
