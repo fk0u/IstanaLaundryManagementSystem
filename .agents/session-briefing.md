@@ -1,8 +1,8 @@
 # Session Briefing - Istana Laundry Management System
 
 ## Project Status
-- **Phase**: Owner Analytics & Refund Approval Integration (Selesai)
-- **Current State**: Visualisasi grafik interaktif Chart.js premium dan bento grid metrik Owner (MoM revenue growth, active orders, top branch) terpasang di dashboard utama. Dropdown Branch Switcher dinamis ditambahkan di topbar untuk peran super-level (Owner/Super Admin/Developer) dengan modifikasi BranchScopeMiddleware untuk persitensi sesi. Modul Refund & Pembatalan Transaksi dengan 4-Stage Approval Workflow (Cashier/Pending -> Branch Admin -> Finance -> Owner) selesai diimplementasikan penuh. Penyelesaian refund terintegrasi otomatis dengan pembalikan jurnal ledger (reversal) dan pemotongan poin loyalitas pelanggan secara proporsional. Seluruh **41 pengujian otomatis** lolos 100% (Passed).
+- **Phase**: Samarinda Location Seeding & Core Role Setup (Selesai)
+- **Current State**: Seeder cabang dan workshop diperbarui dengan 4 lokasi riil Istana Laundry di Samarinda (Pusat - Wijaya Kusuma [WJK], Cabang Dr. Sutomo [SUT], Cabang Pangeran Hidayatullah [HID], dan Cabang Lambung Mangkurat [LMG]). UserSeeder disesuaikan untuk menyemai 3 peran utama (Branch Admin, Cashier, Workshop Staff) pada tiap-tiap cabang tersebut demi kemudahan pengujian. Database MySQL lokal telah disegarkan penuh menggunakan `php artisan migrate:fresh --seed`. Seluruh **41 pengujian otomatis** lolos 100% (Passed).
 - **Next Step**: Penyiapan modul Public Tracking Page (AC detail) atau optimalisasi backup otomatis menggunakan S3.
 
 ## Critical Goals
@@ -16,3 +16,4 @@
 8. Implementasi sistem CRUD lengkap untuk semua modul pendukung ERP dengan validasi bahasa Indonesia (SELESAI).
 9. Implementasi pengadaan PR/PO/GRN, Inventory FIFO, jurnal double-entry otomatis & laporan keuangan lengkap (SELESAI).
 10. Implementasi Owner Dashboard dengan Chart.js, Branch Switcher, dan alur approval Refund 4-tahap (SELESAI).
+11. Update cabang Samarinda dan menyemai 3 peran utama untuk masing-masing cabang (SELESAI).
