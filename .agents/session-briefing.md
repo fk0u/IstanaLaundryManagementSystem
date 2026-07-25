@@ -17,6 +17,10 @@
      - docker-compose.yml dengan MySQL healthcheck, environment variable interpolation, dan Node.js dev service.
      - .dockerignore untuk optimasi build.
      - entrypoint.sh dengan output terstruktur dan cache optimization.
+  5. **Halaman Login (Masuk)** telah diperbarui menjadi lebih canggih:
+     - Ditambahkan fitur interaktif untuk menampilkan/menyembunyikan sandi (*show/hide password*) menggunakan AlpineJS.
+     - Ditambahkan panel pintasan pengisian kredensial otomatis (*Quick Demo Login*) untuk peran `Owner`, `Branch Admin`, `Cashier`, dan `Workshop Staff` guna mempermudah pengujian.
+     - Penyesuaian skrip `npm run start` agar hanya menjalankan Vite dev server lokal, menghindari tabrakan port dengan Nginx Docker.
 - **Next Step**: Melengkapi fungsionalitas transaksi ERP (POS, produksi, pembayaran) agar semua fitur benar-benar bisa digunakan di semua role.
 
 ## Critical Goals
