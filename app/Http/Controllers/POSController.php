@@ -231,7 +231,10 @@ class POSController extends Controller
             // Log activity to audit_logs
             $this->auditLogService->log('create_order', $order);
 
-            return redirect()->route('pos.index')->with('success', "Order #{$orderNumber} berhasil dibuat!");
+            return redirect()->route('pos.index')
+                ->with('success', "Order #{$orderNumber} berhasil dibuat!")
+                ->with('last_order_id', $order->id)
+                ->with('last_order_number', $order->order_number);
         });
     }
 

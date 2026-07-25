@@ -44,7 +44,7 @@ $maxWidth = [
     x-on:keydown.tab.prevent="$event.shiftKey || nextFocusable().focus()"
     x-on:keydown.shift.tab.prevent="prevFocusable().focus()"
     x-show="show"
-    class="fixed inset-0 overflow-y-auto z-50"
+    class="fixed inset-0 overflow-y-auto z-[9999]"
     style="display: {{ $show ? 'block' : 'none' }};"
 >
     {{-- Backdrop --}}
@@ -63,13 +63,13 @@ $maxWidth = [
     </div>
 
     {{-- Modal Panel --}}
-    {{-- Mobile: full screen slide-up. Desktop: centered dialog --}}
-    <div class="flex items-end sm:items-center justify-center min-h-screen px-0 sm:px-4">
+    {{-- Mobile: full screen slide-up with padding for bottom nav. Desktop: centered dialog --}}
+    <div class="flex items-end sm:items-center justify-center min-h-screen px-0 sm:px-4 pb-20 sm:pb-0">
         <div
             x-show="show"
             class="w-full bg-white dark:bg-slate-900 overflow-hidden shadow-xl transform transition-all
-                   rounded-t-2xl sm:rounded-xl
-                   max-h-[90vh] sm:max-h-[85vh] overflow-y-auto
+                   rounded-t-3xl sm:rounded-xl
+                   max-h-[85vh] sm:max-h-[85vh] overflow-y-auto
                    {{ $maxWidth }} sm:mx-auto"
             x-transition:enter="ease-out duration-300"
             x-transition:enter-start="opacity-0 translate-y-full sm:translate-y-0 sm:scale-95"

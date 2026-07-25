@@ -1,11 +1,21 @@
-<header class="flex justify-between items-center h-14 md:h-16 px-4 md:px-8 lg:px-12 w-full bg-white/95 dark:bg-slate-900/95 backdrop-blur-lg border-b border-outline-variant dark:border-slate-800 z-40 sticky top-0 transition-colors duration-200">
-    <div class="flex items-center gap-3 md:gap-6 min-w-0">
+<header class="flex justify-between items-center h-14 md:h-16 px-4 md:px-6 lg:px-8 w-full bg-white/95 dark:bg-slate-900/95 backdrop-blur-lg border-b border-outline-variant dark:border-slate-800 z-40 sticky top-0 transition-colors duration-200">
+    <div class="flex items-center gap-2 md:gap-4 min-w-0">
         <!-- Hamburger Menu for Mobile -->
         <button @click="sidebarOpen = !sidebarOpen" class="p-1.5 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 md:hidden cursor-pointer rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors shrink-0">
             <span class="material-symbols-outlined text-[22px]">menu</span>
         </button>
 
-        <!-- Brand Name - Desktop only -->
+        <!-- Sidebar Toggle Icon for Desktop/Tablet -->
+        <button @click="desktopSidebarOpen = !desktopSidebarOpen; localStorage.setItem('desktopSidebarOpen', desktopSidebarOpen)" 
+                class="hidden md:flex p-2 text-slate-500 hover:text-primary dark:text-slate-400 dark:hover:text-orange-400 cursor-pointer rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors shrink-0 items-center justify-center"
+                :title="desktopSidebarOpen ? 'Ciutkan Sidebar' : 'Perluas Sidebar'">
+            <span class="material-symbols-outlined text-[22px] transition-transform duration-300"
+                  :class="{ 'rotate-180': !desktopSidebarOpen }">
+                menu_open
+            </span>
+        </button>
+
+        <!-- Brand Name - Desktop -->
         <h2 class="text-base md:text-lg font-black text-primary dark:text-orange-400 tracking-tight hidden md:block whitespace-nowrap">Istana Laundry Samarinda</h2>
         
         <!-- Mobile Brand -->
@@ -15,7 +25,7 @@
             @if(auth()->user()->hasAnyRole(['Developer', 'Owner', 'Super_Admin']))
                 <form action="{{ route('switch-branch') }}" method="POST" class="inline-flex items-center">
                     @csrf
-                    <label class="text-2xs font-bold text-slate-400 dark:text-slate-500 mr-1.5 uppercase tracking-wider hidden md:inline">Scope:</label>
+                    <label class="text-2xs font-bold text-slate-400 dark:text-slate-500 mr-1.5 uppercase tracking-wider hidden lg:inline">Scope:</label>
                     <select name="branch_id" onchange="this.form.submit()"
                             class="bg-slate-50 dark:bg-slate-950 border border-outline-variant dark:border-slate-800 rounded-lg text-2xs md:text-[10px] font-bold px-2 py-1.5 md:py-1 outline-none focus:border-primary text-slate-700 dark:text-slate-300 cursor-pointer max-w-[120px] md:max-w-none">
                         <option value="">Global</option>
@@ -34,21 +44,24 @@
         </div>
     </div>
 
-    <div class="flex items-center gap-2 md:gap-4 shrink-0">
+    <div class="flex items-center gap-2 md:gap-3 shrink-0">
         <!-- Dark Mode Toggle -->
-        <button @click="darkMode = !darkMode; localStorage.setItem('darkMode', darkMode)" class="p-2 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer transition-colors" title="Toggle Dark Mode">
+        <button @click="darkMode = !darkMode; localStorage.setItem('darkMode', darkMode)" class="p-2 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer transition-colors" title="Toggle Dark Mode">
             <span class="material-symbols-outlined text-xl" x-show="!darkMode">dark_mode</span>
             <span class="material-symbols-outlined text-xl" x-show="darkMode" x-cloak>light_mode</span>
         </button>
 
         <!-- Notification bell -->
         <div class="relative group">
-            <span class="material-symbols-outlined text-slate-500 dark:text-slate-450 cursor-pointer group-hover:text-primary p-2 transition-all text-xl">notifications</span>
-            <div class="absolute top-1.5 right-1.5 w-2 h-2 bg-primary rounded-full"></div>
+            <button class="p-2 text-slate-500 dark:text-slate-400 hover:text-primary rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-all cursor-pointer">
+                <span class="material-symbols-outlined text-xl">notifications</span>
+                <span class="absolute top-1.5 right-1.5 w-2 h-2 bg-primary rounded-full"></span>
+            </button>
         </div>
 
         <!-- Quick Action button - Desktop only -->
-        <a href="/pos" class="px-4 py-2 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 rounded-lg font-bold text-xs hover:bg-slate-50 dark:hover:bg-slate-800 transition-all active:scale-[0.98] hidden lg:block">
+        <a href="/pos" class="px-3.5 py-1.5 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 rounded-xl font-bold text-xs hover:bg-slate-50 dark:hover:bg-slate-800 transition-all active:scale-[0.98] hidden lg:flex items-center gap-1.5">
+            <span class="material-symbols-outlined text-base text-primary">add_circle</span>
             Quick Action
         </a>
 

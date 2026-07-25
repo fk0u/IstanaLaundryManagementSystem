@@ -1,6 +1,10 @@
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}"
-      x-data="{ darkMode: localStorage.getItem('darkMode') === 'true', sidebarOpen: false }"
+      x-data="{ 
+          darkMode: localStorage.getItem('darkMode') === 'true', 
+          sidebarOpen: false,
+          desktopSidebarOpen: localStorage.getItem('desktopSidebarOpen') !== 'false'
+      }"
       :class="{ 'dark': darkMode }"
       class="h-full">
     <head>
@@ -24,7 +28,6 @@
         
         <style>
             [x-cloak] { display: none !important; }
-            /* iOS safe area support */
             .safe-area-bottom { padding-bottom: env(safe-area-inset-bottom, 0px); }
         </style>
     </head>
@@ -45,13 +48,14 @@
              x-cloak>
         </div>
 
-        <!-- Content Area Wrapper -->
-        <div class="md:pl-72 flex flex-col min-h-screen">
+        <!-- Content Area Wrapper — Dynamic padding based on desktop sidebar state -->
+        <div class="flex flex-col min-h-screen transition-all duration-300 ease-in-out"
+             :class="{ 'md:pl-72': desktopSidebarOpen, 'md:pl-20': !desktopSidebarOpen }">
             <!-- Top Navigation Bar -->
             <x-topbar />
 
             <!-- Page Main Content -->
-            <main class="flex-1 p-4 md:p-6 lg:p-10 max-w-[1400px] mx-auto w-full pb-24 md:pb-6">
+            <main class="flex-1 p-3 sm:p-4 md:p-6 lg:p-8 max-w-[1600px] mx-auto w-full pb-24 md:pb-6">
                 {{ $slot }}
             </main>
         </div>
@@ -64,8 +68,8 @@
             document.addEventListener('DOMContentLoaded', () => {
                 document.querySelectorAll('.premium-shadow').forEach(card => {
                     card.addEventListener('mouseenter', () => {
-                        card.style.transform = 'translateY(-4px)';
-                        card.style.transition = 'transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)';
+                        card.style.transform = 'translateY(-3px)';
+                        card.style.transition = 'transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1)';
                     });
                     card.addEventListener('mouseleave', () => {
                         card.style.transform = 'translateY(0px)';
@@ -73,6 +77,7 @@
                 });
             });
         </script>
+        
         <!-- Global Toast Container -->
         <div x-data="{ 
             toasts: [],
