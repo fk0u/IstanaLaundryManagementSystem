@@ -1,9 +1,18 @@
 # Session Briefing - Istana Laundry Management System
 
 ## Project Status
-- **Phase**: Multi-Role Dashboard Integration (Selesai)
-- **Current State**: Sistem dashboard dinamis berbasis peran operasional selesai diimplementasikan melalui DashboardController. Setiap peran (Owner, Branch Admin, Cashier, dan Workshop Staff) kini disajikan antarmuka visual khusus yang disesuaikan dengan tanggung jawab operasional masing-masing serta terisolasi secara otomatis berdasarkan data cabang masing-masing. Semua rute di web.php terhubung secara rapi. Seluruh **41 pengujian otomatis** lolos 100% (Passed).
-- **Next Step**: Penyiapan modul Public Tracking Page (AC detail) atau optimalisasi backup otomatis menggunakan S3.
+- **Phase**: Multi-Role Dashboard & ERP Data Seeding Integration (Selesai)
+- **Current State**: 
+  1. Pengalihan setelah login sukses bagi seluruh peran operasional (`Branch_Admin`, `Cashier`, `CS_Marketing`, `Finance`, `Workshop_Staff`, `Workshop_Admin`) telah dialihkan sepenuhnya ke rute `/dashboard` alih-alih rute mati `/branches`.
+  2. Implementasi **`ERPDataSeeder`** yang kaya dan realistis berisi data awal penunjang ERP seperti:
+     - 6 item Bahan Habis Pakai (BHP) untuk persediaan (Detergen Cair, Softener, Plastik 35x50, Plastik 40x60, Hanger, Parfum Laundry) per cabang.
+     - 5 Pelanggan setia per cabang.
+     - Karyawan staf workshop & kasir untuk penggajian/HR.
+     - Aset tetap bernilai tinggi (Mesin Cuci LG 15kg, Mesin Pengering SpeedQueen) lengkap dengan data depresiasi.
+     - Periode akuntansi (Open) bulanan.
+     - Histori order & item transaksi per-cabang selama 7 hari terakhir demi menyajikan grafik visual dan antrean yang indah pada masing-masing dashboard.
+  3. Seluruh **41 pengujian otomatis** lolos 100% (Passed).
+- **Next Step**: Modifikasi alur persetujuan PO/GRN jika diperlukan atau laporan akuntansi lanjutan.
 
 ## Critical Goals
 1. Menyelesaikan setup struktur folder Laravel dan memastikannya berfungsi di root workspace (SELESAI).
@@ -18,3 +27,5 @@
 10. Implementasi Owner Dashboard dengan Chart.js, Branch Switcher, dan alur approval Refund 4-tahap (SELESAI).
 11. Update cabang Samarinda dan menyemai 3 peran utama untuk masing-masing cabang (SELESAI).
 12. Implementasi dashboard khusus Branch Admin, Cashier, dan Workshop Staff secara fungsional (SELESAI).
+13. Perbaikan alur pengalihan login (Redirect) semua peran ke `/dashboard` (SELESAI).
+14. Penyemaian data simulasi transaksi ERP lengkap lewat `ERPDataSeeder` (SELESAI).
