@@ -21,6 +21,11 @@
      - Ditambahkan fitur interaktif untuk menampilkan/menyembunyikan sandi (*show/hide password*) menggunakan AlpineJS.
      - Ditambahkan panel pintasan pengisian kredensial otomatis (*Quick Demo Login*) untuk peran `Owner`, `Branch Admin`, `Cashier`, dan `Workshop Staff` guna mempermudah pengujian.
      - Penyesuaian skrip `npm run start` dan berkas batch agar menjalankan seluruh sistem secara penuh (termasuk Vite dev server untuk Tailwind HMR) langsung di dalam kontainer Docker, sehingga tidak memerlukan Node.js lokal di sistem operasi host.
+   6. **Perbaikan Bug & Responsivitas Seluler**:
+     - Memperbaiki error `RelationNotFoundException` (relasi `orderItems` diubah menjadi `items` pada seluruh controller dan berkas view/routing sesuai model `Order`).
+     - Menyempurnakan layout halaman login agar pas (*fit*) pada resolusi kecil serta menyusun panel demo login menjadi 1 kolom di perangkat seluler.
+     - Menambahkan backdrop overlay pada layout utama aplikasi agar pengguna seluler dapat menutup sidebar dengan menyentuh area luar sidebar.
+     - Membuat seluruh *seeder* (`ChartOfAccountSeeder`, `ServiceSeeder`, `UserSeeder`) bersifat *idempotent* menggunakan `firstOrCreate` agar kontainer Docker dapat di-boot berulang kali tanpa error.
 - **Next Step**: Melengkapi fungsionalitas transaksi ERP (POS, produksi, pembayaran) agar semua fitur benar-benar bisa digunakan di semua role.
 
 ## Critical Goals
