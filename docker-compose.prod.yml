@@ -1,0 +1,69 @@
+# Production compose — gunakan image dari GHCR (hasil CD pipeline)
+# Setup:
+#   1. Copy .env.example → .env dan isi nilai production (APP_KEY, DB_*, dll)
+#   2. Pastikan docker/nginx/default.conf mengarah ke upstream app:9000
+#   3. docker compose -f docker-compose.prod.yml up -d
+
+services:
+  app:
+    image: ghcr.io/fk0u/istanalaundrymanagementsystem:latest
+    restart: unless-stopped
+    working_dir: /var/www
+    env_file:
+      - .env
+    environment:
+      APP_ENV: production
+      APP_DEBUG: "false"
+    volumes:
+      # Persist storage (uploads, logs) di host
+      - app_storage:/var/www/storage
+      - app_public:/var/www/public
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - istana-network
+
+  web:
+    image: nginx:alpine
+    restart: unless-stopped
+    ports:
+      - "${APP_PORT:-80}:80"
+    volumes:
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+      - app_public:/var/www/public:ro
+    depends_on:
+      - app
+    networks:
+      - istana-network
+
+  db:
+    image: mysql:8.0
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${DB_DATABASE:-istana_laundry}
+      MYSQL_USER: ${DB_USERNAME:-istana_user}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+    volumes:
+      - dbdata:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - istana-network
+
+networks:
+  istana-network:
+    driver: bridge
+
+volumes:
+  dbdata:
+    driver: local
+  app_storage:
+    driver: local
+  app_public:
+    driver: local
