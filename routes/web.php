@@ -36,10 +36,21 @@ Route::get('/dashboard', function () {
     }
 
     $totalRevenue = $ordersQuery->sum('total');
-    $activeOrdersCount = $ordersQuery->where('production_status', '!=', 'DIAMBIL')->count();
+    
+    $activeOrdersCount = \App\Models\Order::query();
+    if ($branchId) {
+        $activeOrdersCount->where('branch_id', $branchId);
+    }
+    $activeOrdersCount = $activeOrdersCount->where('production_status', '!=', 'DIAMBIL')->count();
+
     $newCustomersCount = $customersQuery->where('created_at', '>=', now()->startOfMonth())->count();
     $activeWorkshops = $workshopsQuery->where('is_active', true)->count();
-    $totalTransactions = $ordersQuery->count();
+    
+    $totalTransactionsQuery = \App\Models\Order::query();
+    if ($branchId) {
+        $totalTransactionsQuery->where('branch_id', $branchId);
+    }
+    $totalTransactions = $totalTransactionsQuery->count();
 
     // Latest 5 orders
     $recentOrders = \App\Models\Order::query();
@@ -51,38 +62,55 @@ Route::get('/dashboard', function () {
         ->take(5)
         ->get();
 
-    // Branch revenue comparison or Weekly revenue data for chart
-    $chartData = [];
+    // MoM growth calculations
+    $currentMonthRev = \App\Models\Order::whereMonth('created_at', now()->month)
+        ->whereYear('created_at', now()->year);
+    $lastMonthRev = \App\Models\Order::whereMonth('created_at', now()->subMonth()->month)
+        ->whereYear('created_at', now()->subMonth()->year);
+    if ($branchId) {
+        $currentMonthRev->where('branch_id', $branchId);
+        $lastMonthRev->where('branch_id', $branchId);
+    }
+    $currentMonthTotal = (float)$currentMonthRev->sum('total');
+    $lastMonthTotal = (float)$lastMonthRev->sum('total');
+    $growthPercent = 0;
+    if ($lastMonthTotal > 0) {
+        $growthPercent = (($currentMonthTotal - $lastMonthTotal) / $lastMonthTotal) * 100;
+    }
+
+    // Top Performing Branch
+    $topBranch = \App\Models\Branch::withSum('orders as total_revenue', 'total')
+        ->orderByDesc('total_revenue')
+        ->first();
+    $topBranchName = $topBranch ? $topBranch->name : 'N/A';
+    $topBranchRevenue = $topBranch ? (float)$topBranch->total_revenue : 0;
+
+    // Chart.js data
+    $chartLabels = [];
+    $chartValues = [];
     if (!$branchId) {
-        // Global: compare all branches
+        // Global view: compare branches
         $branches = \App\Models\Branch::all();
         foreach ($branches as $branch) {
             $revenue = \App\Models\Order::where('branch_id', $branch->id)->sum('total');
-            $chartData[] = [
-                'label' => $branch->name,
-                'amount' => $revenue,
-                'formatted' => 'Rp ' . number_format($revenue / 1000, 0, ',', '.') . 'K',
-            ];
+            $chartLabels[] = $branch->name;
+            $chartValues[] = (float)$revenue;
         }
         $chartTitle = "Komparasi Pendapatan Cabang";
         $chartSub = "Total akumulasi pendapatan per cabang (Rupiah)";
     } else {
-        // Scoped branch: show last 7 days daily revenue trend
+        // Branch view: show 7 days trend
         for ($i = 6; $i >= 0; $i--) {
             $date = now()->subDays($i);
             $revenue = \App\Models\Order::where('branch_id', $branchId)->whereDate('created_at', $date->toDateString())->sum('total');
-            $chartData[] = [
-                'label' => $date->format('D'),
-                'amount' => $revenue,
-                'formatted' => 'Rp ' . number_format($revenue / 1000, 0, ',', '.') . 'K',
-            ];
+            $chartLabels[] = $date->format('D, d M');
+            $chartValues[] = (float)$revenue;
         }
         $chartTitle = "Tren Pendapatan Mingguan";
         $chartSub = "Data 7 hari terakhir (Rupiah)";
     }
 
-    // Find max revenue for chart scaling
-    $maxRevenue = collect($chartData)->max('amount') ?: 1000;
+    $branchesList = \App\Models\Branch::all();
 
     return view('dashboard', compact(
         'totalRevenue', 
@@ -91,11 +119,15 @@ Route::get('/dashboard', function () {
         'activeWorkshops', 
         'totalTransactions',
         'recentOrders',
-        'chartData',
+        'chartLabels',
+        'chartValues',
         'chartTitle',
         'chartSub',
-        'maxRevenue',
-        'branchId'
+        'branchId',
+        'growthPercent',
+        'topBranchName',
+        'topBranchRevenue',
+        'branchesList'
     ));
 })->middleware(['auth', 'verified', 'branch.scope'])->name('dashboard');
 
@@ -421,6 +453,31 @@ Route::middleware(['auth', 'branch.scope'])->group(function () {
 
     // Finance - Reports
     Route::get('/finance/reports', [\App\Http\Controllers\Finance\FinancialReportController::class, 'index'])->name('finance.reports.index');
+
+    // Super User - Switch Scoped Branch
+    Route::post('/switch-branch', function (\Illuminate\Http\Request $request) {
+        if (!auth()->user()->hasAnyRole(['Developer', 'Owner', 'Super_Admin'])) {
+            abort(403, 'Hanya Owner dan Administrator yang dapat beralih cabang.');
+        }
+        
+        $request->validate([
+            'branch_id' => 'nullable|exists:branches,id',
+        ]);
+        
+        if ($request->branch_id) {
+            session(['scoped_branch_id' => $request->branch_id]);
+        } else {
+            session()->forget('scoped_branch_id');
+        }
+        
+        return redirect()->back()->with('success', 'Cabang aktif berhasil diubah.');
+    })->name('switch-branch');
+
+    // Refund Module
+    Route::get('/refunds', [\App\Http\Controllers\RefundController::class, 'index'])->name('refunds.index');
+    Route::post('/refunds', [\App\Http\Controllers\RefundController::class, 'store'])->name('refunds.store');
+    Route::post('/refunds/{id}/approve', [\App\Http\Controllers\RefundController::class, 'approve'])->name('refunds.approve');
+    Route::post('/refunds/{id}/reject', [\App\Http\Controllers\RefundController::class, 'reject'])->name('refunds.reject');
 });
 
 require __DIR__.'/auth.php';

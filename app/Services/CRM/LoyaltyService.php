@@ -119,4 +119,50 @@ class LoyaltyService
             // Optional: log or trigger event
         }
     }
+
+    /**
+     * Deduct points from customer when an order is refunded.
+     * Ratio: 1 point per Rp 1,000 refunded.
+     *
+     * @param Order $order
+     * @param float $refundAmount
+     * @return LoyaltyPointLog|null
+     */
+    public function deductPointsForRefund(Order $order, float $refundAmount): ?LoyaltyPointLog
+    {
+        if (!$order->customer_id) {
+            return null;
+        }
+
+        $customer = $order->customer;
+        $pointsToDeduct = floor($refundAmount / 1000);
+
+        if ($pointsToDeduct <= 0) {
+            return null;
+        }
+
+        // Deduct points up to customer's current points
+        $pointsToDeduct = min($pointsToDeduct, $customer->loyalty_points);
+
+        $balanceBefore = $customer->loyalty_points;
+        $balanceAfter = $balanceBefore - $pointsToDeduct;
+
+        $customer->update([
+            'loyalty_points' => $balanceAfter,
+            'total_spent' => max(0, $customer->total_spent - $refundAmount),
+        ]);
+
+        $log = LoyaltyPointLog::create([
+            'customer_id' => $customer->id,
+            'order_id' => $order->id,
+            'points' => -$pointsToDeduct,
+            'type' => 'adjust',
+            'balance_after' => $balanceAfter,
+            'description' => "Pengurangan poin karena pengembalian dana order #{$order->order_number}",
+        ]);
+
+        $this->checkTierUpgrade($customer);
+
+        return $log;
+    }
 }

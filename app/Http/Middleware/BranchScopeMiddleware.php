@@ -45,8 +45,7 @@ class BranchScopeMiddleware
             
             session(['scoped_branch_id' => $user->branch_id]);
         } else {
-            // Super-level user: no branch restriction
-            session()->forget('scoped_branch_id');
+            // Super-level user: no branch restriction by default, but keep manual session scoping if set
         }
 
         return $next($request);

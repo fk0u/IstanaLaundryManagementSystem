@@ -7,16 +7,25 @@
 
         <h2 class="text-lg font-black text-primary dark:text-orange-400 tracking-tight hidden sm:block">Istana Laundry Samarinda</h2>
         <div class="flex gap-4 items-center">
-            <span class="text-xs font-bold text-primary bg-primary-container/10 px-3 py-1 rounded-lg border border-primary/20">
-                Branch: 
-                @if(session('scoped_branch_id'))
-                    {{ \App\Models\Branch::find(session('scoped_branch_id'))?->name ?? 'Unknown Branch' }}
-                @elseif(auth()->user()->branch_id)
-                    {{ auth()->user()->branch?->name ?? 'Unknown Branch' }}
-                @else
-                    Semua Cabang (Global)
-                @endif
-            </span>
+            @if(auth()->user()->hasAnyRole(['Developer', 'Owner', 'Super_Admin']))
+                <form action="{{ route('switch-branch') }}" method="POST" class="inline-flex items-center">
+                    @csrf
+                    <label class="text-[9px] font-bold text-slate-400 dark:text-slate-500 mr-1.5 uppercase tracking-wider">Scope:</label>
+                    <select name="branch_id" onchange="this.form.submit()"
+                            class="bg-slate-50 dark:bg-slate-950 border border-outline-variant dark:border-slate-800 rounded-lg text-[10px] font-bold px-2 py-1 outline-none focus:border-primary text-slate-700 dark:text-slate-300 cursor-pointer">
+                        <option value="">Semua Cabang (Global)</option>
+                        @foreach(\App\Models\Branch::orderBy('name')->get() as $br)
+                            <option value="{{ $br->id }}" {{ session('scoped_branch_id') == $br->id ? 'selected' : '' }}>
+                                {{ $br->name }}
+                            </option>
+                        @endforeach
+                    </select>
+                </form>
+            @else
+                <span class="text-[10px] font-bold text-primary bg-primary-container/10 px-2.5 py-1 rounded-lg border border-primary/20">
+                    Branch: {{ auth()->user()->branch?->name ?? 'Unknown Branch' }}
+                </span>
+            @endif
             <span class="text-xs text-slate-500 dark:text-slate-400 hover:text-primary cursor-pointer transition-colors font-semibold hidden md:inline-block">Notifications</span>
             <span class="text-xs text-slate-500 dark:text-slate-400 hover:text-primary cursor-pointer transition-colors font-semibold hidden md:inline-block">Support</span>
         </div>

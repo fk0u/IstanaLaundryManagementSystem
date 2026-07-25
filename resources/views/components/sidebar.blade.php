@@ -24,6 +24,14 @@
                 </a>
             @endif
 
+            <!-- Refunds -->
+            @if(auth()->user()->hasAnyRole(['Developer', 'Owner', 'Super_Admin', 'Branch_Admin', 'Cashier', 'Finance']))
+                <a href="/refunds" class="flex items-center gap-3 px-4 py-3 transition-all rounded-lg text-sm font-semibold {{ request()->is('refunds*') ? 'text-primary dark:text-orange-400 bg-primary-container/10 dark:bg-primary-container/20 border-r-4 border-primary font-bold' : 'text-on-surface-variant hover:bg-slate-100 dark:hover:bg-slate-800' }}">
+                    <span class="material-symbols-outlined">assignment_return</span>
+                    <span>Refund &amp; Pembatalan</span>
+                </a>
+            @endif
+
             <!-- Production Tracking -->
             @if(auth()->user()->hasAnyRole(['Developer', 'Owner', 'Super_Admin', 'Branch_Admin', 'Workshop_Admin', 'Workshop_Staff']))
                 <a href="/production" class="flex items-center gap-3 px-4 py-3 transition-all rounded-lg text-sm font-semibold {{ request()->is('production*') ? 'text-primary dark:text-orange-400 bg-primary-container/10 dark:bg-primary-container/20 border-r-4 border-primary font-bold' : 'text-on-surface-variant hover:bg-slate-100 dark:hover:bg-slate-800' }}">
