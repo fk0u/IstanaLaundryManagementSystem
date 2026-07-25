@@ -359,7 +359,7 @@
                         </a>
 
                         <a href="{{ route('invoices.whatsapp', session('last_order_id')) }}" target="_blank" class="btn-touch w-full bg-[#25D366] text-white rounded-xl font-bold text-xs flex items-center justify-center gap-2 py-3 shadow-md shadow-emerald-500/20">
-                            <span class="text-base">📱</span>
+                            <span class="material-symbols-outlined text-lg">chat</span>
                             Kirim Struk via WhatsApp
                         </a>
 

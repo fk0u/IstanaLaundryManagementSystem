@@ -111,7 +111,10 @@
                                 </div>
 
                                 <div class="flex items-center justify-between text-xs pt-1 border-t border-slate-100 dark:border-slate-800">
-                                    <span class="font-semibold text-slate-600 dark:text-slate-400">📱 {{ $customer->phone }}</span>
+                                    <span class="font-semibold text-slate-600 dark:text-slate-400 flex items-center gap-1">
+                                        <span class="material-symbols-outlined text-sm text-slate-400">call</span>
+                                        {{ $customer->phone }}
+                                    </span>
                                     <span class="font-bold text-primary">{{ number_format($customer->loyalty_points) }} pts</span>
                                 </div>
 

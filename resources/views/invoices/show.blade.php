@@ -12,8 +12,8 @@
                     Cetak Struk
                 </a>
                 @if($order->customer?->phone)
-                    <a href="{{ route('invoices.whatsapp', $order) }}" target="_blank" class="btn-touch px-4 py-2 bg-[#25D366] hover:bg-[#1DA851] text-white rounded-xl text-xs font-bold gap-1.5 transition-all active:scale-95 shadow-sm">
-                        <span style="font-size:14px;">📱</span>
+                    <a href="{{ route('invoices.whatsapp', $order) }}" target="_blank" class="btn-touch px-4 py-2 bg-[#25D366] hover:bg-[#1DA851] text-white rounded-xl text-xs font-bold gap-1.5 transition-all active:scale-95 shadow-sm inline-flex items-center">
+                        <span class="material-symbols-outlined text-base">chat</span>
                         WhatsApp
                     </a>
                 @endif
@@ -42,9 +42,10 @@
                         </p>
                     </div>
                     <div class="text-left sm:text-right">
-                        <span class="inline-block px-3 py-1 rounded-lg text-xs font-bold uppercase tracking-wider
+                        <span class="inline-flex items-center gap-1 px-3 py-1 rounded-lg text-xs font-bold uppercase tracking-wider
                             {{ $order->payment_status === 'paid' ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-400' : 'bg-amber-50 text-amber-700 dark:bg-amber-950/30 dark:text-amber-400' }}">
-                            {{ $order->payment_status === 'paid' ? '✅ LUNAS' : '⏳ ' . strtoupper($order->payment_status) }}
+                            <span class="material-symbols-outlined text-sm">{{ $order->payment_status === 'paid' ? 'check_circle' : 'schedule' }}</span>
+                            {{ $order->payment_status === 'paid' ? 'LUNAS' : strtoupper($order->payment_status) }}
                         </span>
                         <p class="text-xs text-slate-400 mt-2">
                             <strong>No. Invoice:</strong> {{ $order->order_number }}
@@ -191,7 +192,7 @@
 
             <!-- Invoice Footer -->
             <div class="p-5 md:p-8 bg-slate-50/50 dark:bg-slate-800/20 border-t border-slate-100 dark:border-slate-800 text-center">
-                <p class="text-xs font-bold text-slate-600 dark:text-slate-400">Terima kasih atas kepercayaan Anda! 🙏</p>
+                <p class="text-xs font-bold text-slate-600 dark:text-slate-400">Terima kasih atas kepercayaan Anda!</p>
                 <p class="text-2xs text-slate-400 mt-1">
                     Istana Premium Laundry Service — Samarinda<br>
                     Dokumen ini sah sebagai bukti transaksi.

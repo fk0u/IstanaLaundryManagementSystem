@@ -304,7 +304,7 @@
 
         <!-- Footer -->
         <div class="footer">
-            <div class="thank-you">Terima Kasih! 🙏</div>
+            <div class="thank-you">Terima Kasih!</div>
             <div class="sub">
                 @if($order->estimated_done_at)
                     Estimasi selesai: {{ $order->estimated_done_at->format('d M Y') }}<br>
@@ -323,14 +323,14 @@
 
         @if($order->customer?->phone)
             <a href="{{ route('invoices.whatsapp', $order) }}" class="btn btn-whatsapp" target="_blank">
-                <span style="font-size:18px;">📱</span>
+                <span class="material-symbols-outlined" style="font-size:18px;">chat</span>
                 Kirim via WhatsApp
             </a>
         @else
             <a href="{{ route('invoices.whatsapp', ['order' => $order->id, 'phone' => '']) }}" 
                class="btn btn-whatsapp" 
                onclick="event.preventDefault(); let p = prompt('Masukkan nomor WhatsApp pelanggan (contoh: 08123456789):'); if(p) window.open('{{ route('invoices.whatsapp', $order) }}?phone=' + encodeURIComponent(p), '_blank');">
-                <span style="font-size:18px;">📱</span>
+                <span class="material-symbols-outlined" style="font-size:18px;">chat</span>
                 Kirim via WhatsApp
             </a>
         @endif
