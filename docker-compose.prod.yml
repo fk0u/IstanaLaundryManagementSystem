@@ -1,3 +1,9 @@
+# Production compose — gunakan image dari GHCR (hasil CD pipeline)
+# Setup:
+#   1. Copy .env.example → .env dan isi nilai production (APP_KEY, DB_*, dll)
+#   2. Pastikan docker/nginx/default.conf mengarah ke upstream app:9000
+#   3. docker compose -f docker-compose.prod.yml up -d
+
 services:
   app:
     image: ghcr.io/fk0u/istanalaundrymanagementsystem:latest
@@ -8,12 +14,15 @@ services:
     environment:
       APP_ENV: production
       APP_DEBUG: "false"
+    volumes:
+      # Persist storage (uploads, logs) di host
+      - app_storage:/var/www/storage
+      - app_public:/var/www/public
     depends_on:
       db:
         condition: service_healthy
     networks:
       - istana-network
-    # Production: jangan mount source code; image sudah berisi app + assets
 
   web:
     image: nginx:alpine
@@ -22,6 +31,7 @@ services:
       - "${APP_PORT:-80}:80"
     volumes:
       - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+      - app_public:/var/www/public:ro
     depends_on:
       - app
     networks:
@@ -52,4 +62,8 @@ networks:
 
 volumes:
   dbdata:
+    driver: local
+  app_storage:
+    driver: local
+  app_public:
     driver: local
