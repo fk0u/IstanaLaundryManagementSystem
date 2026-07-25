@@ -1,3 +1,135 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+    /* Smooth scrolling & overscroll behavior */
+    html {
+        scroll-behavior: smooth;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+        overscroll-behavior: contain;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+    }
+
+    /* Custom scrollbar */
+    ::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+        background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 999px;
+    }
+    .dark ::-webkit-scrollbar-thumb {
+        background: #334155;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+        background: #94a3b8;
+    }
+    .dark ::-webkit-scrollbar-thumb:hover {
+        background: #475569;
+    }
+
+    /* Print styles for invoice/receipt */
+    @media print {
+        body {
+            background: white !important;
+            color: black !important;
+        }
+        .no-print {
+            display: none !important;
+        }
+        .print-only {
+            display: block !important;
+        }
+    }
+}
+
+@layer components {
+    /* Touch-friendly button base — 44px minimum */
+    .btn-touch {
+        @apply min-h-[44px] min-w-[44px] flex items-center justify-center;
+    }
+
+    /* Safe bottom area for bottom nav clearance */
+    .safe-bottom {
+        padding-bottom: 5.5rem;
+    }
+
+    @media (min-width: 768px) {
+        .safe-bottom {
+            padding-bottom: 0;
+        }
+    }
+
+    /* Mobile card variant — compact */
+    .card-mobile {
+        @apply bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-xl shadow-sm p-4;
+    }
+
+    @media (min-width: 768px) {
+        .card-mobile {
+            @apply p-6 rounded-xl;
+        }
+    }
+
+    /* Table to card responsive utility */
+    .responsive-table-wrapper {
+        @apply overflow-x-auto -mx-4 px-4;
+    }
+
+    @media (min-width: 768px) {
+        .responsive-table-wrapper {
+            @apply mx-0 px-0;
+        }
+    }
+
+    /* Bottom sheet handle */
+    .sheet-handle {
+        @apply w-10 h-1 rounded-full bg-slate-300 dark:bg-slate-600 mx-auto mb-3;
+    }
+
+    /* Horizontal scroll pills container */
+    .scroll-pills {
+        @apply flex gap-2 overflow-x-auto pb-2 -mx-4 px-4 scrollbar-none;
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+    }
+    .scroll-pills::-webkit-scrollbar {
+        display: none;
+    }
+
+    @media (min-width: 768px) {
+        .scroll-pills {
+            @apply mx-0 px-0 flex-wrap overflow-visible pb-0;
+        }
+    }
+
+    /* Premium shadow (interactive cards) */
+    .premium-shadow {
+        @apply shadow-sm hover:shadow-md transition-all duration-300;
+    }
+
+    /* Status badge colors */
+    .status-pending { @apply bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/30 dark:text-amber-400 dark:border-amber-800/50; }
+    .status-active { @apply bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/30 dark:text-emerald-400 dark:border-emerald-800/50; }
+    .status-completed { @apply bg-sky-50 text-sky-700 border-sky-200 dark:bg-sky-950/30 dark:text-sky-400 dark:border-sky-800/50; }
+    .status-cancelled { @apply bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/30 dark:text-rose-400 dark:border-rose-800/50; }
+}
+
+@layer utilities {
+    .scrollbar-none {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+    }
+    .scrollbar-none::-webkit-scrollbar {
+        display: none;
+    }
+}

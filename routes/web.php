@@ -37,6 +37,11 @@ Route::middleware(['auth', 'branch.scope'])->group(function () {
     Route::get('/pos', [\App\Http\Controllers\POSController::class, 'index'])->name('pos.index');
     Route::post('/pos', [\App\Http\Controllers\POSController::class, 'store'])->name('pos.store');
 
+    // Invoices & Billing
+    Route::get('/invoices/{order}', [\App\Http\Controllers\InvoiceController::class, 'show'])->name('invoices.show');
+    Route::get('/invoices/{order}/receipt', [\App\Http\Controllers\InvoiceController::class, 'receipt'])->name('invoices.receipt');
+    Route::get('/invoices/{order}/whatsapp', [\App\Http\Controllers\InvoiceController::class, 'sendWhatsApp'])->name('invoices.whatsapp');
+
     // Production Tracking
     Route::get('/production', [\App\Http\Controllers\ProductionController::class, 'index'])->name('production.index');
     Route::post('/production/update/{id}', [\App\Http\Controllers\ProductionController::class, 'updateStatus'])->name('production.update');

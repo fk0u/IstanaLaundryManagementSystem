@@ -5,8 +5,11 @@
       class="h-full">
     <head>
         <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
         <meta name="csrf-token" content="{{ csrf_token() }}">
+        <meta name="theme-color" content="#FF6600">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
         <title>{{ config('app.name', 'Istana Laundry') }}</title>
 
@@ -21,6 +24,8 @@
         
         <style>
             [x-cloak] { display: none !important; }
+            /* iOS safe area support */
+            .safe-area-bottom { padding-bottom: env(safe-area-inset-bottom, 0px); }
         </style>
     </head>
     <body class="font-sans antialiased bg-surface dark:bg-slate-950 text-on-surface dark:text-slate-200 h-full transition-colors duration-200">
@@ -46,10 +51,13 @@
             <x-topbar />
 
             <!-- Page Main Content -->
-            <main class="flex-1 p-6 md:p-10 max-w-[1400px] mx-auto w-full">
+            <main class="flex-1 p-4 md:p-6 lg:p-10 max-w-[1400px] mx-auto w-full pb-24 md:pb-6">
                 {{ $slot }}
             </main>
         </div>
+
+        <!-- Bottom Navigation (Mobile) -->
+        <x-bottom-nav />
 
         <script>
             // Micro-interactions for premium elements
@@ -77,7 +85,7 @@
             }
         }"
         @toast.window="addToast($event.detail.message, $event.detail.type)"
-        class="fixed bottom-5 right-5 z-[9999] flex flex-col gap-3 w-full max-w-sm pointer-events-none"
+        class="fixed bottom-20 md:bottom-5 right-4 md:right-5 z-[9999] flex flex-col gap-3 w-[calc(100%-2rem)] md:w-full max-w-sm pointer-events-none"
         x-cloak>
             <template x-for="toast in toasts" :key="toast.id">
                 <div x-transition:enter="transition ease-out duration-300 transform"
