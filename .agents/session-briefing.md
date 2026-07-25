@@ -1,7 +1,7 @@
 # Session Briefing - Istana Laundry Management System
 
 ## Project Status
-- **Phase**: Multi-Role Dashboard & ERP Data Seeding Integration (Selesai)
+- **Phase**: Docker Infrastructure Migration (Selesai)
 - **Current State**: 
   1. Pengalihan setelah login sukses bagi seluruh peran operasional (`Branch_Admin`, `Cashier`, `CS_Marketing`, `Finance`, `Workshop_Staff`, `Workshop_Admin`) telah dialihkan sepenuhnya ke rute `/dashboard` alih-alih rute mati `/branches`.
   2. Implementasi **`ERPDataSeeder`** yang kaya dan realistis berisi data awal penunjang ERP seperti:
@@ -12,7 +12,12 @@
      - Periode akuntansi (Open) bulanan.
      - Histori order & item transaksi per-cabang selama 7 hari terakhir demi menyajikan grafik visual dan antrean yang indah pada masing-masing dashboard.
   3. Seluruh **41 pengujian otomatis** lolos 100% (Passed).
-- **Next Step**: Modifikasi alur persetujuan PO/GRN jika diperlukan atau laporan akuntansi lanjutan.
+  4. **Konfigurasi Docker** telah diperbaiki sepenuhnya:
+     - Dockerfile menggunakan Alpine-compatible commands (`addgroup`/`adduser`), Node.js untuk Vite build, netcat untuk healthcheck.
+     - docker-compose.yml dengan MySQL healthcheck, environment variable interpolation, dan Node.js dev service.
+     - .dockerignore untuk optimasi build.
+     - entrypoint.sh dengan output terstruktur dan cache optimization.
+- **Next Step**: Melengkapi fungsionalitas transaksi ERP (POS, produksi, pembayaran) agar semua fitur benar-benar bisa digunakan di semua role.
 
 ## Critical Goals
 1. Menyelesaikan setup struktur folder Laravel dan memastikannya berfungsi di root workspace (SELESAI).
@@ -29,3 +34,4 @@
 12. Implementasi dashboard khusus Branch Admin, Cashier, dan Workshop Staff secara fungsional (SELESAI).
 13. Perbaikan alur pengalihan login (Redirect) semua peran ke `/dashboard` (SELESAI).
 14. Penyemaian data simulasi transaksi ERP lengkap lewat `ERPDataSeeder` (SELESAI).
+15. Migrasi infrastruktur dari Laragon ke Docker (Dockerfile, docker-compose.yml, .env.docker, entrypoint.sh, .dockerignore) (SELESAI).
