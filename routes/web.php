@@ -184,6 +184,7 @@ Route::middleware(['auth', 'branch.scope'])->group(function () {
     Route::get('/hr', [\App\Http\Controllers\HR\HRController::class, 'index'])->name('hr.index');
     Route::post('/hr/employees', [\App\Http\Controllers\HR\HRController::class, 'storeEmployee'])->name('hr.employees.store');
     Route::post('/hr/payrolls', [\App\Http\Controllers\HR\HRController::class, 'storePayroll'])->name('hr.payrolls.store');
+    Route::get('/hr/payrolls/{payroll}', [\App\Http\Controllers\HR\HRController::class, 'showPayroll'])->name('hr.payrolls.show');
     Route::get('/hr/payslip/{item}', [\App\Http\Controllers\HR\HRController::class, 'showPayslip'])->name('hr.payslip');
     Route::put('/hr/payroll-item/{item}', [\App\Http\Controllers\HR\HRController::class, 'updatePayrollItem'])->name('hr.payroll-item.update');
     Route::delete('/hr/payroll/{payroll}', [\App\Http\Controllers\HR\HRController::class, 'destroyPayroll'])->name('hr.payroll.destroy');

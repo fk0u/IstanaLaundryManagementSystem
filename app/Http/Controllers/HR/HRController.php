@@ -5,6 +5,7 @@ namespace App\Http\Controllers\HR;
 use App\Http\Controllers\Controller;
 use App\Models\Employee;
 use App\Models\Attendance;
+use App\Models\AuditLog;
 use App\Models\Payroll;
 use App\Models\PayrollItem;
 use App\Models\Branch;
@@ -162,9 +163,18 @@ class HRController extends Controller
         return view('hr.payslip', compact('item'));
     }
 
+    public function showPayroll(Payroll $payroll)
+    {
+        $payroll->load(['branch', 'createdByUser', 'items.employee']);
+
+        return view('hr.payroll-detail', compact('payroll'));
+    }
+
     public function updatePayrollItem(Request $request, PayrollItem $item)
     {
         $request->validate([
+            'allowance' => 'nullable|numeric|min:0',
+            'deduction' => 'nullable|numeric|min:0',
             'bonus_kg' => 'nullable|numeric|min:0',
             'bonus_pcs' => 'nullable|numeric|min:0',
             'transport_allowance' => 'nullable|numeric|min:0',
@@ -176,7 +186,26 @@ class HRController extends Controller
             'bpjs_deduction' => 'nullable|numeric|min:0',
         ]);
 
+        $oldValues = $item->only([
+            'allowance',
+            'deduction',
+            'bonus_kg',
+            'bonus_pcs',
+            'transport_allowance',
+            'overtime_pay',
+            'attendance_bonus',
+            'tardiness_deduction',
+            'loan_deduction',
+            'damage_deduction',
+            'bpjs_deduction',
+            'total_earnings',
+            'total_deductions',
+            'net_salary',
+        ]);
+
         $item->update([
+            'allowance' => $request->allowance ?? 0,
+            'deduction' => $request->deduction ?? 0,
             'bonus_kg' => $request->bonus_kg ?? 0,
             'bonus_pcs' => $request->bonus_pcs ?? 0,
             'transport_allowance' => $request->transport_allowance ?? 0,
@@ -191,17 +220,75 @@ class HRController extends Controller
         // Recalculate totals
         $item->saveCalculations();
 
+        AuditLog::create([
+            'user_id' => Auth::id(),
+            'action' => 'update',
+            'model_type' => PayrollItem::class,
+            'model_id' => $item->id,
+            'old_values' => $oldValues,
+            'new_values' => $item->only([
+                'allowance',
+                'deduction',
+                'bonus_kg',
+                'bonus_pcs',
+                'transport_allowance',
+                'overtime_pay',
+                'attendance_bonus',
+                'tardiness_deduction',
+                'loan_deduction',
+                'damage_deduction',
+                'bpjs_deduction',
+                'total_earnings',
+                'total_deductions',
+                'net_salary',
+            ]),
+            'ip_address' => $request->ip(),
+            'user_agent' => (string) $request->userAgent(),
+        ]);
+
         return redirect()->back()->with('success', 'Komponen payroll berhasil diperbarui!');
     }
 
     public function destroyPayroll(Payroll $payroll)
     {
         try {
+            $payroll->load(['branch', 'items.employee']);
+            $snapshot = [
+                'payroll' => [
+                    'id' => $payroll->id,
+                    'branch_id' => $payroll->branch_id,
+                    'branch_name' => $payroll->branch?->name,
+                    'month' => $payroll->month,
+                    'year' => $payroll->year,
+                    'status' => $payroll->status,
+                    'processed_at' => optional($payroll->processed_at)->toDateTimeString(),
+                    'items_count' => $payroll->items->count(),
+                    'total_net_salary' => $payroll->items->sum('net_salary'),
+                ],
+                'items' => $payroll->items->map(fn (PayrollItem $item) => [
+                    'id' => $item->id,
+                    'employee_id' => $item->employee_id,
+                    'employee_name' => $item->employee?->name,
+                    'net_salary' => $item->net_salary,
+                ])->values()->all(),
+            ];
+
             // Delete all related payroll items first (cascade delete)
             $payroll->items()->delete();
             
             // Delete the payroll record
             $payroll->delete();
+
+            AuditLog::create([
+                'user_id' => Auth::id(),
+                'action' => 'delete',
+                'model_type' => Payroll::class,
+                'model_id' => $payroll->id,
+                'old_values' => $snapshot,
+                'new_values' => null,
+                'ip_address' => request()->ip(),
+                'user_agent' => (string) request()->userAgent(),
+            ]);
             
             return redirect()->route('hr.index')->with('success', 'Riwayat payroll berhasil dihapus!');
         } catch (\Exception $e) {
