@@ -37,10 +37,10 @@
             </div>
 
             <!-- Right Side: Form Content -->
-            <div class="w-full lg:w-[45%] flex flex-col justify-center items-center p-8 md:p-16 relative bg-white">
+            <div class="w-full lg:w-[45%] flex flex-col justify-center items-center p-5 sm:p-8 md:p-16 relative bg-white">
                 <div class="w-full max-w-[420px] flex flex-col">
-                    <div class="mb-12 flex justify-start">
-                        <img alt="Istana Laundry Logo" class="h-20 w-auto object-contain" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAEXXqejtNkEJiMRh0STzavLSAeYne5lV3jHzc8iyhpEGdOftr95a1f37iwO1x9-mrEY-306C6RhQOJ6RF-6pYpZinYRJqZ-rrdFQdQVWm_Aaqn4Fohp9VCUasf_c6VQMjHVZ09clZX7obSeawNcr32vLwaewKciE5xvK6SU8g4FbiYjo9I5_a-MRS1Z0qZ2w-2SzsZUZlKr4zc9-406930fU4yol3rVx4tcQKJptljQkOh1_yugqYGd4s9sfr9KfLUGfMHBwMmLRA"/>
+                    <div class="mb-8 flex justify-start">
+                        <img alt="Istana Laundry Logo" class="h-16 w-auto object-contain" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAEXXqejtNkEJiMRh0STzavLSAeYne5lV3jHzc8iyhpEGdOftr95a1f37iwO1x9-mrEY-306C6RhQOJ6RF-6pYpZinYRJqZ-rrdFQdQVWm_Aaqn4Fohp9VCUasf_c6VQMjHVZ09clZX7obSeawNcr32vLwaewKciE5xvK6SU8g4FbiYjo9I5_a-MRS1Z0qZ2w-2SzsZUZlKr4zc9-406930fU4yol3rVx4tcQKJptljQkOh1_yugqYGd4s9sfr9KfLUGfMHBwMmLRA"/>
                     </div>
                     {{ $slot }}
                 </div>

@@ -27,6 +27,19 @@
         <!-- Sidebar Navigation -->
         <x-sidebar />
 
+        <!-- Mobile Sidebar Backdrop Overlay -->
+        <div x-show="sidebarOpen" 
+             x-transition:enter="transition ease-out duration-300"
+             x-transition:enter-start="opacity-0"
+             x-transition:enter-end="opacity-100"
+             x-transition:leave="transition ease-in duration-200"
+             x-transition:leave-start="opacity-100"
+             x-transition:leave-end="opacity-0"
+             @click="sidebarOpen = false"
+             class="fixed inset-0 bg-slate-950/50 z-40 md:hidden backdrop-blur-[2px]"
+             x-cloak>
+        </div>
+
         <!-- Content Area Wrapper -->
         <div class="md:pl-72 flex flex-col min-h-screen">
             <!-- Top Navigation Bar -->

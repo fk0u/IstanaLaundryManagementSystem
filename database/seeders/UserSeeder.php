@@ -158,16 +158,20 @@ class UserSeeder extends Seeder
         ];
 
         foreach ($users as $userData) {
-            $user = User::create([
-                'name' => $userData['name'],
-                'email' => $userData['email'],
-                'password' => Hash::make($userData['password']),
-                'branch_id' => $userData['branch_id'],
-                'is_active' => true,
-            ]);
+            $user = User::firstOrCreate(
+                ['email' => $userData['email']],
+                [
+                    'name' => $userData['name'],
+                    'password' => Hash::make($userData['password']),
+                    'branch_id' => $userData['branch_id'],
+                    'is_active' => true,
+                ]
+            );
 
-            // Assign role
-            $user->assignRole($userData['role']);
+            // Assign role if not already assigned
+            if (!$user->hasRole($userData['role'])) {
+                $user->assignRole($userData['role']);
+            }
         }
     }
 }

@@ -98,7 +98,7 @@
                 <span class="text-xs font-bold text-slate-700 tracking-wide uppercase">Quick Demo Login</span>
             </div>
             
-            <div class="grid grid-cols-2 gap-2">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 <button @click="fillCredentials('owner@istanalaundry.com')" class="flex flex-col items-start p-2 text-left bg-white border border-slate-150 rounded-lg hover:border-primary hover:bg-primary/5 transition-all focus:outline-none">
                     <span class="text-[10px] font-extrabold text-indigo-600 uppercase tracking-wider">Owner (Pusat)</span>
                     <span class="text-[11px] font-semibold text-slate-800 truncate w-full">owner@istanalaundry.com</span>

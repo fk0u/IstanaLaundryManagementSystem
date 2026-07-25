@@ -66,7 +66,7 @@
                                 <div>
                                     <span class="block text-xs text-slate-400 font-bold uppercase tracking-wider mb-2">Item Cucian</span>
                                     <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                        @foreach ($order->orderItems as $item)
+                                        @foreach ($order->items as $item)
                                             <div class="flex items-center gap-3 p-3 border border-slate-100 dark:border-slate-800/80 rounded-lg bg-slate-50/20 dark:bg-slate-900/50">
                                                 <span class="w-7 h-7 rounded-full bg-orange-100/50 dark:bg-slate-800 text-primary flex items-center justify-center font-bold text-xs">
                                                     {{ round($item->quantity, 1) }}

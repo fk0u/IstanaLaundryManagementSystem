@@ -14,7 +14,7 @@ Route::get('/track', function (\Illuminate\Http\Request $request) {
         return redirect('/')->with('error', 'Masukkan nomor nota terlebih dahulu.');
     }
 
-    $order = \App\Models\Order::with(['customer', 'branch', 'orderItems.service', 'productionStatusLogs.updater'])
+    $order = \App\Models\Order::with(['customer', 'branch', 'items.service', 'productionStatusLogs.updater'])
         ->where('order_number', $orderNumber)
         ->first();
 

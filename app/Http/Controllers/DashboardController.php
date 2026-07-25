@@ -71,7 +71,7 @@ class DashboardController extends Controller
         if ($branchId) {
             $recentOrders->where('branch_id', $branchId);
         }
-        $recentOrders = $recentOrders->with(['customer', 'orderItems.service'])
+        $recentOrders = $recentOrders->with(['customer', 'items.service'])
             ->orderBy('created_at', 'desc')
             ->take(5)
             ->get();
@@ -168,7 +168,7 @@ class DashboardController extends Controller
             ->count();
 
         $recentOrders = Order::where('branch_id', $branchId)
-            ->with(['customer', 'orderItems.service'])
+            ->with(['customer', 'items.service'])
             ->orderBy('created_at', 'desc')
             ->take(5)
             ->get();
@@ -265,7 +265,7 @@ class DashboardController extends Controller
 
         $activeProductionOrders = Order::where('branch_id', $branchId)
             ->whereIn('production_status', ['TERIMA', 'CUCI', 'KERING', 'SETRIKA', 'PACKING'])
-            ->with(['customer', 'orderItems.service'])
+            ->with(['customer', 'items.service'])
             ->orderBy('created_at', 'asc')
             ->take(10)
             ->get();

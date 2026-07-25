@@ -91,7 +91,7 @@
                                     {{ $order->customer?->name ?? 'Walk-In Customer' }}
                                 </td>
                                 <td class="py-3.5 px-4 text-slate-500">
-                                    {{ $order->orderItems->map(fn($it) => $it->quantity . ' ' . $it->service?->name)->join(', ') }}
+                                    {{ $order->items->map(fn($it) => $it->quantity . ' ' . $it->service?->name)->join(', ') }}
                                 </td>
                                 <td class="py-3.5 px-4">
                                     <span class="px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-primary-container/10 text-primary border border-primary/20 animate-pulse">

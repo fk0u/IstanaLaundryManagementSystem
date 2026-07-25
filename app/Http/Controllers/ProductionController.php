@@ -53,7 +53,7 @@ class ProductionController extends Controller
             $query->where('production_status', $request->status);
         }
 
-        $orders = $query->with(['customer', 'orderItems.service'])->orderBy('created_at', 'desc')->get();
+        $orders = $query->with(['customer', 'items.service'])->orderBy('created_at', 'desc')->get();
 
         return view('production.index', compact('branch', 'orders'));
     }

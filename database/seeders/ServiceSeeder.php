@@ -100,23 +100,28 @@ class ServiceSeeder extends Seeder
         // Seed Services
         $seededServices = [];
         foreach ($services as $serviceData) {
-            $seededServices[] = Service::create($serviceData);
+            $seededServices[] = Service::firstOrCreate(
+                ['name' => $serviceData['name']],
+                $serviceData
+            );
         }
 
         // Let's seed some price overrides for Branch 2 (Cabang Dr. Sutomo) to test scoping pricing overrides
         $branch2 = Branch::where('code', 'SUT')->first();
         if ($branch2) {
             // SMD02 has slightly higher prices (e.g. +1000 or +5000)
-            ServiceBranchPrice::create([
+            ServiceBranchPrice::firstOrCreate([
                 'service_id' => $seededServices[0]->id, // Cuci Kiloan Reguler
                 'branch_id' => $branch2->id,
+            ], [
                 'price' => 8000.00, // base was 7000
                 'is_active' => true,
             ]);
 
-            ServiceBranchPrice::create([
+            ServiceBranchPrice::firstOrCreate([
                 'service_id' => $seededServices[2]->id, // Cuci Kiloan Express
                 'branch_id' => $branch2->id,
+            ], [
                 'price' => 20000.00, // base was 18000
                 'is_active' => true,
             ]);

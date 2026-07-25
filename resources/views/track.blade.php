@@ -195,7 +195,7 @@
                         <h2 class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-6">Rincian Cucian</h2>
                         
                         <div class="divide-y divide-slate-100 dark:divide-slate-800">
-                            @foreach ($order->orderItems as $item)
+                            @foreach ($order->items as $item)
                                 <div class="py-4 flex justify-between items-center first:pt-0 last:pb-0">
                                     <div>
                                         <h3 class="text-xs font-bold text-slate-800 dark:text-slate-200">

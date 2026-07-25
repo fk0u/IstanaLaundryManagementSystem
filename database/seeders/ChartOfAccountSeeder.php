@@ -113,16 +113,18 @@ class ChartOfAccountSeeder extends Seeder
             $parentCode = $data['parent_code'];
             $parentId = $parentCode && isset($codeMap[$parentCode]) ? $codeMap[$parentCode] : null;
 
-            $coa = ChartOfAccount::create([
-                'parent_id' => $parentId,
-                'code' => $data['code'],
-                'name' => $data['name'],
-                'type' => $data['type'],
-                'normal_balance' => $data['normal_balance'],
-                'level' => $data['level'],
-                'is_active' => true,
-                'is_system' => true, // Protected accounts
-            ]);
+            $coa = ChartOfAccount::firstOrCreate(
+                ['code' => $data['code']],
+                [
+                    'parent_id' => $parentId,
+                    'name' => $data['name'],
+                    'type' => $data['type'],
+                    'normal_balance' => $data['normal_balance'],
+                    'level' => $data['level'],
+                    'is_active' => true,
+                    'is_system' => true, // Protected accounts
+                ]
+            );
 
             $codeMap[$data['code']] = $coa->id;
         }
