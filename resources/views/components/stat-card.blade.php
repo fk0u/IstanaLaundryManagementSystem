@@ -26,8 +26,12 @@
     </div>
 
     <div class="w-10 h-10 md:w-12 md:h-12 rounded-lg bg-orange-50 dark:bg-slate-800 text-primary dark:text-orange-400 flex items-center justify-center shrink-0">
-        <span class="material-symbols-outlined text-xl md:text-2xl">
-            {{ $icon }}
-        </span>
+        @if($icon === 'local_laundry_service')
+            <img alt="Istana Laundry Logo" class="w-8 h-8 md:w-10 md:h-10 object-contain" src="{{ asset('images/logo.webp') }}"/>
+        @else
+            <span class="material-symbols-outlined text-xl md:text-2xl">
+                {{ $icon }}
+            </span>
+        @endif
     </div>
 </div>

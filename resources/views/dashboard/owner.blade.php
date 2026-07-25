@@ -69,7 +69,7 @@
                     <span class="text-2xs md:text-[10px] font-bold text-slate-400 uppercase tracking-wider">Order Aktif</span>
                     <h4 class="text-base md:text-xl font-extrabold text-slate-800 dark:text-slate-100 mt-1">{{ number_format($activeOrdersCount, 0, ',', '.') }}</h4>
                 </div>
-                <span class="material-symbols-outlined text-blue-500 bg-blue-500/10 p-2 md:p-2.5 rounded-lg text-lg md:text-2xl shrink-0">local_laundry_service</span>
+                <img alt="Istana Laundry Logo" class="w-8 h-8 md:w-10 md:h-10 object-contain shrink-0" src="{{ asset('images/logo.webp') }}"/>
             </div>
             <div class="mt-3 md:mt-4 flex items-center gap-1 text-2xs md:text-[10px] text-slate-500 font-bold">
                 <span class="w-1.5 h-1.5 rounded-full bg-orange-500 animate-pulse shrink-0"></span>

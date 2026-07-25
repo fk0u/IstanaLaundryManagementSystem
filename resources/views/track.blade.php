@@ -29,7 +29,7 @@
     <header class="w-full bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-100 dark:border-slate-800 z-50 sticky top-0 transition-colors">
         <nav class="flex justify-between items-center px-6 md:px-16 py-4 max-w-7xl mx-auto">
             <a href="/" class="flex items-center gap-2">
-                <span class="material-symbols-outlined text-primary text-3xl font-extrabold">local_laundry_service</span>
+                <img alt="Istana Laundry Logo" class="h-10 w-auto object-contain" src="{{ asset('images/logo.webp') }}"/>
                 <span class="font-black text-2xl text-slate-900 dark:text-white tracking-tighter">ISTANA LAUNDRY</span>
             </a>
             
@@ -59,7 +59,7 @@
                 <!-- Status Hero -->
                 <div class="bg-slate-900 text-white p-8 rounded-3xl relative overflow-hidden shadow-2xl">
                     <div class="absolute -right-12 -bottom-12 w-48 h-48 opacity-10">
-                        <span class="material-symbols-outlined text-[192px] text-primary">local_laundry_service</span>
+                        <img alt="Istana Laundry Logo" class="w-full h-full object-contain" src="{{ asset('images/logo.webp') }}"/>
                     </div>
                     <div class="relative z-10 space-y-4">
                         <div class="inline-flex items-center gap-2 px-3 py-1 bg-primary/20 text-primary-fixed rounded-full">
@@ -297,7 +297,7 @@
     <footer class="bg-slate-900 text-white border-t border-slate-800 py-8 transition-colors">
         <div class="max-w-7xl mx-auto px-6 md:px-16 flex flex-col md:flex-row justify-between items-center gap-4 text-center md:text-left">
             <div class="flex items-center gap-2">
-                <span class="material-symbols-outlined text-primary text-2xl">local_laundry_service</span>
+                <img alt="Istana Laundry Logo" class="h-6 w-auto object-contain" src="{{ asset('images/logo.webp') }}"/>
                 <span class="font-black text-lg tracking-tighter text-white">ISTANA LAUNDRY</span>
             </div>
             <p class="text-[10px] text-slate-500">

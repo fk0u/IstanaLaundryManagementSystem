@@ -21,11 +21,17 @@
             </span>
         </button>
 
-        <!-- Brand Name - Desktop -->
-        <h2 class="text-base md:text-lg font-black text-primary dark:text-orange-400 tracking-tight hidden md:block whitespace-nowrap">Istana Laundry Samarinda</h2>
+        <!-- Brand Logo & Name - Desktop -->
+        <div class="hidden md:flex items-center gap-3">
+            <img alt="Istana Laundry Logo" class="h-8 w-auto object-contain" src="{{ asset('images/logo.webp') }}"/>
+            <h2 class="text-base md:text-lg font-black text-primary dark:text-orange-400 tracking-tight whitespace-nowrap">Istana Laundry Samarinda</h2>
+        </div>
         
         <!-- Mobile Brand -->
-        <h2 class="text-sm font-extrabold text-primary dark:text-orange-400 tracking-tight md:hidden truncate">Istana Laundry</h2>
+        <div class="flex md:hidden items-center gap-2">
+            <img alt="Istana Laundry Logo" class="h-6 w-auto object-contain" src="{{ asset('images/logo.webp') }}"/>
+            <h2 class="text-sm font-extrabold text-primary dark:text-orange-400 tracking-tight truncate">Istana Laundry</h2>
+        </div>
 
         <!-- Branch Scope Switcher -->
         <div class="flex gap-2 md:gap-4 items-center shrink-0">
@@ -141,7 +147,7 @@
                     @forelse($recentOrders as $notifOrder)
                         <a href="/production" class="flex items-start gap-2.5 p-2 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors">
                             <span class="w-8 h-8 rounded-full bg-orange-50 text-primary flex items-center justify-center shrink-0">
-                                <span class="material-symbols-outlined text-base">local_laundry_service</span>
+                                <img alt="Istana Laundry Logo" class="w-6 h-6 object-contain" src="{{ asset('images/logo.webp') }}"/>
                             </span>
                             <div class="min-w-0 flex-1 text-xs">
                                 <p class="font-bold text-slate-800 dark:text-slate-200 truncate">#{{ $notifOrder->order_number }} - {{ $notifOrder->customer?->name }}</p>

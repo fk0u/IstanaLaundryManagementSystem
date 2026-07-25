@@ -23,7 +23,7 @@
     <header class="w-full sticky top-0 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-100 dark:border-slate-800 z-50 transition-colors">
         <nav class="flex justify-between items-center px-6 md:px-16 py-4 max-w-7xl mx-auto">
             <div class="flex items-center gap-2">
-                <span class="material-symbols-outlined text-primary text-3xl font-extrabold">local_laundry_service</span>
+                <img alt="Istana Laundry Logo" class="h-10 w-auto object-contain" src="{{ asset('images/logo.webp') }}"/>
                 <span class="font-black text-2xl text-slate-900 dark:text-white tracking-tighter">ISTANA LAUNDRY</span>
             </div>
             
@@ -225,7 +225,7 @@
     <footer class="bg-slate-900 text-white border-t border-slate-800 py-12 transition-colors">
         <div class="max-w-7xl mx-auto px-6 md:px-16 flex flex-col items-center justify-center space-y-6">
             <div class="flex items-center gap-2">
-                <span class="material-symbols-outlined text-primary text-3xl">local_laundry_service</span>
+                <img alt="Istana Laundry Logo" class="h-8 w-auto object-contain" src="{{ asset('images/logo.webp') }}"/>
                 <span class="font-black text-2xl tracking-tighter">ISTANA LAUNDRY</span>
             </div>
             

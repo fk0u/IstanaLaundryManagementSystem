@@ -42,7 +42,7 @@
                     <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Antrean Cucian Aktif</span>
                     <h4 class="text-xl font-extrabold text-slate-800 dark:text-slate-100 mt-1">{{ number_format($activeOrdersCount, 0, ',', '.') }} Nota</h4>
                 </div>
-                <span class="material-symbols-outlined text-blue-500 bg-blue-500/10 p-2.5 rounded-lg">local_laundry_service</span>
+                <img alt="Istana Laundry Logo" class="w-10 h-10 object-contain" src="{{ asset('images/logo.webp') }}"/>
             </div>
             <div class="mt-4 flex items-center gap-1 text-[10px] text-slate-500 font-bold">
                 <span class="w-1.5 h-1.5 rounded-full bg-orange-500 animate-pulse"></span>
