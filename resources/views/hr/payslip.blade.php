@@ -39,6 +39,7 @@
         </dl>
 
         <div class="details">
+            <div style="font-weight:900; font-size:0.7rem; color:#64748b; margin-bottom:0.5rem; text-transform:uppercase;">Penerimaan (Earnings)</div>
             <div class="row">
                 <span>Gaji Pokok</span>
                 <span>Rp {{ number_format($item->base_salary, 0, ',', '.') }}</span>
@@ -47,10 +48,77 @@
                 <span>Tunjangan Operasional</span>
                 <span>Rp {{ number_format($item->allowance, 0, ',', '.') }}</span>
             </div>
+            @if($item->bonus_kg > 0)
+            <div class="row">
+                <span>Bonus Kiloan</span>
+                <span>Rp {{ number_format($item->bonus_kg, 0, ',', '.') }}</span>
+            </div>
+            @endif
+            @if($item->bonus_pcs > 0)
+            <div class="row">
+                <span>Bonus Satuan/Pcs</span>
+                <span>Rp {{ number_format($item->bonus_pcs, 0, ',', '.') }}</span>
+            </div>
+            @endif
+            @if($item->transport_allowance > 0)
+            <div class="row">
+                <span>Uang Transport</span>
+                <span>Rp {{ number_format($item->transport_allowance, 0, ',', '.') }}</span>
+            </div>
+            @endif
+            @if($item->overtime_pay > 0)
+            <div class="row">
+                <span>Upah Lembur</span>
+                <span>Rp {{ number_format($item->overtime_pay, 0, ',', '.') }}</span>
+            </div>
+            @endif
+            @if($item->attendance_bonus > 0)
+            <div class="row">
+                <span>Bonus Presensi</span>
+                <span>Rp {{ number_format($item->attendance_bonus, 0, ',', '.') }}</span>
+            </div>
+            @endif
+            <div class="row" style="font-weight:700; border-top:1px dashed #e2e8f0; padding-top:0.5rem; margin-top:0.25rem;">
+                <span>Total Penerimaan</span>
+                <span>Rp {{ number_format($item->total_earnings ?: $item->base_salary + $item->allowance, 0, ',', '.') }}</span>
+            </div>
+
+            <div style="font-weight:900; font-size:0.7rem; color:#64748b; margin:1rem 0 0.5rem; text-transform:uppercase;">Potongan (Deductions)</div>
+            @if($item->deduction > 0)
             <div class="row" style="color:#dc2626;">
                 <span>Potongan / Absen</span>
                 <span>-Rp {{ number_format($item->deduction, 0, ',', '.') }}</span>
             </div>
+            @endif
+            @if($item->tardiness_deduction > 0)
+            <div class="row" style="color:#dc2626;">
+                <span>Denda Keterlambatan</span>
+                <span>-Rp {{ number_format($item->tardiness_deduction, 0, ',', '.') }}</span>
+            </div>
+            @endif
+            @if($item->loan_deduction > 0)
+            <div class="row" style="color:#dc2626;">
+                <span>Cicilan Kasbon</span>
+                <span>-Rp {{ number_format($item->loan_deduction, 0, ',', '.') }}</span>
+            </div>
+            @endif
+            @if($item->damage_deduction > 0)
+            <div class="row" style="color:#dc2626;">
+                <span>Ganti Rugi Kerusakan</span>
+                <span>-Rp {{ number_format($item->damage_deduction, 0, ',', '.') }}</span>
+            </div>
+            @endif
+            @if($item->bpjs_deduction > 0)
+            <div class="row" style="color:#dc2626;">
+                <span>Potongan BPJS</span>
+                <span>-Rp {{ number_format($item->bpjs_deduction, 0, ',', '.') }}</span>
+            </div>
+            @endif
+            <div class="row" style="font-weight:700; border-top:1px dashed #e2e8f0; padding-top:0.5rem; margin-top:0.25rem; color:#dc2626;">
+                <span>Total Potongan</span>
+                <span>-Rp {{ number_format($item->total_deductions ?: $item->deduction, 0, ',', '.') }}</span>
+            </div>
+
             <div class="row total">
                 <span>GAJI BERSIH (TAKE HOME PAY)</span>
                 <span>Rp {{ number_format($item->net_salary, 0, ',', '.') }}</span>
