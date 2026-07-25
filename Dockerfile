@@ -1,4 +1,4 @@
-FROM php:8.3-fpm-alpine
+FROM php:8.4-fpm-alpine
 
 # Set working directory
 WORKDIR /var/www
@@ -37,19 +37,27 @@ RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
 # Get latest Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# Add user for laravel application
-RUN addgroup -g 1000 -S www \
-    && adduser -u 1000 -S www -G www -s /bin/sh
+# Copy application files
+COPY . /var/www
 
-# Copy existing application directory contents
-COPY --chown=www:www . /var/www
+# Ensure bootstrap/cache exists (excluded by .dockerignore)
+RUN mkdir -p /var/www/bootstrap/cache
 
-# Install composer dependencies as www user
-USER www
+# Install composer dependencies AS ROOT (vendor dir needs root to create)
 RUN composer install --no-dev --optimize-autoloader --no-interaction
 
 # Install npm dependencies and build assets
 RUN npm ci && npm run build && rm -rf node_modules
+
+# Add non-root user for laravel application
+RUN addgroup -g 1000 -S www \
+    && adduser -u 1000 -S www -G www -s /bin/sh
+
+# Fix ownership AFTER install
+RUN chown -R www:www /var/www
+
+# Switch to non-root user
+USER www
 
 # Expose port 9000 and start php-fpm server
 EXPOSE 9000

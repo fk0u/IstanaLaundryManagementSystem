@@ -7,7 +7,7 @@ echo "============================================"
 echo " Istana Laundry Management System - Docker"
 echo "============================================"
 
-echo "[1/5] Menunggu database MySQL siap..."
+echo "[1/6] Menunggu database MySQL siap..."
 until nc -z -w5 db 3306 2>/dev/null
 do
   echo "      Database belum siap. Menunggu 3 detik..."
@@ -15,24 +15,32 @@ do
 done
 echo "      ✓ Database MySQL siap!"
 
-echo "[2/5] Memeriksa APP_KEY..."
+echo "[2/6] Membersihkan cache bootstrap lama..."
+rm -f /var/www/bootstrap/cache/packages.php
+rm -f /var/www/bootstrap/cache/services.php
+rm -f /var/www/bootstrap/cache/config.php
+rm -f /var/www/bootstrap/cache/routes-v7.php
+rm -f /var/www/bootstrap/cache/events.php
+echo "      ✓ Cache bootstrap dibersihkan."
+
+echo "[3/6] Memeriksa APP_KEY..."
 if [ -z "$APP_KEY" ] || [ "$APP_KEY" = "base64:" ]; then
     echo "      Menghasilkan kunci aplikasi baru..."
     php artisan key:generate --force
 fi
 echo "      ✓ APP_KEY tersedia."
 
-echo "[3/5] Mengoptimasi cache konfigurasi..."
+echo "[4/6] Mengoptimasi cache konfigurasi..."
 php artisan config:cache
 php artisan route:cache
 php artisan view:cache
 echo "      ✓ Cache berhasil dioptimasi."
 
-echo "[4/5] Menjalankan migrasi database..."
+echo "[5/6] Menjalankan migrasi database..."
 php artisan migrate --force
 echo "      ✓ Migrasi selesai."
 
-echo "[5/5] Menyemai data awal..."
+echo "[6/6] Menyemai data awal..."
 php artisan db:seed --force
 echo "      ✓ Data awal berhasil disemai."
 
