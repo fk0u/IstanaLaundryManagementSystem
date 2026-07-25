@@ -115,7 +115,7 @@
                                         @endphp
 
                                         @if ($showApproveBtn)
-                                            <form action="{{ route('refunds.approve', $ref->id) }}" method="POST" class="inline">
+                                            <form action="{{ route('refunds.approve', $ref->id) }}" method="POST" class="inline" onsubmit="return confirm('Apakah Anda yakin ingin menyetujui dan memproses pengembalian dana (refund) ini?')">
                                                 @csrf
                                                 <button type="submit" class="px-2.5 py-1.5 bg-green-500 hover:bg-green-600 text-white rounded-lg text-[10px] font-bold cursor-pointer transition-all">
                                                     {{ $approveBtnText }}

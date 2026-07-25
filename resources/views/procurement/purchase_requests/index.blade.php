@@ -59,13 +59,13 @@
                                 <td class="py-4 px-4 text-right">
                                     <div class="flex justify-end gap-2">
                                         @if ($pr->status === 'pending_approval' && auth()->user()->hasRole(['Developer', 'Owner', 'Super Admin', 'Branch Admin']))
-                                            <form action="{{ route('procurement.purchase-requests.approve', $pr->id) }}" method="POST">
+                                            <form action="{{ route('procurement.purchase-requests.approve', $pr->id) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menyetujui Purchase Request ini?')">
                                                 @csrf
                                                 <button type="submit" class="px-2.5 py-1.5 bg-green-500 hover:bg-green-600 text-white rounded-lg text-[10px] font-bold cursor-pointer transition-all">
                                                     Setujui
                                                 </button>
                                             </form>
-                                            <form action="{{ route('procurement.purchase-requests.reject', $pr->id) }}" method="POST">
+                                            <form action="{{ route('procurement.purchase-requests.reject', $pr->id) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menolak Purchase Request ini?')">
                                                 @csrf
                                                 <button type="submit" class="px-2.5 py-1.5 bg-red-550 hover:bg-red-650 text-white rounded-lg text-[10px] font-bold cursor-pointer transition-all">
                                                     Tolak

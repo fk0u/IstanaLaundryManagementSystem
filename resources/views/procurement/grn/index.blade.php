@@ -57,7 +57,7 @@
                                 <td class="py-4 px-4 text-right">
                                     <div class="flex justify-end gap-2">
                                         @if ($grn->status === 'draft')
-                                            <form action="{{ route('procurement.grns.confirm', $grn->id) }}" method="POST">
+                                            <form action="{{ route('procurement.grns.confirm', $grn->id) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin mengonfirmasi penerimaan barang ini? Tindakan ini akan menambah stok dan memposting jurnal persediaan secara otomatis.')">
                                                 @csrf
                                                 <button type="submit" class="px-2.5 py-1.5 bg-green-500 hover:bg-green-600 text-white rounded-lg text-[10px] font-bold cursor-pointer transition-all">
                                                     Konfirmasi Penerimaan

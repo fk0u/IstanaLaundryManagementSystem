@@ -1,6 +1,6 @@
 <x-app-layout>
-    <div x-data="posApp()" class="grid grid-cols-1 lg:grid-cols-12 gap-8 h-[calc(100vh-120px)] overflow-hidden">
-        
+    <div x-data="posApp()" class="h-[calc(100vh-120px)] overflow-hidden">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 h-full">
         <!-- Left Side: Services & Customer Selection (8 cols) -->
         <div class="lg:col-span-8 flex flex-col h-full overflow-y-auto pr-2">
             
@@ -109,7 +109,7 @@
         <div class="lg:col-span-4 h-full flex flex-col">
             <x-card title="Keranjang Belanja" class="flex-1 flex flex-col h-full justify-between">
                 
-                <form action="{{ route('pos.store') }}" method="POST" class="flex flex-col h-full justify-between">
+                <form id="pos-form" action="{{ route('pos.store') }}" method="POST" class="flex flex-col h-full justify-between" @submit.prevent="confirmCheckout()">
                     @csrf
                     
                     <input type="hidden" name="customer_id" x-model="customerId">
@@ -227,10 +227,107 @@
 
     </div>
 
+    <!-- Checkout Confirmation Modal -->
+    <div x-show="showConfirmModal" 
+         class="fixed inset-0 z-[999] flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4"
+         x-transition
+         x-cloak>
+        
+        <div class="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-3xl w-full max-w-lg p-6 sm:p-8 shadow-2xl flex flex-col gap-6"
+             @click.away="showConfirmModal = false">
+             
+             <!-- Modal Header -->
+             <div class="flex justify-between items-center pb-4 border-b border-slate-100 dark:border-slate-800">
+                 <h3 class="text-lg font-black text-slate-850 dark:text-slate-100">Konfirmasi Pembayaran</h3>
+                 <button @click="showConfirmModal = false" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 focus:outline-none">
+                     <span class="material-symbols-outlined">close</span>
+                 </button>
+             </div>
+
+             <!-- Modal Content / Invoice Summary -->
+             <div class="space-y-4">
+                 <div class="flex justify-between text-xs font-bold text-slate-400 uppercase tracking-wider">
+                     <span>Layanan</span>
+                     <span>Subtotal</span>
+                 </div>
+                 
+                 <!-- Items List Scroll -->
+                 <div class="divide-y divide-slate-100 dark:divide-slate-800/60 max-h-40 overflow-y-auto pr-2">
+                     <template x-for="(item, index) in cart" :key="index">
+                         <div class="py-2.5 flex justify-between items-center text-sm">
+                             <div>
+                                 <span class="font-bold text-slate-800 dark:text-slate-200" x-text="item.name"></span>
+                                 <span class="text-xs text-slate-400 block" x-text="item.quantity + ' ' + (item.unit === 'kg' ? 'Kg' : 'Pcs')"></span>
+                             </div>
+                             <span class="font-semibold text-slate-700 dark:text-slate-300" x-text="'Rp ' + formatNumber(item.price * item.quantity)"></span>
+                         </div>
+                     </template>
+                 </div>
+
+                 <!-- Financials Breakdown -->
+                 <div class="bg-slate-50 dark:bg-slate-950/50 p-4 rounded-xl space-y-2 text-sm border border-slate-100 dark:border-slate-800/80">
+                     <div class="flex justify-between">
+                         <span class="text-slate-400">Subtotal</span>
+                         <span class="font-semibold text-slate-700 dark:text-slate-300" x-text="'Rp ' + formatNumber(subtotal)"></span>
+                     </div>
+                     <div class="flex justify-between text-emerald-600" x-show="discount > 0">
+                         <span>Diskon Promo</span>
+                         <span class="font-bold" x-text="'- Rp ' + formatNumber(discount)"></span>
+                     </div>
+                     <div class="flex justify-between text-orange-600" x-show="pointsUsed > 0">
+                         <span>Poin Ditukarkan</span>
+                         <span class="font-bold" x-text="'- Rp ' + formatNumber(pointsUsed)"></span>
+                     </div>
+                     <div class="flex justify-between text-base font-black pt-2 border-t border-slate-150 dark:border-slate-800">
+                         <span class="text-slate-850 dark:text-slate-100">Total Tagihan</span>
+                         <span class="text-primary font-bold" x-text="'Rp ' + formatNumber(total)"></span>
+                     </div>
+                 </div>
+
+                 <!-- Payment Info -->
+                 <div class="grid grid-cols-2 gap-4 text-xs font-semibold p-4 rounded-xl border border-slate-150 dark:border-slate-800 bg-white dark:bg-slate-900">
+                     <div>
+                         <span class="block text-slate-400 uppercase tracking-wide mb-0.5">Pelanggan</span>
+                         <span class="text-xs font-bold text-slate-800 dark:text-slate-200" x-text="customerName"></span>
+                     </div>
+                     <div>
+                         <span class="block text-slate-400 uppercase tracking-wide mb-0.5">Metode Bayar</span>
+                         <span class="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase" x-text="paymentMethod === 'cash' ? 'Cash / Tunai' : (paymentMethod === 'transfer' ? 'Transfer' : 'Invoice / Piutang')"></span>
+                     </div>
+                     <div class="pt-2 border-t border-slate-100 dark:border-slate-800/80">
+                         <span class="block text-slate-400 uppercase tracking-wide mb-0.5">Jumlah Bayar</span>
+                         <span class="text-xs font-bold text-slate-800 dark:text-slate-200" x-text="'Rp ' + formatNumber(paidAmount)"></span>
+                     </div>
+                     <div class="pt-2 border-t border-slate-100 dark:border-slate-800/80" x-show="paymentMethod !== 'invoice'">
+                         <span class="block text-slate-400 uppercase tracking-wide mb-0.5">Kembalian</span>
+                         <span class="text-xs font-bold text-emerald-600" x-text="'Rp ' + formatNumber(changeAmount)"></span>
+                     </div>
+                 </div>
+             </div>
+
+             <!-- Modal Actions -->
+             <div class="flex gap-4 pt-2">
+                 <button type="button" @click="showConfirmModal = false"
+                         class="flex-1 h-11 rounded-xl border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-xs transition-all active:scale-[0.98] cursor-pointer">
+                     Batal
+                 </button>
+                 <button type="button" @click="submitOrder()"
+                         class="flex-1 h-11 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center justify-center gap-2 transition-all active:scale-[0.98] cursor-pointer shadow-md shadow-emerald-500/10">
+                     <span class="material-symbols-outlined text-base">check_circle</span>
+                     Konfirmasi &amp; Bayar
+                 </button>
+             </div>
+
+        </div>
+    </div>
+    </div>
+
     <!-- Alpine.js POS Logic -->
     <script>
         function posApp() {
             return {
+                showConfirmModal: false,
+                customerName: 'Pelanggan Umum',
                 cart: [],
                 customerId: '',
                 customerPoints: 0,
@@ -248,6 +345,10 @@
                 total: 0,
                 changeAmount: 0,
 
+                showToast(message, type = 'success') {
+                    window.dispatchEvent(new CustomEvent('toast', { detail: { message, type } }));
+                },
+
                 addToCart(serviceId, name, price, unit) {
                     let exists = this.cart.find(item => item.service_id === serviceId);
                     if (exists) {
@@ -263,11 +364,14 @@
                         });
                     }
                     this.calculateTotals();
+                    this.showToast('Layanan "' + name + '" ditambahkan!', 'success');
                 },
 
                 removeFromCart(index) {
+                    let name = this.cart[index].name;
                     this.cart.splice(index, 1);
                     this.calculateTotals();
+                    this.showToast('Layanan "' + name + '" dihapus.', 'info');
                 },
 
                 updateCustomerData(e) {
@@ -275,11 +379,13 @@
                     if (option && option.value !== "") {
                         this.customerPoints = parseInt(option.getAttribute('data-points')) || 0;
                         this.customerTier = option.getAttribute('data-tier') || 'Bronze';
+                        this.customerName = option.text.split('(')[0].trim();
                     } else {
                         this.customerId = '';
                         this.customerPoints = 0;
                         this.customerTier = '';
                         this.pointsUsed = 0;
+                        this.customerName = 'Pelanggan Umum';
                     }
                     this.calculateTotals();
                 },
@@ -312,13 +418,23 @@
 
                     // 2. Promo discount
                     this.discount = 0;
-                    if (this.promoId && this.subtotal >= this.promoMin) {
-                        if (this.promoType === 'percent') {
-                            this.discount = this.subtotal * (this.promoValue / 100);
-                        } else if (this.promoType === 'nominal') {
-                            this.discount = this.promoValue;
+                    if (this.promoId) {
+                        if (this.subtotal >= this.promoMin) {
+                            if (this.promoType === 'percent') {
+                                this.discount = this.subtotal * (this.promoValue / 100);
+                            } else if (this.promoType === 'nominal') {
+                                this.discount = this.promoValue;
+                            }
+                            this.discount = Math.min(this.discount, this.subtotal);
+                        } else {
+                            // Min transaction not met, reset promo selection
+                            this.promoId = '';
+                            this.promoType = '';
+                            this.promoValue = 0;
+                            this.promoMin = 0;
+                            this.promoDescription = '';
+                            this.showToast('Minimal transaksi promo tidak terpenuhi!', 'warning');
                         }
-                        this.discount = Math.min(this.discount, this.subtotal);
                     }
 
                     // 3. Loyalty Points discount
@@ -339,6 +455,33 @@
                     } else {
                         this.changeAmount = Math.max(0, this.paidAmount - this.total);
                     }
+                },
+
+                confirmCheckout() {
+                    if (this.cart.length === 0) {
+                        this.showToast('Keranjang belanja masih kosong!', 'error');
+                        return;
+                    }
+
+                    if (this.paymentMethod !== 'invoice') {
+                        if (this.paidAmount < this.total) {
+                            this.showToast('Jumlah bayar kurang dari total tagihan!', 'error');
+                            return;
+                        }
+                    }
+
+                    if (this.paymentMethod === 'transfer' && this.paidAmount === 0) {
+                        this.showToast('Jumlah bayar transfer tidak boleh Rp 0!', 'error');
+                        return;
+                    }
+
+                    this.showConfirmModal = true;
+                },
+
+                submitOrder() {
+                    this.showConfirmModal = false;
+                    this.showToast('Memproses transaksi...', 'info');
+                    document.getElementById('pos-form').submit();
                 },
 
                 formatNumber(val) {

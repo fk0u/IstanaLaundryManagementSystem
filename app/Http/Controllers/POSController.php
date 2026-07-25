@@ -157,6 +157,13 @@ class POSController extends Controller
             $taxAmount = 0; // Tax is 0 for simplicity
             $total = max(0, $subtotal - $discountAmount - $pointsUsed + $taxAmount);
 
+            // Enforce paid_amount >= total for cash and transfer
+            if (in_array($data['payment_method'], ['cash', 'transfer']) && $data['paid_amount'] < $total) {
+                throw ValidationException::withMessages([
+                    'paid_amount' => ['Jumlah bayar tidak boleh kurang dari total tagihan untuk metode tunai atau transfer.'],
+                ]);
+            }
+
             // Determine Payment Status
             $paidAmount = $data['paid_amount'];
             $changeAmount = 0;

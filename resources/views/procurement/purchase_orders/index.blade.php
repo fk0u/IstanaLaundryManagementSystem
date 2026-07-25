@@ -63,7 +63,7 @@
                                 <td class="py-4 px-4 text-right">
                                     <div class="flex justify-end gap-2">
                                         @if ($po->status === 'draft')
-                                            <form action="{{ route('procurement.purchase-orders.send', $po->id) }}" method="POST">
+                                            <form action="{{ route('procurement.purchase-orders.send', $po->id) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin mengirim Purchase Order ini ke supplier?')">
                                                 @csrf
                                                 <button type="submit" class="px-2.5 py-1.5 bg-orange-500 hover:bg-orange-600 text-white rounded-lg text-[10px] font-bold cursor-pointer transition-all">
                                                     Kirim
@@ -72,7 +72,7 @@
                                         @endif
 
                                         @if (in_array($po->status, ['draft', 'sent']))
-                                            <form action="{{ route('procurement.purchase-orders.confirm', $po->id) }}" method="POST">
+                                            <form action="{{ route('procurement.purchase-orders.confirm', $po->id) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin mengonfirmasi penerimaan/pemrosesan Purchase Order ini?')">
                                                 @csrf
                                                 <button type="submit" class="px-2.5 py-1.5 bg-green-500 hover:bg-green-600 text-white rounded-lg text-[10px] font-bold cursor-pointer transition-all">
                                                     Konfirmasi

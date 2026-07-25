@@ -65,5 +65,49 @@
                 });
             });
         </script>
+        <!-- Global Toast Container -->
+        <div x-data="{ 
+            toasts: [],
+            addToast(message, type = 'success') {
+                const id = Date.now();
+                this.toasts.push({ id, message, type });
+                setTimeout(() => {
+                    this.toasts = this.toasts.filter(t => t.id !== id);
+                }, 4000);
+            }
+        }"
+        @toast.window="addToast($event.detail.message, $event.detail.type)"
+        class="fixed bottom-5 right-5 z-[9999] flex flex-col gap-3 w-full max-w-sm pointer-events-none"
+        x-cloak>
+            <template x-for="toast in toasts" :key="toast.id">
+                <div x-transition:enter="transition ease-out duration-300 transform"
+                     x-transition:enter-start="translate-y-5 opacity-0 scale-95"
+                     x-transition:enter-end="translate-y-0 opacity-100 scale-100"
+                     x-transition:leave="transition ease-in duration-200 transform"
+                     x-transition:leave-start="translate-y-0 opacity-100 scale-100"
+                     x-transition:leave-end="translate-y-5 opacity-0 scale-95"
+                     class="flex items-center gap-3 p-4 rounded-xl border shadow-lg pointer-events-auto bg-white dark:bg-slate-900 border-slate-100 dark:border-slate-800/80 transition-all">
+                     
+                     <!-- Icon -->
+                     <span class="material-symbols-outlined shrink-0 text-xl" 
+                           :class="{
+                               'text-emerald-500': toast.type === 'success',
+                               'text-rose-500': toast.type === 'error',
+                               'text-amber-500': toast.type === 'warning',
+                               'text-sky-500': toast.type === 'info'
+                           }"
+                           x-text="toast.type === 'success' ? 'check_circle' : (toast.type === 'error' ? 'error' : (toast.type === 'warning' ? 'warning' : 'info'))">
+                     </span>
+                     
+                     <!-- Text -->
+                     <span class="text-xs font-bold text-slate-800 dark:text-slate-200" x-text="toast.message"></span>
+                     
+                     <!-- Close button -->
+                     <button @click="toasts = toasts.filter(t => t.id !== toast.id)" class="ml-auto text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 focus:outline-none">
+                         <span class="material-symbols-outlined text-base">close</span>
+                     </button>
+                </div>
+            </template>
+        </div>
     </body>
 </html>
