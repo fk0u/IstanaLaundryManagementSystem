@@ -46,6 +46,9 @@ Route::middleware(['auth', 'branch.scope'])->group(function () {
     Route::get('/production', [\App\Http\Controllers\ProductionController::class, 'index'])->name('production.index');
     Route::post('/production/update/{id}', [\App\Http\Controllers\ProductionController::class, 'updateStatus'])->name('production.update');
 
+    // Performance Monitoring
+    Route::get('/performance', [\App\Http\Controllers\PerformanceController::class, 'index'])->name('performance.index');
+
     // CRM & Customers
     Route::get('/customers', function () {
         $customers = \App\Models\Customer::with('branch')->orderBy('name', 'asc')->paginate(10);
@@ -177,11 +180,11 @@ Route::middleware(['auth', 'branch.scope'])->group(function () {
         return redirect()->back()->with('success', 'Stok item inventori berhasil dikoreksi.');
     })->name('inventory.adjust');
 
-    // HR & Employees
-    Route::get('/hr', function () {
-        $employees = \App\Models\Employee::orderBy('name', 'asc')->paginate(10);
-        return view('hr.index', compact('employees'));
-    })->name('hr.index');
+    // HR & Payroll
+    Route::get('/hr', [\App\Http\Controllers\HR\HRController::class, 'index'])->name('hr.index');
+    Route::post('/hr/employees', [\App\Http\Controllers\HR\HRController::class, 'storeEmployee'])->name('hr.employees.store');
+    Route::post('/hr/payrolls', [\App\Http\Controllers\HR\HRController::class, 'storePayroll'])->name('hr.payrolls.store');
+    Route::get('/hr/payslip/{item}', [\App\Http\Controllers\HR\HRController::class, 'showPayslip'])->name('hr.payslip');
 
     Route::post('/hr', function (\Illuminate\Http\Request $request) {
         $request->validate([
@@ -222,10 +225,9 @@ Route::middleware(['auth', 'branch.scope'])->group(function () {
     })->name('hr.update');
 
     // Fixed Assets
-    Route::get('/assets', function () {
-        $assets = \App\Models\FixedAsset::orderBy('name', 'asc')->paginate(10);
-        return view('assets.index', compact('assets'));
-    })->name('assets.index');
+    Route::get('/assets', [\App\Http\Controllers\AssetController::class, 'index'])->name('assets.index');
+    Route::post('/assets', [\App\Http\Controllers\AssetController::class, 'store'])->name('assets.store');
+    Route::get('/assets/{asset}', [\App\Http\Controllers\AssetController::class, 'show'])->name('assets.show');
 
     Route::post('/assets', function (\Illuminate\Http\Request $request) {
         $request->validate([

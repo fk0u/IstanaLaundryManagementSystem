@@ -1,169 +1,134 @@
 <x-app-layout>
-    <div x-data="{ showCreateModal: false }" class="flex flex-col gap-6">
+    <div class="flex flex-col gap-4 md:gap-6" x-data="{ showAddAsset: false }">
+        <x-page-header title="Aset Tetap & Depresiasi (Fixed Assets)" :breadcrumbs="['Aset Tetap' => '/assets']" />
+
+        @if (session('success'))
+            <x-alert type="success" :message="session('success')" class="mb-2" />
+        @endif
+
         <div class="flex justify-between items-center">
-            <x-page-header title="Manajemen Aset Tetap & Depresiasi" :breadcrumbs="['Aset' => '/assets']" />
-            <button @click="showCreateModal = true" class="h-11 px-5 bg-primary hover:bg-orange-600 text-white font-bold rounded-xl text-xs flex items-center gap-2 transition-all active:scale-[0.98] cursor-pointer shadow-md shadow-orange-500/10">
-                <span class="material-symbols-outlined">add_business</span>
-                Daftarkan Aset
+            <button type="button" @click="showAddAsset = true" class="btn-touch px-4 py-2 bg-primary hover:bg-primary-hover text-white text-xs font-bold rounded-xl flex items-center gap-1.5 shadow-sm">
+                <span class="material-symbols-outlined text-base">add_home_work</span> Tambah Aset Tetap
             </button>
         </div>
 
-        @if (session('success'))
-            <x-alert type="success" :message="session('success')" class="mb-4" />
-        @endif
-
-        <x-card title="Daftar Mesin & Peralatan Cabang">
+        <x-card title="Daftar Aset Tetap">
             <div class="overflow-x-auto">
                 <table class="w-full text-left text-xs border-collapse">
                     <thead>
                         <tr class="border-b border-slate-100 dark:border-slate-800 text-slate-400 font-bold uppercase tracking-wider">
-                            <th class="py-3 px-4">Nama Alat</th>
-                            <th class="py-3 px-4">Kode Aset</th>
-                            <th class="py-3 px-4">Kategori</th>
-                            <th class="py-3 px-4">Biaya Perolehan</th>
-                            <th class="py-3 px-4">Nilai Buku</th>
-                            <th class="py-3 px-4">Status</th>
-                            <th class="py-3 px-4 text-right">Aksi</th>
+                            <th class="py-2.5 px-3">Kode / Nama Aset</th>
+                            <th class="py-2.5 px-3">Kategori</th>
+                            <th class="py-2.5 px-3">Perolehan</th>
+                            <th class="py-2.5 px-3 text-right">Harga Beli</th>
+                            <th class="py-2.5 px-3 text-right">Akumulasi Depresiasi</th>
+                            <th class="py-2.5 px-3 text-right">Nilai Buku</th>
+                            <th class="py-2.5 px-3 text-right">Aksi</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-50 dark:divide-slate-850">
-                        @forelse($assets as $asset)
-                            <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-900/30 transition-colors">
-                                <td class="py-4 px-4 font-bold text-slate-800 dark:text-slate-200 text-sm">
-                                    {{ $asset->name }}
+                        @forelse($assets as $ast)
+                            <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-900/30">
+                                <td class="py-3 px-3">
+                                    <span class="font-bold text-slate-800 dark:text-slate-200 block">{{ $ast->name }}</span>
+                                    <span class="text-2xs text-slate-400 font-mono">{{ $ast->asset_code }}</span>
                                 </td>
-                                <td class="py-4 px-4 font-mono text-slate-500">
-                                    {{ $asset->asset_code }}
+                                <td class="py-3 px-3 text-slate-600 dark:text-slate-400">
+                                    {{ $ast->category }}
                                 </td>
-                                <td class="py-4 px-4 text-slate-600 dark:text-slate-400 capitalize">
-                                    {{ $asset->category }}
+                                <td class="py-3 px-3 text-slate-500">
+                                    {{ $ast->acquisition_date?->format('d/m/Y') }}
                                 </td>
-                                <td class="py-4 px-4 font-bold text-slate-800 dark:text-slate-200">
-                                    Rp {{ number_format($asset->acquisition_cost, 0, ',', '.') }}
+                                <td class="py-3 px-3 text-right font-mono font-bold text-slate-800 dark:text-slate-200">
+                                    Rp {{ number_format($ast->acquisition_cost, 0, ',', '.') }}
                                 </td>
-                                <td class="py-4 px-4 font-bold text-primary">
-                                    Rp {{ number_format($asset->book_value, 0, ',', '.') }}
+                                <td class="py-3 px-3 text-right font-mono text-rose-600">
+                                    Rp {{ number_format($ast->accumulated_depreciation, 0, ',', '.') }}
                                 </td>
-                                <td class="py-4 px-4">
-                                    @if ($asset->is_active)
-                                        <x-badge type="success">Operasional</x-badge>
-                                    @else
-                                        <x-badge type="danger">Disposal / Rusak</x-badge>
-                                    @endif
+                                <td class="py-3 px-3 text-right font-mono font-black text-emerald-600">
+                                    Rp {{ number_format($ast->book_value, 0, ',', '.') }}
                                 </td>
-                                <td class="py-4 px-4 text-right">
-                                    <form action="{{ route('assets.destroy', $asset->id) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin melakukan disposal/hapus aset tetap ini?')">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="p-1.5 text-slate-500 hover:text-red-500 transition-colors cursor-pointer" title="Hapus Aset">
-                                            <span class="material-symbols-outlined text-base">delete</span>
-                                        </button>
-                                    </form>
+                                <td class="py-3 px-3 text-right">
+                                    <a href="{{ route('assets.show', $ast->id) }}" class="btn-touch px-3 py-1.5 bg-orange-50 dark:bg-slate-800 text-primary text-2xs font-bold rounded-lg inline-flex items-center gap-1">
+                                        <span class="material-symbols-outlined text-sm">calendar_month</span> Jadwal Depresiasi
+                                    </a>
                                 </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="7" class="py-12 text-center text-slate-400">Belum ada data aset tetap terdaftar.</td>
+                                <td colspan="7" class="py-8 text-center text-slate-400">Belum ada aset tetap terdaftar.</td>
                             </tr>
                         @endforelse
                     </tbody>
                 </table>
             </div>
-
             <div class="mt-4">
                 {{ $assets->links() }}
             </div>
         </x-card>
 
-        <!-- Custom Create Asset Modal -->
-        <div x-show="showCreateModal" 
-             class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm"
-             x-cloak>
-            <div @click.away="showCreateModal = false"
-                 class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl max-w-lg w-full p-6 shadow-2xl transition-all duration-300">
-                <div class="flex justify-between items-center mb-4">
-                    <h3 class="text-base font-bold text-slate-800 dark:text-slate-200">Daftarkan Aset Tetap Baru</h3>
-                    <button @click="showCreateModal = false" class="text-slate-400 hover:text-slate-650 cursor-pointer">
-                        <span class="material-symbols-outlined">close</span>
-                    </button>
+        <!-- Add Asset Modal -->
+        <div x-show="showAddAsset" class="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4" x-cloak>
+            <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-md w-full p-5 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
+                <div class="flex justify-between items-center pb-2 border-b">
+                    <h3 class="font-bold text-sm text-slate-800 dark:text-slate-200">Tambah Aset Tetap Baru</h3>
+                    <button type="button" @click="showAddAsset = false" class="text-slate-400"><span class="material-symbols-outlined">close</span></button>
                 </div>
-                
-                <form action="{{ route('assets.store') }}" method="POST" class="space-y-4">
+                <form action="{{ route('assets.store') }}" method="POST" class="space-y-3">
                     @csrf
-                    
-                    <div class="flex flex-col gap-1.5">
-                        <label for="name" class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Nama Aset / Alat</label>
-                        <input type="text" id="name" name="name" required placeholder="Contoh: Mesin Cuci LG 15kg..."
-                               class="w-full h-11 px-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all">
+                    <div>
+                        <label class="text-2xs font-bold text-slate-400 uppercase">Kode Aset</label>
+                        <input type="text" name="asset_code" required placeholder="AST-MC-001..." class="w-full h-9 px-3 rounded-xl border text-xs">
                     </div>
-
-                    <div class="flex flex-col gap-1.5">
-                        <label for="asset_code" class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Kode Aset (Harus Unik)</label>
-                        <input type="text" id="asset_code" name="asset_code" required placeholder="Contoh: AST-MC-001..."
-                               class="w-full h-11 px-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all">
+                    <div>
+                        <label class="text-2xs font-bold text-slate-400 uppercase">Nama Aset</label>
+                        <input type="text" name="name" required placeholder="Mesin Cuci SpeedQueen 15kg..." class="w-full h-9 px-3 rounded-xl border text-xs">
                     </div>
-
-                    <div class="grid grid-cols-2 gap-4">
-                        <div class="flex flex-col gap-1.5">
-                            <label for="category" class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Kategori Aset</label>
-                            <select id="category" name="category" required
-                                    class="w-full h-11 px-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all">
-                                <option value="mesin">Mesin Cuci & Kering</option>
-                                <option value="peralatan">Peralatan Workshop</option>
-                                <option value="kendaraan">Kendaraan Operasional</option>
-                                <option value="furniture">Furniture & Mebel</option>
-                                <option value="komputer">Komputer & IT</option>
-                            </select>
+                    <div>
+                        <label class="text-2xs font-bold text-slate-400 uppercase">Kategori</label>
+                        <select name="category" required class="w-full h-9 px-2 rounded-xl border text-xs">
+                            <option value="Mesin & Peralatan">Mesin & Peralatan</option>
+                            <option value="Kendaraan">Kendaraan Operasional</option>
+                            <option value="Bangunan & Renovasi">Bangunan & Renovasi</option>
+                            <option value="Elektronik & IT">Elektronik & IT</option>
+                        </select>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="text-2xs font-bold text-slate-400 uppercase">Tgl Perolehan</label>
+                            <input type="date" name="acquisition_date" required value="{{ date('Y-m-d') }}" class="w-full h-9 px-2 rounded-xl border text-xs">
                         </div>
-
-                        <div class="flex flex-col gap-1.5">
-                            <label for="acquisition_date" class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Tanggal Perolehan</label>
-                            <input type="date" id="acquisition_date" name="acquisition_date" required
-                                   class="w-full h-11 px-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all">
+                        <div>
+                            <label class="text-2xs font-bold text-slate-400 uppercase">Harga Beli (Rp)</label>
+                            <input type="number" name="acquisition_cost" required placeholder="25000000..." class="w-full h-9 px-2 rounded-xl border text-xs font-bold">
                         </div>
                     </div>
-
-                    <div class="grid grid-cols-2 gap-4">
-                        <div class="flex flex-col gap-1.5">
-                            <label for="acquisition_cost" class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Biaya Perolehan awal (Rp)</label>
-                            <input type="number" id="acquisition_cost" name="acquisition_cost" required min="0" placeholder="Contoh: 8500000..."
-                                   class="w-full h-11 px-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all">
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="text-2xs font-bold text-slate-400 uppercase">Nilai Sisa (Salvage)</label>
+                            <input type="number" name="salvage_value" required value="0" class="w-full h-9 px-2 rounded-xl border text-xs">
                         </div>
-
-                        <div class="flex flex-col gap-1.5">
-                            <label for="salvage_value" class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Nilai Residu/Sisa (Rp)</label>
-                            <input type="number" id="salvage_value" name="salvage_value" required min="0" placeholder="Contoh: 500000..."
-                                   class="w-full h-11 px-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all">
+                        <div>
+                            <label class="text-2xs font-bold text-slate-400 uppercase">Manfaat (Bulan)</label>
+                            <input type="number" name="useful_life_months" required value="48" class="w-full h-9 px-2 rounded-xl border text-xs font-bold">
                         </div>
                     </div>
-
-                    <div class="grid grid-cols-2 gap-4">
-                        <div class="flex flex-col gap-1.5">
-                            <label for="useful_life_months" class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Umur Ekonomis (Bulan)</label>
-                            <input type="number" id="useful_life_months" name="useful_life_months" required min="1" placeholder="Contoh: 60..."
-                                   class="w-full h-11 px-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all">
-                        </div>
-
-                        <div class="flex flex-col gap-1.5">
-                            <label for="depreciation_method" class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Metode Penyusutan</label>
-                            <select id="depreciation_method" name="depreciation_method" required
-                                    class="w-full h-11 px-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all">
-                                <option value="straight_line">Garis Lurus (Straight Line)</option>
-                                <option value="double_declining">Saldo Menurun (Double Declining)</option>
-                            </select>
-                        </div>
+                    <div>
+                        <label class="text-2xs font-bold text-slate-400 uppercase">Metode Depresiasi</label>
+                        <select name="depreciation_method" required class="w-full h-9 px-2 rounded-xl border text-xs">
+                            <option value="straight_line">Garis Lurus (Straight Line)</option>
+                            <option value="declining_balance">Saldo Menurun (Declining Balance)</option>
+                        </select>
                     </div>
-
-                    <div class="flex justify-end gap-3 pt-4 border-t border-slate-100 dark:border-slate-800">
-                        <button type="button" @click="showCreateModal = false"
-                                class="px-5 py-3 rounded-xl border border-slate-200 dark:border-slate-800 text-xs font-bold text-slate-700 dark:text-slate-350 hover:bg-slate-50 dark:hover:bg-slate-850 cursor-pointer transition-all">
-                            Batal
-                        </button>
-                        <button type="submit"
-                                class="px-5 py-3 bg-primary hover:bg-primary-hover text-white text-xs font-bold rounded-xl cursor-pointer transition-all">
-                            Daftarkan Aset
-                        </button>
+                    <div>
+                        <label class="text-2xs font-bold text-slate-400 uppercase">Cabang</label>
+                        <select name="branch_id" required class="w-full h-9 px-2 rounded-xl border text-xs">
+                            @foreach($branches as $b)
+                                <option value="{{ $b->id }}">{{ $b->name }}</option>
+                            @endforeach
+                        </select>
                     </div>
+                    <button type="submit" class="btn-touch w-full bg-primary text-white font-bold text-xs rounded-xl py-2.5">Simpan Aset Tetap</button>
                 </form>
             </div>
         </div>
