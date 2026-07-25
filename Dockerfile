@@ -16,6 +16,9 @@ RUN apk update && apk add --no-cache \
     curl \
     icu-dev \
     oniguruma-dev \
+    nodejs \
+    npm \
+    netcat-openbsd \
     shadow
 
 # Install PHP extensions
@@ -35,17 +38,18 @@ RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 # Add user for laravel application
-RUN groupadd -g 1000 www \
-    && useradd -u 1000 -ms /bin/sh -g www www
+RUN addgroup -g 1000 -S www \
+    && adduser -u 1000 -S www -G www -s /bin/sh
 
 # Copy existing application directory contents
-COPY . /var/www
-
-# Copy existing application directory permissions
 COPY --chown=www:www . /var/www
 
-# Change current user to www
+# Install composer dependencies as www user
 USER www
+RUN composer install --no-dev --optimize-autoloader --no-interaction
+
+# Install npm dependencies and build assets
+RUN npm ci && npm run build && rm -rf node_modules
 
 # Expose port 9000 and start php-fpm server
 EXPOSE 9000

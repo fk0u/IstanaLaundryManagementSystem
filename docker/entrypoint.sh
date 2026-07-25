@@ -3,28 +3,41 @@
 # Exit immediately if a command exits with a non-zero status
 set -e
 
-echo "Menunggu database MySQL siap..."
-until nc -z -v -w30 db 3306
+echo "============================================"
+echo " Istana Laundry Management System - Docker"
+echo "============================================"
+
+echo "[1/5] Menunggu database MySQL siap..."
+until nc -z -w5 db 3306 2>/dev/null
 do
-  echo "Database belum siap. Menunggu 3 detik..."
+  echo "      Database belum siap. Menunggu 3 detik..."
   sleep 3
 done
-echo "Database MySQL siap!"
+echo "      ✓ Database MySQL siap!"
 
-# Generate key if not exists
-if [ -z "$APP_KEY" ]; then
-    echo "Menghasilkan kunci aplikasi (APP_KEY)..."
+echo "[2/5] Memeriksa APP_KEY..."
+if [ -z "$APP_KEY" ] || [ "$APP_KEY" = "base64:" ]; then
+    echo "      Menghasilkan kunci aplikasi baru..."
     php artisan key:generate --force
 fi
+echo "      ✓ APP_KEY tersedia."
 
-# Run migrations
-echo "Menjalankan migrasi database..."
+echo "[3/5] Mengoptimasi cache konfigurasi..."
+php artisan config:cache
+php artisan route:cache
+php artisan view:cache
+echo "      ✓ Cache berhasil dioptimasi."
+
+echo "[4/5] Menjalankan migrasi database..."
 php artisan migrate --force
+echo "      ✓ Migrasi selesai."
 
-# Seed database
-echo "Menyemai data ERP..."
+echo "[5/5] Menyemai data awal..."
 php artisan db:seed --force
+echo "      ✓ Data awal berhasil disemai."
 
-# Start php-fpm
-echo "Memulai PHP-FPM..."
+echo "============================================"
+echo " Aplikasi siap! Memulai PHP-FPM..."
+echo "============================================"
+
 exec php-fpm
