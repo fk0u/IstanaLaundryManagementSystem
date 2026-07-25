@@ -103,8 +103,8 @@ class ServiceSeeder extends Seeder
             $seededServices[] = Service::create($serviceData);
         }
 
-        // Let's seed some price overrides for Branch 2 (Samarinda Ulu) to test scoping pricing overrides
-        $branch2 = Branch::where('code', 'SMD02')->first();
+        // Let's seed some price overrides for Branch 2 (Cabang Dr. Sutomo) to test scoping pricing overrides
+        $branch2 = Branch::where('code', 'SUT')->first();
         if ($branch2) {
             // SMD02 has slightly higher prices (e.g. +1000 or +5000)
             ServiceBranchPrice::create([

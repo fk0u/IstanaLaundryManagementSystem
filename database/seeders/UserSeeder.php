@@ -14,8 +14,10 @@ class UserSeeder extends Seeder
      */
     public function run(): void
     {
-        $branch1 = Branch::where('code', 'SMD01')->first();
-        $branch2 = Branch::where('code', 'SMD02')->first();
+        $branchWjk = Branch::where('code', 'WJK')->first();
+        $branchSut = Branch::where('code', 'SUT')->first();
+        $branchHid = Branch::where('code', 'HID')->first();
+        $branchLmg = Branch::where('code', 'LMG')->first();
 
         $users = [
             // Super level users (no branch scoping restriction)
@@ -41,64 +43,117 @@ class UserSeeder extends Seeder
                 'role' => 'Super_Admin',
             ],
 
-            // Branch SMD01 Users
+            // Branch WJK (Pusat - Wijaya Kusuma)
             [
-                'name' => 'Branch Admin SMD01',
-                'email' => 'admin.smd01@istanalaundry.com',
+                'name' => 'Branch Admin WJK',
+                'email' => 'admin.wjk@istanalaundry.com',
                 'password' => 'password',
-                'branch_id' => $branch1->id,
+                'branch_id' => $branchWjk->id,
                 'role' => 'Branch_Admin',
             ],
             [
-                'name' => 'Cashier SMD01',
-                'email' => 'cashier.smd01@istanalaundry.com',
+                'name' => 'Cashier WJK',
+                'email' => 'cashier.wjk@istanalaundry.com',
                 'password' => 'password',
-                'branch_id' => $branch1->id,
+                'branch_id' => $branchWjk->id,
                 'role' => 'Cashier',
             ],
             [
-                'name' => 'Workshop Admin SMD01',
-                'email' => 'workshop.admin1@istanalaundry.com',
+                'name' => 'Workshop Admin WJK',
+                'email' => 'workshop.admin.wjk@istanalaundry.com',
                 'password' => 'password',
-                'branch_id' => $branch1->id,
+                'branch_id' => $branchWjk->id,
                 'role' => 'Workshop_Admin',
             ],
             [
-                'name' => 'Workshop Staff SMD01',
-                'email' => 'staff.smd01@istanalaundry.com',
+                'name' => 'Workshop Staff WJK',
+                'email' => 'staff.wjk@istanalaundry.com',
                 'password' => 'password',
-                'branch_id' => $branch1->id,
+                'branch_id' => $branchWjk->id,
                 'role' => 'Workshop_Staff',
             ],
             [
-                'name' => 'CS Marketing SMD01',
-                'email' => 'marketing.smd01@istanalaundry.com',
+                'name' => 'CS Marketing WJK',
+                'email' => 'marketing.wjk@istanalaundry.com',
                 'password' => 'password',
-                'branch_id' => $branch1->id,
+                'branch_id' => $branchWjk->id,
                 'role' => 'CS_Marketing',
             ],
             [
-                'name' => 'Finance SMD01',
-                'email' => 'finance.smd01@istanalaundry.com',
+                'name' => 'Finance WJK',
+                'email' => 'finance.wjk@istanalaundry.com',
                 'password' => 'password',
-                'branch_id' => $branch1->id,
+                'branch_id' => $branchWjk->id,
                 'role' => 'Finance',
             ],
 
-            // Branch SMD02 Users
+            // Branch SUT (Cabang Dr. Sutomo)
             [
-                'name' => 'Branch Admin SMD02',
-                'email' => 'admin.smd02@istanalaundry.com',
+                'name' => 'Branch Admin SUT',
+                'email' => 'admin.sut@istanalaundry.com',
                 'password' => 'password',
-                'branch_id' => $branch2->id,
+                'branch_id' => $branchSut->id,
                 'role' => 'Branch_Admin',
             ],
             [
-                'name' => 'Cashier SMD02',
-                'email' => 'cashier.smd02@istanalaundry.com',
+                'name' => 'Cashier SUT',
+                'email' => 'cashier.sut@istanalaundry.com',
                 'password' => 'password',
-                'branch_id' => $branch2->id,
+                'branch_id' => $branchSut->id,
                 'role' => 'Cashier',
+            ],
+            [
+                'name' => 'Workshop Staff SUT',
+                'email' => 'staff.sut@istanalaundry.com',
+                'password' => 'password',
+                'branch_id' => $branchSut->id,
+                'role' => 'Workshop_Staff',
+            ],
+
+            // Branch HID (Cabang Pangeran Hidayatullah)
+            [
+                'name' => 'Branch Admin HID',
+                'email' => 'admin.hid@istanalaundry.com',
+                'password' => 'password',
+                'branch_id' => $branchHid->id,
+                'role' => 'Branch_Admin',
+            ],
+            [
+                'name' => 'Cashier HID',
+                'email' => 'cashier.hid@istanalaundry.com',
+                'password' => 'password',
+                'branch_id' => $branchHid->id,
+                'role' => 'Cashier',
+            ],
+            [
+                'name' => 'Workshop Staff HID',
+                'email' => 'staff.hid@istanalaundry.com',
+                'password' => 'password',
+                'branch_id' => $branchHid->id,
+                'role' => 'Workshop_Staff',
+            ],
+
+            // Branch LMG (Cabang Lambung Mangkurat)
+            [
+                'name' => 'Branch Admin LMG',
+                'email' => 'admin.lmg@istanalaundry.com',
+                'password' => 'password',
+                'branch_id' => $branchLmg->id,
+                'role' => 'Branch_Admin',
+            ],
+            [
+                'name' => 'Cashier LMG',
+                'email' => 'cashier.lmg@istanalaundry.com',
+                'password' => 'password',
+                'branch_id' => $branchLmg->id,
+                'role' => 'Cashier',
+            ],
+            [
+                'name' => 'Workshop Staff LMG',
+                'email' => 'staff.lmg@istanalaundry.com',
+                'password' => 'password',
+                'branch_id' => $branchLmg->id,
+                'role' => 'Workshop_Staff',
             ],
         ];
 
