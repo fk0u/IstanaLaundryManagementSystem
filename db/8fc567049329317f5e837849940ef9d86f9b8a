@@ -1,0 +1,32 @@
+app/Http/Controllers/HR/HRController.php
+  s_950203d4344ae0::t_3da6bfb359b9ae 8,166-172,176-177,189-205,207-208,223-248,255-275,281-291
+routes/web.php
+  s_950203d4344ae0::t_1bbff14a28665c 187
+resources/views/hr/index.blade.php
+  s_950203d4344ae0::t_62cbd9269a03d0 5,87,89,223,233-238,246-253,256,260,264,268,272,276,280,284,288,327
+  s_950203d4344ae0::t_5f7fdaf2d8b124 97
+resources/views/hr/payroll-detail.blade.php
+  s_950203d4344ae0::t_ecfc139363f4f2 113-117
+  h_1c899976789cf0 1-112,118-123
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "db8fc567049329317f5e837849940ef9d86f9b8a",
+  "prompts": {},
+  "humans": {
+    "h_1c899976789cf0": {
+      "author": "KOU-MacMini <kou.real@outlook.com>"
+    }
+  },
+  "sessions": {
+    "s_950203d4344ae0": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "08255763-7f5b-4dd2-9750-df044f2e23a1",
+        "model": "gpt-5.4-mini"
+      },
+      "human_author": "KOU-MacMini <kou.real@outlook.com>"
+    }
+  }
+}
