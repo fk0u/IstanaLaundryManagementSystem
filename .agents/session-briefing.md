@@ -1,8 +1,8 @@
 # Session Briefing - Istana Laundry Management System
 
 ## Project Status
-- **Phase**: Samarinda Location Seeding & Core Role Setup (Selesai)
-- **Current State**: Seeder cabang dan workshop diperbarui dengan 4 lokasi riil Istana Laundry di Samarinda (Pusat - Wijaya Kusuma [WJK], Cabang Dr. Sutomo [SUT], Cabang Pangeran Hidayatullah [HID], dan Cabang Lambung Mangkurat [LMG]). UserSeeder disesuaikan untuk menyemai 3 peran utama (Branch Admin, Cashier, Workshop Staff) pada tiap-tiap cabang tersebut demi kemudahan pengujian. Database MySQL lokal telah disegarkan penuh menggunakan `php artisan migrate:fresh --seed`. Seluruh **41 pengujian otomatis** lolos 100% (Passed).
+- **Phase**: Multi-Role Dashboard Integration (Selesai)
+- **Current State**: Sistem dashboard dinamis berbasis peran operasional selesai diimplementasikan melalui DashboardController. Setiap peran (Owner, Branch Admin, Cashier, dan Workshop Staff) kini disajikan antarmuka visual khusus yang disesuaikan dengan tanggung jawab operasional masing-masing serta terisolasi secara otomatis berdasarkan data cabang masing-masing. Semua rute di web.php terhubung secara rapi. Seluruh **41 pengujian otomatis** lolos 100% (Passed).
 - **Next Step**: Penyiapan modul Public Tracking Page (AC detail) atau optimalisasi backup otomatis menggunakan S3.
 
 ## Critical Goals
@@ -17,3 +17,4 @@
 9. Implementasi pengadaan PR/PO/GRN, Inventory FIFO, jurnal double-entry otomatis & laporan keuangan lengkap (SELESAI).
 10. Implementasi Owner Dashboard dengan Chart.js, Branch Switcher, dan alur approval Refund 4-tahap (SELESAI).
 11. Update cabang Samarinda dan menyemai 3 peran utama untuk masing-masing cabang (SELESAI).
+12. Implementasi dashboard khusus Branch Admin, Cashier, dan Workshop Staff secara fungsional (SELESAI).
