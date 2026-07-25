@@ -52,7 +52,20 @@
             @if(auth()->user()->hasAnyRole(['Developer', 'Owner', 'Super_Admin', 'Branch_Admin', 'Workshop_Admin']))
                 <a href="/inventory" class="flex items-center gap-3 px-4 py-3 transition-all rounded-lg text-sm font-semibold {{ request()->is('inventory*') ? 'text-primary dark:text-orange-400 bg-primary-container/10 dark:bg-primary-container/20 border-r-4 border-primary font-bold' : 'text-on-surface-variant hover:bg-slate-100 dark:hover:bg-slate-800' }}">
                     <span class="material-symbols-outlined">inventory_2</span>
-                    <span>Inventory</span>
+                    <span>Inventory (Stok)</span>
+                </a>
+                <!-- Procurement Sub-menus -->
+                <a href="/procurement/purchase-requests" class="flex items-center gap-3 pl-10 pr-4 py-2 transition-all rounded-lg text-xs {{ request()->is('procurement/purchase-requests*') ? 'text-primary dark:text-orange-400 font-bold' : 'text-slate-400 hover:text-slate-650 hover:bg-slate-50 dark:hover:bg-slate-850' }}">
+                    <span class="material-symbols-outlined text-sm">shopping_basket</span>
+                    <span>Purchase Requests</span>
+                </a>
+                <a href="/procurement/purchase-orders" class="flex items-center gap-3 pl-10 pr-4 py-2 transition-all rounded-lg text-xs {{ request()->is('procurement/purchase-orders*') ? 'text-primary dark:text-orange-400 font-bold' : 'text-slate-400 hover:text-slate-650 hover:bg-slate-50 dark:hover:bg-slate-850' }}">
+                    <span class="material-symbols-outlined text-sm">description</span>
+                    <span>Purchase Orders</span>
+                </a>
+                <a href="/procurement/grns" class="flex items-center gap-3 pl-10 pr-4 py-2 transition-all rounded-lg text-xs {{ request()->is('procurement/grns*') ? 'text-primary dark:text-orange-400 font-bold' : 'text-slate-400 hover:text-slate-650 hover:bg-slate-50 dark:hover:bg-slate-850' }}">
+                    <span class="material-symbols-outlined text-sm">assignment_turned_in</span>
+                    <span>Goods Received Notes</span>
                 </a>
             @endif
 
@@ -66,7 +79,7 @@
 
             <!-- Fixed Assets -->
             @if(auth()->user()->hasAnyRole(['Developer', 'Owner', 'Super_Admin', 'Finance']))
-                <a href="/assets" class="flex items-center gap-3 px-4 py-3 transition-all rounded-lg text-sm font-semibold {{ request()->is('assets*') ? 'text-primary dark:text-orange-400 bg-primary-container/10 dark:bg-primary-container/20 border-r-4 border-primary font-bold' : 'text-on-surface-variant hover:bg-slate-100 dark:hover:bg-slate-800' }}">
+                <a href="/assets" class="flex items-center gap-3 px-4 py-3 transition-all rounded-lg text-sm font-semibold {{ request()->is('assets*') ? 'text-primary dark:text-orange-400 bg-primary-container/10 dark:bg-primary-container/20 border-r-4 border-primary font-bold' : 'text-on-surface-variant hover:bg-slate-100 dark:hover:bg-slate-850' }}">
                     <span class="material-symbols-outlined">home_work</span>
                     <span>Aset Tetap</span>
                 </a>
@@ -74,9 +87,22 @@
 
             <!-- Accounting -->
             @if(auth()->user()->hasAnyRole(['Developer', 'Owner', 'Super_Admin', 'Finance']))
-                <a href="/finance" class="flex items-center gap-3 px-4 py-3 transition-all rounded-lg text-sm font-semibold {{ request()->is('finance*') ? 'text-primary dark:text-orange-400 bg-primary-container/10 dark:bg-primary-container/20 border-r-4 border-primary font-bold' : 'text-on-surface-variant hover:bg-slate-100 dark:hover:bg-slate-800' }}">
+                <a href="/finance" class="flex items-center gap-3 px-4 py-3 transition-all rounded-lg text-sm font-semibold {{ request()->is('finance') ? 'text-primary dark:text-orange-400 bg-primary-container/10 dark:bg-primary-container/20 border-r-4 border-primary font-bold' : 'text-on-surface-variant hover:bg-slate-100 dark:hover:bg-slate-800' }}">
                     <span class="material-symbols-outlined">account_balance_wallet</span>
                     <span>Keuangan &amp; COA</span>
+                </a>
+                <!-- Finance Sub-menus -->
+                <a href="/finance/journals" class="flex items-center gap-3 pl-10 pr-4 py-2 transition-all rounded-lg text-xs {{ request()->is('finance/journals*') ? 'text-primary dark:text-orange-400 font-bold' : 'text-slate-400 hover:text-slate-650 hover:bg-slate-50 dark:hover:bg-slate-850' }}">
+                    <span class="material-symbols-outlined text-sm">history_edu</span>
+                    <span>Jurnal Ledger</span>
+                </a>
+                <a href="/finance/periods" class="flex items-center gap-3 pl-10 pr-4 py-2 transition-all rounded-lg text-xs {{ request()->is('finance/periods*') ? 'text-primary dark:text-orange-400 font-bold' : 'text-slate-400 hover:text-slate-650 hover:bg-slate-50 dark:hover:bg-slate-850' }}">
+                    <span class="material-symbols-outlined text-sm">calendar_month</span>
+                    <span>Periode Akuntansi</span>
+                </a>
+                <a href="/finance/reports" class="flex items-center gap-3 pl-10 pr-4 py-2 transition-all rounded-lg text-xs {{ request()->is('finance/reports*') ? 'text-primary dark:text-orange-400 font-bold' : 'text-slate-400 hover:text-slate-650 hover:bg-slate-50 dark:hover:bg-slate-850' }}">
+                    <span class="material-symbols-outlined text-sm">summarize</span>
+                    <span>Laporan Keuangan</span>
                 </a>
             @endif
 

@@ -389,6 +389,38 @@ Route::middleware(['auth', 'branch.scope'])->group(function () {
         $logs = \App\Models\AuditLog::with('user')->orderBy('created_at', 'desc')->paginate(20);
         return view('audit_logs.index', compact('logs'));
     })->name('audit-logs.index');
+
+    // Procurement - PR
+    Route::get('/procurement/purchase-requests', [\App\Http\Controllers\Procurement\PurchaseRequestController::class, 'index'])->name('procurement.purchase-requests.index');
+    Route::post('/procurement/purchase-requests', [\App\Http\Controllers\Procurement\PurchaseRequestController::class, 'store'])->name('procurement.purchase-requests.store');
+    Route::post('/procurement/purchase-requests/{id}/approve', [\App\Http\Controllers\Procurement\PurchaseRequestController::class, 'approve'])->name('procurement.purchase-requests.approve');
+    Route::post('/procurement/purchase-requests/{id}/reject', [\App\Http\Controllers\Procurement\PurchaseRequestController::class, 'reject'])->name('procurement.purchase-requests.reject');
+    Route::delete('/procurement/purchase-requests/{id}', [\App\Http\Controllers\Procurement\PurchaseRequestController::class, 'destroy'])->name('procurement.purchase-requests.destroy');
+
+    // Procurement - PO
+    Route::get('/procurement/purchase-orders', [\App\Http\Controllers\Procurement\PurchaseOrderController::class, 'index'])->name('procurement.purchase-orders.index');
+    Route::post('/procurement/purchase-orders', [\App\Http\Controllers\Procurement\PurchaseOrderController::class, 'store'])->name('procurement.purchase-orders.store');
+    Route::post('/procurement/purchase-orders/{id}/send', [\App\Http\Controllers\Procurement\PurchaseOrderController::class, 'send'])->name('procurement.purchase-orders.send');
+    Route::post('/procurement/purchase-orders/{id}/confirm', [\App\Http\Controllers\Procurement\PurchaseOrderController::class, 'confirm'])->name('procurement.purchase-orders.confirm');
+    Route::delete('/procurement/purchase-orders/{id}', [\App\Http\Controllers\Procurement\PurchaseOrderController::class, 'destroy'])->name('procurement.purchase-orders.destroy');
+
+    // Procurement - GRN
+    Route::get('/procurement/grns', [\App\Http\Controllers\Procurement\GoodsReceivedNoteController::class, 'index'])->name('procurement.grns.index');
+    Route::post('/procurement/grns', [\App\Http\Controllers\Procurement\GoodsReceivedNoteController::class, 'store'])->name('procurement.grns.store');
+    Route::post('/procurement/grns/{id}/confirm', [\App\Http\Controllers\Procurement\GoodsReceivedNoteController::class, 'confirm'])->name('procurement.grns.confirm');
+    Route::delete('/procurement/grns/{id}', [\App\Http\Controllers\Procurement\GoodsReceivedNoteController::class, 'destroy'])->name('procurement.grns.destroy');
+
+    // Finance - Ledger / Journals
+    Route::get('/finance/journals', [\App\Http\Controllers\Finance\JournalController::class, 'index'])->name('finance.journals.index');
+    Route::post('/finance/journals', [\App\Http\Controllers\Finance\JournalController::class, 'store'])->name('finance.journals.store');
+    Route::post('/finance/journals/{id}/reverse', [\App\Http\Controllers\Finance\JournalController::class, 'reverse'])->name('finance.journals.reverse');
+
+    // Finance - Accounting Periods
+    Route::get('/finance/periods', [\App\Http\Controllers\Finance\AccountingPeriodController::class, 'index'])->name('finance.periods.index');
+    Route::post('/finance/periods/{id}/close', [\App\Http\Controllers\Finance\AccountingPeriodController::class, 'close'])->name('finance.periods.close');
+
+    // Finance - Reports
+    Route::get('/finance/reports', [\App\Http\Controllers\Finance\FinancialReportController::class, 'index'])->name('finance.reports.index');
 });
 
 require __DIR__.'/auth.php';
