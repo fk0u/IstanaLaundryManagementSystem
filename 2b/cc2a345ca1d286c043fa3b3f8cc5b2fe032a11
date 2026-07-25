@@ -1,0 +1,24 @@
+resources/views/hr/index.blade.php
+  s_950203d4344ae0::t_b21fe664bc338f 2-8,77-111,114-123,205-380,388,397,400,402-404
+  s_950203d4344ae0::t_69d1bb43112ea8 381-383,385-387
+  s_950203d4344ae0::t_5165af78a7a2a1 389-391,394-396
+  s_950203d4344ae0::t_8b00d619b7d78c 398-399
+  s_950203d4344ae0::t_db120ab311dc4d 401
+  s_950203d4344ae0::t_7fbd415fc4e6e2 405
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "2bcc2a345ca1d286c043fa3b3f8cc5b2fe032a11",
+  "prompts": {},
+  "sessions": {
+    "s_950203d4344ae0": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "08255763-7f5b-4dd2-9750-df044f2e23a1",
+        "model": "gpt-5.4-mini"
+      },
+      "human_author": "KOU-MacMini <kou.real@outlook.com>"
+    }
+  }
+}
