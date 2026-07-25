@@ -24,20 +24,6 @@ class RedirectBasedOnRole
         $user = Auth::user();
 
         // Redirect logic based on primary role
-        if ($user->hasRole(['Developer', 'Owner', 'Super_Admin'])) {
-            return redirect()->intended('/dashboard');
-        } elseif ($user->hasRole('Branch_Admin')) {
-            return redirect()->intended('/branches');
-        } elseif ($user->hasRole('Cashier')) {
-            return redirect()->intended('/pos');
-        } elseif ($user->hasRole(['Workshop_Admin', 'Workshop_Staff'])) {
-            return redirect()->intended('/production');
-        } elseif ($user->hasRole('Finance')) {
-            return redirect()->intended('/finance');
-        } elseif ($user->hasRole('CS_Marketing')) {
-            return redirect()->intended('/customers');
-        }
-
         return redirect()->intended('/dashboard');
     }
 }
