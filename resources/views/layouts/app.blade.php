@@ -14,6 +14,7 @@
         <meta name="theme-color" content="#FF6600">
         <meta name="apple-mobile-web-app-capable" content="yes">
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+        <meta name="ngrok-skip-browser-warning" content="true">
 
         <title>{{ config('app.name', 'Istana Laundry') }}</title>
 

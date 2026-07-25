@@ -4,6 +4,7 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="csrf-token" content="{{ csrf_token() }}">
+        <meta name="ngrok-skip-browser-warning" content="true">
 
         <title>{{ config('app.name', 'Istana Laundry') }}</title>
 
