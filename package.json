@@ -5,7 +5,7 @@
     "scripts": {
         "build": "vite build",
         "dev": "vite",
-        "start": "npm run dev"
+        "start": "docker compose up -d && npm run dev"
     },
     "devDependencies": {
         "@tailwindcss/forms": "^0.5.2",
