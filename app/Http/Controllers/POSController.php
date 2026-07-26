@@ -15,6 +15,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
 class POSController extends Controller
@@ -65,6 +66,47 @@ class POSController extends Controller
             ->get();
 
         return view('pos.index', compact('branch', 'services', 'customers', 'promotions'));
+    }
+
+    /**
+     * Quick-create a customer from the POS screen (used by the searchable
+     * customer picker's "Tambah Pelanggan Baru" modal), without leaving POS.
+     */
+    public function storeCustomer(Request $request)
+    {
+        $branchId = session('scoped_branch_id') ?? Auth::user()->branch_id;
+        if (! $branchId) {
+            $firstBranch = Branch::first();
+            $branchId = $firstBranch?->id;
+        }
+
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'phone' => 'required|string|unique:customers,phone',
+            'email' => 'nullable|email|max:255',
+            'address' => 'nullable|string',
+        ]);
+
+        $customer = Customer::create([
+            'branch_id' => $branchId,
+            'name' => $validated['name'],
+            'phone' => $validated['phone'],
+            'email' => $validated['email'] ?? null,
+            'address' => $validated['address'] ?? null,
+            'member_code' => 'CUST-'.now()->format('Ymd').'-'.strtoupper(Str::random(4)),
+            'loyalty_tier' => 'Bronze',
+            'loyalty_points' => 0,
+        ]);
+
+        return response()->json([
+            'customer' => [
+                'id' => $customer->id,
+                'name' => $customer->name,
+                'phone' => $customer->phone,
+                'loyalty_points' => $customer->loyalty_points,
+                'loyalty_tier' => $customer->loyalty_tier,
+            ],
+        ], 201);
     }
 
     /**

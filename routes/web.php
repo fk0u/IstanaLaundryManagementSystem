@@ -62,6 +62,7 @@ Route::middleware(['auth', 'branch.scope'])->group(function () {
     // POS (Kasir)
     Route::get('/pos', [POSController::class, 'index'])->name('pos.index');
     Route::post('/pos', [POSController::class, 'store'])->name('pos.store');
+    Route::post('/pos/customers', [POSController::class, 'storeCustomer'])->name('pos.customers.store');
 
     // Invoices & Billing
     Route::get('/invoices/{order}', [InvoiceController::class, 'show'])->name('invoices.show');

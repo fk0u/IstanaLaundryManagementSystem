@@ -1,5 +1,5 @@
 <x-app-layout>
-    <div x-data="posApp()" class="min-h-[calc(100vh-100px)] flex flex-col gap-6">
+    <div x-data="posApp(@json($customers))" class="min-h-[calc(100vh-100px)] flex flex-col gap-6">
         
         <x-page-header title="Point of Sale (POS)" :breadcrumbs="['POS' => '/pos']" />
 
@@ -18,21 +18,42 @@
                 
                 <!-- Customer & Promo Selectors -->
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <!-- Customer Selection -->
+                    <!-- Customer Selection (searchable combobox + quick add) -->
                     <x-card title="Pilih Pelanggan" :compact="true">
                         <div class="flex flex-col gap-3">
-                            <label for="customer_id" class="text-2xs font-bold text-slate-400 uppercase tracking-wider">Nama Pelanggan</label>
-                            <select id="customer_id" x-model="customerId" @change="updateCustomerData"
-                                    class="w-full h-11 px-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 text-xs font-semibold focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all cursor-pointer">
-                                <option value="">-- Pelanggan Umum (Walk-In) --</option>
-                                @foreach ($customers as $customer)
-                                    <option value="{{ $customer->id }}" 
-                                            data-points="{{ $customer->loyalty_points }}"
-                                            data-tier="{{ $customer->loyalty_tier }}">
-                                        {{ $customer->name }} (Poin: {{ $customer->loyalty_points }} • {{ $customer->loyalty_tier }})
-                                    </option>
-                                @endforeach
-                            </select>
+                            <label class="text-2xs font-bold text-slate-400 uppercase tracking-wider">Cari Pelanggan</label>
+                            <div class="flex gap-2">
+                                <div class="relative flex-1">
+                                    <input type="text" x-model="customerSearch" autocomplete="off"
+                                           @focus="customerOpen = true" @input="customerOpen = true"
+                                           placeholder="Cari nama atau no. HP..."
+                                           class="w-full h-11 px-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 text-xs font-semibold focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all">
+
+                                    <button type="button" x-show="customerId" x-cloak @click="clearCustomer()"
+                                            class="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-rose-500 cursor-pointer">
+                                        <span class="material-symbols-outlined text-base">close</span>
+                                    </button>
+
+                                    <div x-show="customerOpen" @click.outside="customerOpen = false" x-cloak
+                                         class="absolute z-30 mt-1.5 w-full max-h-56 overflow-y-auto bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-lg divide-y divide-slate-50 dark:divide-slate-800">
+                                        <template x-for="c in filteredCustomers()" :key="c.id">
+                                            <button type="button" @click="selectCustomer(c); customerOpen = false"
+                                                    class="w-full text-left px-3 py-2 hover:bg-orange-50 dark:hover:bg-slate-800/60 flex flex-col cursor-pointer">
+                                                <span class="text-xs font-bold text-slate-700 dark:text-slate-200" x-text="c.name"></span>
+                                                <span class="text-2xs text-slate-400" x-text="c.phone + ' • Poin: ' + c.loyalty_points + ' • ' + c.loyalty_tier"></span>
+                                            </button>
+                                        </template>
+                                        <template x-if="filteredCustomers().length === 0">
+                                            <p class="px-3 py-3 text-2xs text-slate-400 text-center">Pelanggan tidak ditemukan.</p>
+                                        </template>
+                                    </div>
+                                </div>
+
+                                <button type="button" @click="openAddCustomerModal()" title="Tambah Pelanggan Baru"
+                                        class="btn-touch shrink-0 w-11 h-11 rounded-xl bg-primary/10 hover:bg-primary/20 text-primary flex items-center justify-center cursor-pointer">
+                                    <span class="material-symbols-outlined text-xl">person_add</span>
+                                </button>
+                            </div>
                             <div x-show="customerId" class="flex gap-3 items-center bg-orange-50/60 dark:bg-slate-800/40 p-2.5 rounded-xl border border-orange-100 dark:border-slate-800" x-cloak>
                                 <span class="material-symbols-outlined text-primary text-xl">workspace_premium</span>
                                 <div>
@@ -288,6 +309,55 @@
             </div>
         </div>
 
+        <!-- Add New Customer Modal -->
+        <div x-show="showAddCustomerModal"
+             class="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4"
+             x-transition x-cloak>
+            <div class="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl w-full max-w-md p-6 shadow-2xl flex flex-col gap-4"
+                 @click.away="showAddCustomerModal = false">
+
+                <div class="flex justify-between items-center pb-3 border-b border-slate-100 dark:border-slate-800">
+                    <h3 class="text-base font-black text-slate-800 dark:text-slate-100">Tambah Pelanggan Baru</h3>
+                    <button type="button" @click="showAddCustomerModal = false" class="text-slate-400 hover:text-slate-600">
+                        <span class="material-symbols-outlined">close</span>
+                    </button>
+                </div>
+
+                <div x-show="newCustomerError" x-cloak class="text-2xs font-semibold text-rose-600 bg-rose-50 dark:bg-rose-950/20 border border-rose-100 dark:border-rose-900/30 rounded-xl px-3 py-2" x-text="newCustomerError"></div>
+
+                <div class="flex flex-col gap-3">
+                    <div>
+                        <label class="text-2xs font-bold text-slate-400 uppercase tracking-wider">Nama *</label>
+                        <input type="text" x-model="newCustomer.name" placeholder="Nama pelanggan"
+                               class="w-full h-11 mt-1 px-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-xs font-semibold outline-none focus:border-primary">
+                    </div>
+                    <div>
+                        <label class="text-2xs font-bold text-slate-400 uppercase tracking-wider">No. HP *</label>
+                        <input type="text" x-model="newCustomer.phone" placeholder="08xxxxxxxxxx"
+                               class="w-full h-11 mt-1 px-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-xs font-semibold outline-none focus:border-primary">
+                    </div>
+                    <div>
+                        <label class="text-2xs font-bold text-slate-400 uppercase tracking-wider">Email</label>
+                        <input type="email" x-model="newCustomer.email" placeholder="Opsional"
+                               class="w-full h-11 mt-1 px-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-xs font-semibold outline-none focus:border-primary">
+                    </div>
+                    <div>
+                        <label class="text-2xs font-bold text-slate-400 uppercase tracking-wider">Alamat</label>
+                        <input type="text" x-model="newCustomer.address" placeholder="Opsional"
+                               class="w-full h-11 mt-1 px-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-xs font-semibold outline-none focus:border-primary">
+                    </div>
+                </div>
+
+                <div class="flex gap-3 pt-2">
+                    <button type="button" @click="showAddCustomerModal = false" class="flex-1 h-11 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-300">Batal</button>
+                    <button type="button" @click="saveNewCustomer()" :disabled="savingCustomer"
+                            class="flex-1 h-11 bg-primary hover:bg-primary-hover text-white font-bold rounded-xl text-xs flex items-center justify-center gap-1.5 shadow-md shadow-primary/20 disabled:opacity-60">
+                        <span x-text="savingCustomer ? 'Menyimpan...' : 'Simpan Pelanggan'"></span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
         <!-- Checkout Confirmation Modal -->
         <div x-show="showConfirmModal" 
              class="fixed inset-0 z-[9999] flex items-[end] sm:items-center justify-center bg-slate-900/60 backdrop-blur-sm p-0 sm:p-4 pb-20 sm:pb-0"
@@ -379,12 +449,19 @@
     </div>
 
     <script>
-        function posApp() {
+        function posApp(initialCustomers) {
             return {
                 cart: [],
+                customers: initialCustomers || [],
                 customerId: '',
+                customerSearch: '',
+                customerOpen: false,
                 customerPoints: 0,
                 customerTier: 'Bronze',
+                newCustomer: { name: '', phone: '', email: '', address: '' },
+                newCustomerError: '',
+                savingCustomer: false,
+                showAddCustomerModal: false,
                 promoId: '',
                 promoType: '',
                 promoValue: 0,
@@ -416,18 +493,68 @@
                     this.calculateTotals();
                 },
 
-                updateCustomerData(e) {
-                    let select = e.target;
-                    let selected = select.options[select.selectedIndex];
-                    if (this.customerId) {
-                        this.customerPoints = parseInt(selected.getAttribute('data-points')) || 0;
-                        this.customerTier = selected.getAttribute('data-tier') || 'Bronze';
-                    } else {
-                        this.customerPoints = 0;
-                        this.customerTier = 'Bronze';
-                        this.pointsUsed = 0;
-                    }
+                filteredCustomers() {
+                    const q = this.customerSearch.trim().toLowerCase();
+                    if (!q) return this.customers;
+                    return this.customers.filter(c => c.name.toLowerCase().includes(q) || (c.phone || '').includes(q));
+                },
+
+                selectCustomer(c) {
+                    this.customerId = String(c.id);
+                    this.customerSearch = c.name;
+                    this.customerPoints = c.loyalty_points || 0;
+                    this.customerTier = c.loyalty_tier || 'Bronze';
                     this.calculateTotals();
+                },
+
+                clearCustomer() {
+                    this.customerId = '';
+                    this.customerSearch = '';
+                    this.customerPoints = 0;
+                    this.customerTier = 'Bronze';
+                    this.pointsUsed = 0;
+                    this.calculateTotals();
+                },
+
+                openAddCustomerModal() {
+                    this.newCustomer = { name: '', phone: '', email: '', address: '' };
+                    this.newCustomerError = '';
+                    this.customerOpen = false;
+                    this.showAddCustomerModal = true;
+                },
+
+                async saveNewCustomer() {
+                    if (!this.newCustomer.name || !this.newCustomer.phone) {
+                        this.newCustomerError = 'Nama dan No. HP wajib diisi.';
+                        return;
+                    }
+                    this.savingCustomer = true;
+                    this.newCustomerError = '';
+                    try {
+                        const response = await fetch('{{ route("pos.customers.store") }}', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Accept': 'application/json',
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                            },
+                            body: JSON.stringify(this.newCustomer),
+                        });
+                        const data = await response.json();
+                        if (!response.ok) {
+                            const firstError = data.errors ? Object.values(data.errors).flat()[0] : null;
+                            this.newCustomerError = firstError || data.message || 'Gagal menyimpan pelanggan.';
+                            return;
+                        }
+                        this.customers.push(data.customer);
+                        this.selectCustomer(data.customer);
+                        this.showAddCustomerModal = false;
+                        window.dispatchEvent(new CustomEvent('toast', { detail: { message: 'Pelanggan "' + data.customer.name + '" berhasil ditambahkan', type: 'success' } }));
+                    } catch (e) {
+                        this.newCustomerError = 'Terjadi kesalahan jaringan.';
+                    } finally {
+                        this.savingCustomer = false;
+                    }
                 },
 
                 updatePromoData(e) {
