@@ -8,11 +8,12 @@ class DebugEnvTest extends TestCase
 {
     public function test_dump_environment(): void
     {
-        fwrite(STDERR, "\nAPP_ENV=" . app()->environment() . "\n");
-        fwrite(STDERR, "runningUnitTests=" . var_export(app()->runningUnitTests(), true) . "\n");
-        fwrite(STDERR, "SESSION_DRIVER=" . config('session.driver') . "\n");
-        fwrite(STDERR, "DB_CONNECTION=" . config('database.default') . "\n");
-        fwrite(STDERR, "configCached=" . var_export(app()->configurationIsCached(), true) . "\n");
+        fwrite(STDERR, "\nappEnvironment=" . app()->environment() . "\n");
+        fwrite(STDERR, "envHelper=" . env('APP_ENV') . "\n");
+        fwrite(STDERR, "configAppEnv=" . config('app.env') . "\n");
+        fwrite(STDERR, "getenv=" . var_export(getenv('APP_ENV'), true) . "\n");
+        fwrite(STDERR, "SERVER=" . var_export($_SERVER['APP_ENV'] ?? null, true) . "\n");
+        fwrite(STDERR, "ENV=" . var_export($_ENV['APP_ENV'] ?? null, true) . "\n");
         $this->assertTrue(true);
     }
 }
