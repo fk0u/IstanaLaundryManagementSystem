@@ -5,15 +5,11 @@ namespace Tests\Feature;
 use App\Models\Branch;
 use App\Models\ChartOfAccount;
 use App\Models\Customer;
+use App\Models\Journal;
 use App\Models\Order;
 use App\Models\Refund;
 use App\Models\Service;
 use App\Models\User;
-use App\Models\Journal;
-use App\Models\JournalLine;
-use App\Models\AccountingPeriod;
-use App\Services\Finance\JournalService;
-use App\Services\CRM\LoyaltyService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Spatie\Permission\Models\Role;
 use Tests\TestCase;
@@ -23,11 +19,17 @@ class RefundTest extends TestCase
     use RefreshDatabase;
 
     protected $branch;
+
     protected $cashier;
+
     protected $branchAdmin;
+
     protected $finance;
+
     protected $owner;
+
     protected $customer;
+
     protected $service;
 
     protected function setUp(): void
@@ -126,7 +128,7 @@ class RefundTest extends TestCase
                 'normal_balance' => $acc['normal_balance'],
                 'level' => 3,
                 'is_active' => true,
-                'is_system' => true
+                'is_system' => true,
             ]);
         }
     }
@@ -146,7 +148,7 @@ class RefundTest extends TestCase
             'payment_method' => 'cash',
             'payment_status' => 'pending',
             'production_status' => 'TERIMA',
-            'status' => 'active'
+            'status' => 'active',
         ]);
 
         // Update payment status to paid to trigger OrderObserver auto-post
@@ -167,7 +169,7 @@ class RefundTest extends TestCase
             'amount' => 100000,
             'reason' => 'Pakaian robek dan luntur parah',
         ]);
-        
+
         $response->assertRedirect();
         $this->assertDatabaseHas('refunds', [
             'order_id' => $order->id,
@@ -182,7 +184,7 @@ class RefundTest extends TestCase
         $this->actingAs($this->branchAdmin);
         $response = $this->post("/refunds/{$refund->id}/approve");
         $response->assertRedirect();
-        
+
         $refund->refresh();
         $this->assertEquals('branch_approved', $refund->status);
         $this->assertNotNull($refund->branch_approved_at);
@@ -191,7 +193,7 @@ class RefundTest extends TestCase
         $this->actingAs($this->finance);
         $response = $this->post("/refunds/{$refund->id}/approve");
         $response->assertRedirect();
-        
+
         $refund->refresh();
         $this->assertEquals('finance_approved', $refund->status);
         $this->assertNotNull($refund->finance_approved_at);
@@ -200,7 +202,7 @@ class RefundTest extends TestCase
         $this->actingAs($this->owner);
         $response = $this->post("/refunds/{$refund->id}/approve");
         $response->assertRedirect();
-        
+
         $refund->refresh();
         $this->assertEquals('completed', $refund->status);
         $this->assertNotNull($refund->owner_approved_at);
@@ -218,14 +220,14 @@ class RefundTest extends TestCase
         $journal->refresh();
         $this->assertEquals('reversed', $journal->status);
 
-        $reversalJournal = Journal::where('reference', 'REV-' . $journal->reference)->first();
+        $reversalJournal = Journal::where('reference', 'REV-'.$journal->reference)->first();
         $this->assertNotNull($reversalJournal);
         $this->assertEquals('posted', $reversalJournal->status);
-        
+
         $totalRevDebit = $reversalJournal->journalLines()->sum('debit');
         $totalRevCredit = $reversalJournal->journalLines()->sum('credit');
         $this->assertEquals($totalRevDebit, $totalRevCredit);
-        $this->assertEquals(100000, (float)$totalRevDebit);
+        $this->assertEquals(100000, (float) $totalRevDebit);
     }
 
     public function test_non_owner_cannot_approve_final_stage()
@@ -242,7 +244,7 @@ class RefundTest extends TestCase
             'payment_method' => 'cash',
             'payment_status' => 'paid',
             'production_status' => 'TERIMA',
-            'status' => 'active'
+            'status' => 'active',
         ]);
 
         $refund = Refund::create([
@@ -277,7 +279,7 @@ class RefundTest extends TestCase
             'payment_method' => 'cash',
             'payment_status' => 'paid',
             'production_status' => 'TERIMA',
-            'status' => 'active'
+            'status' => 'active',
         ]);
 
         $refund = Refund::create([

@@ -2,18 +2,18 @@
 
 namespace App\Http\Controllers\Finance;
 
+use App\Exceptions\AccountingPeriodClosedException;
+use App\Exceptions\JournalNotBalancedException;
 use App\Http\Controllers\Controller;
-use App\Models\Journal;
-use App\Models\JournalLine;
-use App\Models\ChartOfAccount;
 use App\Models\AccountingPeriod;
 use App\Models\Branch;
+use App\Models\ChartOfAccount;
+use App\Models\Journal;
+use App\Models\JournalLine;
 use App\Services\Finance\JournalService;
-use App\Exceptions\JournalNotBalancedException;
-use App\Exceptions\AccountingPeriodClosedException;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Carbon\Carbon;
 
 class JournalController extends Controller
 {
@@ -54,12 +54,12 @@ class JournalController extends Controller
                 $totalCredit = 0;
 
                 foreach ($request->lines as $line) {
-                    $totalDebit += (float)$line['debit'];
-                    $totalCredit += (float)$line['credit'];
+                    $totalDebit += (float) $line['debit'];
+                    $totalCredit += (float) $line['credit'];
                 }
 
                 if (abs($totalDebit - $totalCredit) > 0.01) {
-                    throw new JournalNotBalancedException("Debit ({$totalDebit}) harus sama dengan Kredit ({$totalCredit}). Selisih: " . abs($totalDebit - $totalCredit));
+                    throw new JournalNotBalancedException("Debit ({$totalDebit}) harus sama dengan Kredit ({$totalCredit}). Selisih: ".abs($totalDebit - $totalCredit));
                 }
 
                 $branchId = auth()->user()->branch_id ?? 1;
@@ -72,7 +72,7 @@ class JournalController extends Controller
                     ->where('month', $month)
                     ->first();
 
-                if (!$period) {
+                if (! $period) {
                     $period = AccountingPeriod::create([
                         'branch_id' => $branchId,
                         'year' => $year,
@@ -82,7 +82,7 @@ class JournalController extends Controller
                 }
 
                 if ($period->status === 'closed') {
-                    throw new AccountingPeriodClosedException("Periode akuntansi sudah ditutup. Tidak bisa menambah jurnal.");
+                    throw new AccountingPeriodClosedException('Periode akuntansi sudah ditutup. Tidak bisa menambah jurnal.');
                 }
 
                 $branch = Branch::find($branchId);
@@ -107,7 +107,7 @@ class JournalController extends Controller
                     'date' => $request->date,
                     'status' => 'posted',
                     'created_by' => auth()->id() ?? 1,
-                    'posted_at' => now()
+                    'posted_at' => now(),
                 ]);
 
                 foreach ($request->lines as $line) {
@@ -116,7 +116,7 @@ class JournalController extends Controller
                         'account_id' => $line['account_id'],
                         'debit' => $line['debit'],
                         'credit' => $line['credit'],
-                        'description' => $line['description'] ?? $request->description
+                        'description' => $line['description'] ?? $request->description,
                     ]);
                 }
             });
@@ -127,7 +127,7 @@ class JournalController extends Controller
         } catch (AccountingPeriodClosedException $e) {
             return redirect()->back()->withInput()->with('error', $e->getMessage());
         } catch (\Exception $e) {
-            return redirect()->back()->withInput()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
+            return redirect()->back()->withInput()->with('error', 'Terjadi kesalahan: '.$e->getMessage());
         }
     }
 
@@ -137,11 +137,12 @@ class JournalController extends Controller
 
         try {
             $this->journalService->reverseJournal($journal, auth()->user());
+
             return redirect()->back()->with('success', 'Jurnal berhasil dibatalkan (reversed).');
         } catch (AccountingPeriodClosedException $e) {
             return redirect()->back()->with('error', $e->getMessage());
         } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Terjadi kesalahan: '.$e->getMessage());
         }
     }
 }

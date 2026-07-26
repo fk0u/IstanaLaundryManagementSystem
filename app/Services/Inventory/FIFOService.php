@@ -2,9 +2,9 @@
 
 namespace App\Services\Inventory;
 
-use App\Models\InventoryItem;
-use App\Models\InventoryBatch;
 use App\Exceptions\InsufficientStockException;
+use App\Models\InventoryBatch;
+use App\Models\InventoryItem;
 use Illuminate\Support\Facades\DB;
 
 class FIFOService
@@ -12,9 +12,6 @@ class FIFOService
     /**
      * Deduct stock of an inventory item using FIFO method and calculate COGS.
      *
-     * @param int $itemId
-     * @param float $quantityToDeduct
-     * @return array
      * @throws InsufficientStockException
      */
     public function deduct(int $itemId, float $quantityToDeduct): array
@@ -59,7 +56,7 @@ class FIFOService
                     'batch_number' => $batch->batch_number,
                     'quantity' => $deductFromBatch,
                     'unit_cost' => (float) $batch->unit_cost,
-                    'cogs' => $batchCogs
+                    'cogs' => $batchCogs,
                 ];
 
                 $remainingToDeduct -= $deductFromBatch;
@@ -67,7 +64,7 @@ class FIFOService
 
             // In case of discrepancy
             if ($remainingToDeduct > 0) {
-                throw new InsufficientStockException("Kesalahan kalkulasi FIFO: stok tidak mencukupi pada batch.");
+                throw new InsufficientStockException('Kesalahan kalkulasi FIFO: stok tidak mencukupi pada batch.');
             }
 
             // Deduct the inventory item's current stock
@@ -77,7 +74,7 @@ class FIFOService
             return [
                 'total_quantity' => $quantityToDeduct,
                 'total_cogs' => $totalCogs,
-                'details' => $deductionDetails
+                'details' => $deductionDetails,
             ];
         });
     }

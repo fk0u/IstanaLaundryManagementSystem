@@ -2,7 +2,6 @@
 
 namespace App\Services;
 
-use App\Models\ChartOfAccount;
 use App\Models\JournalLine;
 use Illuminate\Support\Facades\DB;
 
@@ -37,15 +36,15 @@ class FinancialReportService
             DB::raw('SUM(journal_lines.debit) as total_debit'),
             DB::raw('SUM(journal_lines.credit) as total_credit')
         )
-        ->groupBy(
-            'chart_of_accounts.id',
-            'chart_of_accounts.code',
-            'chart_of_accounts.name',
-            'chart_of_accounts.type',
-            'chart_of_accounts.normal_balance'
-        )
-        ->orderBy('chart_of_accounts.code')
-        ->get();
+            ->groupBy(
+                'chart_of_accounts.id',
+                'chart_of_accounts.code',
+                'chart_of_accounts.name',
+                'chart_of_accounts.type',
+                'chart_of_accounts.normal_balance'
+            )
+            ->orderBy('chart_of_accounts.code')
+            ->get();
 
         $totalDebit = 0;
         $totalCredit = 0;
@@ -53,7 +52,7 @@ class FinancialReportService
         $rows = $balances->map(function ($row) use (&$totalDebit, &$totalCredit) {
             $debit = (float) $row->total_debit;
             $credit = (float) $row->total_credit;
-            
+
             $netDebit = 0;
             $netCredit = 0;
 
@@ -99,7 +98,7 @@ class FinancialReportService
     public function getIncomeStatement(?int $branchId, ?int $year, ?int $month): array
     {
         $tb = $this->getTrialBalance($branchId, $year, $month);
-        
+
         $revenues = [];
         $expenses = [];
         $totalRevenue = 0;

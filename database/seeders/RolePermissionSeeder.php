@@ -36,7 +36,7 @@ class RolePermissionSeeder extends Seeder
             // HR
             'employees.manage', 'payroll.manage', 'attendances.manage',
             // Fixed Assets
-            'assets.manage', 'depreciation.process'
+            'assets.manage', 'depreciation.process',
         ];
 
         // Create permissions
@@ -61,7 +61,7 @@ class RolePermissionSeeder extends Seeder
             'reports.sales', 'reports.production', 'reports.finance', 'reports.export',
             'services.manage', 'branches.manage', 'users.manage', 'roles.manage',
             'employees.manage', 'payroll.manage', 'attendances.manage',
-            'assets.manage', 'depreciation.process'
+            'assets.manage', 'depreciation.process',
         ]);
 
         // 3. Super Admin
@@ -74,7 +74,7 @@ class RolePermissionSeeder extends Seeder
             'reports.sales', 'reports.production', 'reports.export',
             'services.manage', 'branches.manage', 'users.manage',
             'employees.manage', 'attendances.manage',
-            'assets.manage'
+            'assets.manage',
         ]);
 
         // 4. Branch Admin
@@ -86,7 +86,7 @@ class RolePermissionSeeder extends Seeder
             'inventory.view', 'inventory.create', 'inventory.update',
             'reports.sales', 'reports.production', 'reports.export',
             'employees.manage', 'attendances.manage',
-            'assets.manage'
+            'assets.manage',
         ]);
 
         // 5. Workshop Admin
@@ -94,7 +94,7 @@ class RolePermissionSeeder extends Seeder
         $roleWorkshopAdmin->givePermissionTo([
             'production.view', 'production.update', 'production.bulk_update',
             'inventory.view', 'inventory.update',
-            'reports.production', 'reports.export'
+            'reports.production', 'reports.export',
         ]);
 
         // 6. Cashier
@@ -103,13 +103,13 @@ class RolePermissionSeeder extends Seeder
             'orders.view', 'orders.create', 'orders.update',
             'production.view', 'production.update',
             'customers.view', 'customers.create', 'customers.update', 'loyalty.manage',
-            'inventory.view'
+            'inventory.view',
         ]);
 
         // 7. Workshop Staff
         $roleWorkshopStaff = Role::findOrCreate('Workshop_Staff');
         $roleWorkshopStaff->givePermissionTo([
-            'production.view', 'production.update'
+            'production.view', 'production.update',
         ]);
 
         // 8. CS Marketing
@@ -117,7 +117,7 @@ class RolePermissionSeeder extends Seeder
         $roleCSMarketing->givePermissionTo([
             'orders.view',
             'customers.view', 'customers.create', 'customers.update', 'loyalty.manage',
-            'reports.sales'
+            'reports.sales',
         ]);
 
         // 9. Finance
@@ -127,7 +127,7 @@ class RolePermissionSeeder extends Seeder
             'journals.view', 'journals.create', 'journals.post', 'journals.reverse', 'accounting_periods.close',
             'payroll.manage',
             'reports.sales', 'reports.finance', 'reports.export',
-            'assets.manage', 'depreciation.process'
+            'assets.manage', 'depreciation.process',
         ]);
     }
 }

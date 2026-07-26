@@ -21,9 +21,9 @@ trait BranchScoped
 
         // Auto-set branch_id on creation
         static::creating(function ($model) {
-            if (!$model->{static::getBranchColumn()}) {
+            if (! $model->{static::getBranchColumn()}) {
                 $branchId = session('scoped_branch_id') ?? auth()->user()?->branch_id;
-                
+
                 if ($branchId) {
                     $model->{static::getBranchColumn()} = $branchId;
                 }
@@ -33,8 +33,6 @@ trait BranchScoped
 
     /**
      * Get the column name for branch scoping
-     *
-     * @return string
      */
     public static function getBranchColumn(): string
     {
@@ -43,8 +41,6 @@ trait BranchScoped
 
     /**
      * Query without branch scope (for super users manually querying)
-     *
-     * @return \Illuminate\Database\Eloquent\Builder
      */
     public static function withoutBranchScope(): Builder
     {

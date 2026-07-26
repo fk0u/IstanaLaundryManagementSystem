@@ -18,9 +18,6 @@ class GRNObserver
 
     /**
      * Handle the GoodsReceivedNote "updated" event.
-     *
-     * @param GoodsReceivedNote $grn
-     * @return void
      */
     public function updated(GoodsReceivedNote $grn): void
     {
@@ -32,7 +29,7 @@ class GRNObserver
                     InventoryBatch::create([
                         'item_id' => $item->item_id,
                         'grn_id' => $grn->id,
-                        'batch_number' => $item->batch_number ?? 'BATCH-' . $grn->grn_number . '-' . $item->item_id,
+                        'batch_number' => $item->batch_number ?? 'BATCH-'.$grn->grn_number.'-'.$item->item_id,
                         'quantity' => $item->quantity,
                         'remaining_qty' => $item->quantity,
                         'unit_cost' => $item->unit_cost,
@@ -42,14 +39,14 @@ class GRNObserver
                     // Update current stock of the inventory item
                     $inventoryItem = $item->item;
                     if ($inventoryItem) {
-                        $inventoryItem->current_stock = (float)$inventoryItem->current_stock + (float)$item->quantity;
+                        $inventoryItem->current_stock = (float) $inventoryItem->current_stock + (float) $item->quantity;
                         $inventoryItem->save();
                     }
 
                     // Update PO Item received qty if po_item_id is set
                     $poItem = $item->poItem;
                     if ($poItem) {
-                        $poItem->received_qty = (float)$poItem->received_qty + (float)$item->quantity;
+                        $poItem->received_qty = (float) $poItem->received_qty + (float) $item->quantity;
                         $poItem->save();
                     }
                 }
@@ -63,7 +60,7 @@ class GRNObserver
                 if ($po) {
                     $fullyReceived = true;
                     foreach ($po->items as $poItem) {
-                        if ((float)$poItem->received_qty < (float)$poItem->quantity) {
+                        if ((float) $poItem->received_qty < (float) $poItem->quantity) {
                             $fullyReceived = false;
                             break;
                         }
@@ -72,7 +69,7 @@ class GRNObserver
                     $po->save();
                 }
             } catch (\Exception $e) {
-                Log::error("Failed to process GRNObserver for GRN #{$grn->id}: " . $e->getMessage());
+                Log::error("Failed to process GRNObserver for GRN #{$grn->id}: ".$e->getMessage());
             }
         }
     }

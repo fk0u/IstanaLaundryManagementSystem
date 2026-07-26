@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Finance;
 use App\Http\Controllers\Controller;
 use App\Models\AccountingPeriod;
 use App\Models\Journal;
-use Illuminate\Http\Request;
 
 class AccountingPeriodController extends Controller
 {

@@ -8,17 +8,17 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 #[Fillable([
-    'order_id', 
-    'branch_id', 
-    'requested_by', 
-    'amount', 
-    'reason', 
-    'status', 
-    'cashier_approved_at', 
-    'branch_approved_at', 
-    'finance_approved_at', 
-    'owner_approved_at', 
-    'processed_at'
+    'order_id',
+    'branch_id',
+    'requested_by',
+    'amount',
+    'reason',
+    'status',
+    'cashier_approved_at',
+    'branch_approved_at',
+    'finance_approved_at',
+    'owner_approved_at',
+    'processed_at',
 ])]
 class Refund extends Model
 {

@@ -15,22 +15,22 @@ class OrderController extends Controller
         $isGlobalUser = $user->hasAnyRole(['Developer', 'Owner', 'Super_Admin', 'Finance']);
 
         $branchId = $request->query('branch_id');
-        if (!$isGlobalUser) {
+        if (! $isGlobalUser) {
             $branchId = session('scoped_branch_id') ?? $user->branch_id;
         }
 
-        $branches   = $isGlobalUser ? Branch::orderBy('name')->get() : collect();
-        $status     = $request->query('status');
-        $payStatus  = $request->query('pay_status');
-        $search     = $request->query('search');
+        $branches = $isGlobalUser ? Branch::orderBy('name')->get() : collect();
+        $status = $request->query('status');
+        $payStatus = $request->query('pay_status');
+        $search = $request->query('search');
 
         $orders = Order::with(['customer', 'branch', 'cashier'])
-            ->when($branchId, fn($q) => $q->where('branch_id', $branchId))
-            ->when($status,   fn($q) => $q->where('production_status', $status))
-            ->when($payStatus, fn($q) => $q->where('payment_status', $payStatus))
+            ->when($branchId, fn ($q) => $q->where('branch_id', $branchId))
+            ->when($status, fn ($q) => $q->where('production_status', $status))
+            ->when($payStatus, fn ($q) => $q->where('payment_status', $payStatus))
             ->when($search, function ($q) use ($search) {
                 $q->where('order_number', 'like', "%{$search}%")
-                  ->orWhereHas('customer', fn($cq) => $cq->where('name', 'like', "%{$search}%"));
+                    ->orWhereHas('customer', fn ($cq) => $cq->where('name', 'like', "%{$search}%"));
             })
             ->latest()
             ->paginate(20)

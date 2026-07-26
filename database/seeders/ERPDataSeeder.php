@@ -2,7 +2,9 @@
 
 namespace Database\Seeders;
 
+use App\Models\AccountingPeriod;
 use App\Models\Branch;
+use App\Models\ChartOfAccount;
 use App\Models\Customer;
 use App\Models\Employee;
 use App\Models\FixedAsset;
@@ -11,11 +13,7 @@ use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Service;
 use App\Models\User;
-use App\Models\AccountingPeriod;
-use App\Models\ChartOfAccount;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Str;
-use Illuminate\Support\Facades\DB;
 
 class ERPDataSeeder extends Seeder
 {
@@ -55,7 +53,7 @@ class ERPDataSeeder extends Seeder
         foreach ($branches as $branch) {
             foreach ($inventoryTemplates as $template) {
                 InventoryItem::firstOrCreate(
-                    ['branch_id' => $branch->id, 'sku' => $template['sku_prefix'] . '-' . $branch->code],
+                    ['branch_id' => $branch->id, 'sku' => $template['sku_prefix'].'-'.$branch->code],
                     [
                         'name' => $template['name'],
                         'category' => $template['category'],
@@ -80,14 +78,14 @@ class ERPDataSeeder extends Seeder
         foreach ($branches as $branch) {
             foreach ($customerTemplates as $template) {
                 Customer::firstOrCreate(
-                    ['phone' => $template['phone'] . '-' . $branch->code],
+                    ['phone' => $template['phone'].'-'.$branch->code],
                     [
                         'branch_id' => $branch->id,
-                        'name' => $template['name'] . ' (' . $branch->code . ')',
-                        'phone' => $template['phone'] . '-' . $branch->code,
+                        'name' => $template['name'].' ('.$branch->code.')',
+                        'phone' => $template['phone'].'-'.$branch->code,
                         'email' => $template['email'],
                         'address' => $template['address'],
-                        'member_code' => 'CUST-' . $branch->code . '-' . str_pad($custIdx++, 4, '0', STR_PAD_LEFT),
+                        'member_code' => 'CUST-'.$branch->code.'-'.str_pad($custIdx++, 4, '0', STR_PAD_LEFT),
                         'loyalty_tier' => 'Bronze',
                         'loyalty_points' => rand(10, 150),
                     ]
@@ -99,10 +97,10 @@ class ERPDataSeeder extends Seeder
         foreach ($branches as $branch) {
             $staffUser = User::where('branch_id', $branch->id)->where('email', 'like', 'staff%')->first();
             $cashierUser = User::where('branch_id', $branch->id)->where('email', 'like', 'cashier%')->first();
-            
+
             if ($staffUser) {
                 Employee::firstOrCreate(
-                    ['nik' => 'NIK-' . $branch->code . '-001'],
+                    ['nik' => 'NIK-'.$branch->code.'-001'],
                     [
                         'branch_id' => $branch->id,
                         'user_id' => $staffUser->id,
@@ -117,7 +115,7 @@ class ERPDataSeeder extends Seeder
 
             if ($cashierUser) {
                 Employee::firstOrCreate(
-                    ['nik' => 'NIK-' . $branch->code . '-002'],
+                    ['nik' => 'NIK-'.$branch->code.'-002'],
                     [
                         'branch_id' => $branch->id,
                         'user_id' => $cashierUser->id,
@@ -134,7 +132,7 @@ class ERPDataSeeder extends Seeder
         // 5. Seed Fixed Assets
         foreach ($branches as $branch) {
             FixedAsset::firstOrCreate(
-                ['asset_code' => 'AST-' . $branch->code . '-WASH-01'],
+                ['asset_code' => 'AST-'.$branch->code.'-WASH-01'],
                 [
                     'branch_id' => $branch->id,
                     'account_id' => $coaMesinCuci?->id ?? 1,
@@ -152,7 +150,7 @@ class ERPDataSeeder extends Seeder
             );
 
             FixedAsset::firstOrCreate(
-                ['asset_code' => 'AST-' . $branch->code . '-DRY-01'],
+                ['asset_code' => 'AST-'.$branch->code.'-DRY-01'],
                 [
                     'branch_id' => $branch->id,
                     'account_id' => $coaMesinPengering?->id ?? 1,
@@ -173,22 +171,24 @@ class ERPDataSeeder extends Seeder
         // 6. Seed Past & Today Orders for Dashboards
         foreach ($branches as $branch) {
             $branchCustomers = Customer::where('branch_id', $branch->id)->get();
-            $cashierUser = User::where('branch_id', $branch->id)->where('email', 'like', 'cashier%')->first() 
+            $cashierUser = User::where('branch_id', $branch->id)->where('email', 'like', 'cashier%')->first()
                 ?? User::where('branch_id', $branch->id)->first()
                 ?? User::first();
 
-            if ($branchCustomers->isEmpty()) continue;
+            if ($branchCustomers->isEmpty()) {
+                continue;
+            }
 
             // Seed 7 days daily revenue trend
             for ($i = 7; $i >= 0; $i--) {
                 $date = now()->subDays($i);
-                
+
                 // 1-3 orders per day
                 $numOrders = rand(1, 3);
                 for ($o = 1; $o <= $numOrders; $o++) {
                     $customer = $branchCustomers->random();
                     $service = $services->random();
-                    
+
                     // Determine price
                     $branchPrice = $service->branchPrices()->where('branch_id', $branch->id)->first();
                     $unitPrice = $branchPrice ? $branchPrice->price : $service->base_price;

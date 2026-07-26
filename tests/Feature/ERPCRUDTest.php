@@ -7,6 +7,7 @@ use App\Models\ChartOfAccount;
 use App\Models\Customer;
 use App\Models\Employee;
 use App\Models\FixedAsset;
+use App\Models\InventoryItem;
 use App\Models\Promotion;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -18,6 +19,7 @@ class ERPCRUDTest extends TestCase
     use RefreshDatabase;
 
     protected $developerUser;
+
     protected $branch;
 
     protected function setUp(): void
@@ -63,7 +65,7 @@ class ERPCRUDTest extends TestCase
         $customer = Customer::where('name', 'Budi Santoso')->first();
 
         // 2. Update
-        $response = $this->put('/customers/' . $customer->id, [
+        $response = $this->put('/customers/'.$customer->id, [
             'name' => 'Budi Santoso Updated',
             'phone' => '081234567890',
             'email' => 'budi.new@gmail.com',
@@ -75,7 +77,7 @@ class ERPCRUDTest extends TestCase
         $this->assertDatabaseHas('customers', ['name' => 'Budi Santoso Updated', 'loyalty_tier' => 'Silver']);
 
         // 3. Delete
-        $response = $this->delete('/customers/' . $customer->id);
+        $response = $this->delete('/customers/'.$customer->id);
         $response->assertRedirect();
         $this->assertDatabaseMissing('customers', ['id' => $customer->id]);
     }
@@ -100,7 +102,7 @@ class ERPCRUDTest extends TestCase
         $promo = Promotion::where('code', 'MERDEKA80')->first();
 
         // 2. Delete
-        $response = $this->delete('/promotions/' . $promo->id);
+        $response = $this->delete('/promotions/'.$promo->id);
         $response->assertRedirect();
         $this->assertDatabaseMissing('promotions', ['id' => $promo->id]);
     }
@@ -121,10 +123,10 @@ class ERPCRUDTest extends TestCase
         $response->assertRedirect();
         $this->assertDatabaseHas('inventory_items', ['sku' => 'DET-LAV-01']);
 
-        $item = \App\Models\InventoryItem::where('sku', 'DET-LAV-01')->first();
+        $item = InventoryItem::where('sku', 'DET-LAV-01')->first();
 
         // 2. Stock Adjustment (Adjust)
-        $response = $this->put('/inventory/' . $item->id . '/adjust', [
+        $response = $this->put('/inventory/'.$item->id.'/adjust', [
             'current_stock' => 125,
         ]);
         $response->assertRedirect();
@@ -149,7 +151,7 @@ class ERPCRUDTest extends TestCase
         $employee = Employee::where('nik', 'NIK-SMD-005')->first();
 
         // 2. Update (Salary / Status / Position)
-        $response = $this->put('/hr/' . $employee->id, [
+        $response = $this->put('/hr/'.$employee->id, [
             'name' => 'Siti Aminah',
             'position' => 'Senior Kasir',
             'base_salary' => 3800000,
@@ -191,7 +193,7 @@ class ERPCRUDTest extends TestCase
         $asset = FixedAsset::where('asset_code', 'AST-DRY-01')->first();
 
         // 2. Delete (Disposal)
-        $response = $this->delete('/assets/' . $asset->id);
+        $response = $this->delete('/assets/'.$asset->id);
         $response->assertRedirect();
         $this->assertDatabaseMissing('fixed_assets', ['id' => $asset->id]);
     }
@@ -214,7 +216,7 @@ class ERPCRUDTest extends TestCase
         $coa = ChartOfAccount::where('code', '11140')->first();
 
         // 2. Delete
-        $response = $this->delete('/finance/' . $coa->id);
+        $response = $this->delete('/finance/'.$coa->id);
         $response->assertRedirect();
         $this->assertDatabaseMissing('chart_of_accounts', ['id' => $coa->id]);
     }

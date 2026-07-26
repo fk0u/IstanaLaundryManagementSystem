@@ -9,21 +9,21 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 #[Fillable([
-    'branch_id', 
-    'account_id', 
-    'asset_code', 
-    'name', 
-    'category', 
-    'acquisition_date', 
-    'acquisition_cost', 
-    'salvage_value', 
-    'useful_life_months', 
-    'depreciation_method', 
-    'accumulated_depreciation', 
-    'book_value', 
-    'is_active', 
-    'disposal_date', 
-    'disposal_value'
+    'branch_id',
+    'account_id',
+    'asset_code',
+    'name',
+    'category',
+    'acquisition_date',
+    'acquisition_cost',
+    'salvage_value',
+    'useful_life_months',
+    'depreciation_method',
+    'accumulated_depreciation',
+    'book_value',
+    'is_active',
+    'disposal_date',
+    'disposal_value',
 ])]
 class FixedAsset extends Model
 {

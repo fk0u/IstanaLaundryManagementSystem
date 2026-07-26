@@ -4,18 +4,11 @@ namespace App\Services\Finance;
 
 use App\Models\ChartOfAccount;
 use App\Models\JournalLine;
-use App\Models\Journal;
-use Illuminate\Support\Facades\DB;
 
 class FinancialReportService
 {
     /**
      * Get trial balance for a branch.
-     *
-     * @param int|null $branchId
-     * @param int $year
-     * @param int $month
-     * @return array
      */
     public function getTrialBalance(?int $branchId, int $year, int $month): array
     {
@@ -62,17 +55,12 @@ class FinancialReportService
             'lines' => $trialBalance,
             'total_debit' => $totalDebit,
             'total_credit' => $totalCredit,
-            'is_balanced' => abs($totalDebit - $totalCredit) < 0.01
+            'is_balanced' => abs($totalDebit - $totalCredit) < 0.01,
         ];
     }
 
     /**
      * Get income statement for a branch.
-     *
-     * @param int|null $branchId
-     * @param int $year
-     * @param int $month
-     * @return array
      */
     public function getIncomeStatement(?int $branchId, int $year, int $month): array
     {
@@ -117,17 +105,12 @@ class FinancialReportService
             'expenses' => $expenses,
             'total_revenue' => $totalRevenue,
             'total_expense' => $totalExpense,
-            'net_income' => $netIncome
+            'net_income' => $netIncome,
         ];
     }
 
     /**
      * Get balance sheet for a branch.
-     *
-     * @param int|null $branchId
-     * @param int $year
-     * @param int $month
-     * @return array
      */
     public function getBalanceSheet(?int $branchId, int $year, int $month): array
     {
@@ -188,7 +171,7 @@ class FinancialReportService
             'total_asset' => $totalAsset,
             'total_liability' => $totalLiability,
             'total_equity' => $totalEquity + $currentNetIncome,
-            'current_net_income' => $currentNetIncome
+            'current_net_income' => $currentNetIncome,
         ];
     }
 }

@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Middleware\BranchScopeMiddleware;
+use App\Http\Middleware\RedirectBasedOnRole;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -13,8 +15,8 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
-            'branch.scope' => \App\Http\Middleware\BranchScopeMiddleware::class,
-            'role.redirect' => \App\Http\Middleware\RedirectBasedOnRole::class,
+            'branch.scope' => BranchScopeMiddleware::class,
+            'role.redirect' => RedirectBasedOnRole::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

@@ -21,7 +21,7 @@ class InvoiceController extends Controller
     public function show(Order $order)
     {
         $order->load(['items.service', 'customer', 'branch', 'cashier', 'promo']);
-        
+
         return view('invoices.show', compact('order'));
     }
 
@@ -31,7 +31,7 @@ class InvoiceController extends Controller
     public function receipt(Order $order)
     {
         $order->load(['items.service', 'customer', 'branch', 'cashier']);
-        
+
         return view('invoices.receipt', compact('order'));
     }
 
@@ -41,19 +41,19 @@ class InvoiceController extends Controller
     public function sendWhatsApp(Order $order, Request $request)
     {
         $order->load(['items.service', 'customer', 'branch', 'cashier']);
-        
+
         // Get phone number: from request, from customer, or prompt
-        $phone = $request->query('phone') 
-                 ?? $order->customer?->phone 
+        $phone = $request->query('phone')
+                 ?? $order->customer?->phone
                  ?? null;
-        
-        if (!$phone) {
+
+        if (! $phone) {
             return redirect()->back()->with('error', 'Nomor telepon pelanggan tidak tersedia. Silakan isi data pelanggan terlebih dahulu.');
         }
-        
+
         $message = $this->whatsAppService->generateReceiptMessage($order);
         $url = $this->whatsAppService->generateWhatsAppUrl($phone, $message);
-        
+
         return redirect()->away($url);
     }
 }

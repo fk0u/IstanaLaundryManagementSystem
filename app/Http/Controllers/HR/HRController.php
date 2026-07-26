@@ -3,15 +3,16 @@
 namespace App\Http\Controllers\HR;
 
 use App\Http\Controllers\Controller;
-use App\Models\Employee;
 use App\Models\Attendance;
 use App\Models\AuditLog;
+use App\Models\Branch;
+use App\Models\Employee;
 use App\Models\Payroll;
 use App\Models\PayrollItem;
-use App\Models\Branch;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class HRController extends Controller
 {
@@ -19,16 +20,16 @@ class HRController extends Controller
     {
         $user = Auth::user();
         $isGlobalUser = $user->hasAnyRole(['Developer', 'Owner', 'Super_Admin', 'Finance']);
-        
+
         $branchId = $request->query('branch_id');
-        if (!$isGlobalUser) {
+        if (! $isGlobalUser) {
             $branchId = session('scoped_branch_id') ?? $user->branch_id;
         }
 
         $branches = Branch::orderBy('name')->get();
 
         $employees = Employee::with('branch')
-            ->when($branchId, fn($q) => $q->where('branch_id', $branchId))
+            ->when($branchId, fn ($q) => $q->where('branch_id', $branchId))
             ->orderBy('name')
             ->paginate(15);
 
@@ -36,7 +37,7 @@ class HRController extends Controller
         // when a non-scoped user (Owner/Developer) accesses /hr without session branch scope.
         $payrolls = Payroll::withoutBranchScope()
             ->with(['branch', 'createdByUser', 'items.employee'])
-            ->when($branchId, fn($q) => $q->where('branch_id', $branchId))
+            ->when($branchId, fn ($q) => $q->where('branch_id', $branchId))
             ->orderByDesc('year')
             ->orderByDesc('month')
             ->get();
@@ -154,7 +155,7 @@ class HRController extends Controller
                 }
             });
         } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Gagal generate payroll: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Gagal generate payroll: '.$e->getMessage());
         }
 
         return redirect()->route('hr.index')->with('success', 'Payroll periode berhasil digenerate!');
@@ -163,6 +164,7 @@ class HRController extends Controller
     public function showPayslip(PayrollItem $item)
     {
         $item->load(['employee', 'payroll.branch']);
+
         return view('hr.payslip', compact('item'));
     }
 
@@ -293,17 +295,17 @@ class HRController extends Controller
 
             // Delete all related payroll items first (cascade delete)
             $payroll->items()->delete();
-            
+
             // Delete the payroll record
             $payroll->delete();
 
             // AuditLog write — wrapped separately so failure won't break the delete flow
             try {
                 AuditLog::create([
-                    'user_id'    => Auth::id(),
-                    'action'     => 'delete',
+                    'user_id' => Auth::id(),
+                    'action' => 'delete',
                     'model_type' => Payroll::class,
-                    'model_id'   => $payrollId,
+                    'model_id' => $payrollId,
                     'old_values' => $snapshot,
                     'new_values' => null,
                     'ip_address' => request()->ip(),
@@ -311,12 +313,12 @@ class HRController extends Controller
                 ]);
             } catch (\Exception $auditEx) {
                 // Audit log failure is non-fatal — log it but don't block the user
-                \Illuminate\Support\Facades\Log::warning('AuditLog write failed after payroll deletion: ' . $auditEx->getMessage());
+                Log::warning('AuditLog write failed after payroll deletion: '.$auditEx->getMessage());
             }
-            
+
             return redirect()->route('hr.index')->with('success', 'Riwayat payroll berhasil dihapus!');
         } catch (\Exception $e) {
-            return redirect()->route('hr.index')->with('error', 'Gagal menghapus payroll: ' . $e->getMessage());
+            return redirect()->route('hr.index')->with('error', 'Gagal menghapus payroll: '.$e->getMessage());
         }
     }
 }

@@ -2,6 +2,7 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
@@ -23,7 +24,7 @@ return new class extends Migration
 
         // Add check constraint using raw SQL for MySQL (SQLite doesn't support ALTER TABLE check constraints)
         if (config('database.default') === 'mysql') {
-            \Illuminate\Support\Facades\DB::statement('ALTER TABLE journal_lines ADD CONSTRAINT chk_debit_credit CHECK (debit = 0 OR credit = 0)');
+            DB::statement('ALTER TABLE journal_lines ADD CONSTRAINT chk_debit_credit CHECK (debit = 0 OR credit = 0)');
         }
     }
 

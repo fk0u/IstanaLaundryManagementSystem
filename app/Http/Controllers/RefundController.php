@@ -2,12 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Journal;
 use App\Models\Order;
 use App\Models\Refund;
-use App\Models\Branch;
 use App\Services\AuditLogService;
-use App\Services\Finance\JournalService;
 use App\Services\CRM\LoyaltyService;
+use App\Services\Finance\JournalService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -15,7 +15,9 @@ use Illuminate\Support\Facades\DB;
 class RefundController extends Controller
 {
     protected AuditLogService $auditLogService;
+
     protected JournalService $journalService;
+
     protected LoyaltyService $loyaltyService;
 
     public function __construct(
@@ -49,7 +51,7 @@ class RefundController extends Controller
         if ($branchId) {
             $ordersQuery->where('branch_id', $branchId);
         }
-        
+
         $activeRefundOrderIds = Refund::where('status', '!=', 'rejected')->pluck('order_id')->toArray();
         $refundableOrders = $ordersQuery->whereNotIn('id', $activeRefundOrderIds)
             ->orderBy('created_at', 'desc')
@@ -112,7 +114,7 @@ class RefundController extends Controller
 
         // Stage 1: pending -> branch_approved
         if ($refund->status === 'pending') {
-            if (!$user->hasAnyRole(['Developer', 'Owner', 'Super_Admin', 'Branch_Admin'])) {
+            if (! $user->hasAnyRole(['Developer', 'Owner', 'Super_Admin', 'Branch_Admin'])) {
                 abort(403, 'Anda tidak memiliki hak akses untuk menyetujui tahap ini.');
             }
 
@@ -128,7 +130,7 @@ class RefundController extends Controller
 
         // Stage 2: branch_approved -> finance_approved
         if ($refund->status === 'branch_approved') {
-            if (!$user->hasAnyRole(['Developer', 'Owner', 'Super_Admin', 'Finance'])) {
+            if (! $user->hasAnyRole(['Developer', 'Owner', 'Super_Admin', 'Finance'])) {
                 abort(403, 'Anda tidak memiliki hak akses untuk menyetujui tahap ini.');
             }
 
@@ -144,7 +146,7 @@ class RefundController extends Controller
 
         // Stage 3: finance_approved -> completed
         if ($refund->status === 'finance_approved') {
-            if (!$user->hasAnyRole(['Developer', 'Owner'])) {
+            if (! $user->hasAnyRole(['Developer', 'Owner'])) {
                 abort(403, 'Anda tidak memiliki hak akses untuk menyetujui tahap ini.');
             }
 
@@ -162,7 +164,7 @@ class RefundController extends Controller
                 ]);
 
                 // 2. Reverse accounting journal entry if exists
-                $journal = \App\Models\Journal::where('source_type', Order::class)
+                $journal = Journal::where('source_type', Order::class)
                     ->where('source_id', $order->id)
                     ->where('status', 'posted')
                     ->first();
@@ -203,7 +205,7 @@ class RefundController extends Controller
             $canReject = true;
         }
 
-        if (!$canReject) {
+        if (! $canReject) {
             abort(403, 'Anda tidak memiliki hak akses untuk menolak permintaan refund ini.');
         }
 

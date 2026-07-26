@@ -2,23 +2,22 @@
 
 namespace Tests\Feature;
 
+use App\Exceptions\AccountingPeriodClosedException;
+use App\Exceptions\InsufficientStockException;
+use App\Models\AccountingPeriod;
 use App\Models\Branch;
 use App\Models\ChartOfAccount;
-use App\Models\InventoryItem;
-use App\Models\InventoryBatch;
-use App\Models\PurchaseRequest;
-use App\Models\PurchaseOrder;
 use App\Models\GoodsReceivedNote;
+use App\Models\InventoryBatch;
+use App\Models\InventoryItem;
+use App\Models\Journal;
+use App\Models\Order;
+use App\Models\PurchaseOrder;
+use App\Models\Service;
 use App\Models\Supplier;
 use App\Models\User;
-use App\Models\Order;
-use App\Models\Service;
-use App\Models\AccountingPeriod;
-use App\Models\Journal;
-use App\Services\Inventory\InventoryService;
 use App\Services\Finance\JournalService;
-use App\Exceptions\InsufficientStockException;
-use App\Exceptions\AccountingPeriodClosedException;
+use App\Services\Inventory\InventoryService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Spatie\Permission\Models\Role;
 use Tests\TestCase;
@@ -28,8 +27,11 @@ class BackOfficeTest extends TestCase
     use RefreshDatabase;
 
     protected $developerUser;
+
     protected $branch;
+
     protected $inventoryService;
+
     protected $journalService;
 
     protected function setUp(): void
@@ -80,7 +82,7 @@ class BackOfficeTest extends TestCase
                 'normal_balance' => $acc['normal_balance'],
                 'level' => 3,
                 'is_active' => true,
-                'is_system' => true
+                'is_system' => true,
             ]);
         }
     }
@@ -165,12 +167,12 @@ class BackOfficeTest extends TestCase
         // Verify remaining batch quantities in DB
         $batch1->refresh();
         $batch2->refresh();
-        $this->assertEquals(0, (float)$batch1->remaining_qty);
-        $this->assertEquals(75, (float)$batch2->remaining_qty);
+        $this->assertEquals(0, (float) $batch1->remaining_qty);
+        $this->assertEquals(75, (float) $batch2->remaining_qty);
 
         // Verify item stock in DB
         $item->refresh();
-        $this->assertEquals(75, (float)$item->current_stock);
+        $this->assertEquals(75, (float) $item->current_stock);
     }
 
     public function test_insufficient_stock_throws_exception()
@@ -215,7 +217,7 @@ class BackOfficeTest extends TestCase
             'payment_method' => 'cash',
             'payment_status' => 'pending',
             'production_status' => 'TERIMA',
-            'status' => 'active'
+            'status' => 'active',
         ]);
 
         // Trigger payment update -> fires OrderObserver
@@ -230,7 +232,7 @@ class BackOfficeTest extends TestCase
         $totalDebit = $journal->journalLines()->sum('debit');
         $totalCredit = $journal->journalLines()->sum('credit');
         $this->assertEquals($totalDebit, $totalCredit);
-        $this->assertEquals(54950, (float)$totalDebit); // Kas (49950) + Diskon (5000) = Pendapatan (50000) + PPN (4950)
+        $this->assertEquals(54950, (float) $totalDebit); // Kas (49950) + Diskon (5000) = Pendapatan (50000) + PPN (4950)
     }
 
     public function test_closed_accounting_period_prevents_journal_posting()
@@ -244,7 +246,7 @@ class BackOfficeTest extends TestCase
             'month' => now()->month,
             'status' => 'closed',
             'closed_at' => now(),
-            'closed_by' => $this->developerUser->id
+            'closed_by' => $this->developerUser->id,
         ]);
 
         $order = Order::create([
@@ -259,7 +261,7 @@ class BackOfficeTest extends TestCase
             'payment_method' => 'cash',
             'payment_status' => 'pending',
             'production_status' => 'TERIMA',
-            'status' => 'active'
+            'status' => 'active',
         ]);
 
         // Attempting to pay order (which auto-posts journal) should throw AccountingPeriodClosedException

@@ -3,11 +3,11 @@
 namespace App\Http\Controllers\Procurement;
 
 use App\Http\Controllers\Controller;
+use App\Models\InventoryItem;
 use App\Models\PurchaseOrder;
 use App\Models\PurchaseOrderItem;
 use App\Models\PurchaseRequest;
 use App\Models\Supplier;
-use App\Models\InventoryItem;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -21,7 +21,7 @@ class PurchaseOrderController extends Controller
 
         // Standard helpers for creating a PO
         $suppliers = Supplier::orderBy('name', 'asc')->get();
-        
+
         // List approved PRs that don't have a PO yet
         $approvedPrs = PurchaseRequest::where('status', 'approved')
             ->whereNotExists(function ($query) {
@@ -66,7 +66,7 @@ class PurchaseOrderController extends Controller
             // Calculate totals
             $subtotal = 0;
             foreach ($request->items as $item) {
-                $subtotal += (float)$item['quantity'] * (float)$item['unit_cost'];
+                $subtotal += (float) $item['quantity'] * (float) $item['unit_cost'];
             }
             $taxAmount = $subtotal * 0.11; // 11% PPN standard tax
             $total = $subtotal + $taxAmount;
@@ -85,7 +85,7 @@ class PurchaseOrderController extends Controller
             ]);
 
             foreach ($request->items as $item) {
-                $itemSubtotal = (float)$item['quantity'] * (float)$item['unit_cost'];
+                $itemSubtotal = (float) $item['quantity'] * (float) $item['unit_cost'];
                 PurchaseOrderItem::create([
                     'po_id' => $po->id,
                     'item_id' => $item['item_id'],
@@ -113,17 +113,19 @@ class PurchaseOrderController extends Controller
         }
 
         $po->update(['status' => 'sent']);
+
         return redirect()->back()->with('success', 'Status PO berhasil diubah menjadi dikirim (Sent).');
     }
 
     public function confirm($id)
     {
         $po = PurchaseOrder::findOrFail($id);
-        if (!in_array($po->status, ['draft', 'sent'])) {
+        if (! in_array($po->status, ['draft', 'sent'])) {
             return redirect()->back()->with('error', 'Hanya PO draft atau dikirim yang dapat dikonfirmasi.');
         }
 
         $po->update(['status' => 'confirmed']);
+
         return redirect()->back()->with('success', 'Status PO berhasil dikonfirmasi oleh supplier.');
     }
 
@@ -135,6 +137,7 @@ class PurchaseOrderController extends Controller
         }
 
         $po->delete();
+
         return redirect()->back()->with('success', 'PO berhasil dihapus.');
     }
 }
