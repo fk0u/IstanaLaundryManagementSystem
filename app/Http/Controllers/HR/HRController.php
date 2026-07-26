@@ -32,7 +32,10 @@ class HRController extends Controller
             ->orderBy('name')
             ->paginate(15);
 
-        $payrolls = Payroll::with(['branch', 'createdByUser', 'items.employee'])
+        // withoutBranchScope prevents global scope from hiding payrolls
+        // when a non-scoped user (Owner/Developer) accesses /hr without session branch scope.
+        $payrolls = Payroll::withoutBranchScope()
+            ->with(['branch', 'createdByUser', 'items.employee'])
             ->when($branchId, fn($q) => $q->where('branch_id', $branchId))
             ->orderByDesc('year')
             ->orderByDesc('month')
@@ -163,8 +166,19 @@ class HRController extends Controller
         return view('hr.payslip', compact('item'));
     }
 
-    public function showPayroll(Payroll $payroll)
+    /**
+     * Resolve a Payroll bypassing BranchScoped global scope.
+     * Required because route model binding uses the global scope,
+     * causing 404 when the session branch scope does not match the payroll.
+     */
+    protected function resolvePayroll(int $id): Payroll
     {
+        return Payroll::withoutBranchScope()->findOrFail($id);
+    }
+
+    public function showPayroll(int $payroll)
+    {
+        $payroll = $this->resolvePayroll($payroll);
         $payroll->load(['branch', 'createdByUser', 'items.employee']);
 
         return view('hr.payroll-detail', compact('payroll'));
@@ -249,9 +263,11 @@ class HRController extends Controller
         return redirect()->back()->with('success', 'Komponen payroll berhasil diperbarui!');
     }
 
-    public function destroyPayroll(Payroll $payroll)
+    public function destroyPayroll(int $payroll)
     {
         try {
+            // Bypass BranchScoped global scope to ensure record is always found
+            $payroll = $this->resolvePayroll($payroll);
             $payroll->load(['branch', 'items.employee']);
             $snapshot = [
                 'payroll' => [
@@ -273,22 +289,30 @@ class HRController extends Controller
                 ])->values()->all(),
             ];
 
+            $payrollId = $payroll->id;
+
             // Delete all related payroll items first (cascade delete)
             $payroll->items()->delete();
             
             // Delete the payroll record
             $payroll->delete();
 
-            AuditLog::create([
-                'user_id' => Auth::id(),
-                'action' => 'delete',
-                'model_type' => Payroll::class,
-                'model_id' => $payroll->id,
-                'old_values' => $snapshot,
-                'new_values' => null,
-                'ip_address' => request()->ip(),
-                'user_agent' => (string) request()->userAgent(),
-            ]);
+            // AuditLog write — wrapped separately so failure won't break the delete flow
+            try {
+                AuditLog::create([
+                    'user_id'    => Auth::id(),
+                    'action'     => 'delete',
+                    'model_type' => Payroll::class,
+                    'model_id'   => $payrollId,
+                    'old_values' => $snapshot,
+                    'new_values' => null,
+                    'ip_address' => request()->ip(),
+                    'user_agent' => (string) request()->userAgent(),
+                ]);
+            } catch (\Exception $auditEx) {
+                // Audit log failure is non-fatal — log it but don't block the user
+                \Illuminate\Support\Facades\Log::warning('AuditLog write failed after payroll deletion: ' . $auditEx->getMessage());
+            }
             
             return redirect()->route('hr.index')->with('success', 'Riwayat payroll berhasil dihapus!');
         } catch (\Exception $e) {
