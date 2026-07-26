@@ -142,7 +142,13 @@
 
         <!-- Recent Branch Orders (12 cols) -->
         <div class="col-span-12 bg-white dark:bg-slate-900 border border-outline-variant dark:border-slate-800 rounded-xl p-6 premium-shadow">
-            <h4 class="text-base font-extrabold text-slate-800 dark:text-slate-200 mb-6">Nota Transaksi Terbaru Cabang</h4>
+            <div class="flex justify-between items-center mb-6">
+                <h4 class="text-base font-extrabold text-slate-800 dark:text-slate-200">Nota Transaksi Terbaru Cabang</h4>
+                <a href="{{ route('orders.index') }}" class="text-2xs md:text-xs font-bold text-primary hover:underline inline-flex items-center gap-1">
+                    Lihat Semua
+                    <span class="material-symbols-outlined text-sm">arrow_forward</span>
+                </a>
+            </div>
             <div class="overflow-x-auto">
                 <table class="w-full text-left text-xs border-collapse">
                     <thead>
@@ -153,6 +159,7 @@
                             <th class="py-2.5 px-4">Bayar</th>
                             <th class="py-2.5 px-4">Produksi</th>
                             <th class="py-2.5 px-4 text-right">Total</th>
+                            <th class="py-2.5 px-4 text-right">Aksi</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-50 dark:divide-slate-850">
@@ -184,10 +191,17 @@
                                 <td class="py-3.5 px-4 text-right font-extrabold text-slate-800 dark:text-slate-100 font-mono">
                                     Rp {{ number_format($order->total, 0, ',', '.') }}
                                 </td>
+                                <td class="py-3.5 px-4 text-right">
+                                    <a href="{{ route('invoices.show', $order) }}"
+                                       class="inline-flex items-center gap-1 px-2.5 py-1.5 bg-orange-50 dark:bg-slate-800 text-primary text-2xs font-bold rounded-lg hover:bg-orange-100 dark:hover:bg-slate-700 transition-colors">
+                                        <span class="material-symbols-outlined text-sm">description</span>
+                                        Invoice
+                                    </a>
+                                </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="6" class="py-8 text-center text-slate-400">Belum ada transaksi di cabang ini.</td>
+                                <td colspan="7" class="py-8 text-center text-slate-400">Belum ada transaksi di cabang ini.</td>
                             </tr>
                         @endforelse
                     </tbody>

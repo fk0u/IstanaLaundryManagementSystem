@@ -157,7 +157,10 @@
         <div class="lg:col-span-12 bg-white dark:bg-slate-900 border border-outline-variant dark:border-slate-800 rounded-xl p-4 md:p-6 premium-shadow">
             <div class="flex justify-between items-center mb-4 md:mb-6">
                 <h4 class="text-sm md:text-base font-extrabold text-slate-800 dark:text-slate-200">Transaksi Terbaru</h4>
-                <a href="/pos" class="text-2xs md:text-xs font-bold text-primary hover:underline">Lihat Semua</a>
+                <a href="{{ route('orders.index') }}" class="text-2xs md:text-xs font-bold text-primary hover:underline inline-flex items-center gap-1">
+                    Lihat Semua
+                    <span class="material-symbols-outlined text-sm">arrow_forward</span>
+                </a>
             </div>
 
             {{-- Desktop Table --}}

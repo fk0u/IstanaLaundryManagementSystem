@@ -75,6 +75,16 @@
                 </a>
             @endif
 
+            <!-- Orders (Semua Transaksi) -->
+            @if(auth()->user()->hasAnyRole(['Developer', 'Owner', 'Super_Admin', 'Branch_Admin', 'Cashier', 'Finance']))
+                <a href="{{ route('orders.index') }}" @click="sidebarOpen = false"
+                   class="flex items-center gap-3.5 px-3.5 py-3 transition-all rounded-xl text-sm font-semibold {{ request()->is('orders*') ? 'text-primary dark:text-orange-400 bg-orange-50 dark:bg-orange-950/30 font-bold border-r-4 border-primary' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/60' }}"
+                   :title="!desktopSidebarOpen ? 'Semua Transaksi' : ''">
+                    <span class="material-symbols-outlined text-[22px] shrink-0" style="font-variation-settings: 'FILL' {{ request()->is('orders*') ? '1' : '0' }};">receipt_long</span>
+                    <span x-show="desktopSidebarOpen" class="truncate">Semua Transaksi</span>
+                </a>
+            @endif
+
             <!-- Production Tracking -->
             @if(auth()->user()->hasAnyRole(['Developer', 'Owner', 'Super_Admin', 'Branch_Admin', 'Workshop_Admin', 'Workshop_Staff']))
                 <a href="/production" @click="sidebarOpen = false" 

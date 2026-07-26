@@ -42,6 +42,9 @@ Route::middleware(['auth', 'branch.scope'])->group(function () {
     Route::get('/invoices/{order}/receipt', [\App\Http\Controllers\InvoiceController::class, 'receipt'])->name('invoices.receipt');
     Route::get('/invoices/{order}/whatsapp', [\App\Http\Controllers\InvoiceController::class, 'sendWhatsApp'])->name('invoices.whatsapp');
 
+    // Orders — list seluruh transaksi
+    Route::get('/orders', [\App\Http\Controllers\OrderController::class, 'index'])->name('orders.index');
+
     // Production Tracking
     Route::get('/production', [\App\Http\Controllers\ProductionController::class, 'index'])->name('production.index');
     Route::post('/production/update/{id}', [\App\Http\Controllers\ProductionController::class, 'updateStatus'])->name('production.update');
