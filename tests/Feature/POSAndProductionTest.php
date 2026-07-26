@@ -17,8 +17,11 @@ class POSAndProductionTest extends TestCase
     use RefreshDatabase;
 
     protected User $cashier;
+
     protected Branch $branch;
+
     protected Service $service;
+
     protected Customer $customer;
 
     protected function setUp(): void
@@ -106,7 +109,7 @@ class POSAndProductionTest extends TestCase
                     [
                         'service_id' => $this->service->id,
                         'quantity' => 3, // Total: 3 * 10000 = 30000
-                    ]
+                    ],
                 ],
                 'promo_id' => $promo->id, // 10% discount = 3000
                 'points_used' => 50, // 50 Rp discount
@@ -120,7 +123,7 @@ class POSAndProductionTest extends TestCase
         // Verify Order in DB
         $order = Order::first();
         $this->assertNotNull($order);
-        $this->assertEquals('SMD01-' . now()->format('Ym') . '-0001', $order->order_number);
+        $this->assertEquals('SMD01-'.now()->format('Ym').'-0001', $order->order_number);
         $this->assertEquals(30000, $order->subtotal);
         $this->assertEquals(3000, $order->discount_amount);
         $this->assertEquals(50, $order->points_used);
@@ -206,7 +209,7 @@ class POSAndProductionTest extends TestCase
             ->post(route('production.update', $order->id), [
                 'status' => 'CUCI',
             ]);
-        
+
         $response->assertSessionHas('error');
         $order->refresh();
         $this->assertEquals('TERIMA', $order->production_status); // Did not change
