@@ -41,9 +41,12 @@ class ProductionController extends Controller
             $query->where('production_status', '!=', 'DIAMBIL');
         }
 
-        $orders = $query->with(['customer', 'items.service'])->orderBy('created_at', 'desc')->get();
+        $orders = $query->with(['customer', 'items.service'])
+            ->orderBy('created_at', 'desc')
+            ->paginate(15)
+            ->withQueryString();
 
-        return view('production.index', compact('branch', 'orders'));
+        return view('production.index', compact('branch', 'orders', 'requestedStatus'));
     }
 
     /**

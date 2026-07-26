@@ -36,7 +36,9 @@
                 <x-card>
                     <div class="text-center py-12 md:py-16">
                         <span class="material-symbols-outlined text-slate-350 dark:text-slate-700 text-5xl md:text-6xl mb-3">dry_cleaning</span>
-                        <p class="text-xs md:text-sm font-semibold text-slate-400 dark:text-slate-500">Tidak ada antrean cucian aktif di stasiun ini.</p>
+                        <p class="text-xs md:text-sm font-semibold text-slate-400 dark:text-slate-500">
+                            {{ $requestedStatus === 'DIAMBIL' ? 'Belum ada order yang sudah diambil pelanggan.' : 'Tidak ada antrean cucian aktif di stasiun ini.' }}
+                        </p>
                     </div>
                 </x-card>
             @else
@@ -165,5 +167,11 @@
                 @endforeach
             @endif
         </div>
+
+        @if ($orders->hasPages())
+            <div class="mt-2">
+                {{ $orders->links() }}
+            </div>
+        @endif
     </div>
 </x-app-layout>

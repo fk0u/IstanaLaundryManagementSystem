@@ -277,4 +277,32 @@ class POSAndProductionTest extends TestCase
             return $orders->contains('id', $diambilOrder->id) && ! $orders->contains('id', $activeOrder->id);
         });
     }
+
+    /**
+     * Test that the Production board paginates results (15 per page) instead
+     * of loading every matching order at once, since DIAMBIL orders can
+     * accumulate indefinitely over time.
+     */
+    public function test_production_index_paginates_orders(): void
+    {
+        for ($i = 1; $i <= 20; $i++) {
+            Order::create([
+                'order_number' => sprintf('SMD01-202607-80%02d', $i),
+                'branch_id' => $this->branch->id,
+                'cashier_id' => $this->cashier->id,
+                'production_status' => 'DIAMBIL',
+                'payment_method' => 'cash',
+                'payment_status' => 'paid',
+                'subtotal' => 10000,
+                'total' => 10000,
+            ]);
+        }
+
+        $response = $this->actingAs($this->cashier)->get(route('production.index', ['status' => 'DIAMBIL']));
+
+        $response->assertStatus(200);
+        $response->assertViewHas('orders', function ($orders) {
+            return $orders->count() === 15 && $orders->total() === 20 && $orders->hasMorePages();
+        });
+    }
 }
