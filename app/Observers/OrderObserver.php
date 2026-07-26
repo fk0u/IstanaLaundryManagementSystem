@@ -20,6 +20,25 @@ class OrderObserver
     }
 
     /**
+     * Handle the Order "created" event.
+     *
+     * Covers the primary POS flow where a cashier creates an order that is
+     * already fully paid at creation time (e.g. cash payment). This never
+     * fires an "updated" event, so the journal must be posted here too.
+     */
+    public function created(Order $order): void
+    {
+        if ($order->payment_status === 'paid') {
+            try {
+                $this->journalService->postOrderJournal($order);
+                Log::info("Auto Journal posted for newly created paid Order #{$order->id}");
+            } catch (\Exception $e) {
+                Log::error("Failed to auto-post journal for newly created Order #{$order->id}: ".$e->getMessage());
+            }
+        }
+    }
+
+    /**
      * Handle the Order "updated" event.
      */
     public function updated(Order $order): void

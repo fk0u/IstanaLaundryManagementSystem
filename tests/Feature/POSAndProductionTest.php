@@ -234,4 +234,47 @@ class POSAndProductionTest extends TestCase
         $order->refresh();
         $this->assertEquals('PILAH', $order->production_status); // Stayed PILAH
     }
+
+    /**
+     * Test that the Production board hides DIAMBIL orders by default, but
+     * shows them when explicitly filtered.
+     */
+    public function test_production_index_hides_diambil_by_default_but_filter_shows_it(): void
+    {
+        $activeOrder = Order::create([
+            'order_number' => 'SMD01-202607-7001',
+            'branch_id' => $this->branch->id,
+            'cashier_id' => $this->cashier->id,
+            'production_status' => 'CUCI',
+            'payment_method' => 'cash',
+            'payment_status' => 'pending',
+            'subtotal' => 10000,
+            'total' => 10000,
+        ]);
+
+        $diambilOrder = Order::create([
+            'order_number' => 'SMD01-202607-7002',
+            'branch_id' => $this->branch->id,
+            'cashier_id' => $this->cashier->id,
+            'production_status' => 'DIAMBIL',
+            'payment_method' => 'cash',
+            'payment_status' => 'paid',
+            'subtotal' => 10000,
+            'total' => 10000,
+        ]);
+
+        // Default view: DIAMBIL is hidden, active order is shown.
+        $response = $this->actingAs($this->cashier)->get(route('production.index'));
+        $response->assertStatus(200);
+        $response->assertViewHas('orders', function ($orders) use ($activeOrder, $diambilOrder) {
+            return $orders->contains('id', $activeOrder->id) && ! $orders->contains('id', $diambilOrder->id);
+        });
+
+        // Explicit DIAMBIL filter: only the DIAMBIL order is shown.
+        $response = $this->actingAs($this->cashier)->get(route('production.index', ['status' => 'DIAMBIL']));
+        $response->assertStatus(200);
+        $response->assertViewHas('orders', function ($orders) use ($activeOrder, $diambilOrder) {
+            return $orders->contains('id', $diambilOrder->id) && ! $orders->contains('id', $activeOrder->id);
+        });
+    }
 }

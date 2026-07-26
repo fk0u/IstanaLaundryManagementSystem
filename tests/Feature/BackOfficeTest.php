@@ -17,6 +17,7 @@ use App\Models\Service;
 use App\Models\Supplier;
 use App\Models\User;
 use App\Services\Finance\JournalService;
+use App\Services\FinancialReportService;
 use App\Services\Inventory\InventoryService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Spatie\Permission\Models\Role;
@@ -233,6 +234,57 @@ class BackOfficeTest extends TestCase
         $totalCredit = $journal->journalLines()->sum('credit');
         $this->assertEquals($totalDebit, $totalCredit);
         $this->assertEquals(54950, (float) $totalDebit); // Kas (49950) + Diskon (5000) = Pendapatan (50000) + PPN (4950)
+    }
+
+    public function test_auto_journal_posted_when_order_created_already_paid()
+    {
+        $this->actingAs($this->developerUser);
+
+        // Simulate the primary POS flow: cashier creates an order that is
+        // already fully paid at creation time (payment_status = 'paid' on
+        // Order::create), which fires the Eloquent "created" event rather
+        // than "updated". Before the fix, OrderObserver only listened to
+        // "updated", so no journal was ever posted for this (most common)
+        // flow, leaving the Financial Reports permanently at zero.
+        $order = Order::create([
+            'branch_id' => $this->branch->id,
+            'customer_id' => null,
+            'cashier_id' => $this->developerUser->id,
+            'order_number' => 'SMD01-202607-0003',
+            'subtotal' => 30000,
+            'discount_amount' => 0,
+            'tax_amount' => 0,
+            'total' => 30000,
+            'payment_method' => 'cash',
+            'payment_status' => 'paid',
+            'production_status' => 'TERIMA',
+            'status' => 'active',
+            'paid_amount' => 30000,
+            'paid_at' => now(),
+        ]);
+
+        $journal = Journal::where('source_type', Order::class)->where('source_id', $order->id)->first();
+        $this->assertNotNull($journal, 'Journal should be auto-posted when an order is created already paid.');
+        $this->assertEquals('posted', $journal->status);
+
+        $totalDebit = $journal->journalLines()->sum('debit');
+        $totalCredit = $journal->journalLines()->sum('credit');
+        $this->assertEquals($totalDebit, $totalCredit);
+        $this->assertEquals(30000, (float) $totalDebit);
+
+        // Acceptance: with at least one paid order + journal entries, the
+        // Financial Report for the matching period must no longer be zero.
+        $reportService = app(FinancialReportService::class);
+        $year = (int) now()->year;
+        $month = (int) now()->month;
+
+        $incomeStatement = $reportService->getIncomeStatement($this->branch->id, $year, $month);
+        $this->assertEquals(30000, $incomeStatement['total_revenue']);
+        $this->assertEquals(30000, $incomeStatement['net_income']);
+
+        $trialBalance = $reportService->getTrialBalance($this->branch->id, $year, $month);
+        $this->assertTrue($trialBalance['total_debit'] > 0);
+        $this->assertTrue($trialBalance['is_balanced']);
     }
 
     public function test_closed_accounting_period_prevents_journal_posting()

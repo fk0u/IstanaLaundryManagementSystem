@@ -29,12 +29,16 @@ class ProductionController extends Controller
 
         $branch = Branch::find($branchId);
 
-        // Fetch orders not yet taken (DIAMBIL)
-        $query = Order::where('branch_id', $branchId)
-            ->where('production_status', '!=', 'DIAMBIL');
+        $requestedStatus = $request->query('status');
+        $query = Order::where('branch_id', $branchId);
 
-        if ($request->has('status') && in_array($request->status, $this->statusOrder)) {
-            $query->where('production_status', $request->status);
+        if ($requestedStatus && in_array($requestedStatus, $this->statusOrder, true)) {
+            // Explicit filter (including DIAMBIL) — show exactly that status.
+            $query->where('production_status', $requestedStatus);
+        } else {
+            // Default board view: hide DIAMBIL so the operational board stays
+            // focused on active production. Use the DIAMBIL filter to see them.
+            $query->where('production_status', '!=', 'DIAMBIL');
         }
 
         $orders = $query->with(['customer', 'items.service'])->orderBy('created_at', 'desc')->get();

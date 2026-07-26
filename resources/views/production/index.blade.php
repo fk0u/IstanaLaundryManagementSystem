@@ -23,6 +23,10 @@
                         {{ $status }}
                     </a>
                 @endforeach
+                <a href="{{ route('production.index', ['status' => 'DIAMBIL']) }}" 
+                   class="btn-touch px-4 py-2 rounded-xl text-xs font-bold border transition-all cursor-pointer whitespace-nowrap {{ request('status') === 'DIAMBIL' ? 'bg-emerald-600 text-white border-emerald-600 shadow-sm' : 'bg-white dark:bg-slate-900 border-emerald-200 dark:border-emerald-900/40 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/20' }}">
+                    <span class="material-symbols-outlined text-xs align-middle mr-0.5">check_circle</span>DIAMBIL
+                </a>
             </div>
         </x-card>
 
