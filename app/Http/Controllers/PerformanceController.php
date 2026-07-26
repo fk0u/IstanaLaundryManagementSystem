@@ -4,8 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Branch;
 use App\Models\Order;
-use App\Models\User;
 use App\Models\ProductionStatusLog;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -16,9 +16,9 @@ class PerformanceController extends Controller
     {
         $user = Auth::user();
         $isGlobalUser = $user->hasAnyRole(['Developer', 'Owner', 'Super_Admin', 'Finance']);
-        
+
         $branchId = $request->query('branch_id');
-        if (!$isGlobalUser) {
+        if (! $isGlobalUser) {
             $branchId = session('scoped_branch_id') ?? $user->branch_id;
         }
 
@@ -27,20 +27,24 @@ class PerformanceController extends Controller
         // 1. Cashiers Leaderboard (Omset & Total Order)
         $cashiersQuery = User::role(['Cashier', 'Branch_Admin', 'Owner', 'Super_Admin', 'Developer'])
             ->withCount(['orders as total_orders' => function ($q) use ($branchId) {
-                if ($branchId) $q->where('branch_id', $branchId);
+                if ($branchId) {
+                    $q->where('branch_id', $branchId);
+                }
             }])
             ->withSum(['orders as total_revenue' => function ($q) use ($branchId) {
-                if ($branchId) $q->where('branch_id', $branchId);
+                if ($branchId) {
+                    $q->where('branch_id', $branchId);
+                }
                 $q->where('payment_status', 'paid');
             }], 'total');
 
-        $cashiers = $cashiersQuery->get()->filter(fn($u) => $u->total_orders > 0)->sortByDesc('total_revenue');
+        $cashiers = $cashiersQuery->get()->filter(fn ($u) => $u->total_orders > 0)->sortByDesc('total_revenue');
 
         // 2. Workshop Staff Productivity (Production Status Updates)
         $staffProductivity = ProductionStatusLog::query()
             ->join('users', 'production_status_logs.updated_by', '=', 'users.id')
             ->join('orders', 'production_status_logs.order_id', '=', 'orders.id')
-            ->when($branchId, fn($q) => $q->where('orders.branch_id', $branchId))
+            ->when($branchId, fn ($q) => $q->where('orders.branch_id', $branchId))
             ->select(
                 'users.name as staff_name',
                 DB::raw('COUNT(production_status_logs.id) as total_actions'),
@@ -52,11 +56,11 @@ class PerformanceController extends Controller
             ->get();
 
         // 3. Operational Performance Metrics
-        $totalActiveOrders = Order::when($branchId, fn($q) => $q->where('branch_id', $branchId))
+        $totalActiveOrders = Order::when($branchId, fn ($q) => $q->where('branch_id', $branchId))
             ->whereNotIn('production_status', ['DIAMBIL'])
             ->count();
 
-        $overdueOrders = Order::when($branchId, fn($q) => $q->where('branch_id', $branchId))
+        $overdueOrders = Order::when($branchId, fn ($q) => $q->where('branch_id', $branchId))
             ->whereNotIn('production_status', ['DIAMBIL'])
             ->where('estimated_done_at', '<', now())
             ->count();

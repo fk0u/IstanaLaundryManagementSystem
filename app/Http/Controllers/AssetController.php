@@ -2,10 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\FixedAsset;
-use App\Models\DepreciationSchedule;
 use App\Models\Branch;
 use App\Models\ChartOfAccount;
+use App\Models\DepreciationSchedule;
+use App\Models\FixedAsset;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -16,16 +17,16 @@ class AssetController extends Controller
     {
         $user = Auth::user();
         $isGlobalUser = $user->hasAnyRole(['Developer', 'Owner', 'Super_Admin', 'Finance']);
-        
+
         $branchId = $request->query('branch_id');
-        if (!$isGlobalUser) {
+        if (! $isGlobalUser) {
             $branchId = session('scoped_branch_id') ?? $user->branch_id;
         }
 
         $branches = Branch::orderBy('name')->get();
 
         $assets = FixedAsset::with(['branch', 'account'])
-            ->when($branchId, fn($q) => $q->where('branch_id', $branchId))
+            ->when($branchId, fn ($q) => $q->where('branch_id', $branchId))
             ->orderBy('asset_code')
             ->paginate(15);
 
@@ -73,7 +74,7 @@ class AssetController extends Controller
             $monthlyDep = ($cost - $salvage) / $months;
 
             $accumulated = 0;
-            $startDate = \Carbon\Carbon::parse($request->acquisition_date)->startOfMonth();
+            $startDate = Carbon::parse($request->acquisition_date)->startOfMonth();
 
             for ($i = 1; $i <= $months; $i++) {
                 $accumulated += $monthlyDep;
@@ -96,6 +97,7 @@ class AssetController extends Controller
     public function show(FixedAsset $asset)
     {
         $asset->load(['branch', 'account', 'depreciationSchedules']);
+
         return view('assets.show', compact('asset'));
     }
 }

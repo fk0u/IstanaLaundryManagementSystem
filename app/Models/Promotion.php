@@ -11,24 +11,24 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 #[Fillable([
-    'branch_id', 
-    'name', 
-    'code', 
-    'type', 
-    'value', 
-    'min_transaction', 
-    'service_id', 
-    'applicable_tier', 
-    'usage_limit', 
-    'usage_count', 
-    'per_customer_limit', 
-    'start_date', 
-    'end_date', 
-    'is_active'
+    'branch_id',
+    'name',
+    'code',
+    'type',
+    'value',
+    'min_transaction',
+    'service_id',
+    'applicable_tier',
+    'usage_limit',
+    'usage_count',
+    'per_customer_limit',
+    'start_date',
+    'end_date',
+    'is_active',
 ])]
 class Promotion extends Model
 {
-    use HasFactory, BranchScoped;
+    use BranchScoped, HasFactory;
 
     protected function casts(): array
     {
@@ -55,7 +55,7 @@ class Promotion extends Model
             if ($branchId !== null) {
                 $builder->where(function (Builder $query) use ($branchId) {
                     $query->where(static::getBranchColumn(), $branchId)
-                          ->orWhereNull(static::getBranchColumn());
+                        ->orWhereNull(static::getBranchColumn());
                 });
             }
         });
@@ -63,7 +63,7 @@ class Promotion extends Model
         static::creating(function ($model) {
             // Nullable branch_id is allowed for global promotions,
             // so we only auto-set if not explicitly set and not intended to be global.
-            if (!$model->{static::getBranchColumn()}) {
+            if (! $model->{static::getBranchColumn()}) {
                 $branchId = session('scoped_branch_id') ?? auth()->user()?->branch_id;
                 if ($branchId) {
                     $model->{static::getBranchColumn()} = $branchId;

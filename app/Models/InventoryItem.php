@@ -12,7 +12,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 #[Fillable(['branch_id', 'name', 'sku', 'category', 'unit', 'min_stock', 'current_stock'])]
 class InventoryItem extends Model
 {
-    use HasFactory, BranchScoped;
+    use BranchScoped, HasFactory;
 
     protected function casts(): array
     {

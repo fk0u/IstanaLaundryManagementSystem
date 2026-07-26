@@ -10,21 +10,21 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 #[Fillable([
-    'branch_id', 
-    'name', 
-    'phone', 
-    'email', 
-    'address', 
-    'member_code', 
-    'loyalty_tier', 
-    'loyalty_points', 
-    'total_spent', 
-    'transaction_count', 
-    'last_transaction_at'
+    'branch_id',
+    'name',
+    'phone',
+    'email',
+    'address',
+    'member_code',
+    'loyalty_tier',
+    'loyalty_points',
+    'total_spent',
+    'transaction_count',
+    'last_transaction_at',
 ])]
 class Customer extends Model
 {
-    use HasFactory, BranchScoped;
+    use BranchScoped, HasFactory;
 
     protected function casts(): array
     {

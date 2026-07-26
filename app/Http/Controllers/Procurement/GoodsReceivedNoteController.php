@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Models\GoodsReceivedNote;
 use App\Models\GRNItem;
 use App\Models\PurchaseOrder;
-use App\Models\InventoryItem;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -46,9 +45,9 @@ class GoodsReceivedNoteController extends Controller
             $yearMonth = now()->format('Ym');
 
             // Generate GRN number
-            $count = GoodsReceivedNote::whereHas('purchaseOrder', function($q) use ($branchId) {
-                    $q->where('branch_id', $branchId);
-                })
+            $count = GoodsReceivedNote::whereHas('purchaseOrder', function ($q) use ($branchId) {
+                $q->where('branch_id', $branchId);
+            })
                 ->whereYear('created_at', now()->year)
                 ->whereMonth('created_at', now()->month)
                 ->count();
@@ -66,7 +65,7 @@ class GoodsReceivedNoteController extends Controller
 
             foreach ($request->items as $item) {
                 // Skip if quantity is 0 (partial receiving could ignore some items)
-                if ((float)$item['quantity'] <= 0) {
+                if ((float) $item['quantity'] <= 0) {
                     continue;
                 }
 
@@ -76,7 +75,7 @@ class GoodsReceivedNoteController extends Controller
                     'po_item_id' => $item['po_item_id'],
                     'quantity' => $item['quantity'],
                     'unit_cost' => $item['unit_cost'],
-                    'batch_number' => 'BATCH-' . $grnNumber . '-' . $item['item_id'],
+                    'batch_number' => 'BATCH-'.$grnNumber.'-'.$item['item_id'],
                 ]);
             }
         });
@@ -105,6 +104,7 @@ class GoodsReceivedNoteController extends Controller
         }
 
         $grn->delete();
+
         return redirect()->back()->with('success', 'GRN berhasil dihapus.');
     }
 }

@@ -7,11 +7,11 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 #[Fillable([
-    'payroll_id', 'employee_id', 'base_salary', 'allowance', 'deduction', 
+    'payroll_id', 'employee_id', 'base_salary', 'allowance', 'deduction',
     'attendance_days', 'work_days', 'net_salary',
     'bonus_kg', 'bonus_pcs', 'transport_allowance', 'overtime_pay', 'attendance_bonus',
     'tardiness_deduction', 'loan_deduction', 'damage_deduction', 'bpjs_deduction',
-    'total_earnings', 'total_deductions'
+    'total_earnings', 'total_deductions',
 ])]
 class PayrollItem extends Model
 {
@@ -53,12 +53,12 @@ class PayrollItem extends Model
      */
     public function calculateTotalEarnings(): float
     {
-        return $this->base_salary 
-            + $this->allowance 
-            + $this->bonus_kg 
-            + $this->bonus_pcs 
-            + $this->transport_allowance 
-            + $this->overtime_pay 
+        return $this->base_salary
+            + $this->allowance
+            + $this->bonus_kg
+            + $this->bonus_pcs
+            + $this->transport_allowance
+            + $this->overtime_pay
             + $this->attendance_bonus;
     }
 
@@ -67,10 +67,10 @@ class PayrollItem extends Model
      */
     public function calculateTotalDeductions(): float
     {
-        return $this->deduction 
-            + $this->tardiness_deduction 
-            + $this->loan_deduction 
-            + $this->damage_deduction 
+        return $this->deduction
+            + $this->tardiness_deduction
+            + $this->loan_deduction
+            + $this->damage_deduction
             + $this->bpjs_deduction;
     }
 

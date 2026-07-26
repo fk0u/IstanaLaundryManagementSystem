@@ -21,9 +21,9 @@ class FinancialReportController extends Controller
     {
         $user = Auth::user();
         $isGlobalUser = $user->hasAnyRole(['Developer', 'Owner', 'Super_Admin', 'Finance']);
-        
+
         $branchId = $request->query('branch_id');
-        if (!$isGlobalUser) {
+        if (! $isGlobalUser) {
             $branchId = session('scoped_branch_id') ?? $user->branch_id;
         }
 
@@ -32,7 +32,7 @@ class FinancialReportController extends Controller
         $tab = $request->query('tab', 'income');
 
         $branches = Branch::orderBy('name')->get();
-        
+
         $trialBalance = $this->reportService->getTrialBalance($branchId, $year, $month);
         $incomeStatement = $this->reportService->getIncomeStatement($branchId, $year, $month);
         $balanceSheet = $this->reportService->getBalanceSheet($branchId, $year, $month);

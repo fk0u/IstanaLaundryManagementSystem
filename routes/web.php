@@ -1,27 +1,53 @@
 <?php
 
+use App\Http\Controllers\AssetController;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\Finance\AccountingPeriodController;
+use App\Http\Controllers\Finance\FinancialReportController;
+use App\Http\Controllers\Finance\JournalController;
+use App\Http\Controllers\HR\HRController;
+use App\Http\Controllers\InvoiceController;
+use App\Http\Controllers\OrderController;
+use App\Http\Controllers\PerformanceController;
+use App\Http\Controllers\POSController;
+use App\Http\Controllers\Procurement\GoodsReceivedNoteController;
+use App\Http\Controllers\Procurement\PurchaseOrderController;
+use App\Http\Controllers\Procurement\PurchaseRequestController;
+use App\Http\Controllers\ProductionController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\RefundController;
+use App\Models\AuditLog;
+use App\Models\Branch;
+use App\Models\ChartOfAccount;
+use App\Models\Customer;
+use App\Models\Employee;
+use App\Models\FixedAsset;
+use App\Models\InventoryItem;
+use App\Models\Order;
+use App\Models\Promotion;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Str;
 
 Route::get('/', function () {
     return view('welcome');
 });
 
-Route::get('/track', function (\Illuminate\Http\Request $request) {
+Route::get('/track', function (Request $request) {
     $orderNumber = $request->input('order_number');
-    
-    if (!$orderNumber) {
+
+    if (! $orderNumber) {
         return redirect('/')->with('error', 'Masukkan nomor nota terlebih dahulu.');
     }
 
-    $order = \App\Models\Order::with(['customer', 'branch', 'items.service', 'productionStatusLogs.updater'])
+    $order = Order::with(['customer', 'branch', 'items.service', 'productionStatusLogs.updater'])
         ->where('order_number', $orderNumber)
         ->first();
 
     return view('track', compact('order', 'orderNumber'));
 })->name('track');
 
-Route::get('/dashboard', [\App\Http\Controllers\DashboardController::class, 'index'])
+Route::get('/dashboard', [DashboardController::class, 'index'])
     ->middleware(['auth', 'verified', 'branch.scope'])
     ->name('dashboard');
 
@@ -34,31 +60,32 @@ Route::middleware('auth')->group(function () {
 // POS & Production Scoped Routes
 Route::middleware(['auth', 'branch.scope'])->group(function () {
     // POS (Kasir)
-    Route::get('/pos', [\App\Http\Controllers\POSController::class, 'index'])->name('pos.index');
-    Route::post('/pos', [\App\Http\Controllers\POSController::class, 'store'])->name('pos.store');
+    Route::get('/pos', [POSController::class, 'index'])->name('pos.index');
+    Route::post('/pos', [POSController::class, 'store'])->name('pos.store');
 
     // Invoices & Billing
-    Route::get('/invoices/{order}', [\App\Http\Controllers\InvoiceController::class, 'show'])->name('invoices.show');
-    Route::get('/invoices/{order}/receipt', [\App\Http\Controllers\InvoiceController::class, 'receipt'])->name('invoices.receipt');
-    Route::get('/invoices/{order}/whatsapp', [\App\Http\Controllers\InvoiceController::class, 'sendWhatsApp'])->name('invoices.whatsapp');
+    Route::get('/invoices/{order}', [InvoiceController::class, 'show'])->name('invoices.show');
+    Route::get('/invoices/{order}/receipt', [InvoiceController::class, 'receipt'])->name('invoices.receipt');
+    Route::get('/invoices/{order}/whatsapp', [InvoiceController::class, 'sendWhatsApp'])->name('invoices.whatsapp');
 
     // Orders — list seluruh transaksi
-    Route::get('/orders', [\App\Http\Controllers\OrderController::class, 'index'])->name('orders.index');
+    Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
 
     // Production Tracking
-    Route::get('/production', [\App\Http\Controllers\ProductionController::class, 'index'])->name('production.index');
-    Route::post('/production/update/{id}', [\App\Http\Controllers\ProductionController::class, 'updateStatus'])->name('production.update');
+    Route::get('/production', [ProductionController::class, 'index'])->name('production.index');
+    Route::post('/production/update/{id}', [ProductionController::class, 'updateStatus'])->name('production.update');
 
     // Performance Monitoring
-    Route::get('/performance', [\App\Http\Controllers\PerformanceController::class, 'index'])->name('performance.index');
+    Route::get('/performance', [PerformanceController::class, 'index'])->name('performance.index');
 
     // CRM & Customers
     Route::get('/customers', function () {
-        $customers = \App\Models\Customer::with('branch')->orderBy('name', 'asc')->paginate(10);
+        $customers = Customer::with('branch')->orderBy('name', 'asc')->paginate(10);
+
         return view('customers.index', compact('customers'));
     })->name('customers.index');
 
-    Route::post('/customers', function (\Illuminate\Http\Request $request) {
+    Route::post('/customers', function (Request $request) {
         $request->validate([
             'name' => 'required|string|max:255',
             'phone' => 'required|string|unique:customers,phone',
@@ -66,15 +93,15 @@ Route::middleware(['auth', 'branch.scope'])->group(function () {
             'address' => 'nullable|string',
         ]);
 
-        $branchId = session('scoped_branch_id') ?? auth()->user()->branch_id ?? \App\Models\Branch::first()->id;
+        $branchId = session('scoped_branch_id') ?? auth()->user()->branch_id ?? Branch::first()->id;
 
-        \App\Models\Customer::create([
+        Customer::create([
             'branch_id' => $branchId,
             'name' => $request->name,
             'phone' => $request->phone,
             'email' => $request->email,
             'address' => $request->address,
-            'member_code' => 'CUST-' . now()->format('Ymd') . '-' . strtoupper(\Illuminate\Support\Str::random(4)),
+            'member_code' => 'CUST-'.now()->format('Ymd').'-'.strtoupper(Str::random(4)),
             'loyalty_tier' => 'Bronze',
             'loyalty_points' => 0,
         ]);
@@ -82,35 +109,37 @@ Route::middleware(['auth', 'branch.scope'])->group(function () {
         return redirect()->back()->with('success', 'Pelanggan baru berhasil didaftarkan.');
     })->name('customers.store');
 
-    Route::put('/customers/{id}', function (\Illuminate\Http\Request $request, $id) {
+    Route::put('/customers/{id}', function (Request $request, $id) {
         $request->validate([
             'name' => 'required|string|max:255',
-            'phone' => 'required|string|unique:customers,phone,' . $id,
+            'phone' => 'required|string|unique:customers,phone,'.$id,
             'email' => 'nullable|email|max:255',
             'address' => 'nullable|string',
             'loyalty_tier' => 'required|in:Bronze,Silver,Gold,Platinum',
             'loyalty_points' => 'required|integer|min:0',
         ]);
 
-        $customer = \App\Models\Customer::findOrFail($id);
+        $customer = Customer::findOrFail($id);
         $customer->update($request->only('name', 'phone', 'email', 'address', 'loyalty_tier', 'loyalty_points'));
 
         return redirect()->back()->with('success', 'Data pelanggan berhasil diperbarui.');
     })->name('customers.update');
 
     Route::delete('/customers/{id}', function ($id) {
-        $customer = \App\Models\Customer::findOrFail($id);
+        $customer = Customer::findOrFail($id);
         $customer->delete();
+
         return redirect()->back()->with('success', 'Pelanggan berhasil dihapus.');
     })->name('customers.destroy');
 
     // Promotions
     Route::get('/promotions', function () {
-        $promotions = \App\Models\Promotion::orderBy('created_at', 'desc')->paginate(10);
+        $promotions = Promotion::orderBy('created_at', 'desc')->paginate(10);
+
         return view('promotions.index', compact('promotions'));
     })->name('promotions.index');
 
-    Route::post('/promotions', function (\Illuminate\Http\Request $request) {
+    Route::post('/promotions', function (Request $request) {
         $request->validate([
             'name' => 'required|string|max:255',
             'code' => 'required|string|unique:promotions,code',
@@ -121,7 +150,7 @@ Route::middleware(['auth', 'branch.scope'])->group(function () {
             'end_date' => 'required|date|after_or_equal:start_date',
         ]);
 
-        \App\Models\Promotion::create([
+        Promotion::create([
             'name' => $request->name,
             'code' => strtoupper($request->code),
             'type' => $request->type,
@@ -136,18 +165,20 @@ Route::middleware(['auth', 'branch.scope'])->group(function () {
     })->name('promotions.store');
 
     Route::delete('/promotions/{id}', function ($id) {
-        $promo = \App\Models\Promotion::findOrFail($id);
+        $promo = Promotion::findOrFail($id);
         $promo->delete();
+
         return redirect()->back()->with('success', 'Kupon promosi berhasil dihapus.');
     })->name('promotions.destroy');
 
     // Inventory
     Route::get('/inventory', function () {
-        $inventoryItems = \App\Models\InventoryItem::orderBy('name', 'asc')->paginate(10);
+        $inventoryItems = InventoryItem::orderBy('name', 'asc')->paginate(10);
+
         return view('inventory.index', compact('inventoryItems'));
     })->name('inventory.index');
 
-    Route::post('/inventory', function (\Illuminate\Http\Request $request) {
+    Route::post('/inventory', function (Request $request) {
         $request->validate([
             'name' => 'required|string|max:255',
             'sku' => 'required|string|unique:inventory_items,sku',
@@ -157,9 +188,9 @@ Route::middleware(['auth', 'branch.scope'])->group(function () {
             'current_stock' => 'required|numeric|min:0',
         ]);
 
-        $branchId = session('scoped_branch_id') ?? auth()->user()->branch_id ?? \App\Models\Branch::first()->id;
+        $branchId = session('scoped_branch_id') ?? auth()->user()->branch_id ?? Branch::first()->id;
 
-        \App\Models\InventoryItem::create([
+        InventoryItem::create([
             'branch_id' => $branchId,
             'name' => $request->name,
             'sku' => strtoupper($request->sku),
@@ -172,27 +203,27 @@ Route::middleware(['auth', 'branch.scope'])->group(function () {
         return redirect()->back()->with('success', 'Item inventori baru berhasil ditambahkan.');
     })->name('inventory.store');
 
-    Route::put('/inventory/{id}/adjust', function (\Illuminate\Http\Request $request, $id) {
+    Route::put('/inventory/{id}/adjust', function (Request $request, $id) {
         $request->validate([
             'current_stock' => 'required|numeric|min:0',
         ]);
 
-        $item = \App\Models\InventoryItem::findOrFail($id);
+        $item = InventoryItem::findOrFail($id);
         $item->update(['current_stock' => $request->current_stock]);
 
         return redirect()->back()->with('success', 'Stok item inventori berhasil dikoreksi.');
     })->name('inventory.adjust');
 
     // HR & Payroll
-    Route::get('/hr', [\App\Http\Controllers\HR\HRController::class, 'index'])->name('hr.index');
-    Route::post('/hr/employees', [\App\Http\Controllers\HR\HRController::class, 'storeEmployee'])->name('hr.employees.store');
-    Route::post('/hr/payrolls', [\App\Http\Controllers\HR\HRController::class, 'storePayroll'])->name('hr.payrolls.store');
-    Route::get('/hr/payrolls/{payroll}', [\App\Http\Controllers\HR\HRController::class, 'showPayroll'])->name('hr.payrolls.show');
-    Route::get('/hr/payslip/{item}', [\App\Http\Controllers\HR\HRController::class, 'showPayslip'])->name('hr.payslip');
-    Route::put('/hr/payroll-item/{item}', [\App\Http\Controllers\HR\HRController::class, 'updatePayrollItem'])->name('hr.payroll-item.update');
-    Route::delete('/hr/payroll/{payroll}', [\App\Http\Controllers\HR\HRController::class, 'destroyPayroll'])->name('hr.payroll.destroy');
+    Route::get('/hr', [HRController::class, 'index'])->name('hr.index');
+    Route::post('/hr/employees', [HRController::class, 'storeEmployee'])->name('hr.employees.store');
+    Route::post('/hr/payrolls', [HRController::class, 'storePayroll'])->name('hr.payrolls.store');
+    Route::get('/hr/payrolls/{payroll}', [HRController::class, 'showPayroll'])->name('hr.payrolls.show');
+    Route::get('/hr/payslip/{item}', [HRController::class, 'showPayslip'])->name('hr.payslip');
+    Route::put('/hr/payroll-item/{item}', [HRController::class, 'updatePayrollItem'])->name('hr.payroll-item.update');
+    Route::delete('/hr/payroll/{payroll}', [HRController::class, 'destroyPayroll'])->name('hr.payroll.destroy');
 
-    Route::post('/hr', function (\Illuminate\Http\Request $request) {
+    Route::post('/hr', function (Request $request) {
         $request->validate([
             'name' => 'required|string|max:255',
             'nik' => 'required|string|unique:employees,nik',
@@ -201,9 +232,9 @@ Route::middleware(['auth', 'branch.scope'])->group(function () {
             'joined_at' => 'required|date',
         ]);
 
-        $branchId = session('scoped_branch_id') ?? auth()->user()->branch_id ?? \App\Models\Branch::first()->id;
+        $branchId = session('scoped_branch_id') ?? auth()->user()->branch_id ?? Branch::first()->id;
 
-        \App\Models\Employee::create([
+        Employee::create([
             'branch_id' => $branchId,
             'name' => $request->name,
             'nik' => $request->nik,
@@ -216,7 +247,7 @@ Route::middleware(['auth', 'branch.scope'])->group(function () {
         return redirect()->back()->with('success', 'Karyawan baru berhasil ditambahkan.');
     })->name('hr.store');
 
-    Route::put('/hr/{id}', function (\Illuminate\Http\Request $request, $id) {
+    Route::put('/hr/{id}', function (Request $request, $id) {
         $request->validate([
             'name' => 'required|string|max:255',
             'position' => 'required|string|max:255',
@@ -224,18 +255,18 @@ Route::middleware(['auth', 'branch.scope'])->group(function () {
             'is_active' => 'required|boolean',
         ]);
 
-        $employee = \App\Models\Employee::findOrFail($id);
+        $employee = Employee::findOrFail($id);
         $employee->update($request->only('name', 'position', 'base_salary', 'is_active'));
 
         return redirect()->back()->with('success', 'Data karyawan berhasil diperbarui.');
     })->name('hr.update');
 
     // Fixed Assets
-    Route::get('/assets', [\App\Http\Controllers\AssetController::class, 'index'])->name('assets.index');
-    Route::post('/assets', [\App\Http\Controllers\AssetController::class, 'store'])->name('assets.store');
-    Route::get('/assets/{asset}', [\App\Http\Controllers\AssetController::class, 'show'])->name('assets.show');
+    Route::get('/assets', [AssetController::class, 'index'])->name('assets.index');
+    Route::post('/assets', [AssetController::class, 'store'])->name('assets.store');
+    Route::get('/assets/{asset}', [AssetController::class, 'show'])->name('assets.show');
 
-    Route::post('/assets', function (\Illuminate\Http\Request $request) {
+    Route::post('/assets', function (Request $request) {
         $request->validate([
             'name' => 'required|string|max:255',
             'asset_code' => 'required|string|unique:fixed_assets,asset_code',
@@ -247,10 +278,10 @@ Route::middleware(['auth', 'branch.scope'])->group(function () {
             'acquisition_date' => 'required|date',
         ]);
 
-        $branchId = session('scoped_branch_id') ?? auth()->user()->branch_id ?? \App\Models\Branch::first()->id;
-        $coa = \App\Models\ChartOfAccount::where('type', 'asset')->first();
+        $branchId = session('scoped_branch_id') ?? auth()->user()->branch_id ?? Branch::first()->id;
+        $coa = ChartOfAccount::where('type', 'asset')->first();
 
-        \App\Models\FixedAsset::create([
+        FixedAsset::create([
             'branch_id' => $branchId,
             'account_id' => $coa?->id ?? 1,
             'asset_code' => strtoupper($request->asset_code),
@@ -270,19 +301,21 @@ Route::middleware(['auth', 'branch.scope'])->group(function () {
     })->name('assets.store');
 
     Route::delete('/assets/{id}', function ($id) {
-        $asset = \App\Models\FixedAsset::findOrFail($id);
+        $asset = FixedAsset::findOrFail($id);
         $asset->delete();
+
         return redirect()->back()->with('success', 'Aset tetap berhasil dihapus.');
     })->name('assets.destroy');
 
     // Finance & COA
     Route::get('/finance', function () {
-        $coas = \App\Models\ChartOfAccount::orderBy('code', 'asc')->paginate(20);
-        $allCoas = \App\Models\ChartOfAccount::orderBy('code', 'asc')->get();
+        $coas = ChartOfAccount::orderBy('code', 'asc')->paginate(20);
+        $allCoas = ChartOfAccount::orderBy('code', 'asc')->get();
+
         return view('finance.index', compact('coas', 'allCoas'));
     })->name('finance.index');
 
-    Route::post('/finance', function (\Illuminate\Http\Request $request) {
+    Route::post('/finance', function (Request $request) {
         $request->validate([
             'code' => 'required|string|unique:chart_of_accounts,code',
             'name' => 'required|string|max:255',
@@ -291,10 +324,10 @@ Route::middleware(['auth', 'branch.scope'])->group(function () {
             'parent_id' => 'nullable|exists:chart_of_accounts,id',
         ]);
 
-        $parent = $request->parent_id ? \App\Models\ChartOfAccount::find($request->parent_id) : null;
+        $parent = $request->parent_id ? ChartOfAccount::find($request->parent_id) : null;
         $level = $parent ? $parent->level + 1 : 1;
 
-        \App\Models\ChartOfAccount::create([
+        ChartOfAccount::create([
             'code' => $request->code,
             'name' => $request->name,
             'type' => $request->type,
@@ -309,82 +342,84 @@ Route::middleware(['auth', 'branch.scope'])->group(function () {
     })->name('finance.store');
 
     Route::delete('/finance/{id}', function ($id) {
-        $coa = \App\Models\ChartOfAccount::findOrFail($id);
-        
+        $coa = ChartOfAccount::findOrFail($id);
+
         if ($coa->is_system) {
             return redirect()->back()->with('error', 'Akun bawaan sistem tidak dapat dihapus.');
         }
-        
+
         if ($coa->children()->count() > 0) {
             return redirect()->back()->with('error', 'Akun yang memiliki sub-akun tidak dapat dihapus.');
         }
 
         $coa->delete();
+
         return redirect()->back()->with('success', 'Akun COA berhasil dihapus.');
     })->name('finance.destroy');
 
     // Audit Logs
     Route::get('/audit-logs', function () {
-        $logs = \App\Models\AuditLog::with('user')->orderBy('created_at', 'desc')->paginate(20);
+        $logs = AuditLog::with('user')->orderBy('created_at', 'desc')->paginate(20);
+
         return view('audit_logs.index', compact('logs'));
     })->name('audit-logs.index');
 
     // Procurement - PR
-    Route::get('/procurement/purchase-requests', [\App\Http\Controllers\Procurement\PurchaseRequestController::class, 'index'])->name('procurement.purchase-requests.index');
-    Route::post('/procurement/purchase-requests', [\App\Http\Controllers\Procurement\PurchaseRequestController::class, 'store'])->name('procurement.purchase-requests.store');
-    Route::post('/procurement/purchase-requests/{id}/approve', [\App\Http\Controllers\Procurement\PurchaseRequestController::class, 'approve'])->name('procurement.purchase-requests.approve');
-    Route::post('/procurement/purchase-requests/{id}/reject', [\App\Http\Controllers\Procurement\PurchaseRequestController::class, 'reject'])->name('procurement.purchase-requests.reject');
-    Route::delete('/procurement/purchase-requests/{id}', [\App\Http\Controllers\Procurement\PurchaseRequestController::class, 'destroy'])->name('procurement.purchase-requests.destroy');
+    Route::get('/procurement/purchase-requests', [PurchaseRequestController::class, 'index'])->name('procurement.purchase-requests.index');
+    Route::post('/procurement/purchase-requests', [PurchaseRequestController::class, 'store'])->name('procurement.purchase-requests.store');
+    Route::post('/procurement/purchase-requests/{id}/approve', [PurchaseRequestController::class, 'approve'])->name('procurement.purchase-requests.approve');
+    Route::post('/procurement/purchase-requests/{id}/reject', [PurchaseRequestController::class, 'reject'])->name('procurement.purchase-requests.reject');
+    Route::delete('/procurement/purchase-requests/{id}', [PurchaseRequestController::class, 'destroy'])->name('procurement.purchase-requests.destroy');
 
     // Procurement - PO
-    Route::get('/procurement/purchase-orders', [\App\Http\Controllers\Procurement\PurchaseOrderController::class, 'index'])->name('procurement.purchase-orders.index');
-    Route::post('/procurement/purchase-orders', [\App\Http\Controllers\Procurement\PurchaseOrderController::class, 'store'])->name('procurement.purchase-orders.store');
-    Route::post('/procurement/purchase-orders/{id}/send', [\App\Http\Controllers\Procurement\PurchaseOrderController::class, 'send'])->name('procurement.purchase-orders.send');
-    Route::post('/procurement/purchase-orders/{id}/confirm', [\App\Http\Controllers\Procurement\PurchaseOrderController::class, 'confirm'])->name('procurement.purchase-orders.confirm');
-    Route::delete('/procurement/purchase-orders/{id}', [\App\Http\Controllers\Procurement\PurchaseOrderController::class, 'destroy'])->name('procurement.purchase-orders.destroy');
+    Route::get('/procurement/purchase-orders', [PurchaseOrderController::class, 'index'])->name('procurement.purchase-orders.index');
+    Route::post('/procurement/purchase-orders', [PurchaseOrderController::class, 'store'])->name('procurement.purchase-orders.store');
+    Route::post('/procurement/purchase-orders/{id}/send', [PurchaseOrderController::class, 'send'])->name('procurement.purchase-orders.send');
+    Route::post('/procurement/purchase-orders/{id}/confirm', [PurchaseOrderController::class, 'confirm'])->name('procurement.purchase-orders.confirm');
+    Route::delete('/procurement/purchase-orders/{id}', [PurchaseOrderController::class, 'destroy'])->name('procurement.purchase-orders.destroy');
 
     // Procurement - GRN
-    Route::get('/procurement/grns', [\App\Http\Controllers\Procurement\GoodsReceivedNoteController::class, 'index'])->name('procurement.grns.index');
-    Route::post('/procurement/grns', [\App\Http\Controllers\Procurement\GoodsReceivedNoteController::class, 'store'])->name('procurement.grns.store');
-    Route::post('/procurement/grns/{id}/confirm', [\App\Http\Controllers\Procurement\GoodsReceivedNoteController::class, 'confirm'])->name('procurement.grns.confirm');
-    Route::delete('/procurement/grns/{id}', [\App\Http\Controllers\Procurement\GoodsReceivedNoteController::class, 'destroy'])->name('procurement.grns.destroy');
+    Route::get('/procurement/grns', [GoodsReceivedNoteController::class, 'index'])->name('procurement.grns.index');
+    Route::post('/procurement/grns', [GoodsReceivedNoteController::class, 'store'])->name('procurement.grns.store');
+    Route::post('/procurement/grns/{id}/confirm', [GoodsReceivedNoteController::class, 'confirm'])->name('procurement.grns.confirm');
+    Route::delete('/procurement/grns/{id}', [GoodsReceivedNoteController::class, 'destroy'])->name('procurement.grns.destroy');
 
     // Finance - Ledger / Journals
-    Route::get('/finance/journals', [\App\Http\Controllers\Finance\JournalController::class, 'index'])->name('finance.journals.index');
-    Route::post('/finance/journals', [\App\Http\Controllers\Finance\JournalController::class, 'store'])->name('finance.journals.store');
-    Route::post('/finance/journals/{id}/reverse', [\App\Http\Controllers\Finance\JournalController::class, 'reverse'])->name('finance.journals.reverse');
+    Route::get('/finance/journals', [JournalController::class, 'index'])->name('finance.journals.index');
+    Route::post('/finance/journals', [JournalController::class, 'store'])->name('finance.journals.store');
+    Route::post('/finance/journals/{id}/reverse', [JournalController::class, 'reverse'])->name('finance.journals.reverse');
 
     // Finance - Accounting Periods
-    Route::get('/finance/periods', [\App\Http\Controllers\Finance\AccountingPeriodController::class, 'index'])->name('finance.periods.index');
-    Route::post('/finance/periods/{id}/close', [\App\Http\Controllers\Finance\AccountingPeriodController::class, 'close'])->name('finance.periods.close');
+    Route::get('/finance/periods', [AccountingPeriodController::class, 'index'])->name('finance.periods.index');
+    Route::post('/finance/periods/{id}/close', [AccountingPeriodController::class, 'close'])->name('finance.periods.close');
 
     // Finance - Reports
-    Route::get('/finance/reports', [\App\Http\Controllers\Finance\FinancialReportController::class, 'index'])->name('finance.reports.index');
+    Route::get('/finance/reports', [FinancialReportController::class, 'index'])->name('finance.reports.index');
 
     // Super User - Switch Scoped Branch
-    Route::post('/switch-branch', function (\Illuminate\Http\Request $request) {
-        if (!auth()->user()->hasAnyRole(['Developer', 'Owner', 'Super_Admin'])) {
+    Route::post('/switch-branch', function (Request $request) {
+        if (! auth()->user()->hasAnyRole(['Developer', 'Owner', 'Super_Admin'])) {
             abort(403, 'Hanya Owner dan Administrator yang dapat beralih cabang.');
         }
-        
+
         $request->validate([
             'branch_id' => 'nullable|exists:branches,id',
         ]);
-        
+
         if ($request->branch_id) {
             session(['scoped_branch_id' => $request->branch_id]);
         } else {
             session()->forget('scoped_branch_id');
         }
-        
+
         return redirect()->back()->with('success', 'Cabang aktif berhasil diubah.');
     })->name('switch-branch');
 
     // Refund Module
-    Route::get('/refunds', [\App\Http\Controllers\RefundController::class, 'index'])->name('refunds.index');
-    Route::post('/refunds', [\App\Http\Controllers\RefundController::class, 'store'])->name('refunds.store');
-    Route::post('/refunds/{id}/approve', [\App\Http\Controllers\RefundController::class, 'approve'])->name('refunds.approve');
-    Route::post('/refunds/{id}/reject', [\App\Http\Controllers\RefundController::class, 'reject'])->name('refunds.reject');
+    Route::get('/refunds', [RefundController::class, 'index'])->name('refunds.index');
+    Route::post('/refunds', [RefundController::class, 'store'])->name('refunds.store');
+    Route::post('/refunds/{id}/approve', [RefundController::class, 'approve'])->name('refunds.approve');
+    Route::post('/refunds/{id}/reject', [RefundController::class, 'reject'])->name('refunds.reject');
 });
 
 require __DIR__.'/auth.php';

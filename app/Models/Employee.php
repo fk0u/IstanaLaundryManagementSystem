@@ -12,7 +12,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 #[Fillable(['branch_id', 'user_id', 'nik', 'name', 'position', 'base_salary', 'is_active', 'joined_at'])]
 class Employee extends Model
 {
-    use HasFactory, BranchScoped;
+    use BranchScoped, HasFactory;
 
     protected function casts(): array
     {

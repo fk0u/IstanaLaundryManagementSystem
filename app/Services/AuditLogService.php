@@ -11,12 +11,6 @@ class AuditLogService
 {
     /**
      * Write an audit log entry.
-     *
-     * @param string $action
-     * @param Model|null $model
-     * @param array|null $oldValues
-     * @param array|null $newValues
-     * @return AuditLog
      */
     public function log(string $action, ?Model $model = null, ?array $oldValues = null, ?array $newValues = null): AuditLog
     {

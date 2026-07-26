@@ -2,31 +2,29 @@
 
 namespace App\Services\Finance;
 
+use App\Exceptions\AccountingPeriodClosedException;
+use App\Exceptions\JournalNotBalancedException;
 use App\Models\AccountingPeriod;
 use App\Models\Branch;
 use App\Models\ChartOfAccount;
+use App\Models\DepreciationSchedule;
+use App\Models\GoodsReceivedNote;
 use App\Models\Journal;
 use App\Models\JournalLine;
 use App\Models\Order;
-use App\Models\GoodsReceivedNote;
 use App\Models\Payroll;
-use App\Models\DepreciationSchedule;
 use App\Models\User;
-use App\Exceptions\JournalNotBalancedException;
-use App\Exceptions\AccountingPeriodClosedException;
-use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class JournalService
 {
     /**
      * Create a balanced journal entry from business transactions automatically.
      *
-     * @param mixed $sourceModel
-     * @param int $sourceId
-     * @param array $entries Array of ['account_id' => x, 'debit' => x, 'credit' => x, 'description' => x]
-     * @param string|null $date
-     * @return Journal
+     * @param  mixed  $sourceModel
+     * @param  array  $entries  Array of ['account_id' => x, 'debit' => x, 'credit' => x, 'description' => x]
+     *
      * @throws JournalNotBalancedException
      * @throws AccountingPeriodClosedException
      */
@@ -55,7 +53,7 @@ class JournalService
                 ->where('month', $month)
                 ->first();
 
-            if (!$period) {
+            if (! $period) {
                 $period = AccountingPeriod::create([
                     'branch_id' => $branchId,
                     'year' => $year,
@@ -88,11 +86,11 @@ class JournalService
                 'source_type' => get_class($sourceModel),
                 'source_id' => $sourceId,
                 'type' => 'auto',
-                'description' => "Jurnal otomatis untuk " . class_basename($sourceModel) . " #{$sourceId}",
+                'description' => 'Jurnal otomatis untuk '.class_basename($sourceModel)." #{$sourceId}",
                 'date' => $carbonDate->toDateString(),
                 'status' => 'posted',
                 'created_by' => auth()->id() ?? User::where('branch_id', $branchId)->first()?->id ?? 1,
-                'posted_at' => now()
+                'posted_at' => now(),
             ]);
 
             foreach ($entries as $entry) {
@@ -101,7 +99,7 @@ class JournalService
                     'account_id' => $entry['account_id'],
                     'debit' => $entry['debit'],
                     'credit' => $entry['credit'],
-                    'description' => $entry['description']
+                    'description' => $entry['description'],
                 ]);
             }
 
@@ -111,9 +109,6 @@ class JournalService
 
     /**
      * Post journal entry for an Order payment.
-     *
-     * @param Order $order
-     * @return Journal
      */
     public function postOrderJournal(Order $order): Journal
     {
@@ -130,7 +125,7 @@ class JournalService
             'account_id' => $debitAccount->id,
             'debit' => $order->total,
             'credit' => 0,
-            'description' => "Penerimaan pembayaran order #{$order->order_number}"
+            'description' => "Penerimaan pembayaran order #{$order->order_number}",
         ];
 
         // Determine Credit Account (Revenue)
@@ -139,7 +134,7 @@ class JournalService
             'account_id' => $revenueAccount->id,
             'debit' => 0,
             'credit' => $order->subtotal,
-            'description' => "Pendapatan jasa laundry order #{$order->order_number}"
+            'description' => "Pendapatan jasa laundry order #{$order->order_number}",
         ];
 
         // If there's a discount
@@ -149,7 +144,7 @@ class JournalService
                 'account_id' => $discountAccount->id,
                 'debit' => $order->discount_amount,
                 'credit' => 0,
-                'description' => "Beban diskon promo order #{$order->order_number}"
+                'description' => "Beban diskon promo order #{$order->order_number}",
             ];
         }
 
@@ -160,7 +155,7 @@ class JournalService
                 'account_id' => $taxAccount->id,
                 'debit' => 0,
                 'credit' => $order->tax_amount,
-                'description' => "Pajak PPN keluaran order #{$order->order_number}"
+                'description' => "Pajak PPN keluaran order #{$order->order_number}",
             ];
         }
 
@@ -169,9 +164,6 @@ class JournalService
 
     /**
      * Post journal entry for a GRN confirmation.
-     *
-     * @param GoodsReceivedNote $grn
-     * @return Journal
      */
     public function postGRNJournal(GoodsReceivedNote $grn): Journal
     {
@@ -188,7 +180,7 @@ class JournalService
             'account_id' => $inventoryAccount->id,
             'debit' => $totalCost,
             'credit' => 0,
-            'description' => "Persediaan masuk dari penerimaan barang GRN #{$grn->grn_number}"
+            'description' => "Persediaan masuk dari penerimaan barang GRN #{$grn->grn_number}",
         ];
 
         // Cr: Hutang Usaha
@@ -197,7 +189,7 @@ class JournalService
             'account_id' => $payableAccount->id,
             'debit' => 0,
             'credit' => $totalCost,
-            'description' => "Hutang atas penerimaan barang GRN #{$grn->grn_number}"
+            'description' => "Hutang atas penerimaan barang GRN #{$grn->grn_number}",
         ];
 
         return $this->autoPostJournal($grn, $grn->id, $entries, $grn->received_date?->toDateString() ?? now()->toDateString());
@@ -205,9 +197,6 @@ class JournalService
 
     /**
      * Post journal entry for Payroll.
-     *
-     * @param Payroll $payroll
-     * @return Journal
      */
     public function postPayrollJournal(Payroll $payroll): Journal
     {
@@ -221,7 +210,7 @@ class JournalService
             'account_id' => $expenseAccount->id,
             'debit' => $totalNetSalary,
             'credit' => 0,
-            'description' => "Beban gaji karyawan periode {$payroll->month}/{$payroll->year}"
+            'description' => "Beban gaji karyawan periode {$payroll->month}/{$payroll->year}",
         ];
 
         // Cr: Kas Kecil
@@ -230,7 +219,7 @@ class JournalService
             'account_id' => $cashAccount->id,
             'debit' => 0,
             'credit' => $totalNetSalary,
-            'description' => "Pembayaran gaji karyawan periode {$payroll->month}/{$payroll->year}"
+            'description' => "Pembayaran gaji karyawan periode {$payroll->month}/{$payroll->year}",
         ];
 
         return $this->autoPostJournal($payroll, $payroll->id, $entries, now()->toDateString());
@@ -238,9 +227,6 @@ class JournalService
 
     /**
      * Post journal entry for Depreciation.
-     *
-     * @param DepreciationSchedule $schedule
-     * @return Journal
      */
     public function postDepreciationJournal(DepreciationSchedule $schedule): Journal
     {
@@ -255,7 +241,7 @@ class JournalService
             'account_id' => $depExpenseAccount->id,
             'debit' => $amount,
             'credit' => 0,
-            'description' => "Beban penyusutan aset {$asset->name} untuk periode {$schedule->period_date?->format('Y-m')}"
+            'description' => "Beban penyusutan aset {$asset->name} untuk periode {$schedule->period_date?->format('Y-m')}",
         ];
 
         // Cr: Akumulasi Penyusutan berdasarkan Kategori Aset
@@ -273,7 +259,7 @@ class JournalService
             'account_id' => $accumulatedAccount->id,
             'debit' => 0,
             'credit' => $amount,
-            'description' => "Akum. penyusutan aset {$asset->name} periode {$schedule->period_date?->format('Y-m')}"
+            'description' => "Akum. penyusutan aset {$asset->name} periode {$schedule->period_date?->format('Y-m')}",
         ];
 
         // Perform the post
@@ -282,7 +268,7 @@ class JournalService
         // Update schedule
         $schedule->update([
             'is_posted' => true,
-            'journal_id' => $journal->id
+            'journal_id' => $journal->id,
         ]);
 
         return $journal;
@@ -291,9 +277,6 @@ class JournalService
     /**
      * Reverse a posted journal.
      *
-     * @param Journal $journal
-     * @param User $user
-     * @return Journal
      * @throws AccountingPeriodClosedException
      */
     public function reverseJournal(Journal $journal, User $user): Journal
@@ -301,10 +284,10 @@ class JournalService
         return DB::transaction(function () use ($journal, $user) {
             $period = $journal->accountingPeriod;
             if ($period && $period->status === 'closed') {
-                throw new AccountingPeriodClosedException("Tidak dapat membatalkan jurnal pada periode akuntansi yang sudah ditutup.");
+                throw new AccountingPeriodClosedException('Tidak dapat membatalkan jurnal pada periode akuntansi yang sudah ditutup.');
             }
 
-            $reversalReference = "REV-" . $journal->reference;
+            $reversalReference = 'REV-'.$journal->reference;
 
             $reversalJournal = Journal::create([
                 'branch_id' => $journal->branch_id,
@@ -317,7 +300,7 @@ class JournalService
                 'date' => now()->toDateString(),
                 'status' => 'posted',
                 'created_by' => $user->id,
-                'posted_at' => now()
+                'posted_at' => now(),
             ]);
 
             foreach ($journal->journalLines as $line) {
@@ -326,13 +309,13 @@ class JournalService
                     'account_id' => $line->account_id,
                     'debit' => $line->credit, // Swapped
                     'credit' => $line->debit, // Swapped
-                    'description' => "Pembatalan: " . $line->description
+                    'description' => 'Pembatalan: '.$line->description,
                 ]);
             }
 
             $journal->update([
                 'status' => 'reversed',
-                'reversed_by' => $reversalJournal->id
+                'reversed_by' => $reversalJournal->id,
             ]);
 
             return $reversalJournal;

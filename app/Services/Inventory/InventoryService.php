@@ -2,10 +2,10 @@
 
 namespace App\Services\Inventory;
 
-use App\Models\InventoryItem;
-use App\Models\InventoryBatch;
 use App\Events\LowStockAlert;
 use App\Exceptions\InsufficientStockException;
+use App\Models\InventoryItem;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Log;
 
 class InventoryService
@@ -21,11 +21,6 @@ class InventoryService
      * Update stock of an inventory item.
      * If delta is negative, deducts stock using FIFO.
      *
-     * @param int $itemId
-     * @param float $delta
-     * @param string $source
-     * @param int $sourceId
-     * @return array|null
      * @throws InsufficientStockException
      */
     public function updateStock(int $itemId, float $delta, string $source, int $sourceId): ?array
@@ -36,8 +31,8 @@ class InventoryService
         if ($delta < 0) {
             // Deduct using FIFO
             $result = $this->fifoService->deduct($itemId, abs($delta));
-            Log::info("FIFO Stock Deduction: Item ID {$itemId}, Quantity " . abs($delta) . ", Source {$source} (ID: {$sourceId})");
-        } else if ($delta > 0) {
+            Log::info("FIFO Stock Deduction: Item ID {$itemId}, Quantity ".abs($delta).", Source {$source} (ID: {$sourceId})");
+        } elseif ($delta > 0) {
             // Simply add to stock
             $item->current_stock += $delta;
             $item->save();
@@ -56,8 +51,7 @@ class InventoryService
     /**
      * Check low stock items for a branch and fire alerts.
      *
-     * @param int $branchId
-     * @return \Illuminate\Database\Eloquent\Collection
+     * @return Collection
      */
     public function checkLowStock(int $branchId)
     {

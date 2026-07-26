@@ -42,7 +42,7 @@ class ChartOfAccountSeeder extends Seeder
             ['code' => '1-1202', 'name' => 'Piutang Lain-lain', 'type' => 'asset', 'normal_balance' => 'debit', 'level' => 3, 'parent_code' => '1-1'],
             ['code' => '1-1301', 'name' => 'Persediaan Bahan Habis Pakai', 'type' => 'asset', 'normal_balance' => 'debit', 'level' => 3, 'parent_code' => '1-1'],
             ['code' => '1-1401', 'name' => 'Biaya Dibayar Di Muka', 'type' => 'asset', 'normal_balance' => 'debit', 'level' => 3, 'parent_code' => '1-1'],
-            
+
             // 1-2 Aset Tetap
             ['code' => '1-2101', 'name' => 'Mesin Cuci', 'type' => 'asset', 'normal_balance' => 'debit', 'level' => 3, 'parent_code' => '1-2'],
             ['code' => '1-2102', 'name' => 'Mesin Pengering', 'type' => 'asset', 'normal_balance' => 'debit', 'level' => 3, 'parent_code' => '1-2'],
@@ -58,7 +58,7 @@ class ChartOfAccountSeeder extends Seeder
             // 2-1 Liabilitas Jangka Pendek
             ['code' => '2-1101', 'name' => 'Hutang Usaha', 'type' => 'liability', 'normal_balance' => 'credit', 'level' => 3, 'parent_code' => '2-1'],
             ['code' => '2-1201', 'name' => 'Hutang Gaji', 'type' => 'liability', 'normal_balance' => 'credit', 'level' => 3, 'parent_code' => '2-1'],
-            
+
             // 2-2 Liabilitas Jangka Panjang
             ['code' => '2-2101', 'name' => 'Hutang PPN', 'type' => 'liability', 'normal_balance' => 'credit', 'level' => 3, 'parent_code' => '2-2'],
             ['code' => '2-2102', 'name' => 'Hutang PPh 23', 'type' => 'liability', 'normal_balance' => 'credit', 'level' => 3, 'parent_code' => '2-2'],

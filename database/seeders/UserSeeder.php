@@ -169,7 +169,7 @@ class UserSeeder extends Seeder
             );
 
             // Assign role if not already assigned
-            if (!$user->hasRole($userData['role'])) {
+            if (! $user->hasRole($userData['role'])) {
                 $user->assignRole($userData['role']);
             }
         }

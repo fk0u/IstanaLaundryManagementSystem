@@ -3,9 +3,9 @@
 namespace App\Http\Controllers\Procurement;
 
 use App\Http\Controllers\Controller;
+use App\Models\InventoryItem;
 use App\Models\PurchaseRequest;
 use App\Models\PurchaseRequestItem;
-use App\Models\InventoryItem;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -73,7 +73,7 @@ class PurchaseRequestController extends Controller
     public function approve($id)
     {
         $pr = PurchaseRequest::findOrFail($id);
-        
+
         if ($pr->status !== 'pending_approval') {
             return redirect()->back()->with('error', 'PR ini tidak dalam status pending.');
         }
@@ -106,11 +106,12 @@ class PurchaseRequestController extends Controller
     {
         $pr = PurchaseRequest::findOrFail($id);
 
-        if (!in_array($pr->status, ['pending_approval', 'rejected'])) {
+        if (! in_array($pr->status, ['pending_approval', 'rejected'])) {
             return redirect()->back()->with('error', 'Hanya PR pending atau ditolak yang dapat dihapus.');
         }
 
         $pr->delete();
+
         return redirect()->back()->with('success', 'PR berhasil dihapus.');
     }
 }

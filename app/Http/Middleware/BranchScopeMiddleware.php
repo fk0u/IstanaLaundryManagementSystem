@@ -16,13 +16,11 @@ class BranchScopeMiddleware
     /**
      * Handle an incoming request.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \Closure  $next
      * @return mixed
      */
     public function handle(Request $request, Closure $next)
     {
-        if (!Auth::check()) {
+        if (! Auth::check()) {
             return redirect()->route('login');
         }
 
@@ -37,12 +35,12 @@ class BranchScopeMiddleware
             }
         }
 
-        if (!$isSuperUser) {
+        if (! $isSuperUser) {
             // Branch-level user: set branch_id in session
-            if (!$user->branch_id) {
+            if (! $user->branch_id) {
                 abort(403, 'User tidak memiliki branch assignment');
             }
-            
+
             session(['scoped_branch_id' => $user->branch_id]);
         } else {
             // Super-level user: no branch restriction by default, but keep manual session scoping if set

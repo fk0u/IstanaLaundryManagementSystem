@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 #[Fillable(['service_id', 'branch_id', 'price', 'is_active'])]
 class ServiceBranchPrice extends Model
 {
-    use HasFactory, BranchScoped;
+    use BranchScoped, HasFactory;
 
     protected function casts(): array
     {

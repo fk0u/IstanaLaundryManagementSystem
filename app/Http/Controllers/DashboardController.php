@@ -4,10 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Models\Branch;
 use App\Models\Customer;
-use App\Models\Order;
 use App\Models\InventoryItem;
+use App\Models\Order;
 use App\Models\Workshop;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class DashboardController extends Controller
@@ -38,7 +37,7 @@ class DashboardController extends Controller
     protected function ownerDashboard()
     {
         $branchId = session('scoped_branch_id') ?? Auth::user()->branch_id;
-        
+
         $ordersQuery = Order::query();
         $customersQuery = Customer::query();
         $workshopsQuery = Workshop::query();
@@ -50,7 +49,7 @@ class DashboardController extends Controller
         }
 
         $totalRevenue = $ordersQuery->sum('total');
-        
+
         $activeOrdersCount = Order::query();
         if ($branchId) {
             $activeOrdersCount->where('branch_id', $branchId);
@@ -59,7 +58,7 @@ class DashboardController extends Controller
 
         $newCustomersCount = $customersQuery->where('created_at', '>=', now()->startOfMonth())->count();
         $activeWorkshops = $workshopsQuery->where('is_active', true)->count();
-        
+
         $totalTransactionsQuery = Order::query();
         if ($branchId) {
             $totalTransactionsQuery->where('branch_id', $branchId);
@@ -85,8 +84,8 @@ class DashboardController extends Controller
             $currentMonthRev->where('branch_id', $branchId);
             $lastMonthRev->where('branch_id', $branchId);
         }
-        $currentMonthTotal = (float)$currentMonthRev->sum('total');
-        $lastMonthTotal = (float)$lastMonthRev->sum('total');
+        $currentMonthTotal = (float) $currentMonthRev->sum('total');
+        $lastMonthTotal = (float) $lastMonthRev->sum('total');
         $growthPercent = 0;
         if ($lastMonthTotal > 0) {
             $growthPercent = (($currentMonthTotal - $lastMonthTotal) / $lastMonthTotal) * 100;
@@ -97,40 +96,40 @@ class DashboardController extends Controller
             ->orderByDesc('total_revenue')
             ->first();
         $topBranchName = $topBranch ? $topBranch->name : 'N/A';
-        $topBranchRevenue = $topBranch ? (float)$topBranch->total_revenue : 0;
+        $topBranchRevenue = $topBranch ? (float) $topBranch->total_revenue : 0;
 
         // Chart.js data
         $chartLabels = [];
         $chartValues = [];
-        if (!$branchId) {
+        if (! $branchId) {
             // Global view: compare branches
             $branches = Branch::all();
             foreach ($branches as $branch) {
                 $revenue = Order::where('branch_id', $branch->id)->sum('total');
                 $chartLabels[] = $branch->name;
-                $chartValues[] = (float)$revenue;
+                $chartValues[] = (float) $revenue;
             }
-            $chartTitle = "Komparasi Pendapatan Cabang";
-            $chartSub = "Total akumulasi pendapatan per cabang (Rupiah)";
+            $chartTitle = 'Komparasi Pendapatan Cabang';
+            $chartSub = 'Total akumulasi pendapatan per cabang (Rupiah)';
         } else {
             // Branch view: show 7 days trend
             for ($i = 6; $i >= 0; $i--) {
                 $date = now()->subDays($i);
                 $revenue = Order::where('branch_id', $branchId)->whereDate('created_at', $date->toDateString())->sum('total');
                 $chartLabels[] = $date->format('D, d M');
-                $chartValues[] = (float)$revenue;
+                $chartValues[] = (float) $revenue;
             }
-            $chartTitle = "Tren Pendapatan Mingguan";
-            $chartSub = "Data 7 hari terakhir (Rupiah)";
+            $chartTitle = 'Tren Pendapatan Mingguan';
+            $chartSub = 'Data 7 hari terakhir (Rupiah)';
         }
 
         $branchesList = Branch::all();
 
         return view('dashboard.owner', compact(
-            'totalRevenue', 
-            'activeOrdersCount', 
-            'newCustomersCount', 
-            'activeWorkshops', 
+            'totalRevenue',
+            'activeOrdersCount',
+            'newCustomersCount',
+            'activeWorkshops',
             'totalTransactions',
             'recentOrders',
             'chartLabels',
@@ -158,11 +157,11 @@ class DashboardController extends Controller
         $activeOrdersCount = Order::where('branch_id', $branchId)
             ->where('production_status', '!=', 'DIAMBIL')
             ->count();
-        
+
         $lowStockCount = InventoryItem::where('branch_id', $branchId)
             ->whereColumn('current_stock', '<=', 'min_stock')
             ->count();
-            
+
         $todayTransactions = Order::where('branch_id', $branchId)
             ->whereDate('created_at', now()->toDateString())
             ->count();
@@ -180,7 +179,7 @@ class DashboardController extends Controller
             $date = now()->subDays($i);
             $revenue = Order::where('branch_id', $branchId)->whereDate('created_at', $date->toDateString())->sum('total');
             $chartLabels[] = $date->format('D, d M');
-            $chartValues[] = (float)$revenue;
+            $chartValues[] = (float) $revenue;
         }
 
         return view('dashboard.branch_admin', compact(

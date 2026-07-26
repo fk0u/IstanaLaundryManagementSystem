@@ -12,30 +12,30 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 #[Fillable([
-    'order_number', 
-    'branch_id', 
-    'workshop_id', 
-    'customer_id', 
-    'cashier_id', 
-    'promo_id', 
-    'production_status', 
-    'payment_method', 
-    'payment_status', 
-    'subtotal', 
-    'discount_amount', 
-    'points_used', 
-    'tax_amount', 
-    'total', 
-    'paid_amount', 
-    'change_amount', 
-    'notes', 
-    'qr_code_path', 
-    'estimated_done_at', 
-    'paid_at'
+    'order_number',
+    'branch_id',
+    'workshop_id',
+    'customer_id',
+    'cashier_id',
+    'promo_id',
+    'production_status',
+    'payment_method',
+    'payment_status',
+    'subtotal',
+    'discount_amount',
+    'points_used',
+    'tax_amount',
+    'total',
+    'paid_amount',
+    'change_amount',
+    'notes',
+    'qr_code_path',
+    'estimated_done_at',
+    'paid_at',
 ])]
 class Order extends Model
 {
-    use HasFactory, SoftDeletes, BranchScoped;
+    use BranchScoped, HasFactory, SoftDeletes;
 
     protected function casts(): array
     {

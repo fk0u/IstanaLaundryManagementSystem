@@ -94,7 +94,7 @@ class ServiceSeeder extends Seeder
                 'base_price' => 60000.00,
                 'est_duration_hours' => 72,
                 'description' => 'Dry cleaning jas set lengkap jas dan celana',
-            ]
+            ],
         ];
 
         // Seed Services

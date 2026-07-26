@@ -18,13 +18,13 @@ return new class extends Migration
             $table->decimal('transport_allowance', 12, 2)->default(0)->after('bonus_pcs');
             $table->decimal('overtime_pay', 12, 2)->default(0)->after('transport_allowance');
             $table->decimal('attendance_bonus', 12, 2)->default(0)->after('overtime_pay');
-            
+
             // Deductions Components
             $table->decimal('tardiness_deduction', 12, 2)->default(0)->after('deduction');
             $table->decimal('loan_deduction', 12, 2)->default(0)->after('tardiness_deduction');
             $table->decimal('damage_deduction', 12, 2)->default(0)->after('loan_deduction');
             $table->decimal('bpjs_deduction', 12, 2)->default(0)->after('damage_deduction');
-            
+
             // Additional calculation fields
             $table->decimal('total_earnings', 12, 2)->default(0)->after('attendance_bonus');
             $table->decimal('total_deductions', 12, 2)->default(0)->after('bpjs_deduction');
@@ -39,7 +39,7 @@ return new class extends Migration
         Schema::table('payroll_items', function (Blueprint $table) {
             $table->dropColumn([
                 'bonus_kg',
-                'bonus_pcs', 
+                'bonus_pcs',
                 'transport_allowance',
                 'overtime_pay',
                 'attendance_bonus',
@@ -48,7 +48,7 @@ return new class extends Migration
                 'damage_deduction',
                 'bpjs_deduction',
                 'total_earnings',
-                'total_deductions'
+                'total_deductions',
             ]);
         });
     }

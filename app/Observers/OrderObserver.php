@@ -3,13 +3,14 @@
 namespace App\Observers;
 
 use App\Models\Order;
-use App\Services\Finance\JournalService;
 use App\Services\CRM\LoyaltyService;
+use App\Services\Finance\JournalService;
 use Illuminate\Support\Facades\Log;
 
 class OrderObserver
 {
     protected $journalService;
+
     protected $loyaltyService;
 
     public function __construct(JournalService $journalService, LoyaltyService $loyaltyService)
@@ -20,9 +21,6 @@ class OrderObserver
 
     /**
      * Handle the Order "updated" event.
-     *
-     * @param Order $order
-     * @return void
      */
     public function updated(Order $order): void
     {
@@ -39,7 +37,7 @@ class OrderObserver
                     Log::info("Loyalty points awarded for paid Order #{$order->id}");
                 }
             } catch (\Exception $e) {
-                Log::error("Failed to auto-process order observers for Order #{$order->id}: " . $e->getMessage());
+                Log::error("Failed to auto-process order observers for Order #{$order->id}: ".$e->getMessage());
             }
         }
     }

@@ -10,18 +10,18 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 
 #[Fillable([
-    'branch_id', 
-    'accounting_period_id', 
-    'reference', 
-    'source_type', 
-    'source_id', 
-    'type', 
-    'description', 
-    'date', 
-    'status', 
-    'reversed_by', 
-    'created_by', 
-    'posted_at'
+    'branch_id',
+    'accounting_period_id',
+    'reference',
+    'source_type',
+    'source_id',
+    'type',
+    'description',
+    'date',
+    'status',
+    'reversed_by',
+    'created_by',
+    'posted_at',
 ])]
 class Journal extends Model
 {
