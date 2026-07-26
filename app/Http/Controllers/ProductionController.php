@@ -9,7 +9,6 @@ use App\Services\AuditLogService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Validation\ValidationException;
 
 class ProductionController extends Controller
 {
@@ -17,14 +16,14 @@ class ProductionController extends Controller
 
     // Status order for validation
     protected array $statusOrder = [
-        'TERIMA', 
-        'PILAH', 
-        'CUCI', 
-        'KERING', 
-        'LIPAT', 
-        'CEK', 
-        'SIAP', 
-        'DIAMBIL'
+        'TERIMA',
+        'PILAH',
+        'CUCI',
+        'KERING',
+        'LIPAT',
+        'CEK',
+        'SIAP',
+        'DIAMBIL',
     ];
 
     public function __construct(AuditLogService $auditLogService)
@@ -38,7 +37,7 @@ class ProductionController extends Controller
     public function index(Request $request)
     {
         $branchId = session('scoped_branch_id') ?? Auth::user()->branch_id;
-        if (!$branchId) {
+        if (! $branchId) {
             $firstBranch = Branch::first();
             $branchId = $firstBranch?->id;
         }
@@ -66,7 +65,7 @@ class ProductionController extends Controller
         $order = Order::findOrFail($id);
         $newStatus = strtoupper($request->input('status'));
 
-        if (!in_array($newStatus, $this->statusOrder)) {
+        if (! in_array($newStatus, $this->statusOrder)) {
             return redirect()->back()->with('error', 'Status produksi tidak valid.');
         }
 
@@ -80,14 +79,15 @@ class ProductionController extends Controller
 
         // Optional: Enforce strictly 1-step transition (unless Developer/Owner/Super_Admin)
         $isSuper = Auth::user()->hasAnyRole(['Developer', 'Owner', 'Super_Admin']);
-        if (!$isSuper && $newIndex !== $currentIndex + 1) {
+        if (! $isSuper && $newIndex !== $currentIndex + 1) {
             $expectedNext = $this->statusOrder[$currentIndex + 1] ?? 'SELESAI';
+
             return redirect()->back()->with('error', "Transisi tidak boleh melompat. Langkah selanjutnya yang diwajibkan: {$expectedNext}.");
         }
 
         DB::transaction(function () use ($order, $newStatus, $request) {
             $oldStatus = $order->production_status;
-            
+
             // Update Order
             $order->update([
                 'production_status' => $newStatus,
@@ -110,7 +110,7 @@ class ProductionController extends Controller
             }
 
             // Log activity to audit_logs
-            $this->auditLogService->log("update_production_status_{$newStatus}", $order, ['production_status' => $oldStatus], ['production_status' => $newStatus]);
+            $this->auditLogService->log("prod_status_{$newStatus}", $order, ['production_status' => $oldStatus], ['production_status' => $newStatus]);
         });
 
         return redirect()->route('production.index')->with('success', "Status order #{$order->order_number} berhasil diperbarui ke {$newStatus}!");

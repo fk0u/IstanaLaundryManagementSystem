@@ -135,6 +135,57 @@ class POSAndProductionTest extends TestCase
     /**
      * Test linear transition verification of production status.
      */
+    public function test_production_status_updates_to_kering_and_diambil_are_audited(): void
+    {
+        $this->cashier->assignRole('Developer');
+
+        $keringOrder = Order::create([
+            'order_number' => 'SMD01-202607-9998',
+            'branch_id' => $this->branch->id,
+            'cashier_id' => $this->cashier->id,
+            'production_status' => 'CUCI',
+            'payment_method' => 'cash',
+            'payment_status' => 'pending',
+            'subtotal' => 10000,
+            'total' => 10000,
+        ]);
+
+        $diambilOrder = Order::create([
+            'order_number' => 'SMD01-202607-9997',
+            'branch_id' => $this->branch->id,
+            'cashier_id' => $this->cashier->id,
+            'production_status' => 'SIAP',
+            'payment_method' => 'cash',
+            'payment_status' => 'pending',
+            'subtotal' => 10000,
+            'total' => 10000,
+        ]);
+
+        foreach ([[$keringOrder, 'KERING'], [$diambilOrder, 'DIAMBIL']] as [$order, $status]) {
+            $response = $this->actingAs($this->cashier)
+                ->post(route('production.update', $order->id), ['status' => $status]);
+
+            $response->assertRedirect(route('production.index'));
+            $response->assertSessionHas('success');
+            $this->assertDatabaseHas('orders', [
+                'id' => $order->id,
+                'production_status' => $status,
+            ]);
+            $this->assertDatabaseHas('production_status_logs', [
+                'order_id' => $order->id,
+                'status' => $status,
+                'updated_by' => $this->cashier->id,
+            ]);
+            $this->assertDatabaseHas('audit_logs', [
+                'model_id' => $order->id,
+                'action' => "prod_status_{$status}",
+            ]);
+        }
+    }
+
+    /**
+     * Test linear transition verification of production status.
+     */
     public function test_production_status_transitions_must_be_linear_forward(): void
     {
         // 1. Create order with status TERIMA
