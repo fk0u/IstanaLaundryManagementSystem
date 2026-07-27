@@ -1,0 +1,18 @@
+app/Http/Controllers/POSController.php
+  h_1c899976789cf0 57-65,133
+routes/web.php
+  h_1c899976789cf0 19,84-85,87-100,189-196
+resources/views/pos/index.blade.php
+  h_1c899976789cf0 47,604-607
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "3eec4cdfbf29104cb4573a7f3b47f48b45bd1a57",
+  "prompts": {},
+  "humans": {
+    "h_1c899976789cf0": {
+      "author": "KOU-MacMini <kou.real@outlook.com>"
+    }
+  }
+}
