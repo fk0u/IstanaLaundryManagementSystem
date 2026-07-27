@@ -54,7 +54,16 @@ class POSController extends Controller
         });
 
         // Fetch Customers (automatically filtered if non-super due to BranchScoped global scope)
-        $customers = Customer::where('branch_id', $branchId)->get();
+        // Defensive: hide any Walk-In placeholder entries from POS list (T4 — no Walk-In allowed)
+        $customers = Customer::where('branch_id', $branchId)
+            ->where(function ($q) {
+                $q->where('name', 'NOT LIKE', '%Walk-In%')
+                    ->where('name', 'NOT LIKE', '%walk-in%')
+                    ->where('name', 'NOT LIKE', '%Walk In%')
+                    ->where('name', 'NOT LIKE', '%Pelanggan Umum%')
+                    ->where('name', 'NOT LIKE', '%pelanggan umum%');
+            })
+            ->get();
 
         // Fetch active Promotions
         $promotions = Promotion::where('is_active', true)
@@ -121,7 +130,7 @@ class POSController extends Controller
         }
 
         $validator = Validator::make($request->all(), [
-            'customer_id' => 'nullable|exists:customers,id',
+            'customer_id' => 'required|exists:customers,id',
             'items' => 'required|array|min:1',
             'items.*.service_id' => 'required|exists:services,id',
             'items.*.quantity' => 'required|numeric|min:0.01',

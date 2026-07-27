@@ -16,6 +16,7 @@ use App\Http\Controllers\Procurement\PurchaseRequestController;
 use App\Http\Controllers\ProductionController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RefundController;
+use App\Http\Controllers\ServiceController;
 use App\Models\AuditLog;
 use App\Models\Branch;
 use App\Models\ChartOfAccount;
@@ -80,10 +81,23 @@ Route::middleware(['auth', 'branch.scope'])->group(function () {
     Route::get('/performance', [PerformanceController::class, 'index'])->name('performance.index');
 
     // CRM & Customers
-    Route::get('/customers', function () {
-        $customers = Customer::with('branch')->orderBy('name', 'asc')->paginate(10);
+    Route::get('/customers', function (Request $request) {
+        $q = trim($request->query('q', ''));
 
-        return view('customers.index', compact('customers'));
+        $customersQuery = Customer::with('branch')
+            ->when($q !== '', function ($query) use ($q) {
+                $like = "%{$q}%";
+                $query->where(function ($sub) use ($like) {
+                    $sub->where('name', 'LIKE', $like)
+                        ->orWhere('phone', 'LIKE', $like)
+                        ->orWhere('member_code', 'LIKE', $like);
+                });
+            })
+            ->orderBy('name', 'asc');
+
+        $customers = $customersQuery->paginate(10)->withQueryString();
+
+        return view('customers.index', compact('customers', 'q'));
     })->name('customers.index');
 
     Route::post('/customers', function (Request $request) {
@@ -171,6 +185,14 @@ Route::middleware(['auth', 'branch.scope'])->group(function () {
 
         return redirect()->back()->with('success', 'Kupon promosi berhasil dihapus.');
     })->name('promotions.destroy');
+
+    // ===== MASTER DATA: SERVICES =====
+    Route::middleware('role:Developer|Owner|Super_Admin')->prefix('services')->name('services.')->group(function () {
+        Route::get('/', [ServiceController::class, 'index'])->name('index');
+        Route::post('/', [ServiceController::class, 'store'])->name('store');
+        Route::match(['put', 'patch'], '/{service}', [ServiceController::class, 'update'])->name('update');
+        Route::patch('/{service}/toggle-active', [ServiceController::class, 'toggleActive'])->name('toggle-active');
+    });
 
     // Inventory
     Route::get('/inventory', function () {

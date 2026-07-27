@@ -25,6 +25,23 @@
             <x-alert type="success" :message="session('success')" class="mb-2" />
         @endif
 
+        <form method="GET" action="{{ route('customers.index') }}" class="flex flex-col sm:flex-row gap-2">
+            <div class="flex-1 relative">
+                <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg">search</span>
+                <input type="text" name="q" value="{{ request('q') }}"
+                       placeholder="Cari nama, no HP, atau kode member..."
+                       class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none transition-all">
+            </div>
+            <button type="submit" class="px-5 py-2.5 bg-primary text-white rounded-xl font-semibold text-sm hover:bg-primary-hover transition-all active:scale-95 cursor-pointer">
+                Cari
+            </button>
+            @if(request('q'))
+                <a href="{{ route('customers.index') }}" class="px-5 py-2.5 text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 rounded-xl border border-slate-200 dark:border-slate-700 font-semibold text-sm transition-colors text-center">
+                    Reset
+                </a>
+            @endif
+        </form>
+
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 md:gap-6">
             <!-- Customer List Table / Mobile Cards (8 cols) -->
             <div class="lg:col-span-8">

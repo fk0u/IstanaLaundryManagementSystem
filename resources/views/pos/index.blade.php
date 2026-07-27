@@ -44,7 +44,7 @@
                                             </button>
                                         </template>
                                         <template x-if="filteredCustomers().length === 0">
-                                            <p class="px-3 py-3 text-2xs text-slate-400 text-center">Pelanggan tidak ditemukan.</p>
+                                            <p class="px-3 py-3 text-2xs text-slate-400 text-center">Pelanggan tidak ditemukan. Klik tombol + untuk mendaftarkan pelanggan baru.</p>
                                         </template>
                                     </div>
                                 </div>
@@ -601,6 +601,10 @@
                 },
 
                 confirmCheckout() {
+                    if (!this.customerId) {
+                        window.dispatchEvent(new CustomEvent('toast', { detail: { message: 'Pilih pelanggan terlebih dahulu atau daftar pelanggan baru.', type: 'warning' } }));
+                        return;
+                    }
                     if (this.cart.length === 0) {
                         window.dispatchEvent(new CustomEvent('toast', { detail: { message: 'Keranjang belanja masih kosong!', type: 'warning' } }));
                         return;
