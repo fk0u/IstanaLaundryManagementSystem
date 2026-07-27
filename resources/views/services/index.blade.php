@@ -43,7 +43,7 @@
             this.showCreateBranchPrices = false;
         }
     }" class="flex flex-col gap-4 md:gap-6">
-        <x-page-header title="Jenis Layanan Laundry" :breadcrumbs="['Jenis Layanan' => '/services']">
+        <x-page-header title="Jenis Layanan Laundry" :breadcrumbs="['Jenis Layanan' => route('services.index')]">
             <x-slot name="actions">
                 <button @click="showCreateModal = true; resetCreateForm();"
                         class="bg-primary hover:bg-primary-hover text-white rounded-xl font-bold flex items-center justify-center gap-1.5 px-4 py-2.5 text-sm transition-all active:scale-95 shadow-md shadow-primary/20 cursor-pointer">
@@ -269,7 +269,7 @@
                     </button>
                 </div>
 
-                <form :action="`/services/${edit.id}`" method="POST" class="space-y-3.5">
+                <form x-bind:action="'/services/' + edit.id" method="POST" class="space-y-3.5">
                     @csrf
                     @method('PATCH')
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -336,9 +336,10 @@
                                     <label class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block mb-1">
                                         [{{ $b->code }}] {{ $b->name }}
                                     </label>
-                                    <input type="number" :name="`branch_prices[{{ $b->id }}]`" min="0" step="100"
+                                    <input type="number" name="branch_prices[{{ $b->id }}]" min="0" step="100"
                                            placeholder="Kosong = hapus override / pakai default"
-                                           :value="edit.branch_prices && edit.branch_prices['{{ $b->id }}'] != null ? edit.branch_prices['{{ $b->id }}'] : ''"
+                                           data-branch-id="{{ $b->id }}"
+                                           :value="edit.branch_prices && edit.branch_prices[String($el.dataset.branchId)] != null ? edit.branch_prices[String($el.dataset.branchId)] : ''"
                                            class="w-full h-9 px-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs font-semibold focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all">
                                 </div>
                             @endforeach

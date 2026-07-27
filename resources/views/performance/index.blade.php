@@ -1,6 +1,6 @@
 <x-app-layout>
     <div class="flex flex-col gap-4 md:gap-6">
-        <x-page-header title="Pemantauan Kinerja & Produktivitas" :breadcrumbs="['Kinerja' => '/performance']" />
+        <x-page-header title="Pemantauan Kinerja & Produktivitas" :breadcrumbs="['Kinerja' => route('performance.index')]" />
 
         <!-- Filter Bar -->
         @if(auth()->user()->hasAnyRole(['Developer', 'Owner', 'Super_Admin', 'Finance']))

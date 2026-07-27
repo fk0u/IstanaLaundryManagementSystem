@@ -97,7 +97,7 @@
 
             <!-- Performance Monitoring -->
             @if(auth()->user()->hasAnyRole(['Developer', 'Owner', 'Super_Admin', 'Branch_Admin', 'Workshop_Admin', 'Finance']))
-                <a href="/performance" @click="sidebarOpen = false" 
+                <a href="{{ route('performance.index') }}" @click="sidebarOpen = false" 
                    class="flex items-center gap-3.5 px-3.5 py-3 transition-all rounded-xl text-sm font-semibold {{ request()->is('performance*') ? 'text-primary dark:text-orange-400 bg-orange-50 dark:bg-orange-950/30 font-bold border-r-4 border-primary' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/60' }}"
                    :title="!desktopSidebarOpen ? 'Memantau Kinerja' : ''">
                     <span class="material-symbols-outlined text-[22px] shrink-0" style="font-variation-settings: 'FILL' {{ request()->is('performance*') ? '1' : '0' }};">insights</span>
