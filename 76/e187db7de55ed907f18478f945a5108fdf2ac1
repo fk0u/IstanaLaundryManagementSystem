@@ -1,0 +1,16 @@
+app/Models/User.php
+  h_1c899976789cf0 11,56-62
+resources/views/services/index.blade.php
+  h_1c899976789cf0 46,272,339,341-342
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "76e187db7de55ed907f18478f945a5108fdf2ac1",
+  "prompts": {},
+  "humans": {
+    "h_1c899976789cf0": {
+      "author": "KOU-MacMini <kou.real@outlook.com>"
+    }
+  }
+}
