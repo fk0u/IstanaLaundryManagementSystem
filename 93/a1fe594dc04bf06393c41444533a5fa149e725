@@ -1,0 +1,12 @@
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "93a1fe594dc04bf06393c41444533a5fa149e725",
+  "prompts": {},
+  "humans": {
+    "h_1c899976789cf0": {
+      "author": "KOU-MacMini <kou.real@outlook.com>"
+    }
+  }
+}
