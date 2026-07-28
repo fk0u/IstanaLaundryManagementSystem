@@ -1,0 +1,93 @@
+app/Models/Supplier.php
+  s_a978321855821a::t_52d4dfdcd41e46 5,14
+routes/api.php
+  s_a978321855821a::t_6a2e7858beee50 17-19
+  s_a978321855821a::t_875c0a0c2dd53d 14-16
+CHANGELOG.md
+  s_a978321855821a::t_1c2fc9abecc31b 1-12,26-99
+  s_46508cd7d70b45::t_5f97ae17d32814 13-25
+app/Models/Traits/BranchScoped.php
+  s_a978321855821a::t_10e456ce64de50 17-22
+app/Models/Order.php
+  s_a978321855821a::t_2024f0a8168ca0 5
+  s_a978321855821a::t_e21641e8140a42 39
+app/Models/Journal.php
+  s_a978321855821a::t_c2d56daad45202 5,29
+app/Models/Refund.php
+  s_a978321855821a::t_3b62c37b3d2485 5,26
+routes/auth.php
+  s_a978321855821a::t_2315273f7f44f9 30,37
+  s_a978321855821a::t_009b5032d587fe 15-17,19
+database/migrations/2026_07_28_000001_add_unique_reference_to_journals.php
+  s_46508cd7d70b45::t_2d65c6e4343c65 1-29
+docs/PHASE_SECURITY_CACHE.md
+  s_46508cd7d70b45::t_fd84210d9fa6c2 140-158,160-183
+  s_a978321855821a::t_eedee525151160 19-25,28,33-139,159,184-190
+  s_46508cd7d70b45::t_5ac061a35c5124 26-27
+app/Models/Traits/Auditable.php
+  s_a978321855821a::t_e5cc610265af6e 1-76
+app/Http/Controllers/Api/OrderTrackingController.php
+  s_a978321855821a::t_39ec91cc3a07c0 6
+  s_a978321855821a::t_bcce41e43c031e 18-25,35
+app/Models/Payroll.php
+  s_a978321855821a::t_54c2aa8371f857 5,16
+routes/web.php
+  s_a978321855821a::t_2f3f819eeb1b7b 55
+  s_a978321855821a::t_91a3a5e77ed9e9 212
+  s_a978321855821a::t_ee34a81c460937 157-195,213-248,251-297,300-345,348-397,400,407-432,435-438,440-442,444-446,468-473
+  s_a978321855821a::t_0a6e27498c32fd 45-49
+docker-compose.prod.yml
+  s_46508cd7d70b45::t_eba9548d9ac357 28
+app/Models/User.php
+  s_a978321855821a::t_be5b62232098c8 6-11
+app/Http/Resources/OrderTrackingResource.php
+  s_a978321855821a::t_0b41933875482b 1-46
+app/Models/PurchaseOrder.php
+  s_a978321855821a::t_22c0a2cbd02dd8 5,15
+app/Services/Finance/JournalService.php
+  s_46508cd7d70b45::t_4a102ec6970a61 96-100
+  s_46508cd7d70b45::t_a171219ed5b9e5 44-49
+  s_46508cd7d70b45::t_00c993239058f7 73-79
+  s_46508cd7d70b45::t_bce3e68f4dbad1 19
+  s_46508cd7d70b45::t_d4a2be691e30cd 87-95,101-104,109
+docker/entrypoint.sh
+  s_46508cd7d70b45::t_8b43395f979e58 44-50
+docker/nginx/default.conf
+  s_46508cd7d70b45::t_bde28a46602143 8-13
+app/Http/Middleware/BranchScopeMiddleware.php
+  s_a978321855821a::t_8b1cb36d9e124d 29-36
+app/Models/GoodsReceivedNote.php
+  s_a978321855821a::t_eb063f5aa7b437 5,14
+tasks.md
+  s_a978321855821a::t_3f93dfd1aa7712 48-51
+  s_46508cd7d70b45::t_649dc35edfd8b8 52-53
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "9a3f66198d3f30690f5cb8b13c529862a618c90e",
+  "prompts": {},
+  "humans": {
+    "h_1c899976789cf0": {
+      "author": "KOU-MacMini <kou.real@outlook.com>"
+    }
+  },
+  "sessions": {
+    "s_46508cd7d70b45": {
+      "agent_id": {
+        "tool": "windsurf",
+        "id": "1e288816-3e5a-4e70-b0f9-1f15f957bb6a",
+        "model": "SWE-1.6 Slow"
+      },
+      "human_author": "KOU-MacMini <kou.real@outlook.com>"
+    },
+    "s_a978321855821a": {
+      "agent_id": {
+        "tool": "windsurf",
+        "id": "efb87959-523c-4644-b056-152e692de6fb",
+        "model": "SWE-1.6 Slow"
+      },
+      "human_author": "KOU-MacMini <kou.real@outlook.com>"
+    }
+  }
+}
