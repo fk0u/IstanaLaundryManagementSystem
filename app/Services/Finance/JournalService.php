@@ -16,6 +16,7 @@ use App\Models\Payroll;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class JournalService
 {
@@ -40,6 +41,12 @@ class JournalService
             }
 
             if (abs($totalDebit - $totalCredit) > 0.01) {
+                Log::error('Journal not balanced', [
+                    'source_type' => get_class($sourceModel),
+                    'source_id' => $sourceId,
+                    'total_debit' => $totalDebit,
+                    'total_credit' => $totalCredit,
+                ]);
                 throw new JournalNotBalancedException("Jurnal tidak seimbang. Total Debit: {$totalDebit}, Total Kredit: {$totalCredit}");
             }
 
@@ -63,6 +70,13 @@ class JournalService
             }
 
             if ($period->status === 'closed') {
+                Log::error('Attempted to post journal to closed period', [
+                    'source_type' => get_class($sourceModel),
+                    'source_id' => $sourceId,
+                    'period_id' => $period->id,
+                    'year' => $year,
+                    'month' => $month,
+                ]);
                 throw new AccountingPeriodClosedException("Tidak dapat memposting jurnal ke periode akuntansi yang sudah ditutup ({$year}-{$month}).");
             }
 
@@ -70,11 +84,29 @@ class JournalService
             $branchCode = $branch ? $branch->code : 'HQ';
             $yearMonthStr = $carbonDate->format('Ym');
 
-            // Count existing journals for sequence
+            // Idempotency check: check if journal already exists for this source
+            $existingJournal = Journal::withoutGlobalScopes()
+                ->where('branch_id', $branchId)
+                ->where('source_type', get_class($sourceModel))
+                ->where('source_id', $sourceId)
+                ->where('status', '!=', 'reversed')
+                ->first();
+
+            if ($existingJournal) {
+                Log::warning('Journal already exists for source (idempotency)', [
+                    'source_type' => get_class($sourceModel),
+                    'source_id' => $sourceId,
+                    'existing_reference' => $existingJournal->reference,
+                ]);
+                throw new \Exception("Jurnal sudah ada untuk {$sourceModel} #{$sourceId} (Reference: {$existingJournal->reference}). Gunakan fungsi reverse jika perlu membatalkan.");
+            }
+
+            // Count existing journals for sequence with lock to prevent race condition
             $lastSeq = Journal::withoutGlobalScopes()
                 ->where('branch_id', $branchId)
                 ->whereYear('date', $year)
                 ->whereMonth('date', $month)
+                ->lockForUpdate()
                 ->count();
             $seqStr = str_pad($lastSeq + 1, 4, '0', STR_PAD_LEFT);
             $reference = "JRN-{$branchCode}-{$yearMonthStr}-{$seqStr}";

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Traits\Auditable;
 use App\Models\Traits\BranchScoped;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
@@ -11,7 +12,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 #[Fillable(['pr_id', 'branch_id', 'po_number', 'supplier_id', 'status', 'subtotal', 'tax_amount', 'total', 'order_date', 'expected_date'])]
 class PurchaseOrder extends Model
 {
-    use BranchScoped;
+    use Auditable, BranchScoped;
 
     protected function casts(): array
     {

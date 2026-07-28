@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Traits\Auditable;
 use App\Models\Traits\BranchScoped;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -35,7 +36,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 ])]
 class Order extends Model
 {
-    use BranchScoped, HasFactory, SoftDeletes;
+    use Auditable, BranchScoped, HasFactory, SoftDeletes;
 
     protected function casts(): array
     {

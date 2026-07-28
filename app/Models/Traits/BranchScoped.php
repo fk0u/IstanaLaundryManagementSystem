@@ -14,6 +14,12 @@ trait BranchScoped
         static::addGlobalScope('branch_scope', function (Builder $builder) {
             $branchId = session('scoped_branch_id');
 
+            // Fail-safe: if no branch scope is set, restrict to authenticated user's branch
+            // This prevents cross-branch data leaks when session is empty
+            if ($branchId === null) {
+                $branchId = auth()->user()?->branch_id;
+            }
+
             if ($branchId !== null) {
                 $builder->where(static::getBranchColumn(), $branchId);
             }

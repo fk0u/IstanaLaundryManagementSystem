@@ -42,12 +42,17 @@ Route::get('/track', function (Request $request) {
         return redirect('/')->with('error', 'Masukkan nomor nota terlebih dahulu.');
     }
 
+    // Validate order number format (basic alphanumeric check)
+    if (! preg_match('/^[A-Z0-9-]+$/', $orderNumber)) {
+        return redirect('/')->with('error', 'Format nomor nota tidak valid.');
+    }
+
     $order = Order::with(['customer', 'branch', 'items.service', 'productionStatusLogs.updater'])
         ->where('order_number', $orderNumber)
         ->first();
 
     return view('track', compact('order', 'orderNumber'));
-})->name('track');
+})->middleware('throttle:30,1')->name('track');
 
 Route::get('/dashboard', [DashboardController::class, 'index'])
     ->middleware(['auth', 'verified', 'branch.scope'])
@@ -149,43 +154,45 @@ Route::middleware(['auth', 'branch.scope'])->group(function () {
     })->name('customers.destroy');
 
     // Promotions
-    Route::get('/promotions', function () {
-        $promotions = Promotion::orderBy('created_at', 'desc')->paginate(10);
+    Route::middleware('role:Branch_Admin|Owner|Super_Admin|Developer')->group(function () {
+        Route::get('/promotions', function () {
+            $promotions = Promotion::orderBy('created_at', 'desc')->paginate(10);
 
-        return view('promotions.index', compact('promotions'));
-    })->name('promotions.index');
+            return view('promotions.index', compact('promotions'));
+        })->name('promotions.index');
 
-    Route::post('/promotions', function (Request $request) {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'code' => 'required|string|unique:promotions,code',
-            'type' => 'required|in:percent,nominal',
-            'value' => 'required|numeric|min:0',
-            'min_transaction' => 'required|numeric|min:0',
-            'start_date' => 'required|date',
-            'end_date' => 'required|date|after_or_equal:start_date',
-        ]);
+        Route::post('/promotions', function (Request $request) {
+            $request->validate([
+                'name' => 'required|string|max:255',
+                'code' => 'required|string|unique:promotions,code',
+                'type' => 'required|in:percent,nominal',
+                'value' => 'required|numeric|min:0',
+                'min_transaction' => 'required|numeric|min:0',
+                'start_date' => 'required|date',
+                'end_date' => 'required|date|after_or_equal:start_date',
+            ]);
 
-        Promotion::create([
-            'name' => $request->name,
-            'code' => strtoupper($request->code),
-            'type' => $request->type,
-            'value' => $request->value,
-            'min_transaction' => $request->min_transaction,
-            'start_date' => $request->start_date,
-            'end_date' => $request->end_date,
-            'is_active' => true,
-        ]);
+            Promotion::create([
+                'name' => $request->name,
+                'code' => strtoupper($request->code),
+                'type' => $request->type,
+                'value' => $request->value,
+                'min_transaction' => $request->min_transaction,
+                'start_date' => $request->start_date,
+                'end_date' => $request->end_date,
+                'is_active' => true,
+            ]);
 
-        return redirect()->back()->with('success', 'Kupon promosi baru berhasil dibuat.');
-    })->name('promotions.store');
+            return redirect()->back()->with('success', 'Kupon promosi baru berhasil dibuat.');
+        })->name('promotions.store');
 
-    Route::delete('/promotions/{id}', function ($id) {
-        $promo = Promotion::findOrFail($id);
-        $promo->delete();
+        Route::delete('/promotions/{id}', function ($id) {
+            $promo = Promotion::findOrFail($id);
+            $promo->delete();
 
-        return redirect()->back()->with('success', 'Kupon promosi berhasil dihapus.');
-    })->name('promotions.destroy');
+            return redirect()->back()->with('success', 'Kupon promosi berhasil dihapus.');
+        })->name('promotions.destroy');
+    });
 
     // ===== MASTER DATA: SERVICES =====
     Route::middleware('role:Developer|Owner|Super_Admin')->prefix('services')->name('services.')->group(function () {
@@ -202,229 +209,241 @@ Route::middleware(['auth', 'branch.scope'])->group(function () {
         return view('inventory.index', compact('inventoryItems'));
     })->name('inventory.index');
 
-    Route::post('/inventory', function (Request $request) {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'sku' => 'required|string|unique:inventory_items,sku',
-            'category' => 'required|string|max:255',
-            'unit' => 'required|string|max:50',
-            'min_stock' => 'required|numeric|min:0',
-            'current_stock' => 'required|numeric|min:0',
-        ]);
+    Route::middleware('role:Branch_Admin|Owner|Super_Admin|Developer')->group(function () {
+        Route::post('/inventory', function (Request $request) {
+            $request->validate([
+                'name' => 'required|string|max:255',
+                'sku' => 'required|string|unique:inventory_items,sku',
+                'category' => 'required|string|max:255',
+                'unit' => 'required|string|max:50',
+                'min_stock' => 'required|numeric|min:0',
+                'current_stock' => 'required|numeric|min:0',
+            ]);
 
-        $branchId = session('scoped_branch_id') ?? auth()->user()->branch_id ?? Branch::first()->id;
+            $branchId = session('scoped_branch_id') ?? auth()->user()->branch_id ?? Branch::first()->id;
 
-        InventoryItem::create([
-            'branch_id' => $branchId,
-            'name' => $request->name,
-            'sku' => strtoupper($request->sku),
-            'category' => $request->category,
-            'unit' => $request->unit,
-            'min_stock' => $request->min_stock,
-            'current_stock' => $request->current_stock,
-        ]);
+            InventoryItem::create([
+                'branch_id' => $branchId,
+                'name' => $request->name,
+                'sku' => strtoupper($request->sku),
+                'category' => $request->category,
+                'unit' => $request->unit,
+                'min_stock' => $request->min_stock,
+                'current_stock' => $request->current_stock,
+            ]);
 
-        return redirect()->back()->with('success', 'Item inventori baru berhasil ditambahkan.');
-    })->name('inventory.store');
+            return redirect()->back()->with('success', 'Item inventori baru berhasil ditambahkan.');
+        })->name('inventory.store');
 
-    Route::put('/inventory/{id}/adjust', function (Request $request, $id) {
-        $request->validate([
-            'current_stock' => 'required|numeric|min:0',
-        ]);
+        Route::put('/inventory/{id}/adjust', function (Request $request, $id) {
+            $request->validate([
+                'current_stock' => 'required|numeric|min:0',
+            ]);
 
-        $item = InventoryItem::findOrFail($id);
-        $item->update(['current_stock' => $request->current_stock]);
+            $item = InventoryItem::findOrFail($id);
+            $item->update(['current_stock' => $request->current_stock]);
 
-        return redirect()->back()->with('success', 'Stok item inventori berhasil dikoreksi.');
-    })->name('inventory.adjust');
+            return redirect()->back()->with('success', 'Stok item inventori berhasil dikoreksi.');
+        })->name('inventory.adjust');
+    });
 
     // HR & Payroll
-    Route::get('/hr', [HRController::class, 'index'])->name('hr.index');
-    Route::post('/hr/employees', [HRController::class, 'storeEmployee'])->name('hr.employees.store');
-    Route::post('/hr/payrolls', [HRController::class, 'storePayroll'])->name('hr.payrolls.store');
-    Route::get('/hr/payrolls/{payroll}', [HRController::class, 'showPayroll'])->name('hr.payrolls.show');
-    Route::get('/hr/payslip/{item}', [HRController::class, 'showPayslip'])->name('hr.payslip');
-    Route::put('/hr/payroll-item/{item}', [HRController::class, 'updatePayrollItem'])->name('hr.payroll-item.update');
-    Route::delete('/hr/payroll/{payroll}', [HRController::class, 'destroyPayroll'])->name('hr.payroll.destroy');
+    Route::middleware('role:Finance|Owner|Super_Admin|Developer')->group(function () {
+        Route::get('/hr', [HRController::class, 'index'])->name('hr.index');
+        Route::post('/hr/employees', [HRController::class, 'storeEmployee'])->name('hr.employees.store');
+        Route::post('/hr/payrolls', [HRController::class, 'storePayroll'])->name('hr.payrolls.store');
+        Route::get('/hr/payrolls/{payroll}', [HRController::class, 'showPayroll'])->name('hr.payrolls.show');
+        Route::get('/hr/payslip/{item}', [HRController::class, 'showPayslip'])->name('hr.payslip');
+        Route::put('/hr/payroll-item/{item}', [HRController::class, 'updatePayrollItem'])->name('hr.payroll-item.update');
+        Route::delete('/hr/payroll/{payroll}', [HRController::class, 'destroyPayroll'])->name('hr.payroll.destroy');
 
-    Route::post('/hr', function (Request $request) {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'nik' => 'required|string|unique:employees,nik',
-            'position' => 'required|string|max:255',
-            'base_salary' => 'required|numeric|min:0',
-            'joined_at' => 'required|date',
-        ]);
+        Route::post('/hr', function (Request $request) {
+            $request->validate([
+                'name' => 'required|string|max:255',
+                'nik' => 'required|string|unique:employees,nik',
+                'position' => 'required|string|max:255',
+                'base_salary' => 'required|numeric|min:0',
+                'joined_at' => 'required|date',
+            ]);
 
-        $branchId = session('scoped_branch_id') ?? auth()->user()->branch_id ?? Branch::first()->id;
+            $branchId = session('scoped_branch_id') ?? auth()->user()->branch_id ?? Branch::first()->id;
 
-        Employee::create([
-            'branch_id' => $branchId,
-            'name' => $request->name,
-            'nik' => $request->nik,
-            'position' => $request->position,
-            'base_salary' => $request->base_salary,
-            'joined_at' => $request->joined_at,
-            'is_active' => true,
-        ]);
+            Employee::create([
+                'branch_id' => $branchId,
+                'name' => $request->name,
+                'nik' => $request->nik,
+                'position' => $request->position,
+                'base_salary' => $request->base_salary,
+                'joined_at' => $request->joined_at,
+                'is_active' => true,
+            ]);
 
-        return redirect()->back()->with('success', 'Karyawan baru berhasil ditambahkan.');
-    })->name('hr.store');
+            return redirect()->back()->with('success', 'Karyawan baru berhasil ditambahkan.');
+        })->name('hr.store');
 
-    Route::put('/hr/{id}', function (Request $request, $id) {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'position' => 'required|string|max:255',
-            'base_salary' => 'required|numeric|min:0',
-            'is_active' => 'required|boolean',
-        ]);
+        Route::put('/hr/{id}', function (Request $request, $id) {
+            $request->validate([
+                'name' => 'required|string|max:255',
+                'position' => 'required|string|max:255',
+                'base_salary' => 'required|numeric|min:0',
+                'is_active' => 'required|boolean',
+            ]);
 
-        $employee = Employee::findOrFail($id);
-        $employee->update($request->only('name', 'position', 'base_salary', 'is_active'));
+            $employee = Employee::findOrFail($id);
+            $employee->update($request->only('name', 'position', 'base_salary', 'is_active'));
 
-        return redirect()->back()->with('success', 'Data karyawan berhasil diperbarui.');
-    })->name('hr.update');
+            return redirect()->back()->with('success', 'Data karyawan berhasil diperbarui.');
+        })->name('hr.update');
+    });
 
     // Fixed Assets
-    Route::get('/assets', [AssetController::class, 'index'])->name('assets.index');
-    Route::post('/assets', [AssetController::class, 'store'])->name('assets.store');
-    Route::get('/assets/{asset}', [AssetController::class, 'show'])->name('assets.show');
+    Route::middleware('role:Finance|Owner|Super_Admin|Developer')->group(function () {
+        Route::get('/assets', [AssetController::class, 'index'])->name('assets.index');
+        Route::post('/assets', [AssetController::class, 'store'])->name('assets.store');
+        Route::get('/assets/{asset}', [AssetController::class, 'show'])->name('assets.show');
 
-    Route::post('/assets', function (Request $request) {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'asset_code' => 'required|string|unique:fixed_assets,asset_code',
-            'category' => 'required|string|max:255',
-            'acquisition_cost' => 'required|numeric|min:0',
-            'salvage_value' => 'required|numeric|min:0',
-            'useful_life_months' => 'required|integer|min:1',
-            'depreciation_method' => 'required|in:straight_line,double_declining',
-            'acquisition_date' => 'required|date',
-        ]);
+        Route::post('/assets', function (Request $request) {
+            $request->validate([
+                'name' => 'required|string|max:255',
+                'asset_code' => 'required|string|unique:fixed_assets,asset_code',
+                'category' => 'required|string|max:255',
+                'acquisition_cost' => 'required|numeric|min:0',
+                'salvage_value' => 'required|numeric|min:0',
+                'useful_life_months' => 'required|integer|min:1',
+                'depreciation_method' => 'required|in:straight_line,double_declining',
+                'acquisition_date' => 'required|date',
+            ]);
 
-        $branchId = session('scoped_branch_id') ?? auth()->user()->branch_id ?? Branch::first()->id;
-        $coa = ChartOfAccount::where('type', 'asset')->first();
+            $branchId = session('scoped_branch_id') ?? auth()->user()->branch_id ?? Branch::first()->id;
+            $coa = ChartOfAccount::where('type', 'asset')->first();
 
-        FixedAsset::create([
-            'branch_id' => $branchId,
-            'account_id' => $coa?->id ?? 1,
-            'asset_code' => strtoupper($request->asset_code),
-            'name' => $request->name,
-            'category' => $request->category,
-            'acquisition_date' => $request->acquisition_date,
-            'acquisition_cost' => $request->acquisition_cost,
-            'salvage_value' => $request->salvage_value,
-            'useful_life_months' => $request->useful_life_months,
-            'depreciation_method' => $request->depreciation_method,
-            'accumulated_depreciation' => 0,
-            'book_value' => $request->acquisition_cost,
-            'is_active' => true,
-        ]);
+            FixedAsset::create([
+                'branch_id' => $branchId,
+                'account_id' => $coa?->id ?? 1,
+                'asset_code' => strtoupper($request->asset_code),
+                'name' => $request->name,
+                'category' => $request->category,
+                'acquisition_date' => $request->acquisition_date,
+                'acquisition_cost' => $request->acquisition_cost,
+                'salvage_value' => $request->salvage_value,
+                'useful_life_months' => $request->useful_life_months,
+                'depreciation_method' => $request->depreciation_method,
+                'accumulated_depreciation' => 0,
+                'book_value' => $request->acquisition_cost,
+                'is_active' => true,
+            ]);
 
-        return redirect()->back()->with('success', 'Aset tetap baru berhasil didaftarkan.');
-    })->name('assets.store');
+            return redirect()->back()->with('success', 'Aset tetap baru berhasil didaftarkan.');
+        })->name('assets.store');
 
-    Route::delete('/assets/{id}', function ($id) {
-        $asset = FixedAsset::findOrFail($id);
-        $asset->delete();
+        Route::delete('/assets/{id}', function ($id) {
+            $asset = FixedAsset::findOrFail($id);
+            $asset->delete();
 
-        return redirect()->back()->with('success', 'Aset tetap berhasil dihapus.');
-    })->name('assets.destroy');
+            return redirect()->back()->with('success', 'Aset tetap berhasil dihapus.');
+        })->name('assets.destroy');
+    });
 
     // Finance & COA
-    Route::get('/finance', function () {
-        $coas = ChartOfAccount::orderBy('code', 'asc')->paginate(20);
-        $allCoas = ChartOfAccount::orderBy('code', 'asc')->get();
+    Route::middleware('role:Finance|Owner|Super_Admin|Developer')->group(function () {
+        Route::get('/finance', function () {
+            $coas = ChartOfAccount::orderBy('code', 'asc')->paginate(20);
+            $allCoas = ChartOfAccount::orderBy('code', 'asc')->get();
 
-        return view('finance.index', compact('coas', 'allCoas'));
-    })->name('finance.index');
+            return view('finance.index', compact('coas', 'allCoas'));
+        })->name('finance.index');
 
-    Route::post('/finance', function (Request $request) {
-        $request->validate([
-            'code' => 'required|string|unique:chart_of_accounts,code',
-            'name' => 'required|string|max:255',
-            'type' => 'required|in:asset,liability,equity,revenue,expense',
-            'normal_balance' => 'required|in:debit,credit',
-            'parent_id' => 'nullable|exists:chart_of_accounts,id',
-        ]);
+        Route::post('/finance', function (Request $request) {
+            $request->validate([
+                'code' => 'required|string|unique:chart_of_accounts,code',
+                'name' => 'required|string|max:255',
+                'type' => 'required|in:asset,liability,equity,revenue,expense',
+                'normal_balance' => 'required|in:debit,credit',
+                'parent_id' => 'nullable|exists:chart_of_accounts,id',
+            ]);
 
-        $parent = $request->parent_id ? ChartOfAccount::find($request->parent_id) : null;
-        $level = $parent ? $parent->level + 1 : 1;
+            $parent = $request->parent_id ? ChartOfAccount::find($request->parent_id) : null;
+            $level = $parent ? $parent->level + 1 : 1;
 
-        ChartOfAccount::create([
-            'code' => $request->code,
-            'name' => $request->name,
-            'type' => $request->type,
-            'normal_balance' => $request->normal_balance,
-            'parent_id' => $request->parent_id,
-            'level' => $level,
-            'is_active' => true,
-            'is_system' => false,
-        ]);
+            ChartOfAccount::create([
+                'code' => $request->code,
+                'name' => $request->name,
+                'type' => $request->type,
+                'normal_balance' => $request->normal_balance,
+                'parent_id' => $request->parent_id,
+                'level' => $level,
+                'is_active' => true,
+                'is_system' => false,
+            ]);
 
-        return redirect()->back()->with('success', 'Akun COA baru berhasil dibuat.');
-    })->name('finance.store');
+            return redirect()->back()->with('success', 'Akun COA baru berhasil dibuat.');
+        })->name('finance.store');
 
-    Route::delete('/finance/{id}', function ($id) {
-        $coa = ChartOfAccount::findOrFail($id);
+        Route::delete('/finance/{id}', function ($id) {
+            $coa = ChartOfAccount::findOrFail($id);
 
-        if ($coa->is_system) {
-            return redirect()->back()->with('error', 'Akun bawaan sistem tidak dapat dihapus.');
-        }
+            if ($coa->is_system) {
+                return redirect()->back()->with('error', 'Akun bawaan sistem tidak dapat dihapus.');
+            }
 
-        if ($coa->children()->count() > 0) {
-            return redirect()->back()->with('error', 'Akun yang memiliki sub-akun tidak dapat dihapus.');
-        }
+            if ($coa->children()->count() > 0) {
+                return redirect()->back()->with('error', 'Akun yang memiliki sub-akun tidak dapat dihapus.');
+            }
 
-        $coa->delete();
+            $coa->delete();
 
-        return redirect()->back()->with('success', 'Akun COA berhasil dihapus.');
-    })->name('finance.destroy');
+            return redirect()->back()->with('success', 'Akun COA berhasil dihapus.');
+        })->name('finance.destroy');
+    });
 
     // Audit Logs
-    Route::get('/audit-logs', function () {
+    Route::middleware('role:Super_Admin|Developer')->get('/audit-logs', function () {
         $logs = AuditLog::with('user')->orderBy('created_at', 'desc')->paginate(20);
 
         return view('audit_logs.index', compact('logs'));
     })->name('audit-logs.index');
 
     // Procurement - Supplier
-    Route::get('/procurement/suppliers', [SupplierController::class, 'index'])->name('procurement.suppliers.index');
-    Route::post('/procurement/suppliers', [SupplierController::class, 'store'])->name('procurement.suppliers.store');
-    Route::put('/procurement/suppliers/{id}', [SupplierController::class, 'update'])->name('procurement.suppliers.update');
-    Route::delete('/procurement/suppliers/{id}', [SupplierController::class, 'destroy'])->name('procurement.suppliers.destroy');
+    Route::middleware('role:Branch_Admin|Owner|Super_Admin|Developer')->group(function () {
+        Route::get('/procurement/suppliers', [SupplierController::class, 'index'])->name('procurement.suppliers.index');
+        Route::post('/procurement/suppliers', [SupplierController::class, 'store'])->name('procurement.suppliers.store');
+        Route::put('/procurement/suppliers/{id}', [SupplierController::class, 'update'])->name('procurement.suppliers.update');
+        Route::delete('/procurement/suppliers/{id}', [SupplierController::class, 'destroy'])->name('procurement.suppliers.destroy');
 
-    // Procurement - PR
-    Route::get('/procurement/purchase-requests', [PurchaseRequestController::class, 'index'])->name('procurement.purchase-requests.index');
-    Route::post('/procurement/purchase-requests', [PurchaseRequestController::class, 'store'])->name('procurement.purchase-requests.store');
-    Route::post('/procurement/purchase-requests/{id}/approve', [PurchaseRequestController::class, 'approve'])->name('procurement.purchase-requests.approve');
-    Route::post('/procurement/purchase-requests/{id}/reject', [PurchaseRequestController::class, 'reject'])->name('procurement.purchase-requests.reject');
-    Route::delete('/procurement/purchase-requests/{id}', [PurchaseRequestController::class, 'destroy'])->name('procurement.purchase-requests.destroy');
+        // Procurement - PR
+        Route::get('/procurement/purchase-requests', [PurchaseRequestController::class, 'index'])->name('procurement.purchase-requests.index');
+        Route::post('/procurement/purchase-requests', [PurchaseRequestController::class, 'store'])->name('procurement.purchase-requests.store');
+        Route::post('/procurement/purchase-requests/{id}/approve', [PurchaseRequestController::class, 'approve'])->name('procurement.purchase-requests.approve');
+        Route::post('/procurement/purchase-requests/{id}/reject', [PurchaseRequestController::class, 'reject'])->name('procurement.purchase-requests.reject');
+        Route::delete('/procurement/purchase-requests/{id}', [PurchaseRequestController::class, 'destroy'])->name('procurement.purchase-requests.destroy');
 
-    // Procurement - PO
-    Route::get('/procurement/purchase-orders', [PurchaseOrderController::class, 'index'])->name('procurement.purchase-orders.index');
-    Route::post('/procurement/purchase-orders', [PurchaseOrderController::class, 'store'])->name('procurement.purchase-orders.store');
-    Route::post('/procurement/purchase-orders/{id}/send', [PurchaseOrderController::class, 'send'])->name('procurement.purchase-orders.send');
-    Route::post('/procurement/purchase-orders/{id}/confirm', [PurchaseOrderController::class, 'confirm'])->name('procurement.purchase-orders.confirm');
-    Route::delete('/procurement/purchase-orders/{id}', [PurchaseOrderController::class, 'destroy'])->name('procurement.purchase-orders.destroy');
+        // Procurement - PO
+        Route::get('/procurement/purchase-orders', [PurchaseOrderController::class, 'index'])->name('procurement.purchase-orders.index');
+        Route::post('/procurement/purchase-orders', [PurchaseOrderController::class, 'store'])->name('procurement.purchase-orders.store');
+        Route::post('/procurement/purchase-orders/{id}/send', [PurchaseOrderController::class, 'send'])->name('procurement.purchase-orders.send');
+        Route::post('/procurement/purchase-orders/{id}/confirm', [PurchaseOrderController::class, 'confirm'])->name('procurement.purchase-orders.confirm');
+        Route::delete('/procurement/purchase-orders/{id}', [PurchaseOrderController::class, 'destroy'])->name('procurement.purchase-orders.destroy');
 
-    // Procurement - GRN
-    Route::get('/procurement/grns', [GoodsReceivedNoteController::class, 'index'])->name('procurement.grns.index');
-    Route::post('/procurement/grns', [GoodsReceivedNoteController::class, 'store'])->name('procurement.grns.store');
-    Route::post('/procurement/grns/{id}/confirm', [GoodsReceivedNoteController::class, 'confirm'])->name('procurement.grns.confirm');
-    Route::delete('/procurement/grns/{id}', [GoodsReceivedNoteController::class, 'destroy'])->name('procurement.grns.destroy');
+        // Procurement - GRN
+        Route::get('/procurement/grns', [GoodsReceivedNoteController::class, 'index'])->name('procurement.grns.index');
+        Route::post('/procurement/grns', [GoodsReceivedNoteController::class, 'store'])->name('procurement.grns.store');
+        Route::post('/procurement/grns/{id}/confirm', [GoodsReceivedNoteController::class, 'confirm'])->name('procurement.grns.confirm');
+        Route::delete('/procurement/grns/{id}', [GoodsReceivedNoteController::class, 'destroy'])->name('procurement.grns.destroy');
+    });
 
     // Finance - Ledger / Journals
-    Route::get('/finance/journals', [JournalController::class, 'index'])->name('finance.journals.index');
-    Route::post('/finance/journals', [JournalController::class, 'store'])->name('finance.journals.store');
-    Route::post('/finance/journals/{id}/reverse', [JournalController::class, 'reverse'])->name('finance.journals.reverse');
+    Route::middleware('role:Finance|Owner|Super_Admin|Developer')->group(function () {
+        Route::get('/finance/journals', [JournalController::class, 'index'])->name('finance.journals.index');
+        Route::post('/finance/journals', [JournalController::class, 'store'])->name('finance.journals.store');
+        Route::post('/finance/journals/{id}/reverse', [JournalController::class, 'reverse'])->name('finance.journals.reverse');
 
-    // Finance - Accounting Periods
-    Route::get('/finance/periods', [AccountingPeriodController::class, 'index'])->name('finance.periods.index');
-    Route::post('/finance/periods/{id}/close', [AccountingPeriodController::class, 'close'])->name('finance.periods.close');
+        // Finance - Accounting Periods
+        Route::get('/finance/periods', [AccountingPeriodController::class, 'index'])->name('finance.periods.index');
+        Route::post('/finance/periods/{id}/close', [AccountingPeriodController::class, 'close'])->name('finance.periods.close');
 
-    // Finance - Reports
-    Route::get('/finance/reports', [FinancialReportController::class, 'index'])->name('finance.reports.index');
+        // Finance - Reports
+        Route::get('/finance/reports', [FinancialReportController::class, 'index'])->name('finance.reports.index');
+    });
 
     // Super User - Switch Scoped Branch
     Route::post('/switch-branch', function (Request $request) {
@@ -446,10 +465,12 @@ Route::middleware(['auth', 'branch.scope'])->group(function () {
     })->name('switch-branch');
 
     // Refund Module
-    Route::get('/refunds', [RefundController::class, 'index'])->name('refunds.index');
-    Route::post('/refunds', [RefundController::class, 'store'])->name('refunds.store');
-    Route::post('/refunds/{id}/approve', [RefundController::class, 'approve'])->name('refunds.approve');
-    Route::post('/refunds/{id}/reject', [RefundController::class, 'reject'])->name('refunds.reject');
+    Route::middleware('role:Branch_Admin|Owner|Super_Admin|Developer')->group(function () {
+        Route::get('/refunds', [RefundController::class, 'index'])->name('refunds.index');
+        Route::post('/refunds', [RefundController::class, 'store'])->name('refunds.store');
+        Route::post('/refunds/{id}/approve', [RefundController::class, 'approve'])->name('refunds.approve');
+        Route::post('/refunds/{id}/reject', [RefundController::class, 'reject'])->name('refunds.reject');
+    });
 });
 
 require __DIR__.'/auth.php';

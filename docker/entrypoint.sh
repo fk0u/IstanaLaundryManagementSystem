@@ -41,8 +41,13 @@ php artisan migrate --force
 echo "      ✓ Migrasi selesai."
 
 echo "[6/6] Menyemai data awal..."
-php artisan db:seed --force
-echo "      ✓ Data awal berhasil disemai."
+# Only seed in non-production environments to prevent data overwrites
+if [ "$APP_ENV" != "production" ]; then
+    php artisan db:seed --force
+    echo "      ✓ Data awal berhasil disemai."
+else
+    echo "      ⚠ Skipping db:seed in production environment."
+fi
 
 echo "============================================"
 echo " Aplikasi siap! Memulai PHP-FPM..."

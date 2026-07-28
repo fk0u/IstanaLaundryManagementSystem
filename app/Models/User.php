@@ -3,6 +3,12 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+// TODO: Consider enabling MustVerifyEmail for production security.
+// Currently disabled to simplify onboarding. To enable:
+// 1. Uncomment the above use statement
+// 2. Add "implements MustVerifyEmail" to class declaration
+// 3. Configure email settings in .env (MAIL_MAILER, MAIL_HOST, etc.)
+// 4. Ensure email verification routes are properly configured
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;

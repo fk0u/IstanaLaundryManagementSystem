@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Http\Resources\OrderResource;
+use App\Http\Resources\OrderTrackingResource;
 use App\Models\Order;
 use Illuminate\Http\Request;
 
@@ -15,7 +15,14 @@ class OrderTrackingController extends Controller
      */
     public function show(Request $request, string $orderNumber)
     {
-        $order = Order::with(['customer', 'branch', 'items.service', 'productionStatusLogs.updater'])
+        // Validate order number format (basic alphanumeric check)
+        if (! preg_match('/^[A-Z0-9-]+$/', $orderNumber)) {
+            return response()->json([
+                'message' => 'Format nomor nota tidak valid.',
+            ], 400);
+        }
+
+        $order = Order::with(['customer', 'branch', 'items.service', 'productionStatusLogs'])
             ->where('order_number', $orderNumber)
             ->first();
 
@@ -25,6 +32,6 @@ class OrderTrackingController extends Controller
             ], 404);
         }
 
-        return new OrderResource($order);
+        return new OrderTrackingResource($order);
     }
 }

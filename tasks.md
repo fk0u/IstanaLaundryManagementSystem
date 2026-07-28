@@ -45,12 +45,12 @@ Semua closed di GitHub + Linear:
 
 | # | GH | Linear | Priority | Task | Status |
 |---|-----|--------|----------|------|--------|
-| 1 | [#15](https://github.com/fk0u/IstanaLaundryManagementSystem/issues/15) | KIL-23 | P0 | Role/permission middleware modul sensitif | Open |
-| 2 | [#16](https://github.com/fk0u/IstanaLaundryManagementSystem/issues/16) | KIL-24 | P0 | Auth: register, API login throttle, password reset | Open |
-| 3 | [#17](https://github.com/fk0u/IstanaLaundryManagementSystem/issues/17) | KIL-25 | P0 | Tenant isolation `/track` + BranchScoped | Open |
-| 4 | [#18](https://github.com/fk0u/IstanaLaundryManagementSystem/issues/18) | KIL-26 | P0 | Audit log mutasi bisnis | Open |
-| 5 | [#19](https://github.com/fk0u/IstanaLaundryManagementSystem/issues/19) | KIL-27 | P1 | Journal `lockForUpdate` + idempotency | Open |
-| 6 | [#20](https://github.com/fk0u/IstanaLaundryManagementSystem/issues/20) | KIL-28 | P1 | Docker/Nginx prod hygiene (seed guard, headers) | Open |
+| 1 | [#15](https://github.com/fk0u/IstanaLaundryManagementSystem/issues/15) | KIL-23 | P0 | Role/permission middleware modul sensitif | ✅ Done |
+| 2 | [#16](https://github.com/fk0u/IstanaLaundryManagementSystem/issues/16) | KIL-24 | P0 | Auth: register, API login throttle, password reset | ✅ Done |
+| 3 | [#17](https://github.com/fk0u/IstanaLaundryManagementSystem/issues/17) | KIL-25 | P0 | Tenant isolation `/track` + BranchScoped | ✅ Done |
+| 4 | [#18](https://github.com/fk0u/IstanaLaundryManagementSystem/issues/18) | KIL-26 | P0 | Audit log mutasi bisnis | ✅ Done |
+| 5 | [#19](https://github.com/fk0u/IstanaLaundryManagementSystem/issues/19) | KIL-27 | P1 | Journal `lockForUpdate` + idempotency | ✅ Done |
+| 6 | [#20](https://github.com/fk0u/IstanaLaundryManagementSystem/issues/20) | KIL-28 | P1 | Docker/Nginx prod hygiene (seed guard, headers) | ✅ Done |
 | 7 | [#21](https://github.com/fk0u/IstanaLaundryManagementSystem/issues/21) | KIL-29 | Perf | Caching layer + queue observers | Open |
 
 ### Definition of done (fase)

@@ -11,8 +11,12 @@ Route::get('/user', function (Request $request) {
 })->middleware('auth:sanctum');
 
 // Public
-Route::post('/login', [AuthController::class, 'login'])->name('api.login');
-Route::get('/track/{orderNumber}', [OrderTrackingController::class, 'show'])->name('api.track');
+Route::post('/login', [AuthController::class, 'login'])
+    ->middleware('throttle:10,1')
+    ->name('api.login');
+Route::get('/track/{orderNumber}', [OrderTrackingController::class, 'show'])
+    ->middleware('throttle:30,1')
+    ->name('api.track');
 
 // Authenticated (Sanctum token)
 Route::middleware('auth:sanctum')->group(function () {

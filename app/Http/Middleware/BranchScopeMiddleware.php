@@ -26,6 +26,14 @@ class BranchScopeMiddleware
 
         $user = Auth::user();
 
+        // Reject inactive users
+        if (! $user->is_active) {
+            Auth::logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+            return redirect()->route('login')->with('error', 'Akun Anda tidak aktif. Hubungi administrator.');
+        }
+
         // Check if user has super-level role
         $isSuperUser = false;
         foreach ($this->superRoles as $role) {
