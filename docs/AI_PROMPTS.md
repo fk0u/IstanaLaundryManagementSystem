@@ -1,222 +1,199 @@
-# AI Prompts — Istana Laundry (context-free)
+# AI Prompts — Istana Laundry (Security + Caching phase)
 
-Pakai prompt di bawah ini di AI **baru** yang tidak punya riwayat chat.  
-Selalu mulai session dengan **Prompt Bootstrap**, lalu 1 task prompt per sesi.
+> Updated: 2026-07-28  
+> Branch kerja: **`chore/security-and-caching`**  
+> Epic: GitHub #14
 
-Repo: `https://github.com/fk0u/IstanaLaundryManagementSystem`  
-Branch kerja: `master` (atau buat branch `fix/...` / `feat/...`)
+Pakai di AI **baru** (Cursor / Claude / dll). Satu sesi = **satu issue**.  
+Baca file nyata di repo sebelum edit. Minimal diff. Jangan refactor di luar scope.
 
 ---
 
-## Prompt Bootstrap (tempel sekali di awal chat)
+## 0) Bootstrap (tempel sekali di awal chat)
 
 ```
-Kamu adalah senior Laravel developer.
+Kamu senior Laravel engineer.
 
 ## Project
-- Nama: Istana Laundry Management System (semi-ERP laundry multi-cabang)
-- Repo lokal / clone: IstanaLaundryManagementSystem
-- Stack: Laravel 13, PHP 8.3+, Blade, Alpine.js, Tailwind, MySQL, Spatie Permission
+- Istana Laundry Management System — semi-ERP laundry multi-cabang
+- Branch: chore/security-and-caching (JANGAN kerja di master kecuali diminta)
+- Stack: Laravel 13, PHP 8.3+, Blade, Alpine, Tailwind, MySQL, Spatie Permission, Sanctum, Docker
 - Multi-branch: trait BranchScoped + middleware branch.scope + session scoped_branch_id
 - Production status linear: TERIMA → PILAH → CUCI → KERING → LIPAT → CEK → SIAP → DIAMBIL
-- Local run: docker compose up -d --build → http://localhost:8000
+- Docs: tasks.md, docs/PHASE_SECURITY_CACHE.md
 
-## Aturan kerja
-1. Baca file terkait dulu sebelum edit. Jangan mengarang API/route yang tidak ada.
-2. Minimal diff — jangan refactor besar di luar scope task.
-3. Ikuti pola UI existing (x-card, x-badge, x-page-header, Alpine modal).
-4. Setelah edit: jelaskan file yang diubah + cara test manual.
-5. Jangan commit secrets. Jangan hapus fitur yang tidak terkait.
+## Aturan
+1. Baca file terkait dulu. Jangan mengarang route/API.
+2. Minimal diff — tidak ada feature bisnis baru di phase ini.
+3. Hormati nama role Spatie yang ada di seeder (Super_Admin, Branch_Admin, dll).
+4. Jangan commit .env / secrets.
+5. Setelah selesai: list file diubah + cara test + saran commit message dengan Refs #N.
 
-## Referensi task
-Baca `tasks.md` di root repo untuk daftar issue terbuka dan prioritas.
-Graphify/codebase index boleh dipakai jika ada, tapi verifikasi ke source file nyata.
-
-Konfirmasi kamu siap, lalu tunggu task prompt berikutnya.
+Konfirmasi siap, tunggu prompt issue berikutnya.
 ```
 
 ---
 
-## T1 — Bug Production status (#3 + #4) — KERJAKAN DULU
+## #15 — Role & permission middleware (P0)
 
 ```
-Task T1 | GitHub #3 + #4 | Linear KIL-12 + KIL-13
+Task GH #15 | Linear KIL-23 | Branch chore/security-and-caching
 
-## Bug
-Update status Production gagal untuk transisi ke KERING dan DIAMBIL dengan error:
-SQLSTATE[22001]: String data, right truncated: 1406 Data too long for column 'action'
+## Goal
+Semua modul sensitif wajib role/permission, bukan hanya auth + branch.scope.
 
-## Root cause (sudah dianalisis)
-Di app/Http/Controllers/ProductionController.php method updateStatus:
-$this->auditLogService->log("update_production_status_{$newStatus}", $order, ...)
+## Problem
+Finance, Procurement (approve/send/confirm), HR/Payroll, POS, Refund, Inventory, dll.
+hanya middleware auth — Cashier secara teknis bisa hit endpoint kritis.
 
-Migration audit_logs: $table->string('action', 30);
-Panjang string:
-- update_production_status_KERING = 31 > 30
-- update_production_status_DIAMBIL = 32 > 30
-(CUCI masih muat ≈29, jadi kadang status pendek lolos)
+## Do
+1. Baca routes/web.php — kelompokkan route per modul.
+2. Tambah middleware role: (atau permission:) sesuai SRS:
+   - Finance / journals / periods / reports → Finance, Owner, Super_Admin, Developer
+   - Procurement approve/send/confirm → Branch_Admin+, Owner, …
+   - HR payroll → role HR/Owner/…
+   - POS tetap Cashier+ yang relevan
+3. Samakan pola dengan services.* yang sudah role:Developer|Owner|Super_Admin.
+4. Jangan putus akses Owner/Developer.
+5. Test mental: role Cashier tidak bisa close period / approve PO / store payroll.
 
-## Fix yang diminta
-1. Perpendek nilai action yang di-log (contoh: "prod_status_KERING" atau "prod:{STATUS}") agar selalu ≤30, ATAU lebih baik:
-2. Tambah migration baru: alter audit_logs.action menjadi string(64) atau string(100).
-3. Ideal: lakukan keduanya (action pendek + kolom lebih longgar) biar aman ke depan.
-4. Jangan ubah logic transisi status linear / role check kecuali perlu.
-5. Pastikan update CUCI→KERING dan SIAP→DIAMBIL sukses, audit log terisi.
+## Out of scope
+UI redesign, cache, 2FA.
+
+Jelaskan mapping role per grup route.
+```
+
+---
+
+## #16 — Auth hardening (P0)
+
+```
+Task GH #16 | Linear KIL-24
+
+## Goal
+1. Nonaktifkan atau batasi self-registration publik (prefer admin-only create user).
+2. Throttle POST /api/login + cek is_active / locked_until seperti login web.
+3. Throttle eksplisit password.email / password.store di routes/auth.php.
+4. Evaluasi MustVerifyEmail — minimal dokumentasikan jika belum diaktifkan penuh.
 
 ## Files
-- app/Http/Controllers/ProductionController.php
-- app/Services/AuditLogService.php (opsional: Str::limit safeguard)
-- database/migrations/*_create_audit_logs_table.php JANGAN edit migration lama yang sudah deploy — buat migration baru alter column
+routes/auth.php, routes/api.php, Api\AuthController, RegisteredUserController,
+AuthenticatedSessionController, LoginRequest
 
 ## Acceptance
-- Tidak ada SQLSTATE 22001 saat update status ke KERING / DIAMBIL
-- Redirect success, production_status di orders berubah, production_status_logs & audit_logs terisi
-
-Kerjakan minimal diff. Jelaskan perubahan + cara test.
+Guest tidak mass-register ke dashboard operasional; API login ter-throttle.
 ```
 
 ---
 
-## T2 — Bug Laporan Keuangan = 0 (#5)
+## #17 — Tenant isolation (P0)
 
 ```
-Task T2 | GitHub #5 | Linear KIL-14
+Task GH #17 | Linear KIL-25
 
-## Bug
-Menu Laporan Keuangan selalu menampilkan nominal 0 padahal sudah ada transaksi.
+## Goal
+Cegah data leak lintas cabang.
 
-## Investigasi wajib (baca dulu)
-1. app/Http/Controllers/Finance/FinancialReportController.php
-2. app/Services/FinancialReportService.php DAN app/Services/Finance/FinancialReportService.php — cek mana yang di-inject container
-3. app/Services/Finance/JournalService.php + app/Observers/OrderObserver.php — apakah order paid membuat journal?
-4. resources/views/finance/reports*.blade.php — apakah baca key array yang salah?
-5. Sample data: orders payment_status=paid, journals + journal_lines
+## Focus
+1. Public /track dan GET /api/track/{orderNumber} — batasi PII yang diekspos;
+   rate-limit; pertimbangkan validasi format nota; jangan andalkan session kosong = no scope.
+2. RefundController index — pastikan query order/refund ter-filter branch.
+3. BranchScopeMiddleware: set scope konsisten; tolak user is_active=false.
+4. Route sensitif wajib lewat branch.scope kecuali memang global super-user pattern.
 
-## Yang harus dicapai
-- Laporan (income statement / trial balance / balance sheet sesuai UI) menampilkan angka dari journal yang valid
-- Jika root cause-nya order tidak pernah post journal: perbaiki observer/service agar POS paid membuat journal seimbang
-- Jika root cause filter branch/year/month: perbaiki query
-- Jangan hardcode angka dummy
-
-## Acceptance
-Dengan minimal 1 order paid + journal entries, laporan ≠ 0 untuk periode yang sesuai.
-
-Minimal diff. Jelaskan root cause aktual yang kamu temukan.
+Baca: BranchScopeMiddleware, BranchScoped trait, track routes, RefundController.
 ```
 
 ---
 
-## T3 — Production filter DIAMBIL (#6)
+## #18 — Audit log bisnis (P0)
 
 ```
-Task T3 | GitHub #6 | Linear KIL-15
+Task GH #18 | Linear KIL-26
 
-## Kebutuhan
-Di Production, status DIAMBIL tidak punya list/filter. Saat ini index mengecualikan DIAMBIL:
-Order::...->where('production_status', '!=', 'DIAMBIL')
+## Goal
+Mutasi model kritis tercatat di audit_logs (bukan hanya login/logout).
 
-## Lakukan
-1. Tambah filter/tab status termasuk DIAMBIL (dan status lain yang sudah ada)
-2. Jika filter=DIAMBIL (atau "all"), tampilkan order berstatus DIAMBIL
-3. Default view boleh tetap hide DIAMBIL agar board operasional tidak penuh — tapi user harus bisa pilih filter Diambil
-4. Update resources/views/production/index.blade.php agar UI filter jelas
+## Approach (pilih minimal invasif)
+- Observer generik / trait Auditable pada: Order, Journal, Payroll, Refund,
+  Supplier, PurchaseOrder, GoodsReceivedNote, Customer, Service (sesuaikan prioritas)
+- Atau panggil AuditLogService di service layer write paths
 
-## Acceptance
-User bisa melihat daftar order DIAMBIL lewat filter/tab di halaman Production.
-```
+## Rules
+- action string pendek atau pastikan kolom action cukup (64+)
+- Jangan log password/token
+- old_values/new_values JSON untuk field penting saja
 
----
-
-## T4 — POS Customer (#7)
-
-```
-Task T4 | GitHub #7 | Linear KIL-16
-
-## Kebutuhan di POS (resources/views/pos/index.blade.php + POSController)
-1. Modal/form tambah pelanggan baru dari POS (boleh POST ke route customers.store yang sudah ada, atau endpoint JSON kecil)
-2. Hapus opsi "Walk-In" / "Pelanggan Umum (Walk-In)" dari dropdown customer
-3. Dropdown customer searchable (Select2 via CDN, atau Choices.js, atau Alpine.js filter — pilih yang paling ringan dan konsisten)
-
-## Constraint
-- Jangan rusak alur store order POS
-- Customer baru harus dapat branch_id yang benar (session scoped_branch_id / user branch)
-- Setelah tambah customer, dropdown ter-update (reload atau append option)
-
-## Acceptance
-Kasir bisa cari customer, tambah customer baru tanpa buka CRM, tidak ada Walk-In di list.
+Acceptance: ubah status produksi / buat supplier / post journal → ada baris audit.
 ```
 
 ---
 
-## T5 — CRM Search (#8)
+## #19 — Journal race-safe (P1)
 
 ```
-Task T5 | GitHub #8 | Linear KIL-17
+Task GH #19 | Linear KIL-27
 
-## Kebutuhan
-Halaman CRM customers (routes/web.php closure customers.index + resources/views/customers/index.blade.php):
-- Tambah search bar (nama / phone / member_code)
-- Query ?q= dengan pagination tetap jalan
-- UX: searchable, debounced optional (form GET sudah cukup)
+## Goal
+JournalService anti race + anti double-post.
 
-Minimal diff. Jangan rewrite seluruh CRM.
-```
+## Do
+1. lockForUpdate (atau counter table) saat generate sequence reference
+2. Idempotency: jika journal untuk source_type+source_id sudah ada → skip/return existing
+3. Unique constraint reference per branch bila feasible
+4. Observer: error journal tidak boleh silent tanpa jejak (log + optional rethrow/flag)
 
----
+Files: app/Services/Finance/JournalService.php, OrderObserver, GRNObserver
 
-## T6 — CRUD Service / jenis layanan (#9)
-
-```
-Task T6 | GitHub #9 | Linear KIL-18
-
-## Kebutuhan
-CRUD Master Data jenis layanan cuci. Model Service + ServiceBranchPrice + ServicePriceHistory sudah ada.
-
-## Lakukan
-1. Halaman index list services
-2. Form create/edit (nama, kategori, satuan, harga default, aktif/nonaktif)
-3. Opsional: harga per cabang (ServiceBranchPrice)
-4. Routes + controller tipis (jangan taruh semua logic di closure web.php jika sudah terlalu penuh — boleh ServiceController)
-5. Akses: role Owner / Super_Admin / Developer (sesuaikan sidebar permission)
-6. Link menu di sidebar jika belum ada
-
-Ikuti UI existing. Seed data jangan dihapus.
+Acceptance: concurrent paid orders tidak collision; retry tidak dobel journal.
 ```
 
 ---
 
-## T7 — Menu Memantau Kinerja (#10)
+## #20 — Docker / Nginx hygiene (P1)
 
 ```
-Task T7 | GitHub #10 | Linear KIL-19
+Task GH #20 | Linear KIL-28
 
-## Kebutuhan
-Menu "Memantau Kinerja" reported not accessible / broken link.
+## Do
+1. docker/entrypoint.sh — JANGAN db:seed jika APP_ENV=production (atau SEED_ON_BOOT=false)
+2. docker/nginx/default.conf — headers: X-Frame-Options, X-Content-Type-Options,
+   Referrer-Policy, baseline CSP, (HSTS hanya jika HTTPS terminator jelas)
+3. docker-compose.prod.yml — hindari :latest mengambang bila memungkinkan; dokumentasikan pin
+4. Pastikan .gitignore memuat .env
 
-## Fakta kode
-- Route sudah ada: Route::get('/performance', [PerformanceController::class, 'index'])->name('performance.index');
-- Controller + view performance/index.blade.php sudah ada
-
-## Lakukan
-1. Cek resources/views/components/sidebar.blade.php (dan topbar/bottom-nav) — perbaiki href/route label "Memantau Kinerja" agar ke route('performance.index')
-2. Jika 403: sesuaikan middleware/role agar role yang berhak (Owner, dll) bisa akses
-3. Jika view error: perbaiki error runtime di PerformanceController (mis. relation orders di User)
-4. Jangan rebuild fitur dari nol kecuali memang kosong total
-
-## Acceptance
-Klik menu Memantau Kinerja → halaman performance tampil tanpa 404/500.
+Jangan ubah dev DX secara merusak (local tetap boleh seed).
 ```
 
 ---
 
-## Setelah tiap task
+## #21 — Caching + queue (Perf)
 
-Minta AI:
 ```
-Setelah selesai:
-1. List file yang diubah
-2. Cara test manual (step by step)
-3. Saran commit message 1 baris
+Task GH #21 | Linear KIL-29
+
+## Goal
+1. Cache::remember untuk Branch list & agregat dashboard (TTL pendek + invalidasi wajar)
+2. Hilangkan N+1 DashboardController (loop sum per branch/hari → aggregated query)
+3. Kurangi query FinancialReportService per COA (batch/sum grouping)
+4. OrderObserver / GRNObserver kerja berat → Job ShouldQueue (QUEUE_CONNECTION=database ok)
+5. Dokumentasikan config:cache + route:cache di CD/deploy
+
+## Constraints
+- Invalidasi cache saat order paid / journal post / branch berubah
+- Jangan cache data lintas-tenant tanpa key branchId
+- Redis opsional; file/database cache acceptable dulu
+
+Acceptance: dashboard owner tidak 1 query per cabang; observer tidak block request lama.
 ```
 
-Lalu di GitHub close issue terkait + di Linear set status Done.
+---
+
+## Setelah tiap issue
+
+```
+1. File yang diubah
+2. Cara test manual (role + skenario)
+3. Commit message 1 baris + Refs #N
+4. Ingatkan close GH issue + Linear Done setelah merge
+```

@@ -1,54 +1,96 @@
 # Istana Laundry — Tasks
 
-> Updated: 2026-07-28  
+> Updated: **2026-07-28**  
 > Repo: https://github.com/fk0u/IstanaLaundryManagementSystem  
-> Linear: Istana Laundry Management System
-
-## Stack
-Laravel 13 · PHP 8.3+ · Docker · Sanctum · Spatie Permission · multi-branch
-
-Local: `docker compose up -d --build` → http://localhost:8000
+> Active branch: **`chore/security-and-caching`**  
+> Linear: project *Istana Laundry Management System*
 
 ---
 
-## Phase complete (Tech Lead TEST 1 + ops)
+## Stack singkat
 
-| GH | Status |
-|----|--------|
-| #1–#11, #13 | Closed |
-
-Includes: HR, Dashboard, Production status, Laporan Keuangan, POS/CRM UX, Services CRUD, Performance menu, CI/CD, Procurement PR/PO/GRN + **Supplier** sub-page.
-
----
-
-## Current phase — Security + Caching
-
-**Branch:** `chore/security-and-caching`  
-**Epic:** [#14](https://github.com/fk0u/IstanaLaundryManagementSystem/issues/14)  
-**Guide:** [docs/PHASE_SECURITY_CACHE.md](docs/PHASE_SECURITY_CACHE.md)
-
-| Order | GH | Task |
-|-------|-----|------|
-| 1 | [#15](https://github.com/fk0u/IstanaLaundryManagementSystem/issues/15) | Role/permission middleware modul sensitif |
-| 2 | [#16](https://github.com/fk0u/IstanaLaundryManagementSystem/issues/16) | Auth: register, API throttle, password reset |
-| 3 | [#17](https://github.com/fk0u/IstanaLaundryManagementSystem/issues/17) | Tenant isolation /track + BranchScoped |
-| 4 | [#18](https://github.com/fk0u/IstanaLaundryManagementSystem/issues/18) | Audit log mutasi bisnis |
-| 5 | [#19](https://github.com/fk0u/IstanaLaundryManagementSystem/issues/19) | Journal lockForUpdate + idempotency |
-| 6 | [#20](https://github.com/fk0u/IstanaLaundryManagementSystem/issues/20) | Docker/Nginx prod hygiene |
-| 7 | [#21](https://github.com/fk0u/IstanaLaundryManagementSystem/issues/21) | Caching layer + queue observers |
+- Laravel 13 / PHP 8.3+ (Docker: PHP 8.4-FPM)
+- Blade + Alpine.js + Tailwind v4 + Chart.js
+- MySQL 8 · Redis (compose) · Sanctum · Spatie Permission
+- Local: `docker compose up -d --build` → http://localhost:8000
 
 ```bash
 git fetch origin
 git checkout chore/security-and-caching
+git pull origin chore/security-and-caching
 ```
-
-Kerjakan **satu issue per PR** ke branch phase (atau commit atomic dengan `Refs #15`).
 
 ---
 
-## Backlog (nanti)
+## Phase done — operasional & Tech Lead TEST 1
 
-- 2FA evaluation
-- PII field encryption (NIK/phone)
-- Pint style cleanup (`chore/pint-cleanup`)
-- Expand REST API modules
+Semua closed di GitHub + Linear:
+
+| Cluster | Issues |
+|---------|--------|
+| Bugs | #1 HR · #2 Dashboard · #3–#4 Production status · #5 Laporan Keuangan |
+| Improvements | #6 Diambil filter · #7 POS customer · #8 CRM search |
+| Features | #9 Services CRUD · #10 Memantau Kinerja · #11 CI/CD |
+| Procurement | #13 PR/PO/GRN + **Supplier** sub-page |
+
+---
+
+## Phase aktif — Security + Caching
+
+**Epic:** [#14](https://github.com/fk0u/IstanaLaundryManagementSystem/issues/14) · Linear [KIL-22](https://linear.app/kiloux/issue/KIL-22)  
+**Guide:** [docs/PHASE_SECURITY_CACHE.md](docs/PHASE_SECURITY_CACHE.md)  
+**Prompts:** [docs/AI_PROMPTS.md](docs/AI_PROMPTS.md)
+
+### Urutan wajib
+
+| # | GH | Linear | Priority | Task | Status |
+|---|-----|--------|----------|------|--------|
+| 1 | [#15](https://github.com/fk0u/IstanaLaundryManagementSystem/issues/15) | KIL-23 | P0 | Role/permission middleware modul sensitif | Open |
+| 2 | [#16](https://github.com/fk0u/IstanaLaundryManagementSystem/issues/16) | KIL-24 | P0 | Auth: register, API login throttle, password reset | Open |
+| 3 | [#17](https://github.com/fk0u/IstanaLaundryManagementSystem/issues/17) | KIL-25 | P0 | Tenant isolation `/track` + BranchScoped | Open |
+| 4 | [#18](https://github.com/fk0u/IstanaLaundryManagementSystem/issues/18) | KIL-26 | P0 | Audit log mutasi bisnis | Open |
+| 5 | [#19](https://github.com/fk0u/IstanaLaundryManagementSystem/issues/19) | KIL-27 | P1 | Journal `lockForUpdate` + idempotency | Open |
+| 6 | [#20](https://github.com/fk0u/IstanaLaundryManagementSystem/issues/20) | KIL-28 | P1 | Docker/Nginx prod hygiene (seed guard, headers) | Open |
+| 7 | [#21](https://github.com/fk0u/IstanaLaundryManagementSystem/issues/21) | KIL-29 | Perf | Caching layer + queue observers | Open |
+
+### Definition of done (fase)
+
+- [ ] #15–#21 closed + Linear Done
+- [ ] PR `chore/security-and-caching` → `master`
+- [ ] Smoke: role Cashier tidak akses approve PO/close period; journal tidak double-post; dashboard tidak N+1 parah; prod entrypoint tidak seed
+
+### Aturan commit
+
+```text
+fix(sec): …    Refs #15
+feat(audit): …  Refs #18
+perf(cache): …  Refs #21
+```
+
+Satu issue ≈ satu fokus diff. Jangan campur fitur bisnis (POS UI baru, dll.) di branch ini.
+
+---
+
+## Backlog (setelah fase ini)
+
+| Item | Catatan |
+|------|---------|
+| 2FA (evaluasi Fortify/custom) | Post-hardening |
+| Enkripsi PII selektif (NIK, phone) | Butuh migration + akses pattern |
+| `chore/pint-cleanup` | Style only, PR terpisah |
+| Expand REST API (orders, customers, POS) | Branch `feat/api-*` |
+| Redis sebagai `CACHE_STORE` + `QUEUE_CONNECTION` prod | Setelah #21 |
+
+---
+
+## Mapping cepat file kritis
+
+| Topic | Path |
+|-------|------|
+| Routes web/API | `routes/web.php`, `routes/api.php`, `routes/auth.php` |
+| Branch scope | `app/Http/Middleware/BranchScopeMiddleware.php`, `app/Models/Traits/BranchScoped.php` |
+| Audit | `app/Services/AuditLogService.php` |
+| Journal | `app/Services/Finance/JournalService.php`, `app/Observers/*` |
+| Dashboard heavy | `app/Http/Controllers/DashboardController.php` |
+| Reports heavy | `app/Services/Finance/FinancialReportService.php` |
+| Docker/Nginx | `docker/entrypoint.sh`, `docker/nginx/default.conf`, `docker-compose.prod.yml` |
