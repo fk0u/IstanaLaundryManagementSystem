@@ -126,7 +126,7 @@
                                             </button>
                                         </form>
                                         <button type="button"
-                                                @click='openEdit(@json($service->append(["branch_prices" => $service->branchPrices->makeHidden(["created_at","updated_at","service_id","is_active"]) ])))'
+                                                @click='openEdit(@json(array_merge($service->toArray(), ["branch_prices" => $service->branchPrices->map(fn($bp) => ["branch_id" => $bp->branch_id, "price" => $bp->price])->values()])))'
                                                 class="p-1.5 text-slate-500 hover:text-primary hover:bg-orange-50 dark:hover:bg-orange-950/20 transition-colors rounded-lg cursor-pointer"
                                                 title="Edit">
                                             <span class="material-symbols-outlined text-base">edit</span>

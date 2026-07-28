@@ -20,6 +20,7 @@ class DatabaseSeeder extends Seeder
             ChartOfAccountSeeder::class,
             ServiceSeeder::class,
             UserSeeder::class,
+            SupplierSeeder::class,
             ERPDataSeeder::class,
         ]);
     }

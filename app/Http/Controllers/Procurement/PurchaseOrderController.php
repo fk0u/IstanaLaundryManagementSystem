@@ -20,7 +20,7 @@ class PurchaseOrderController extends Controller
             ->paginate(15);
 
         // Standard helpers for creating a PO
-        $suppliers = Supplier::orderBy('name', 'asc')->get();
+        $suppliers = Supplier::where('is_active', true)->orderBy('name', 'asc')->get();
 
         // List approved PRs that don't have a PO yet
         $approvedPrs = PurchaseRequest::where('status', 'approved')

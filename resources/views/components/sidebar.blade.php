@@ -135,7 +135,7 @@
                 <a href="{{ route('services.index') }}" @click="sidebarOpen = false"
                    class="flex items-center gap-3.5 px-3.5 py-3 transition-all rounded-xl text-sm font-semibold {{ request()->is('services*') ? 'text-primary dark:text-orange-400 bg-orange-50 dark:bg-orange-950/30 font-bold border-r-4 border-primary' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/60' }}"
                    :title="!desktopSidebarOpen ? 'Jenis Layanan' : ''">
-                    <span class="material-symbols-outlined text-[22px] shrink-0" style="font-variation-settings: 'FILL' {{ request()->is('services*') ? '1' : '0' }};">miscellaneous_services</span>
+                    <span class="material-symbols-outlined text-[22px] shrink-0" style="font-variation-settings: 'FILL' {{ request()->is('services*') ? '1' : '0' }};">dry_cleaning</span>
                     <span x-show="desktopSidebarOpen" class="truncate">Jenis Layanan</span>
                 </a>
             @endif
@@ -151,6 +151,10 @@
                 
                 <!-- Procurement Sub-menus (visible when expanded) -->
                 <div x-show="desktopSidebarOpen" class="space-y-0.5 pl-4">
+                    <a href="/procurement/suppliers" @click="sidebarOpen = false" class="flex items-center gap-3 px-3 py-2 transition-all rounded-xl text-xs font-medium {{ request()->is('procurement/suppliers*') ? 'text-primary font-bold bg-orange-50/50' : 'text-slate-400 hover:text-slate-600' }}">
+                        <span class="material-symbols-outlined text-[16px]">local_shipping</span>
+                        <span class="truncate">Supplier</span>
+                    </a>
                     <a href="/procurement/purchase-requests" @click="sidebarOpen = false" class="flex items-center gap-3 px-3 py-2 transition-all rounded-xl text-xs font-medium {{ request()->is('procurement/purchase-requests*') ? 'text-primary font-bold bg-orange-50/50' : 'text-slate-400 hover:text-slate-600' }}">
                         <span class="material-symbols-outlined text-[16px]">shopping_basket</span>
                         <span class="truncate">Purchase Requests</span>

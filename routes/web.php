@@ -13,6 +13,7 @@ use App\Http\Controllers\POSController;
 use App\Http\Controllers\Procurement\GoodsReceivedNoteController;
 use App\Http\Controllers\Procurement\PurchaseOrderController;
 use App\Http\Controllers\Procurement\PurchaseRequestController;
+use App\Http\Controllers\Procurement\SupplierController;
 use App\Http\Controllers\ProductionController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RefundController;
@@ -386,6 +387,12 @@ Route::middleware(['auth', 'branch.scope'])->group(function () {
 
         return view('audit_logs.index', compact('logs'));
     })->name('audit-logs.index');
+
+    // Procurement - Supplier
+    Route::get('/procurement/suppliers', [SupplierController::class, 'index'])->name('procurement.suppliers.index');
+    Route::post('/procurement/suppliers', [SupplierController::class, 'store'])->name('procurement.suppliers.store');
+    Route::put('/procurement/suppliers/{id}', [SupplierController::class, 'update'])->name('procurement.suppliers.update');
+    Route::delete('/procurement/suppliers/{id}', [SupplierController::class, 'destroy'])->name('procurement.suppliers.destroy');
 
     // Procurement - PR
     Route::get('/procurement/purchase-requests', [PurchaseRequestController::class, 'index'])->name('procurement.purchase-requests.index');

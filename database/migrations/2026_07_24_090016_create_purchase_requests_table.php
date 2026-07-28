@@ -17,7 +17,7 @@ return new class extends Migration
             $table->string('pr_number', 30)->unique();
             $table->foreignId('requested_by')->constrained('users')->onDelete('cascade');
             $table->foreignId('approved_by')->nullable()->constrained('users')->onDelete('set null');
-            $table->enum('status', ['draft', 'pending', 'approved', 'rejected'])->default('draft');
+            $table->enum('status', ['draft', 'pending_approval', 'approved', 'rejected'])->default('pending_approval');
             $table->date('request_date');
             $table->text('notes')->nullable();
             $table->timestamps();
