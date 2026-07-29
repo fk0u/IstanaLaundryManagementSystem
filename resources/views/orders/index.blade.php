@@ -131,11 +131,18 @@
                                     Rp {{ number_format($order->total, 0, ',', '.') }}
                                 </td>
                                 <td class="py-3 px-4 text-right">
-                                    <a href="{{ route('invoices.show', $order) }}"
-                                       class="btn-touch inline-flex items-center gap-1 px-2.5 py-1.5 bg-orange-50 dark:bg-slate-800 text-primary text-2xs font-bold rounded-lg hover:bg-orange-100 dark:hover:bg-slate-700 transition-colors">
-                                        <span class="material-symbols-outlined text-sm">description</span>
-                                        Invoice
-                                    </a>
+                                    <div class="flex items-center justify-end gap-1.5">
+                                        <a href="{{ route('track', ['order_number' => $order->order_number]) }}" target="_blank"
+                                           class="btn-touch inline-flex items-center gap-1 px-2 py-1 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-2xs font-bold rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors" title="Lacak Live Tracking">
+                                            <span class="material-symbols-outlined text-sm">my_location</span>
+                                            Lacak
+                                        </a>
+                                        <a href="{{ route('invoices.show', $order) }}" target="_blank"
+                                           class="btn-touch inline-flex items-center gap-1 px-2 py-1 bg-orange-50 dark:bg-slate-800 text-primary text-2xs font-bold rounded-lg hover:bg-orange-100 dark:hover:bg-slate-700 transition-colors" title="Cetak Invoice Billing A4">
+                                            <span class="material-symbols-outlined text-sm">description</span>
+                                            Invoice
+                                        </a>
+                                    </div>
                                 </td>
                             </tr>
                         @empty

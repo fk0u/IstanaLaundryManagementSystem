@@ -96,6 +96,30 @@
                         <p class="text-xs md:text-sm text-slate-300 max-w-xl leading-relaxed">
                             {{ $statusDescs[$order->production_status] ?? 'Sedang diproses oleh tim profesional kami.' }}
                         </p>
+
+                        <!-- Live Financial Payment Status Synchronization Bar -->
+                        <div class="pt-4 border-t border-slate-800/80 flex flex-wrap items-center justify-between gap-3">
+                            <div class="flex items-center gap-3">
+                                @if($order->payment_status === 'paid')
+                                    <span class="px-3 py-1 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-full text-xs font-black uppercase flex items-center gap-1">
+                                        <span class="material-symbols-outlined text-sm">verified</span> Pembayaran Lunas (Paid)
+                                    </span>
+                                @elseif($order->payment_status === 'partial')
+                                    <span class="px-3 py-1 bg-amber-500/20 text-amber-400 border border-amber-500/30 rounded-full text-xs font-black uppercase flex items-center gap-1">
+                                        <span class="material-symbols-outlined text-sm">pending</span> DP / Sebagian (Piutang: Rp {{ number_format($order->total - $order->paid_amount, 0, ',', '.') }})
+                                    </span>
+                                @else
+                                    <span class="px-3 py-1 bg-rose-500/20 text-rose-400 border border-rose-500/30 rounded-full text-xs font-black uppercase flex items-center gap-1">
+                                        <span class="material-symbols-outlined text-sm">error</span> Belum Lunas (Unpaid: Rp {{ number_format($order->total - $order->paid_amount, 0, ',', '.') }})
+                                    </span>
+                                @endif
+                                <span class="text-xs text-slate-400 font-semibold uppercase">Metode: {{ strtoupper($order->payment_method) }}</span>
+                            </div>
+
+                            <a href="{{ route('invoices.show', $order->id) }}" target="_blank" class="px-4 py-2 bg-white/10 hover:bg-white/20 backdrop-blur-md text-white rounded-xl font-bold text-xs flex items-center gap-1.5 transition-all">
+                                <span class="material-symbols-outlined text-sm">description</span> Unduh Invoice / Billing A4
+                            </a>
+                        </div>
                     </div>
                 </div>
 

@@ -165,10 +165,20 @@
                                     @endif
                                 </div>
                                 
-                                <div class="mt-3 pt-3 border-t border-slate-50 dark:border-slate-800/30 text-center flex flex-col gap-0.5 text-2xs text-slate-400">
-                                    <span>Nota: {{ $order->order_number }}</span>
-                                    <span>Bayar: {{ strtoupper($order->payment_method) }} ({{ strtoupper($order->payment_status) }})</span>
-                                </div>
+                                <div class="mt-3 pt-3 border-t border-slate-50 dark:border-slate-800/30 flex flex-col gap-1.5 text-2xs text-slate-400">
+                                     <div class="flex justify-between items-center">
+                                         <span>Nota: <strong class="text-slate-700 dark:text-slate-300 font-mono">{{ $order->order_number }}</strong></span>
+                                         <span class="font-extrabold uppercase {{ $order->payment_status === 'paid' ? 'text-emerald-600' : 'text-amber-600' }}">{{ $order->payment_status }}</span>
+                                     </div>
+                                     <div class="flex items-center gap-2 pt-1">
+                                         <a href="{{ route('invoices.show', $order->id) }}" target="_blank" class="flex-1 py-1.5 px-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold rounded-lg text-center flex items-center justify-center gap-1 transition-colors">
+                                             <span class="material-symbols-outlined text-xs">description</span> Invoice A4
+                                         </a>
+                                         <a href="{{ route('track', ['order_number' => $order->order_number]) }}" target="_blank" class="flex-1 py-1.5 px-2 bg-orange-50 dark:bg-slate-800 hover:bg-orange-100 dark:hover:bg-slate-700 text-primary font-bold rounded-lg text-center flex items-center justify-center gap-1 transition-colors">
+                                             <span class="material-symbols-outlined text-xs">my_location</span> Lacak Live
+                                         </a>
+                                     </div>
+                                 </div>
                             </div>
                         </div>
                     </x-card>
