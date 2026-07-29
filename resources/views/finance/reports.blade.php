@@ -57,6 +57,10 @@
 
         <!-- Report Tabs -->
         <div class="flex border-b border-slate-200 dark:border-slate-800 gap-4 text-xs font-bold">
+            <a href="{{ route('finance.reports.index', array_merge(request()->query(), ['tab' => 'analytics'])) }}" 
+               class="pb-3 border-b-2 transition-all {{ $tab === 'analytics' ? 'border-primary text-primary' : 'border-transparent text-slate-400 hover:text-slate-600' }}">
+                Analytics KPI & Breakdown Cabang
+            </a>
             <a href="{{ route('finance.reports.index', array_merge(request()->query(), ['tab' => 'income'])) }}" 
                class="pb-3 border-b-2 transition-all {{ $tab === 'income' ? 'border-primary text-primary' : 'border-transparent text-slate-400 hover:text-slate-600' }}">
                 Laba Rugi (Income Statement)
@@ -70,6 +74,147 @@
                 Neraca Saldo (Trial Balance)
             </a>
         </div>
+
+        <!-- Tab 0: Analytics & KPI Breakdown -->
+        @if($tab === 'analytics' || empty($tab))
+            <div class="flex flex-col gap-6">
+                <!-- Executive KPI Cards Grid -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <x-card :compact="true">
+                        <div class="flex flex-col gap-1">
+                            <span class="text-2xs font-extrabold uppercase text-slate-400">Total Omset Kotor</span>
+                            <span class="text-lg font-black text-slate-800 dark:text-slate-100 font-mono">Rp {{ number_format($kpiAnalytics['total_gross_revenue'], 0, ',', '.') }}</span>
+                            <span class="text-2xs text-slate-400 font-semibold">{{ $kpiAnalytics['total_orders_count'] }} Transaksi Terproses</span>
+                        </div>
+                    </x-card>
+
+                    <x-card :compact="true">
+                        <div class="flex flex-col gap-1">
+                            <span class="text-2xs font-extrabold uppercase text-emerald-600">Omset Terbayar (Paid)</span>
+                            <span class="text-lg font-black text-emerald-600 font-mono">Rp {{ number_format($kpiAnalytics['total_paid_revenue'], 0, ',', '.') }}</span>
+                            <span class="text-2xs text-emerald-500 font-semibold">Kas & Transfer Masuk</span>
+                        </div>
+                    </x-card>
+
+                    <x-card :compact="true">
+                        <div class="flex flex-col gap-1">
+                            <span class="text-2xs font-extrabold uppercase text-amber-600">Piutang / Unpaid</span>
+                            <span class="text-lg font-black text-amber-600 font-mono">Rp {{ number_format($kpiAnalytics['total_outstanding_piutang'], 0, ',', '.') }}</span>
+                            <span class="text-2xs text-amber-500 font-semibold">Belum Pelunasan</span>
+                        </div>
+                    </x-card>
+
+                    <x-card :compact="true">
+                        <div class="flex flex-col gap-1">
+                            <span class="text-2xs font-extrabold uppercase text-primary">Rata-rata Nota (Basket Size)</span>
+                            <span class="text-lg font-black text-primary font-mono">Rp {{ number_format($kpiAnalytics['average_basket_size'], 0, ',', '.') }}</span>
+                            <span class="text-2xs text-slate-400 font-semibold">Per Nota Transaksi</span>
+                        </div>
+                    </x-card>
+                </div>
+
+                <!-- Deep Branch Performance Ranking Table -->
+                <x-card title="Transparansi Performa Per Cabang">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-xs border-collapse">
+                            <thead>
+                                <tr class="border-b border-slate-100 dark:border-slate-800 text-slate-400 font-bold uppercase tracking-wider">
+                                    <th class="py-3 px-4 text-left">Cabang</th>
+                                    <th class="py-3 px-4 text-right">Total Transaksi</th>
+                                    <th class="py-3 px-4 text-right">Total Omset</th>
+                                    <th class="py-3 px-4 text-right">Terbayar (Paid)</th>
+                                    <th class="py-3 px-4 text-right">Piutang (Unpaid)</th>
+                                    <th class="py-3 px-4 text-right">Rata-rata / Order</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-50 dark:divide-slate-850 font-mono">
+                                @forelse($kpiAnalytics['branch_breakdown'] as $br)
+                                    <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-900/30 transition-colors">
+                                        <td class="py-3.5 px-4 font-sans font-bold text-slate-800 dark:text-slate-200">
+                                            {{ $br['name'] }}
+                                            <span class="text-2xs font-mono text-slate-400 block font-normal">{{ $br['code'] }}</span>
+                                        </td>
+                                        <td class="py-3.5 px-4 text-right text-slate-700 dark:text-slate-300 font-sans font-semibold">
+                                            {{ number_format($br['total_orders']) }} Nota
+                                        </td>
+                                        <td class="py-3.5 px-4 text-right font-extrabold text-slate-900 dark:text-slate-100">
+                                            Rp {{ number_format($br['total_revenue'], 0, ',', '.') }}
+                                        </td>
+                                        <td class="py-3.5 px-4 text-right text-emerald-600 font-bold">
+                                            Rp {{ number_format($br['paid_revenue'], 0, ',', '.') }}
+                                        </td>
+                                        <td class="py-3.5 px-4 text-right text-amber-600 font-bold">
+                                            Rp {{ number_format($br['unpaid_revenue'], 0, ',', '.') }}
+                                        </td>
+                                        <td class="py-3.5 px-4 text-right text-slate-600 dark:text-slate-400 font-sans">
+                                            Rp {{ number_format($br['avg_order_value'], 0, ',', '.') }}
+                                        </td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="6" class="py-8 text-center text-slate-400 font-sans">Belum ada data transaksi cabang.</td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                </x-card>
+
+                <!-- Service Popularity & Payment Methods Breakdown -->
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                    <!-- Top 5 Services (Paling Laris) -->
+                    <div class="lg:col-span-6">
+                        <x-card title="Layanan Paling Laris (Top Popular)">
+                            <div class="space-y-3">
+                                @forelse($kpiAnalytics['top_services'] as $index => $srv)
+                                    <div class="flex items-center justify-between p-3 rounded-xl bg-emerald-50/50 dark:bg-emerald-950/20 border border-emerald-100 dark:border-emerald-900/30">
+                                        <div class="flex items-center gap-3">
+                                            <span class="w-7 h-7 rounded-lg bg-emerald-600 text-white font-extrabold text-xs flex items-center justify-center">#{{ $index + 1 }}</span>
+                                            <div>
+                                                <span class="font-bold text-xs text-slate-800 dark:text-slate-200 block">{{ $srv->name }}</span>
+                                                <span class="text-2xs text-slate-400 uppercase font-semibold">{{ $srv->type }} • {{ $srv->unit }}</span>
+                                            </div>
+                                        </div>
+                                        <div class="text-right font-mono">
+                                            <span class="font-black text-xs text-emerald-600 block">{{ number_format($srv->total_qty) }} {{ $srv->unit }}</span>
+                                            <span class="text-2xs text-slate-400">Rp {{ number_format($srv->total_revenue, 0, ',', '.') }}</span>
+                                        </div>
+                                    </div>
+                                @empty
+                                    <div class="py-6 text-center text-slate-400 text-xs">Belum ada data penjualan layanan.</div>
+                                @endforelse
+                            </div>
+                        </x-card>
+                    </div>
+
+                    <!-- Bottom 5 Services (Paling Sepi) -->
+                    <div class="lg:col-span-6">
+                        <x-card title="Layanan Paling Sepi Ditempah (Low Demand)">
+                            <div class="space-y-3">
+                                @forelse($kpiAnalytics['least_services'] as $index => $srv)
+                                    <div class="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800">
+                                        <div class="flex items-center gap-3">
+                                            <span class="w-7 h-7 rounded-lg bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 font-extrabold text-xs flex items-center justify-center">#{{ $index + 1 }}</span>
+                                            <div>
+                                                <span class="font-bold text-xs text-slate-800 dark:text-slate-200 block">{{ $srv->name }}</span>
+                                                <span class="text-2xs text-slate-400 uppercase font-semibold">{{ $srv->type }} • {{ $srv->unit }}</span>
+                                            </div>
+                                        </div>
+                                        <div class="text-right font-mono">
+                                            <span class="font-bold text-xs text-slate-600 dark:text-slate-400 block">{{ number_format($srv->total_qty) }} {{ $srv->unit }}</span>
+                                            <span class="text-2xs text-slate-400">Rp {{ number_format($srv->total_revenue, 0, ',', '.') }}</span>
+                                        </div>
+                                    </div>
+                                @empty
+                                    <div class="py-6 text-center text-slate-400 text-xs">Belum ada data penjualan layanan.</div>
+                                @endforelse
+                            </div>
+                        </x-card>
+                    </div>
+                </div>
+
+            </div>
+        @endif
 
         <!-- Tab 1: Income Statement -->
         @if($tab === 'income')

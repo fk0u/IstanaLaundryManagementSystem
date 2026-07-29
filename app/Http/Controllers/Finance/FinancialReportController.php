@@ -36,11 +36,13 @@ class FinancialReportController extends Controller
         $trialBalance = $this->reportService->getTrialBalance($branchId, $year, $month);
         $incomeStatement = $this->reportService->getIncomeStatement($branchId, $year, $month);
         $balanceSheet = $this->reportService->getBalanceSheet($branchId, $year, $month);
+        $kpiAnalytics = $this->reportService->getExecutiveKpiAnalytics($branchId, $year, $month);
 
         return view('finance.reports', compact(
             'trialBalance',
             'incomeStatement',
             'balanceSheet',
+            'kpiAnalytics',
             'branches',
             'branchId',
             'year',
