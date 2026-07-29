@@ -126,8 +126,13 @@ class DashboardController extends Controller
 
             $branchesListCached = Cache::remember('branches:list', 300, fn () => Branch::all());
             foreach ($branchesListCached as $branch) {
-                $chartLabels[] = $branch->name;
-                $chartValues[] = (float) ($perBranch[$branch->id] ?? 0);
+                if (is_object($branch) && isset($branch->name)) {
+                    $chartLabels[] = $branch->name;
+                    $chartValues[] = (float) ($perBranch[$branch->id] ?? 0);
+                } elseif (is_string($branch)) {
+                    $chartLabels[] = $branch;
+                    $chartValues[] = 0;
+                }
             }
             $chartTitle = 'Komparasi Pendapatan Cabang';
             $chartSub = 'Total akumulasi pendapatan per cabang (Rupiah)';
