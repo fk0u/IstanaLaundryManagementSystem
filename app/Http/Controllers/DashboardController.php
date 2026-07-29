@@ -8,6 +8,7 @@ use App\Models\InventoryItem;
 use App\Models\Order;
 use App\Models\Workshop;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 
 class DashboardController extends Controller
 {
@@ -102,28 +103,29 @@ class DashboardController extends Controller
         $chartLabels = [];
         $chartValues = [];
         if (! $branchId) {
-            // Global view: compare branches
-            $branches = Branch::all();
-            foreach ($branches as $branch) {
-                $revenue = Order::where('branch_id', $branch->id)->sum('total');
+            // Global view: compare branches — one aggregated query instead of
+            // a query per branch (fixes N+1).
+            $perBranch = Order::query()
+                ->selectRaw('branch_id, SUM(total) as revenue')
+                ->whereNotNull('branch_id')
+                ->groupBy('branch_id')
+                ->pluck('revenue', 'branch_id');
+
+            $branchesListCached = Cache::remember('branches:list', 300, fn () => Branch::all());
+            foreach ($branchesListCached as $branch) {
                 $chartLabels[] = $branch->name;
-                $chartValues[] = (float) $revenue;
+                $chartValues[] = (float) ($perBranch[$branch->id] ?? 0);
             }
             $chartTitle = 'Komparasi Pendapatan Cabang';
             $chartSub = 'Total akumulasi pendapatan per cabang (Rupiah)';
         } else {
-            // Branch view: show 7 days trend
-            for ($i = 6; $i >= 0; $i--) {
-                $date = now()->subDays($i);
-                $revenue = Order::where('branch_id', $branchId)->whereDate('created_at', $date->toDateString())->sum('total');
-                $chartLabels[] = $date->format('D, d M');
-                $chartValues[] = (float) $revenue;
-            }
+            // Branch view: 7-day trend built from a single grouped query.
+            [$chartLabels, $chartValues] = $this->weeklyRevenueTrend($branchId);
             $chartTitle = 'Tren Pendapatan Mingguan';
             $chartSub = 'Data 7 hari terakhir (Rupiah)';
         }
 
-        $branchesList = Branch::all();
+        $branchesList = Cache::remember('branches:list', 300, fn () => Branch::all());
 
         return view('dashboard.owner', compact(
             'totalRevenue',
@@ -172,15 +174,8 @@ class DashboardController extends Controller
             ->take(5)
             ->get();
 
-        // 7 days daily revenue trend for chart
-        $chartLabels = [];
-        $chartValues = [];
-        for ($i = 6; $i >= 0; $i--) {
-            $date = now()->subDays($i);
-            $revenue = Order::where('branch_id', $branchId)->whereDate('created_at', $date->toDateString())->sum('total');
-            $chartLabels[] = $date->format('D, d M');
-            $chartValues[] = (float) $revenue;
-        }
+        // 7 days daily revenue trend for chart — single grouped query.
+        [$chartLabels, $chartValues] = $this->weeklyRevenueTrend($branchId);
 
         return view('dashboard.branch_admin', compact(
             'branch',
@@ -276,5 +271,34 @@ class DashboardController extends Controller
             'completedTodayCount',
             'activeProductionOrders'
         ));
+    }
+
+    /**
+     * Build a 7-day revenue trend for a branch from a single grouped query,
+     * filling zero-revenue days instead of running one query per day.
+     *
+     * @return array{0: array<int, string>, 1: array<int, float>}
+     */
+    protected function weeklyRevenueTrend(int $branchId): array
+    {
+        $start = now()->subDays(6)->startOfDay();
+
+        $daily = Order::query()
+            ->selectRaw('DATE(created_at) as day, SUM(total) as revenue')
+            ->where('branch_id', $branchId)
+            ->whereBetween('created_at', [$start, now()->endOfDay()])
+            ->groupByRaw('DATE(created_at)')
+            ->pluck('revenue', 'day');
+
+        $labels = [];
+        $values = [];
+        for ($i = 6; $i >= 0; $i--) {
+            $date = now()->subDays($i);
+            $key = $date->toDateString();
+            $labels[] = $date->format('D, d M');
+            $values[] = (float) ($daily[$key] ?? 0);
+        }
+
+        return [$labels, $values];
     }
 }

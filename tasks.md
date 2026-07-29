@@ -2,7 +2,7 @@
 
 > Updated: **2026-07-28**  
 > Repo: https://github.com/fk0u/IstanaLaundryManagementSystem  
-> Active branch: **`chore/security-and-caching`**  
+> Active branch: **`perf/caching-and-queue`** (based on `master`)  
 > Linear: project *Istana Laundry Management System*
 
 ---
@@ -51,13 +51,13 @@ Semua closed di GitHub + Linear:
 | 4 | [#18](https://github.com/fk0u/IstanaLaundryManagementSystem/issues/18) | KIL-26 | P0 | Audit log mutasi bisnis | ✅ Done |
 | 5 | [#19](https://github.com/fk0u/IstanaLaundryManagementSystem/issues/19) | KIL-27 | P1 | Journal `lockForUpdate` + idempotency | ✅ Done |
 | 6 | [#20](https://github.com/fk0u/IstanaLaundryManagementSystem/issues/20) | KIL-28 | P1 | Docker/Nginx prod hygiene (seed guard, headers) | ✅ Done |
-| 7 | [#21](https://github.com/fk0u/IstanaLaundryManagementSystem/issues/21) | KIL-29 | Perf | Caching layer + queue observers | Open |
+| 7 | [#21](https://github.com/fk0u/IstanaLaundryManagementSystem/issues/21) | KIL-29 | Perf | Caching layer + queue observers | ✅ Done |
 
 ### Definition of done (fase)
 
-- [ ] #15–#21 closed + Linear Done
-- [ ] PR `chore/security-and-caching` → `master`
-- [ ] Smoke: role Cashier tidak akses approve PO/close period; journal tidak double-post; dashboard tidak N+1 parah; prod entrypoint tidak seed
+- [x] #15–#21 closed + Linear Done
+- [ ] PR `perf/caching-and-queue` → `master`
+- [x] Smoke: role Cashier tidak akses approve PO/close period; journal tidak double-post; dashboard tidak N+1 parah; prod entrypoint tidak seed
 
 ### Aturan commit
 

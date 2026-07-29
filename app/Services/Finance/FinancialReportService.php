@@ -4,51 +4,62 @@ namespace App\Services\Finance;
 
 use App\Models\ChartOfAccount;
 use App\Models\JournalLine;
+use Illuminate\Support\Collection;
 
 class FinancialReportService
 {
+    /**
+     * Sum debit/credit per account for a given period in a single grouped
+     * query, instead of one query per chart-of-account entry.
+     *
+     * @return Collection<int, array{account_id: int, debit: float, credit: float}>
+     */
+    protected function periodBalancesByAccount(?int $branchId, int $year, int $month): Collection
+    {
+        return JournalLine::query()
+            ->selectRaw('journal_lines.account_id, SUM(journal_lines.debit) as debit, SUM(journal_lines.credit) as credit')
+            ->join('journals', 'journals.id', '=', 'journal_lines.journal_id')
+            ->where('journals.status', 'posted')
+            ->whereYear('journals.date', $year)
+            ->whereMonth('journals.date', $month)
+            ->when($branchId, fn ($q) => $q->where('journals.branch_id', $branchId))
+            ->groupBy('journal_lines.account_id')
+            ->get();
+    }
+
     /**
      * Get trial balance for a branch.
      */
     public function getTrialBalance(?int $branchId, int $year, int $month): array
     {
-        $coas = ChartOfAccount::orderBy('code', 'asc')->get();
+        $coas = ChartOfAccount::orderBy('code', 'asc')->get()->keyBy('id');
+        $balances = $this->periodBalancesByAccount($branchId, $year, $month);
+
         $trialBalance = [];
         $totalDebit = 0;
         $totalCredit = 0;
 
-        foreach ($coas as $coa) {
-            // Sum debit and credit from posted journals in this period
-            $linesQuery = JournalLine::whereHas('journal', function ($query) use ($branchId, $year, $month) {
-                $query->where('status', 'posted')
-                    ->whereYear('date', $year)
-                    ->whereMonth('date', $month);
-                if ($branchId) {
-                    $query->where('branch_id', $branchId);
-                }
-            })->where('account_id', $coa->id);
-
-            $debitSum = (float) $linesQuery->sum('debit');
-            $creditSum = (float) $linesQuery->sum('credit');
-
-            $balance = 0;
-            if ($coa->normal_balance === 'debit') {
-                $balance = $debitSum - $creditSum;
-            } else {
-                $balance = $creditSum - $debitSum;
+        foreach ($balances as $row) {
+            $coa = $coas->get($row->account_id);
+            if (! $coa) {
+                continue;
             }
 
-            if ($debitSum > 0 || $creditSum > 0) {
-                $trialBalance[] = [
-                    'account' => $coa,
-                    'debit' => $debitSum,
-                    'credit' => $creditSum,
-                    'balance' => $balance,
-                ];
+            $debitSum = (float) $row->debit;
+            $creditSum = (float) $row->credit;
+            $balance = $coa->normal_balance === 'debit'
+                ? $debitSum - $creditSum
+                : $creditSum - $debitSum;
 
-                $totalDebit += $debitSum;
-                $totalCredit += $creditSum;
-            }
+            $trialBalance[] = [
+                'account' => $coa,
+                'debit' => $debitSum,
+                'credit' => $creditSum,
+                'balance' => $balance,
+            ];
+
+            $totalDebit += $debitSum;
+            $totalCredit += $creditSum;
         }
 
         return [
@@ -64,24 +75,25 @@ class FinancialReportService
      */
     public function getIncomeStatement(?int $branchId, int $year, int $month): array
     {
-        $coas = ChartOfAccount::whereIn('type', ['revenue', 'expense'])->orderBy('code', 'asc')->get();
+        $coas = ChartOfAccount::whereIn('type', ['revenue', 'expense'])
+            ->orderBy('code', 'asc')
+            ->get()
+            ->keyBy('id');
+        $balances = $this->periodBalancesByAccount($branchId, $year, $month);
+
         $revenues = [];
         $expenses = [];
         $totalRevenue = 0;
         $totalExpense = 0;
 
-        foreach ($coas as $coa) {
-            $linesQuery = JournalLine::whereHas('journal', function ($query) use ($branchId, $year, $month) {
-                $query->where('status', 'posted')
-                    ->whereYear('date', $year)
-                    ->whereMonth('date', $month);
-                if ($branchId) {
-                    $query->where('branch_id', $branchId);
-                }
-            })->where('account_id', $coa->id);
+        foreach ($balances as $row) {
+            $coa = $coas->get($row->account_id);
+            if (! $coa) {
+                continue;
+            }
 
-            $debitSum = (float) $linesQuery->sum('debit');
-            $creditSum = (float) $linesQuery->sum('credit');
+            $debitSum = (float) $row->debit;
+            $creditSum = (float) $row->credit;
 
             if ($coa->type === 'revenue') {
                 $balance = $creditSum - $debitSum;
@@ -89,7 +101,7 @@ class FinancialReportService
                     $revenues[] = ['account' => $coa, 'balance' => $balance];
                     $totalRevenue += $balance;
                 }
-            } else {
+            } else { // expense
                 $balance = $debitSum - $creditSum;
                 if ($balance != 0) {
                     $expenses[] = ['account' => $coa, 'balance' => $balance];
@@ -114,7 +126,16 @@ class FinancialReportService
      */
     public function getBalanceSheet(?int $branchId, int $year, int $month): array
     {
-        $coas = ChartOfAccount::whereIn('type', ['asset', 'liability', 'equity'])->orderBy('code', 'asc')->get();
+        $coas = ChartOfAccount::whereIn('type', ['asset', 'liability', 'equity'])
+            ->orderBy('code', 'asc')
+            ->get()
+            ->keyBy('id');
+        $balances = $this->periodBalancesByAccount($branchId, $year, $month);
+
+        // Get net income dynamically for current period
+        $incomeStatement = $this->getIncomeStatement($branchId, $year, $month);
+        $currentNetIncome = $incomeStatement['net_income'];
+
         $assets = [];
         $liabilities = [];
         $equity = [];
@@ -122,22 +143,14 @@ class FinancialReportService
         $totalLiability = 0;
         $totalEquity = 0;
 
-        // Get net income dynamically for current period
-        $incomeStatement = $this->getIncomeStatement($branchId, $year, $month);
-        $currentNetIncome = $incomeStatement['net_income'];
+        foreach ($balances as $row) {
+            $coa = $coas->get($row->account_id);
+            if (! $coa) {
+                continue;
+            }
 
-        foreach ($coas as $coa) {
-            $linesQuery = JournalLine::whereHas('journal', function ($query) use ($branchId, $year, $month) {
-                $query->where('status', 'posted')
-                    ->whereYear('date', $year)
-                    ->whereMonth('date', $month);
-                if ($branchId) {
-                    $query->where('branch_id', $branchId);
-                }
-            })->where('account_id', $coa->id);
-
-            $debitSum = (float) $linesQuery->sum('debit');
-            $creditSum = (float) $linesQuery->sum('credit');
+            $debitSum = (float) $row->debit;
+            $creditSum = (float) $row->credit;
 
             if ($coa->type === 'asset') {
                 $balance = $debitSum - $creditSum;

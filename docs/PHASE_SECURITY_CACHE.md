@@ -25,7 +25,7 @@ Scope = **non-functional only** (security + cache/queue). No large business feat
 | P0 | [#18](https://github.com/fk0u/IstanaLaundryManagementSystem/issues/18) | KIL-26 | Audit log mutations | ✅ Done |
 | P1 | [#19](https://github.com/fk0u/IstanaLaundryManagementSystem/issues/19) | KIL-27 | Journal lock + idempotency | ✅ Done |
 | P1 | [#20](https://github.com/fk0u/IstanaLaundryManagementSystem/issues/20) | KIL-28 | Docker/Nginx hygiene | ✅ Done |
-| Perf | [#21](https://github.com/fk0u/IstanaLaundryManagementSystem/issues/21) | KIL-29 | Caching + queue | Open |
+| Perf | [#21](https://github.com/fk0u/IstanaLaundryManagementSystem/issues/21) | KIL-29 | Caching + queue | ✅ Done |
 
 Order: **#15 → #16 → #17 → #18 → #19 → #20 → #21**
 
@@ -182,9 +182,92 @@ Prompts: [AI_PROMPTS.md](AI_PROMPTS.md)
 
 ## Remaining Issues
 
-### #21 — Caching + Queue (Perf)
-- Cache branch list and dashboard aggregates with TTL
-- Fix N+1 in DashboardController
-- Optimize FinancialReportService queries
-- Queue heavy observers (OrderObserver, GRNObserver)
-- Document config:cache + route:cache for deployment
+All phase issues (#15–#21) are complete. Next steps live in the post-phase
+backlog (see `tasks.md`): 2FA, selective PII encryption, Redis as
+`CACHE_STORE` + `QUEUE_CONNECTION`, Pint cleanup, REST API expansion.
+
+---
+
+### #21 — Caching + Queue (Perf) ✅
+
+**Status:** Completed  
+**Date:** 2026-07-29  
+**Branch:** `perf/caching-and-queue`
+
+**Changes:**
+
+*DashboardController (`app/Http/Controllers/DashboardController.php`)*
+- Replaced N+1 global-view branch comparison (one query per branch) with a
+  single grouped `SUM(total) GROUP BY branch_id` query.
+- Replaced the 7-day revenue trend loop (one query per day) in both owner and
+  branch-admin dashboards with a single `GROUP BY DATE(created_at)` query via
+  the new `weeklyRevenueTrend()` helper; empty days filled with 0.
+- `branchesList` (and the global-view branch lookup) now cached via
+  `Cache::remember('branches:list', 300, ...)`.
+
+*FinancialReportService (`app/Services/Finance/FinancialReportService.php`)*
+- Trial balance, income statement, and balance sheet no longer run one query
+  per chart-of-account. Added `periodBalancesByAccount()` that returns
+  `SUM(debit)/SUM(credit)` per account in one grouped join query; each report
+  maps that to its COA collection. Query count is now constant regardless of
+  the number of COAs.
+
+*Caching invalidation (`app/Models/Branch.php`)*
+- `Branch::booted()` flushes `branches:list` on save/delete so the dashboard
+  chart and selector stay fresh.
+
+*Queue observers (asynchronous journal posting)*
+- `app/Jobs/PostOrderJournalJob.php` (**new**) — posts the order journal and
+  awards loyalty points off the request cycle; re-fetches the order by id and
+  busts the dashboard cache on completion. `tries=3`, `backoff=10`.
+- `app/Jobs/PostGrnJournalJob.php` (**new**) — creates inventory batches,
+  updates stock + PO received quantities, posts the GRN journal, and finalizes
+  the PO status.
+- `app/Observers/OrderObserver.php` / `app/Observers/GRNObserver.php` —
+  simplified to dispatch the jobs above; observers no longer block the HTTP
+  response with journal posting.
+- `database/migrations/2026_07_29_000001_create_jobs_tables.php` (**new**) —
+  creates `jobs` + `failed_jobs` so `QUEUE_CONNECTION=database` works.
+- `.env.example` — documented `QUEUE_CONNECTION=database` and switched
+  `CACHE_STORE` to `database` (was `file`) to match the config default and
+  keep a single backend for this phase.
+
+**Testing:**
+- Owner dashboard (global view) → no per-branch query; 7-day trend is one
+  grouped query.
+- Trial balance / income statement → query count constant regardless of COA
+  count.
+- Create a paid order → `PostOrderJournalJob` is queued; run
+  `php artisan queue:work` and confirm the journal posts; `failed_jobs`
+  stays empty.
+- Confirm a GRN → stock updates and journal post happen via the worker.
+- Edit/delete a branch → `branches:list` cache is flushed.
+
+---
+
+## Deployment notes (#21)
+
+**Queue worker (required for async journal/GRN processing):**
+
+```bash
+php artisan queue:work --tries=3 --backoff=10
+```
+
+Run as a supervised process (e.g. Supervisor / systemd). Without a worker,
+jobs pile up in the `jobs` table and journal/GRN side-effects stall.
+
+**Optimize on deploy (CD) / clear on rollback:**
+
+```bash
+# Deploy / cache
+php artisan config:cache
+php artisan route:cache
+php artisan event:cache
+php artisan view:cache
+
+# Rollback / clear
+php artisan optimize:clear
+```
+
+Re-run `config:cache` whenever `.env` values (e.g. `CACHE_STORE`,
+`QUEUE_CONNECTION`) change.

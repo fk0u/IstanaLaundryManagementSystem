@@ -7,11 +7,20 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\Cache;
 
 #[Fillable(['code', 'name', 'address', 'phone', 'email', 'lat', 'lng', 'is_active'])]
 class Branch extends Model
 {
     use HasFactory, SoftDeletes;
+
+    protected static function booted(): void
+    {
+        // Invalidate the cached branch list whenever a branch is created,
+        // updated, or deleted so the dashboard chart/selector stays fresh.
+        static::saved(fn () => Cache::forget('branches:list'));
+        static::deleted(fn () => Cache::forget('branches:list'));
+    }
 
     protected function casts(): array
     {
