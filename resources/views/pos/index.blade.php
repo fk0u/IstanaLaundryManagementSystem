@@ -305,10 +305,11 @@
                 </div>
 
                 <!-- Mobile Cart Form -->
-                <form action="{{ route('pos.store') }}" method="POST" @submit.prevent="confirmCheckout(); mobileCartOpen = false;">
+                <form id="pos-form-mobile" action="{{ route('pos.store') }}" method="POST" @submit.prevent="confirmCheckout(); mobileCartOpen = false;">
                     @csrf
                     <input type="hidden" name="customer_id" x-model="customerId">
                     <input type="hidden" name="promo_id" x-model="promoId">
+                    <input type="hidden" name="points_used" x-model="pointsUsed">
 
                     <div class="space-y-3 max-h-[250px] overflow-y-auto pr-1">
                         <template x-if="cart.length === 0">
@@ -318,10 +319,12 @@
                             <div class="flex items-center justify-between gap-3 p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/40">
                                 <div class="flex-1 min-w-0">
                                     <span class="font-bold text-xs text-slate-800 dark:text-slate-200 block truncate" x-text="item.name"></span>
-                                    <span class="text-2xs text-slate-400" x-text="'Rp ' + formatNumber(item.price)"></span>
+                                    <span class="text-2xs text-slate-400" x-text="'Rp ' + formatNumber(item.price) + ' / ' + item.unit"></span>
+                                    <input type="hidden" :name="'items[' + index + '][service_id]'" :value="item.service_id">
+                                    <input type="hidden" :name="'items[' + index + '][notes]'" :value="item.notes || ''">
                                 </div>
                                 <div class="flex items-center gap-1.5">
-                                    <input type="number" x-model.number="item.quantity" min="0.01" step="0.01" @input="calculateTotals()" class="w-14 h-7 text-center rounded-lg border text-xs font-bold">
+                                    <input type="number" :name="'items[' + index + '][quantity]'" x-model.number="item.quantity" min="0.01" step="0.01" @input="calculateTotals()" class="w-14 h-7 text-center rounded-lg border text-xs font-bold">
                                     <button type="button" @click="removeFromCart(index)" class="text-rose-500"><span class="material-symbols-outlined text-base">delete</span></button>
                                 </div>
                             </div>
@@ -753,7 +756,17 @@
 
                 submitOrder() {
                     this.showConfirmModal = false;
-                    document.getElementById('pos-form').submit();
+                    const desktopForm = document.getElementById('pos-form');
+                    if (desktopForm && desktopForm.offsetParent !== null) {
+                        desktopForm.submit();
+                    } else {
+                        const mobileForm = document.getElementById('pos-form-mobile');
+                        if (mobileForm) {
+                            mobileForm.submit();
+                        } else if (desktopForm) {
+                            desktopForm.submit();
+                        }
+                    }
                 },
 
                 formatNumber(num) {
