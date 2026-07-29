@@ -24,6 +24,13 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
     'is_active',
     'disposal_date',
     'disposal_value',
+    'last_maintenance_date',
+    'next_maintenance_date',
+    'maintenance_notes',
+    'notes',
+    'serial_number',
+    'supplier',
+    'condition',
 ])]
 class FixedAsset extends Model
 {
@@ -43,6 +50,8 @@ class FixedAsset extends Model
             'is_active' => 'boolean',
             'disposal_date' => 'date',
             'disposal_value' => 'decimal:2',
+            'last_maintenance_date' => 'date',
+            'next_maintenance_date' => 'date',
         ];
     }
 
@@ -59,5 +68,40 @@ class FixedAsset extends Model
     public function depreciationSchedules(): HasMany
     {
         return $this->hasMany(DepreciationSchedule::class, 'asset_id');
+    }
+
+    /**
+     * Get the last posted depreciation schedule.
+     */
+    public function lastDepreciation()
+    {
+        return $this->depreciationSchedules()
+            ->where('is_posted', true)
+            ->orderByDesc('period_date')
+            ->first();
+    }
+
+    /**
+     * Get age in months since acquisition.
+     */
+    public function getAgeInMonthsAttribute(): int
+    {
+        if (! $this->acquisition_date) {
+            return 0;
+        }
+
+        return (int) $this->acquisition_date->diffInMonths(now());
+    }
+
+    /**
+     * Get depreciation progress percentage.
+     */
+    public function getDepreciationProgressAttribute(): float
+    {
+        if ($this->acquisition_cost <= 0) {
+            return 0;
+        }
+
+        return round(($this->accumulated_depreciation / ($this->acquisition_cost - $this->salvage_value)) * 100, 1);
     }
 }

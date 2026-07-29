@@ -196,10 +196,13 @@ class HRController extends Controller
             'transport_allowance' => 'nullable|numeric|min:0',
             'overtime_pay' => 'nullable|numeric|min:0',
             'attendance_bonus' => 'nullable|numeric|min:0',
+            'special_bonus' => 'nullable|numeric|min:0',
             'tardiness_deduction' => 'nullable|numeric|min:0',
             'loan_deduction' => 'nullable|numeric|min:0',
             'damage_deduction' => 'nullable|numeric|min:0',
             'bpjs_deduction' => 'nullable|numeric|min:0',
+            'bpjs_kesehatan_deduction' => 'nullable|numeric|min:0',
+            'bpjs_ketenagakerjaan_deduction' => 'nullable|numeric|min:0',
         ]);
 
         $oldValues = $item->only([
@@ -227,10 +230,13 @@ class HRController extends Controller
             'transport_allowance' => $request->transport_allowance ?? 0,
             'overtime_pay' => $request->overtime_pay ?? 0,
             'attendance_bonus' => $request->attendance_bonus ?? 0,
+            'special_bonus' => $request->special_bonus ?? 0,
             'tardiness_deduction' => $request->tardiness_deduction ?? 0,
             'loan_deduction' => $request->loan_deduction ?? 0,
             'damage_deduction' => $request->damage_deduction ?? 0,
             'bpjs_deduction' => $request->bpjs_deduction ?? 0,
+            'bpjs_kesehatan_deduction' => $request->bpjs_kesehatan_deduction ?? 0,
+            'bpjs_ketenagakerjaan_deduction' => $request->bpjs_ketenagakerjaan_deduction ?? 0,
         ]);
 
         // Recalculate totals

@@ -242,17 +242,18 @@
                         <form action="{{ route('hr.payroll-item.update', $pItem->id) }}" method="POST" class="space-y-3">
                             @csrf
                             @method('PUT')
+                            
+                            {{-- ===== PENGHASILAN ===== --}}
+                            <p class="text-2xs font-bold text-emerald-600 uppercase tracking-wider border-b border-emerald-100 dark:border-emerald-900/30 pb-1">
+                                <span class="material-symbols-outlined text-xs align-middle">add_circle</span> Komponen Penghasilan
+                            </p>
                             <div class="grid grid-cols-2 gap-3">
                                 <div>
                                     <label class="text-2xs font-bold text-slate-400 uppercase">Tunjangan</label>
                                     <input type="number" name="allowance" value="{{ $pItem->allowance }}" step="0.01" min="0" class="w-full h-9 px-3 rounded-xl border text-xs">
                                 </div>
                                 <div>
-                                    <label class="text-2xs font-bold text-slate-400 uppercase">Potongan Dasar</label>
-                                    <input type="number" name="deduction" value="{{ $pItem->deduction }}" step="0.01" min="0" class="w-full h-9 px-3 rounded-xl border text-xs">
-                                </div>
-                                <div>
-                                    <label class="text-2xs font-bold text-slate-400 uppercase">Bonus Kiloan</label>
+                                    <label class="text-2xs font-bold text-slate-400 uppercase">Bonus Kiloan (Kg)</label>
                                     <input type="number" name="bonus_kg" value="{{ $pItem->bonus_kg }}" step="0.01" min="0" class="w-full h-9 px-3 rounded-xl border text-xs">
                                 </div>
                                 <div>
@@ -271,6 +272,21 @@
                                     <label class="text-2xs font-bold text-slate-400 uppercase">Bonus Presensi</label>
                                     <input type="number" name="attendance_bonus" value="{{ $pItem->attendance_bonus }}" step="0.01" min="0" class="w-full h-9 px-3 rounded-xl border text-xs">
                                 </div>
+                                <div class="col-span-2">
+                                    <label class="text-2xs font-bold text-slate-400 uppercase">Bonus Khusus / Insentif</label>
+                                    <input type="number" name="special_bonus" value="{{ $pItem->special_bonus ?? 0 }}" step="0.01" min="0" class="w-full h-9 px-3 rounded-xl border text-xs" placeholder="Bonus THR, insentif penjualan, dll...">
+                                </div>
+                            </div>
+
+                            {{-- ===== POTONGAN ===== --}}
+                            <p class="text-2xs font-bold text-rose-600 uppercase tracking-wider border-b border-rose-100 dark:border-rose-900/30 pb-1 mt-2">
+                                <span class="material-symbols-outlined text-xs align-middle">remove_circle</span> Komponen Potongan
+                            </p>
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label class="text-2xs font-bold text-slate-400 uppercase">Potongan Dasar</label>
+                                    <input type="number" name="deduction" value="{{ $pItem->deduction }}" step="0.01" min="0" class="w-full h-9 px-3 rounded-xl border text-xs">
+                                </div>
                                 <div>
                                     <label class="text-2xs font-bold text-slate-400 uppercase">Denda Terlambat</label>
                                     <input type="number" name="tardiness_deduction" value="{{ $pItem->tardiness_deduction }}" step="0.01" min="0" class="w-full h-9 px-3 rounded-xl border text-xs">
@@ -283,16 +299,41 @@
                                     <label class="text-2xs font-bold text-slate-400 uppercase">Ganti Rugi</label>
                                     <input type="number" name="damage_deduction" value="{{ $pItem->damage_deduction }}" step="0.01" min="0" class="w-full h-9 px-3 rounded-xl border text-xs">
                                 </div>
+                                {{-- BPJS Kesehatan --}}
+                                <div>
+                                    <label class="text-2xs font-bold text-slate-400 uppercase">BPJS Kesehatan (1%)</label>
+                                    <input type="number" name="bpjs_kesehatan_deduction" value="{{ $pItem->bpjs_kesehatan_deduction ?? 0 }}" step="0.01" min="0" 
+                                           class="w-full h-9 px-3 rounded-xl border text-xs" 
+                                           placeholder="{{ number_format($pItem->base_salary * 0.01, 0) }}"
+                                           title="Iuran BPJS Kesehatan karyawan: 1% dari gaji pokok">
+                                    <span class="text-[9px] text-slate-400">Karyawan 1% dari gaji pokok</span>
+                                </div>
+                                {{-- BPJS Ketenagakerjaan --}}
+                                <div>
+                                    <label class="text-2xs font-bold text-slate-400 uppercase">BPJS Ketenagakerjaan (2%)</label>
+                                    <input type="number" name="bpjs_ketenagakerjaan_deduction" value="{{ $pItem->bpjs_ketenagakerjaan_deduction ?? 0 }}" step="0.01" min="0" 
+                                           class="w-full h-9 px-3 rounded-xl border text-xs"
+                                           placeholder="{{ number_format($pItem->base_salary * 0.02, 0) }}"
+                                           title="Iuran JHT BPJS Ketenagakerjaan karyawan: 2% dari gaji pokok">
+                                    <span class="text-[9px] text-slate-400">JHT karyawan 2% dari gaji pokok</span>
+                                </div>
+                                {{-- Legacy BPJS field (legacy support) --}}
                                 <div class="col-span-2">
-                                    <label class="text-2xs font-bold text-slate-400 uppercase">Potongan BPJS</label>
+                                    <label class="text-2xs font-bold text-slate-400 uppercase">Potongan BPJS Lainnya</label>
                                     <input type="number" name="bpjs_deduction" value="{{ $pItem->bpjs_deduction }}" step="0.01" min="0" class="w-full h-9 px-3 rounded-xl border text-xs">
                                 </div>
                             </div>
+
+                            {{-- Summary Box --}}
                             <div class="bg-emerald-50 dark:bg-emerald-900/20 p-3 rounded-lg">
                                 <div class="flex justify-between text-xs">
                                     <span class="font-bold text-slate-600 dark:text-slate-400">Estimasi Gaji Bersih:</span>
-                                    <span class="font-bold text-emerald-600">Rp {{ number_format($pItem->base_salary + $pItem->allowance + $pItem->bonus_kg + $pItem->bonus_pcs + $pItem->transport_allowance + $pItem->overtime_pay + $pItem->attendance_bonus - $pItem->deduction - $pItem->tardiness_deduction - $pItem->loan_deduction - $pItem->damage_deduction - $pItem->bpjs_deduction, 0, ',', '.') }}</span>
+                                    <span class="font-bold text-emerald-600">Rp {{ number_format(
+                                        $pItem->base_salary + $pItem->allowance + $pItem->bonus_kg + $pItem->bonus_pcs + $pItem->transport_allowance + $pItem->overtime_pay + $pItem->attendance_bonus + ($pItem->special_bonus ?? 0)
+                                        - $pItem->deduction - $pItem->tardiness_deduction - $pItem->loan_deduction - $pItem->damage_deduction - $pItem->bpjs_deduction - ($pItem->bpjs_kesehatan_deduction ?? 0) - ($pItem->bpjs_ketenagakerjaan_deduction ?? 0),
+                                        0, ',', '.') }}</span>
                                 </div>
+                                <p class="text-[9px] text-slate-400 mt-1">* Estimasi berdasarkan nilai saat ini, akan diupdate setelah disimpan.</p>
                             </div>
                             <button type="submit" class="btn-touch w-full bg-primary text-white font-bold text-xs rounded-xl py-2.5">Simpan Perubahan</button>
                         </form>

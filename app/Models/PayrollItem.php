@@ -9,8 +9,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 #[Fillable([
     'payroll_id', 'employee_id', 'base_salary', 'allowance', 'deduction',
     'attendance_days', 'work_days', 'net_salary',
-    'bonus_kg', 'bonus_pcs', 'transport_allowance', 'overtime_pay', 'attendance_bonus',
-    'tardiness_deduction', 'loan_deduction', 'damage_deduction', 'bpjs_deduction',
+    'bonus_kg', 'bonus_pcs', 'transport_allowance', 'overtime_pay', 'attendance_bonus', 'special_bonus',
+    'tardiness_deduction', 'loan_deduction', 'damage_deduction',
+    'bpjs_deduction', 'bpjs_kesehatan_deduction', 'bpjs_ketenagakerjaan_deduction',
     'total_earnings', 'total_deductions',
 ])]
 class PayrollItem extends Model
@@ -29,10 +30,13 @@ class PayrollItem extends Model
             'transport_allowance' => 'decimal:2',
             'overtime_pay' => 'decimal:2',
             'attendance_bonus' => 'decimal:2',
+            'special_bonus' => 'decimal:2',
             'tardiness_deduction' => 'decimal:2',
             'loan_deduction' => 'decimal:2',
             'damage_deduction' => 'decimal:2',
             'bpjs_deduction' => 'decimal:2',
+            'bpjs_kesehatan_deduction' => 'decimal:2',
+            'bpjs_ketenagakerjaan_deduction' => 'decimal:2',
             'total_earnings' => 'decimal:2',
             'total_deductions' => 'decimal:2',
         ];
@@ -55,11 +59,12 @@ class PayrollItem extends Model
     {
         return $this->base_salary
             + $this->allowance
-            + $this->bonus_kg
-            + $this->bonus_pcs
-            + $this->transport_allowance
-            + $this->overtime_pay
-            + $this->attendance_bonus;
+            + ($this->bonus_kg ?? 0)
+            + ($this->bonus_pcs ?? 0)
+            + ($this->transport_allowance ?? 0)
+            + ($this->overtime_pay ?? 0)
+            + ($this->attendance_bonus ?? 0)
+            + ($this->special_bonus ?? 0);
     }
 
     /**
@@ -67,11 +72,13 @@ class PayrollItem extends Model
      */
     public function calculateTotalDeductions(): float
     {
-        return $this->deduction
-            + $this->tardiness_deduction
-            + $this->loan_deduction
-            + $this->damage_deduction
-            + $this->bpjs_deduction;
+        return ($this->deduction ?? 0)
+            + ($this->tardiness_deduction ?? 0)
+            + ($this->loan_deduction ?? 0)
+            + ($this->damage_deduction ?? 0)
+            + ($this->bpjs_deduction ?? 0)
+            + ($this->bpjs_kesehatan_deduction ?? 0)
+            + ($this->bpjs_ketenagakerjaan_deduction ?? 0);
     }
 
     /**

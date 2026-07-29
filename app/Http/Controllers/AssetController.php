@@ -48,6 +48,10 @@ class AssetController extends Controller
             'depreciation_method' => 'required|in:straight_line,declining_balance',
             'branch_id' => 'required|exists:branches,id',
             'account_id' => 'nullable|exists:chart_of_accounts,id',
+            'serial_number' => 'nullable|string|max:100',
+            'supplier' => 'nullable|string|max:100',
+            'condition' => 'nullable|in:good,fair,poor,scrapped',
+            'notes' => 'nullable|string',
         ]);
 
         DB::transaction(function () use ($request) {
@@ -65,6 +69,10 @@ class AssetController extends Controller
                 'accumulated_depreciation' => 0,
                 'book_value' => $request->acquisition_cost,
                 'is_active' => true,
+                'serial_number' => $request->serial_number,
+                'supplier' => $request->supplier,
+                'condition' => $request->condition ?? 'good',
+                'notes' => $request->notes,
             ]);
 
             // Generate Depreciation Schedule

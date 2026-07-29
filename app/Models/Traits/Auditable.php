@@ -14,7 +14,7 @@ trait Auditable
     protected static function bootAuditable(): void
     {
         static::created(function ($model) {
-            self::logAudit('created', $model, null, self::getAuditableAttributes($model));
+            self::logAudit('created', $model, null, self::getAuditableAttributes($model->getAttributes()));
         });
 
         static::updated(function ($model) {
@@ -28,7 +28,7 @@ trait Auditable
         });
 
         static::deleted(function ($model) {
-            self::logAudit('deleted', $model, self::getAuditableAttributes($model), null);
+            self::logAudit('deleted', $model, self::getAuditableAttributes($model->getAttributes()), null);
         });
     }
 

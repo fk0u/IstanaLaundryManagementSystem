@@ -30,28 +30,34 @@ return new class extends Migration
                 ->where('status', 'pending')
                 ->update(['status' => 'pending_approval']);
 
-            DB::statement(
-                "ALTER TABLE `purchase_requests` "
-                ."MODIFY `status` ENUM('draft','pending_approval','approved','rejected') "
-                ."NOT NULL DEFAULT 'pending_approval'"
-            );
+            if (DB::getDriverName() !== 'sqlite') {
+                DB::statement(
+                    "ALTER TABLE `purchase_requests` "
+                    ."MODIFY `status` ENUM('draft','pending_approval','approved','rejected') "
+                    ."NOT NULL DEFAULT 'pending_approval'"
+                );
+            }
         }
 
         // 2) purchase_orders.status — nilai sudah benar, hanya pastikan ulang.
         if (Schema::hasTable('purchase_orders') && Schema::hasColumn('purchase_orders', 'status')) {
-            DB::statement(
-                "ALTER TABLE `purchase_orders` "
-                ."MODIFY `status` ENUM('draft','sent','confirmed','partial','completed','cancelled') "
-                ."NOT NULL DEFAULT 'draft'"
-            );
+            if (DB::getDriverName() !== 'sqlite') {
+                DB::statement(
+                    "ALTER TABLE `purchase_orders` "
+                    ."MODIFY `status` ENUM('draft','sent','confirmed','partial','completed','cancelled') "
+                    ."NOT NULL DEFAULT 'draft'"
+                );
+            }
         }
 
         // 3) goods_received_notes.status — nilai sudah benar, pastikan ulang.
         if (Schema::hasTable('goods_received_notes') && Schema::hasColumn('goods_received_notes', 'status')) {
-            DB::statement(
-                "ALTER TABLE `goods_received_notes` "
-                ."MODIFY `status` ENUM('draft','confirmed') NOT NULL DEFAULT 'draft'"
-            );
+            if (DB::getDriverName() !== 'sqlite') {
+                DB::statement(
+                    "ALTER TABLE `goods_received_notes` "
+                    ."MODIFY `status` ENUM('draft','confirmed') NOT NULL DEFAULT 'draft'"
+                );
+            }
         }
     }
 
