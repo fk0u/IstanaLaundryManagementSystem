@@ -16,3 +16,6 @@
 8. **Performance Monitoring & Analytics**: Filter tanggal/periode, Cashier sales leaderboard & rincian harian per kasir, Workshop staff productivity metrics & order status breakdown.
 10. **Admin-Only User Management**: Manajemen pengguna internal di `/users` untuk pendaftaran akun staf (Kasir, Workshop, Finance, Admin Cabang), pengubahan role Spatie & penautan cabang, reset password staf, dan penonaktifan akun.
 11. **Production-Grade WhatsApp Notification**: Pesan otomatis "Siap Diambil" (`/invoices/{order}/ready-whatsapp`) untuk order di status `SIAP`/`DIAMBIL` dengan rincian nota dan tautan pelacakan publik (`/track?order_number=...`).
+12. **POS Tablet REST API Expansion**: Endpoint REST API berotentikasi Sanctum (`/api/pos/services`, `/api/pos/customers`, `/api/pos/orders`) untuk aplikasi POS Tablet/Mobile.
+13. **Workload-Linked Payroll HR**: Penghitungan otomatis insentif produktivitas Kg & Pcs workshop pada slip gaji.
+14. **Closing Checklist & CSV Financial Reports Export**: Interface penutupan buku bulanan (`/finance/closing-checklist`) dan tombol ekspor CSV laporan keuangan.
