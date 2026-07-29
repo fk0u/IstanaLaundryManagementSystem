@@ -23,6 +23,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout'])->name('api.logout');
     Route::get('/me', [AuthController::class, 'me'])->name('api.me');
 
+    // POS Tablet API
+    Route::get('/pos/services', [\App\Http\Controllers\Api\PosTabletController::class, 'services'])->name('api.pos.services');
+    Route::get('/pos/customers', [\App\Http\Controllers\Api\PosTabletController::class, 'customers'])->name('api.pos.customers');
+    Route::post('/pos/orders', [\App\Http\Controllers\Api\PosTabletController::class, 'storeOrder'])->name('api.pos.store-order');
+
     Route::get('/production', [ProductionController::class, 'index'])->name('api.production.index');
     Route::get('/production/{order}', [ProductionController::class, 'show'])->name('api.production.show');
     Route::patch('/production/{order}/status', [ProductionController::class, 'updateStatus'])->name('api.production.update-status');

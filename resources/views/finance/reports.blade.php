@@ -38,10 +38,16 @@
                     </select>
                 </div>
 
-                <div class="ml-auto flex gap-2">
-                    <button type="button" onclick="window.print()" class="btn-touch px-4 py-2 border rounded-xl text-xs font-bold bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300">
-                        <span class="material-symbols-outlined text-base">print</span> Print
+                <div class="flex items-center gap-2 mt-auto pb-0.5">
+                    <button type="submit" class="h-9 px-4 bg-primary text-white text-xs font-bold rounded-xl flex items-center gap-1 shadow-sm">
+                        <span class="material-symbols-outlined text-base">filter_alt</span> Filter
                     </button>
+                    <a href="{{ route('finance.reports.export', request()->all()) }}" class="h-9 px-3 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl flex items-center gap-1 shadow-sm">
+                        <span class="material-symbols-outlined text-base">download</span> Export CSV
+                    </a>
+                    <a href="{{ route('finance.closing-checklist') }}" class="h-9 px-3 bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold rounded-xl flex items-center gap-1 shadow-sm">
+                        <span class="material-symbols-outlined text-base">checklist</span> Closing Checklist
+                    </a>
                 </div>
             </form>
         </x-card>

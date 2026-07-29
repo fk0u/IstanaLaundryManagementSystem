@@ -380,21 +380,58 @@ Route::middleware(['auth', 'branch.scope'])->group(function () {
             return redirect()->back()->with('success', 'Akun COA baru berhasil dibuat.');
         })->name('finance.store');
 
-        Route::delete('/finance/{id}', function ($id) {
-            $coa = ChartOfAccount::findOrFail($id);
+        // Closing Checklist Periode Akuntansi
+        Route::get('/finance/closing-checklist', function () {
+            $currentMonth = now()->format('Y-m');
+            $openPeriods = \App\Models\AccountingPeriod::where('is_closed', false)->get();
+            $unpaidOrdersCount = \App\Models\Order::where('payment_status', '!=', 'paid')->whereNotIn('production_status', ['BATAL'])->count();
+            $unpaidOrdersAmount = \App\Models\Order::where('payment_status', '!=', 'paid')->whereNotIn('production_status', ['BATAL'])->sum(\Illuminate\Support\Facades\DB::raw('total - paid_amount'));
 
-            if ($coa->is_system) {
-                return redirect()->back()->with('error', 'Akun bawaan sistem tidak dapat dihapus.');
-            }
+            return view('finance.closing_checklist', compact('openPeriods', 'unpaidOrdersCount', 'unpaidOrdersAmount', 'currentMonth'));
+        })->name('finance.closing-checklist');
 
-            if ($coa->children()->count() > 0) {
-                return redirect()->back()->with('error', 'Akun yang memiliki sub-akun tidak dapat dihapus.');
-            }
+        // Export Laporan CSV/Excel
+        Route::get('/finance/reports/export', function (Request $request) {
+            $startDate = $request->query('start_date', now()->startOfMonth()->toDateString());
+            $endDate = $request->query('end_date', now()->endOfMonth()->toDateString());
+            $branchId = session('scoped_branch_id') ?? auth()->user()->branch_id;
 
-            $coa->delete();
+            $reportService = app(\App\Services\Finance\FinancialReportService::class);
+            $incomeStatement = $reportService->generateIncomeStatement($startDate, $endDate, $branchId);
 
-            return redirect()->back()->with('success', 'Akun COA berhasil dihapus.');
-        })->name('finance.destroy');
+            $filename = "Laporan_Keuangan_{$startDate}_sd_{$endDate}.csv";
+            $headers = [
+                'Content-Type' => 'text/csv',
+                'Content-Disposition' => "attachment; filename=\"{$filename}\"",
+            ];
+
+            $callback = function () use ($incomeStatement, $startDate, $endDate) {
+                $file = fopen('php://output', 'w');
+                fputcsv($file, ['LAPORAN LABA RUGI - ISTANA LAUNDRY ERP']);
+                fputcsv($file, ["Periode: {$startDate} s/d {$endDate}"]);
+                fputcsv($file, []);
+                fputcsv($file, ['Komponen Akun', 'Kode', 'Nilai (Rp)']);
+
+                fputcsv($file, ['PENDAPATAN OPERASIONAL', '', '']);
+                foreach ($incomeStatement['revenues']['accounts'] as $acc) {
+                    fputcsv($file, [$acc['name'], $acc['code'], number_format($acc['balance'], 2, '.', '')]);
+                }
+                fputcsv($file, ['TOTAL PENDAPATAN', '', number_format($incomeStatement['revenues']['total'], 2, '.', '')]);
+                fputcsv($file, []);
+
+                fputcsv($file, ['BEBAN OPERASIONAL', '', '']);
+                foreach ($incomeStatement['expenses']['accounts'] as $acc) {
+                    fputcsv($file, [$acc['name'], $acc['code'], number_format($acc['balance'], 2, '.', '')]);
+                }
+                fputcsv($file, ['TOTAL BEBAN', '', number_format($incomeStatement['expenses']['total'], 2, '.', '')]);
+                fputcsv($file, []);
+
+                fputcsv($file, ['LABA (RUGI) BERSIH', '', number_format($incomeStatement['net_income'], 2, '.', '')]);
+                fclose($file);
+            };
+
+            return response()->stream($callback, 200, $headers);
+        })->name('finance.reports.export');
     });
 
     // User Management (Admin Only)

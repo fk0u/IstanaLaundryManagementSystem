@@ -135,6 +135,29 @@ class HRController extends Controller
                     $bpjsKesehatan = round($emp->base_salary * 0.01);
                     $bpjsKetenagakerjaan = round($emp->base_salary * 0.02);
 
+                    // Auto-calculate workload performance bonus from actual completed workshop order items
+                    $totalWorkloadKg = \App\Models\OrderItem::whereHas('order', function ($q) use ($emp, $request) {
+                        $q->where('branch_id', $emp->branch_id)
+                          ->whereYear('created_at', $request->year)
+                          ->whereMonth('created_at', $request->month)
+                          ->whereNotIn('production_status', ['BATAL']);
+                    })->whereHas('service', function ($s) {
+                        $s->where('unit', 'Kg');
+                    })->sum('quantity');
+
+                    $totalWorkloadPcs = \App\Models\OrderItem::whereHas('order', function ($q) use ($emp, $request) {
+                        $q->where('branch_id', $emp->branch_id)
+                          ->whereYear('created_at', $request->year)
+                          ->whereMonth('created_at', $request->month)
+                          ->whereNotIn('production_status', ['BATAL']);
+                    })->whereHas('service', function ($s) {
+                        $s->where('unit', 'Pcs');
+                    })->sum('quantity');
+
+                    // Incentive rates: Rp 200/Kg & Rp 500/Pcs for workshop staff
+                    $bonusKg = ($emp->position === 'Operator Workshop') ? round($totalWorkloadKg * 200) : 0;
+                    $bonusPcs = ($emp->position === 'Operator Workshop') ? round($totalWorkloadPcs * 500) : 0;
+
                     // Create payroll item with comprehensive components
                     $payrollItem = PayrollItem::create([
                         'payroll_id' => $payroll->id,
@@ -145,20 +168,20 @@ class HRController extends Controller
                         'attendance_days' => $presentCount,
                         'work_days' => $workDays,
                         // Earnings components
-                        'bonus_kg' => 0, // To be calculated based on actual workload
-                        'bonus_pcs' => 0, // To be calculated based on special items
+                        'bonus_kg' => $bonusKg,
+                        'bonus_pcs' => $bonusPcs,
                         'transport_allowance' => $transportAllowance, // Auto Rp15k/day
-                        'overtime_pay' => 0, // To be calculated based on overtime hours
+                        'overtime_pay' => 0,
                         'attendance_bonus' => $attendanceBonus,
                         'special_bonus' => 0,
                         // Deductions components
                         'tardiness_deduction' => $tardinessDeduction,
-                        'loan_deduction' => 0, // Manual input from employee loans
-                        'damage_deduction' => 0, // Manual input from damage claims
+                        'loan_deduction' => 0,
+                        'damage_deduction' => 0,
                         'bpjs_deduction' => 0,
                         'bpjs_kesehatan_deduction' => $bpjsKesehatan,
                         'bpjs_ketenagakerjaan_deduction' => $bpjsKetenagakerjaan,
-                        'net_salary' => $netSalary, // Will be recalculated
+                        'net_salary' => $emp->base_salary,
                     ]);
 
                     // Auto-calculate totals
