@@ -55,7 +55,7 @@
                                     <th class="py-3 px-4">Kontak</th>
                                     <th class="py-3 px-4">Loyalty Tier</th>
                                     <th class="py-3 px-4">Poin</th>
-                                    <th class="py-3 px-4">Cabang</th>
+                                     <th class="py-3 px-4">Cabang Pendaftaran</th>
                                     <th class="py-3 px-4 text-right">Aksi</th>
                                 </tr>
                             </thead>
@@ -86,7 +86,8 @@
                                             {{ number_format($customer->loyalty_points) }} pts
                                         </td>
                                         <td class="py-4 px-4 text-slate-500">
-                                            {{ $customer->branch?->name ?? 'Global' }}
+                                            <span class="font-semibold text-slate-700 dark:text-slate-300 block">{{ $customer->branch?->name ?? 'Global' }}</span>
+                                            <span class="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold block">✓ Berlaku Semua Cabang</span>
                                         </td>
                                         <td class="py-4 px-4">
                                             <div class="flex items-center justify-end gap-2">

@@ -24,7 +24,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 ])]
 class Customer extends Model
 {
-    use BranchScoped, HasFactory;
+    use HasFactory;
 
     protected function casts(): array
     {

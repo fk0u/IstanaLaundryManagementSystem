@@ -56,16 +56,15 @@ class POSController extends Controller
             return $service;
         });
 
-        // Fetch Customers explicitly by branch_id using withoutBranchScope to prevent empty results for Owner without branch_id
-        $customers = Customer::withoutBranchScope()
-            ->where('branch_id', $branchId)
-            ->where(function ($q) {
+        // Fetch all global Customers (cross-branch membership support)
+        $customers = Customer::where(function ($q) {
                 $q->where('name', 'NOT LIKE', '%Walk-In%')
                     ->where('name', 'NOT LIKE', '%walk-in%')
                     ->where('name', 'NOT LIKE', '%Walk In%')
                     ->where('name', 'NOT LIKE', '%Pelanggan Umum%')
                     ->where('name', 'NOT LIKE', '%pelanggan umum%');
             })
+            ->orderBy('name')
             ->get();
 
         // Fetch active Promotions
@@ -158,7 +157,7 @@ class POSController extends Controller
         $data = $validator->validated();
 
         return DB::transaction(function () use ($data, $branchId) {
-            $customer = $data['customer_id'] ? Customer::withoutBranchScope()->find($data['customer_id']) : null;
+            $customer = $data['customer_id'] ? Customer::find($data['customer_id']) : null;
 
             // Calculate Subtotal
             $subtotal = 0;
