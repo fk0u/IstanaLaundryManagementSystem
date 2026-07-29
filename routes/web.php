@@ -488,8 +488,10 @@ Route::middleware(['auth', 'branch.scope'])->group(function () {
         Route::get('/finance/periods', [AccountingPeriodController::class, 'index'])->name('finance.periods.index');
         Route::post('/finance/periods/{id}/close', [AccountingPeriodController::class, 'close'])->name('finance.periods.close');
 
-        // Finance - Reports
+        // Finance - Reports & Exports
         Route::get('/finance/reports', [FinancialReportController::class, 'index'])->name('finance.reports.index');
+        Route::get('/finance/reports/excel', [FinancialReportController::class, 'exportExcel'])->name('finance.reports.excel');
+        Route::get('/finance/reports/pdf', [FinancialReportController::class, 'exportPowerBiPdf'])->name('finance.reports.pdf');
     });
 
     // Super User - Switch Scoped Branch

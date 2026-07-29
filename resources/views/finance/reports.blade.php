@@ -42,8 +42,11 @@
                     <button type="submit" class="h-9 px-4 bg-primary text-white text-xs font-bold rounded-xl flex items-center gap-1 shadow-sm">
                         <span class="material-symbols-outlined text-base">filter_alt</span> Filter
                     </button>
-                    <a href="{{ route('finance.reports.export', request()->all()) }}" class="h-9 px-3 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl flex items-center gap-1 shadow-sm">
-                        <span class="material-symbols-outlined text-base">download</span> Export CSV
+                    <a href="{{ route('finance.reports.excel', request()->all()) }}" class="h-9 px-3 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl flex items-center gap-1 shadow-sm">
+                        <span class="material-symbols-outlined text-base">table_view</span> Ekspor Excel (.CSV)
+                    </a>
+                    <a href="{{ route('finance.reports.pdf', request()->all()) }}" target="_blank" class="h-9 px-3 bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold rounded-xl flex items-center gap-1 shadow-sm">
+                        <span class="material-symbols-outlined text-base">analytics</span> Cetak PowerBI PDF
                     </a>
                     <a href="{{ route('finance.closing-checklist') }}" class="h-9 px-3 bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold rounded-xl flex items-center gap-1 shadow-sm">
                         <span class="material-symbols-outlined text-base">checklist</span> Closing Checklist
