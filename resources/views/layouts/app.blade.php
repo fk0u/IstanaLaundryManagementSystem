@@ -14,9 +14,13 @@
         <meta name="theme-color" content="#FF6600">
         <meta name="apple-mobile-web-app-capable" content="yes">
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-        <meta name="ngrok-skip-browser-warning" content="true">
-
         <title>{{ config('app.name', 'Istana Laundry') }}</title>
+
+        <!-- PWA Manifest & Meta -->
+        <link rel="manifest" href="/manifest.json">
+        <meta name="mobile-web-app-capable" content="yes">
+        <meta name="application-name" content="Istana Laundry ERP">
+        <link rel="apple-touch-icon" href="/favicon.ico">
 
         <!-- Fonts & Icons -->
         <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -123,5 +127,18 @@
                 </div>
             </template>
         </div>
+
+        <!-- Service Worker Registration for PWA -->
+        <script>
+            if ('serviceWorker' in navigator) {
+                window.addEventListener('load', () => {
+                    navigator.serviceWorker.register('/sw.js').then(reg => {
+                        console.log('PWA Service Worker registered:', reg.scope);
+                    }).catch(err => {
+                        console.log('PWA Service Worker registration failed:', err);
+                    });
+                });
+            }
+        </script>
     </body>
 </html>
