@@ -1,5 +1,11 @@
 <x-app-layout>
-    <div x-data="posApp(@json($customers))" class="min-h-[calc(100vh-100px)] flex flex-col gap-6">
+    {{-- Pass customer data via a script tag to avoid HTML attribute parsing issues
+         when customer names contain special characters (quotes, newlines, etc.).
+         Using x-data="posApp()" (no args) lets Alpine init the component cleanly. --}}
+    <script>
+        window.__posCustomers = @json($customers);
+    </script>
+    <div x-data="posApp()" class="min-h-[calc(100vh-100px)] flex flex-col gap-6">
         
         <x-page-header title="Point of Sale (POS)" :breadcrumbs="['POS' => '/pos']">
             <x-slot:actions>
@@ -536,7 +542,7 @@
             return {
                 showBranchScopeModal: {{ auth()->user()->hasAnyRole(['Developer', 'Owner', 'Super_Admin']) && !session()->has('scoped_branch_id') ? 'true' : 'false' }},
                 cart: [],
-                customers: initialCustomers || [],
+                customers: initialCustomers || window.__posCustomers || [],
                 customerId: '',
                 customerSearch: '',
                 customerOpen: false,
