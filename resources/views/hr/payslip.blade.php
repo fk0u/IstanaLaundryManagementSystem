@@ -3,152 +3,527 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Slip Gaji - {{ $item->employee?->name }}</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+    <title>Slip Gaji - {{ $item->employee?->name }} ({{ date('F Y', mktime(0, 0, 0, $item->payroll?->month ?? 1, 10)) }})</title>
+    
+    <!-- Fonts & Material Icons -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:ital,wght@0,300..800;1,300..800&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap" rel="stylesheet" />
+
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Inter', sans-serif; background: #f8fafc; color: #1e293b; padding: 2rem; display: flex; flex-direction: column; align-items: center; }
-        .payslip { background: white; border: 1px solid #e2e8f0; border-radius: 1rem; padding: 2rem; max-width: 500px; width: 100%; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
-        .header { text-align: center; border-bottom: 2px solid #FF6600; padding-bottom: 1rem; margin-bottom: 1.5rem; }
-        .header h1 { font-size: 1.25rem; font-weight: 900; color: #FF6600; }
-        .header p { font-size: 0.75rem; color: #64748b; font-weight: 600; }
-        .meta { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; font-size: 0.75rem; margin-bottom: 1.5rem; }
-        .meta dt { color: #94a3b8; font-weight: 700; uppercase; }
-        .meta dd { font-weight: 700; text-align: right; color: #1e293b; }
-        .details { border-top: 1px border-bottom: 1px solid #e2e8f0; padding: 1rem 0; margin-bottom: 1.5rem; font-size: 0.8125rem; }
-        .row { display: flex; justify-content: space-between; padding: 0.375rem 0; }
-        .total { border-top: 2px solid #1e293b; padding-top: 0.75rem; font-size: 1rem; font-weight: 900; }
-        .footer { text-align: center; font-size: 0.6875rem; color: #94a3b8; margin-top: 1.5rem; }
-        .btn-print { background: #FF6600; color: white; border: none; padding: 0.75rem 1.5rem; font-weight: 700; border-radius: 0.75rem; cursor: pointer; margin-top: 1rem; font-size: 0.8125rem; }
-        @media print { body { background: white; padding: 0; } .payslip { border: none; box-shadow: none; max-width: 100%; } .no-print { display: none; } }
+        body { 
+            font-family: 'Plus Jakarta Sans', sans-serif; 
+            background: #F8FAFC; 
+            color: #1E293B; 
+            padding: 2.5rem 1rem; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .payslip-container { 
+            background: #FFFFFF; 
+            border: 1px solid #E2E8F0; 
+            border-radius: 1.5rem; 
+            padding: 2.5rem; 
+            max-width: 820px; 
+            width: 100%; 
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01); 
+            position: relative;
+        }
+
+        /* Top Bar & Header */
+        .top-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 2rem;
+        }
+
+        .confidential-badge {
+            border: 2px solid #FF6600;
+            color: #FF6600;
+            font-weight: 800;
+            font-size: 0.8125rem;
+            padding: 0.375rem 1.25rem;
+            border-radius: 0.5rem;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+        }
+
+        .brand-logo {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            text-align: right;
+        }
+
+        .brand-logo img {
+            height: 44px;
+            width: auto;
+            object-fit: contain;
+            margin-bottom: 0.25rem;
+        }
+
+        .brand-logo h2 {
+            font-family: 'Outfit', sans-serif;
+            font-weight: 900;
+            font-size: 1.125rem;
+            color: #0F172A;
+            letter-spacing: -0.025em;
+        }
+
+        .brand-logo p {
+            font-size: 0.6875rem;
+            color: #64748B;
+            font-weight: 600;
+        }
+
+        /* Document Title & Period */
+        .doc-title {
+            margin-bottom: 1.75rem;
+        }
+
+        .doc-title h1 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 900;
+            color: #0F172A;
+            margin-bottom: 0.25rem;
+        }
+
+        .doc-title p {
+            font-size: 0.8125rem;
+            font-weight: 700;
+            color: #64748B;
+        }
+
+        /* Meta Information Grid (4 Columns Layout) */
+        .meta-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.75rem 2.5rem;
+            background: #F8FAFC;
+            border: 1px solid #F1F5F9;
+            padding: 1.25rem 1.5rem;
+            border-radius: 1rem;
+            margin-bottom: 2rem;
+            font-size: 0.8125rem;
+        }
+
+        .meta-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .meta-label {
+            color: #64748B;
+            font-weight: 600;
+            width: 140px;
+        }
+
+        .meta-value {
+            color: #0F172A;
+            font-weight: 800;
+            text-align: left;
+            flex: 1;
+        }
+
+        /* Dual Table Breakdown */
+        .breakdown-tables {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .table-box {
+            border: 1px solid #E2E8F0;
+            border-radius: 1rem;
+            overflow: hidden;
+        }
+
+        .table-box table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.8125rem;
+        }
+
+        .table-box th {
+            padding: 0.75rem 1rem;
+            text-align: left;
+            font-weight: 800;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #FFFFFF;
+        }
+
+        .table-box.earnings th {
+            background: #FF6600;
+        }
+
+        .table-box.deductions th {
+            background: #E11D48;
+        }
+
+        .table-box th:last-child {
+            text-align: right;
+        }
+
+        .table-box td {
+            padding: 0.625rem 1rem;
+            border-bottom: 1px solid #F1F5F9;
+            color: #334155;
+            font-weight: 600;
+        }
+
+        .table-box td:last-child {
+            text-align: right;
+            font-weight: 700;
+            color: #0F172A;
+            font-family: monospace, monospace;
+            font-size: 0.875rem;
+        }
+
+        .table-box.deductions td:last-child {
+            color: #E11D48;
+        }
+
+        .table-box tr.total-row td {
+            background: #F8FAFC;
+            font-weight: 800;
+            color: #0F172A;
+            border-bottom: none;
+            border-top: 2px solid #E2E8F0;
+            padding: 0.75rem 1rem;
+        }
+
+        /* Summary Take Home Pay Box */
+        .thp-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #FFF3E0;
+            border: 1.5px solid #FFDBC9;
+            padding: 1.25rem 1.75rem;
+            border-radius: 1.25rem;
+            margin-bottom: 2.5rem;
+        }
+
+        .bank-info {
+            font-size: 0.8125rem;
+            line-height: 1.5;
+        }
+
+        .bank-info p {
+            color: #64748B;
+            font-weight: 600;
+        }
+
+        .bank-info strong {
+            color: #0F172A;
+            font-weight: 800;
+        }
+
+        .thp-value {
+            text-align: right;
+        }
+
+        .thp-value span {
+            display: block;
+            font-size: 0.75rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #77574E;
+            margin-bottom: 0.25rem;
+        }
+
+        .thp-value h2 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.75rem;
+            font-weight: 900;
+            color: #FF6600;
+            line-height: 1;
+        }
+
+        /* Bottom Footer Note */
+        .payslip-footer {
+            border-top: 1px solid #F1F5F9;
+            padding-top: 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.6875rem;
+            color: #94A3B8;
+            font-weight: 600;
+        }
+
+        .btn-print {
+            background: #FF6600;
+            color: white;
+            border: none;
+            padding: 0.875rem 2rem;
+            font-weight: 800;
+            font-size: 0.875rem;
+            border-radius: 9999px;
+            cursor: pointer;
+            margin-top: 1.5rem;
+            box-shadow: 0 4px 12px rgba(255, 102, 0, 0.25);
+            display: inline-flex;
+            items-center;
+            gap: 0.5rem;
+            transition: all 0.2s;
+        }
+
+        .btn-print:hover {
+            background: #E55C00;
+            transform: translateY(-1px);
+        }
+
+        @media print {
+            body { background: white; padding: 0; }
+            .payslip-container { border: none; box-shadow: none; max-width: 100%; padding: 0; }
+            .no-print { display: none !important; }
+        }
     </style>
 </head>
 <body>
-    <div class="payslip">
-        <div class="header">
-            <h1>ISTANA LAUNDRY</h1>
-            <p>SLIP GAJI KARYAWAN — {{ strtoupper(date('F Y', mktime(0, 0, 0, $item->payroll?->month ?? 1, 10))) }}</p>
-            <p style="font-size:0.625rem;">Cabang: {{ $item->payroll?->branch?->name ?? 'Utama' }}</p>
-        </div>
-
-        <dl class="meta">
-            <dt>NIK</dt><dd>{{ $item->employee?->nik }}</dd>
-            <dt>NAMA</dt><dd>{{ $item->employee?->name }}</dd>
-            <dt>JABATAN</dt><dd>{{ $item->employee?->position }}</dd>
-            <dt>PRESENSI</dt><dd>{{ $item->attendance_days }} / {{ $item->work_days }} Hari</dd>
-        </dl>
-
-        <div class="details">
-            <div style="font-weight:900; font-size:0.7rem; color:#64748b; margin-bottom:0.5rem; text-transform:uppercase;">Penerimaan (Earnings)</div>
-            <div class="row">
-                <span>Gaji Pokok</span>
-                <span>Rp {{ number_format($item->base_salary, 0, ',', '.') }}</span>
+    <div class="payslip-container">
+        
+        <!-- Header Top Bar -->
+        <div class="top-header">
+            <div class="confidential-badge">
+                Pribadi & Rahasia
             </div>
-            <div class="row">
-                <span>Tunjangan Operasional</span>
-                <span>Rp {{ number_format($item->allowance, 0, ',', '.') }}</span>
-            </div>
-            @if($item->bonus_kg > 0)
-            <div class="row">
-                <span>Bonus Kiloan</span>
-                <span>Rp {{ number_format($item->bonus_kg, 0, ',', '.') }}</span>
-            </div>
-            @endif
-            @if($item->bonus_pcs > 0)
-            <div class="row">
-                <span>Bonus Satuan/Pcs</span>
-                <span>Rp {{ number_format($item->bonus_pcs, 0, ',', '.') }}</span>
-            </div>
-            @endif
-            @if($item->transport_allowance > 0)
-            <div class="row">
-                <span>Uang Transport</span>
-                <span>Rp {{ number_format($item->transport_allowance, 0, ',', '.') }}</span>
-            </div>
-            @endif
-            @if($item->overtime_pay > 0)
-            <div class="row">
-                <span>Upah Lembur</span>
-                <span>Rp {{ number_format($item->overtime_pay, 0, ',', '.') }}</span>
-            </div>
-            @endif
-            @if($item->attendance_bonus > 0)
-            <div class="row">
-                <span>Bonus Presensi</span>
-                <span>Rp {{ number_format($item->attendance_bonus, 0, ',', '.') }}</span>
-            </div>
-            @endif
-            @if($item->special_bonus > 0)
-            <div class="row">
-                <span>Bonus Umum / Spesial</span>
-                <span>Rp {{ number_format($item->special_bonus, 0, ',', '.') }}</span>
-            </div>
-            @endif
-            <div class="row" style="font-weight:700; border-top:1px dashed #e2e8f0; padding-top:0.5rem; margin-top:0.25rem;">
-                <span>Total Penerimaan</span>
-                <span>Rp {{ number_format($item->total_earnings ?: $item->base_salary + $item->allowance, 0, ',', '.') }}</span>
-            </div>
-
-            <div style="font-weight:900; font-size:0.7rem; color:#64748b; margin:1rem 0 0.5rem; text-transform:uppercase;">Potongan (Deductions)</div>
-            @if($item->deduction > 0)
-            <div class="row" style="color:#dc2626;">
-                <span>Potongan / Absen</span>
-                <span>-Rp {{ number_format($item->deduction, 0, ',', '.') }}</span>
-            </div>
-            @endif
-            @if($item->tardiness_deduction > 0)
-            <div class="row" style="color:#dc2626;">
-                <span>Denda Keterlambatan</span>
-                <span>-Rp {{ number_format($item->tardiness_deduction, 0, ',', '.') }}</span>
-            </div>
-            @endif
-            @if($item->loan_deduction > 0)
-            <div class="row" style="color:#dc2626;">
-                <span>Cicilan Kasbon</span>
-                <span>-Rp {{ number_format($item->loan_deduction, 0, ',', '.') }}</span>
-            </div>
-            @endif
-            @if($item->damage_deduction > 0)
-            <div class="row" style="color:#dc2626;">
-                <span>Ganti Rugi Kerusakan</span>
-                <span>-Rp {{ number_format($item->damage_deduction, 0, ',', '.') }}</span>
-            </div>
-            @endif
-            @if($item->bpjs_kesehatan_deduction > 0)
-            <div class="row" style="color:#dc2626;">
-                <span>BPJS Kesehatan (1%)</span>
-                <span>-Rp {{ number_format($item->bpjs_kesehatan_deduction, 0, ',', '.') }}</span>
-            </div>
-            @endif
-            @if($item->bpjs_ketenagakerjaan_deduction > 0)
-            <div class="row" style="color:#dc2626;">
-                <span>BPJS Ketenagakerjaan (2%)</span>
-                <span>-Rp {{ number_format($item->bpjs_ketenagakerjaan_deduction, 0, ',', '.') }}</span>
-            </div>
-            @endif
-            @if($item->bpjs_deduction > 0)
-            <div class="row" style="color:#dc2626;">
-                <span>Potongan BPJS Lainnya</span>
-                <span>-Rp {{ number_format($item->bpjs_deduction, 0, ',', '.') }}</span>
-            </div>
-            @endif
-            <div class="row" style="font-weight:700; border-top:1px dashed #e2e8f0; padding-top:0.5rem; margin-top:0.25rem; color:#dc2626;">
-                <span>Total Potongan</span>
-                <span>-Rp {{ number_format($item->total_deductions ?: $item->deduction, 0, ',', '.') }}</span>
-            </div>
-
-            <div class="row total">
-                <span>GAJI BERSIH (TAKE HOME PAY)</span>
-                <span>Rp {{ number_format($item->net_salary, 0, ',', '.') }}</span>
+            <div class="brand-logo">
+                <img alt="Istana Laundry Logo" src="{{ asset('images/logo.webp') }}"/>
+                <h2>Istana Laundry Samarinda</h2>
+                <p>Enterprise Garment Care & POS Portal</p>
             </div>
         </div>
 
-        <div class="footer">
-            Dokumen ini divalidasi secara elektronik oleh Sistem ERP Istana Laundry.<br>
-            Dicetak pada {{ date('d/m/Y H:i') }} WIB.
+        <!-- Document Title -->
+        <div class="doc-title">
+            <h1>Slip Gaji Karyawan</h1>
+            <p>Periode : 01 {{ date('M Y', mktime(0, 0, 0, $item->payroll?->month ?? 1, 10)) }} - 28 {{ date('M Y', mktime(0, 0, 0, $item->payroll?->month ?? 1, 10)) }}</p>
         </div>
+
+        <!-- Employee Metadata Grid -->
+        <div class="meta-grid">
+            <div class="meta-item">
+                <span class="meta-label">Nama</span>
+                <span class="meta-value">: {{ $item->employee?->name ?? 'N/A' }}</span>
+            </div>
+            <div class="meta-item">
+                <span class="meta-label">Golongan / Jabatan</span>
+                <span class="meta-value">: {{ $item->employee?->position ?? 'Staf Operational' }}</span>
+            </div>
+            <div class="meta-item">
+                <span class="meta-label">ID Karyawan (NIK)</span>
+                <span class="meta-value">: {{ $item->employee?->nik ?? '-' }}</span>
+            </div>
+            <div class="meta-item">
+                <span class="meta-label">Status Karyawan</span>
+                <span class="meta-value">: Karyawan Tetap</span>
+            </div>
+            <div class="meta-item">
+                <span class="meta-label">Cabang Penempatan</span>
+                <span class="meta-value">: {{ $item->payroll?->branch?->name ?? 'Cabang Utama' }}</span>
+            </div>
+            <div class="meta-item">
+                <span class="meta-label">Total Kehadiran</span>
+                <span class="meta-value">: {{ $item->attendance_days }} / {{ $item->work_days }} Hari Kerja</span>
+            </div>
+        </div>
+
+        @php
+            $totalEarnings = $item->total_earnings ?: ($item->base_salary + $item->allowance + $item->bonus_kg + $item->bonus_pcs + $item->transport_allowance + $item->overtime_pay + $item->attendance_bonus + $item->special_bonus);
+            $totalDeductions = $item->total_deductions ?: ($item->deduction + $item->tardiness_deduction + $item->loan_deduction + $item->damage_deduction + $item->bpjs_kesehatan_deduction + $item->bpjs_ketenagakerjaan_deduction + $item->bpjs_deduction);
+        @endphp
+
+        <!-- Dual Table Structure (Earnings vs Deductions) -->
+        <div class="breakdown-tables">
+            
+            <!-- 1. Komponen Pendapatan -->
+            <div class="table-box earnings">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Komponen Pendapatan</th>
+                            <th>Jumlah</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Gaji Pokok (Upah Utama)</td>
+                            <td>{{ number_format($item->base_salary, 0, ',', '.') }}</td>
+                        </tr>
+                        @if($item->allowance > 0)
+                        <tr>
+                            <td>Tunjangan Jabatan / Ops</td>
+                            <td>{{ number_format($item->allowance, 0, ',', '.') }}</td>
+                        </tr>
+                        @endif
+                        @if($item->transport_allowance > 0)
+                        <tr>
+                            <td>Tunjangan Transportasi</td>
+                            <td>{{ number_format($item->transport_allowance, 0, ',', '.') }}</td>
+                        </tr>
+                        @endif
+                        @if($item->bonus_kg > 0)
+                        <tr>
+                            <td>Insentif Hasil Workload (Kg)</td>
+                            <td>{{ number_format($item->bonus_kg, 0, ',', '.') }}</td>
+                        </tr>
+                        @endif
+                        @if($item->bonus_pcs > 0)
+                        <tr>
+                            <td>Insentif Hasil Workload (Pcs)</td>
+                            <td>{{ number_format($item->bonus_pcs, 0, ',', '.') }}</td>
+                        </tr>
+                        @endif
+                        @if($item->overtime_pay > 0)
+                        <tr>
+                            <td>Upah Lembur Jam Kerja</td>
+                            <td>{{ number_format($item->overtime_pay, 0, ',', '.') }}</td>
+                        </tr>
+                        @endif
+                        @if($item->attendance_bonus > 0)
+                        <tr>
+                            <td>Bonus Presensi Penuh</td>
+                            <td>{{ number_format($item->attendance_bonus, 0, ',', '.') }}</td>
+                        </tr>
+                        @endif
+                        @if($item->special_bonus > 0)
+                        <tr>
+                            <td>Bonus Khusus / Kinerja</td>
+                            <td>{{ number_format($item->special_bonus, 0, ',', '.') }}</td>
+                        </tr>
+                        @endif
+                        
+                        <!-- Filler rows to equalize height if needed -->
+                        @for($i = 0; $i < max(0, 3 - count(array_filter([$item->allowance, $item->transport_allowance, $item->bonus_kg, $item->bonus_pcs, $item->overtime_pay, $item->attendance_bonus, $item->special_bonus]))); $i++)
+                        <tr>
+                            <td>&nbsp;</td>
+                            <td>&nbsp;</td>
+                        </tr>
+                        @endfor
+
+                        <tr class="total-row">
+                            <td>Total Pendapatan</td>
+                            <td>{{ number_format($totalEarnings, 0, ',', '.') }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- 2. Komponen Potongan -->
+            <div class="table-box deductions">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Komponen Potongan</th>
+                            <th>Jumlah</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if($item->bpjs_kesehatan_deduction > 0)
+                        <tr>
+                            <td>BPJS Kesehatan (1%)</td>
+                            <td>{{ number_format($item->bpjs_kesehatan_deduction, 0, ',', '.') }}</td>
+                        </tr>
+                        @endif
+                        @if($item->bpjs_ketenagakerjaan_deduction > 0)
+                        <tr>
+                            <td>BPJS Ketenagakerjaan (2%)</td>
+                            <td>{{ number_format($item->bpjs_ketenagakerjaan_deduction, 0, ',', '.') }}</td>
+                        </tr>
+                        @endif
+                        @if($item->bpjs_deduction > 0 && !($item->bpjs_kesehatan_deduction > 0))
+                        <tr>
+                            <td>Iuran BPJS Ketenagakerjaan/Kes</td>
+                            <td>{{ number_format($item->bpjs_deduction, 0, ',', '.') }}</td>
+                        </tr>
+                        @endif
+                        @if($item->deduction > 0)
+                        <tr>
+                            <td>Potongan Ketidakhadiran</td>
+                            <td>{{ number_format($item->deduction, 0, ',', '.') }}</td>
+                        </tr>
+                        @endif
+                        @if($item->tardiness_deduction > 0)
+                        <tr>
+                            <td>Denda Keterlambatan</td>
+                            <td>{{ number_format($item->tardiness_deduction, 0, ',', '.') }}</td>
+                        </tr>
+                        @endif
+                        @if($item->loan_deduction > 0)
+                        <tr>
+                            <td>Cicilan Kasbon Pegawai</td>
+                            <td>{{ number_format($item->loan_deduction, 0, ',', '.') }}</td>
+                        </tr>
+                        @endif
+                        @if($item->damage_deduction > 0)
+                        <tr>
+                            <td>Ganti Rugi Kerusakan Goods</td>
+                            <td>{{ number_format($item->damage_deduction, 0, ',', '.') }}</td>
+                        </tr>
+                        @endif
+
+                        <!-- Filler rows for height alignment -->
+                        @for($i = 0; $i < max(0, 3 - count(array_filter([$item->bpjs_kesehatan_deduction, $item->bpjs_ketenagakerjaan_deduction, $item->bpjs_deduction, $item->deduction, $item->tardiness_deduction, $item->loan_deduction, $item->damage_deduction]))); $i++)
+                        <tr>
+                            <td>&nbsp;</td>
+                            <td>&nbsp;</td>
+                        </tr>
+                        @endfor
+
+                        <tr class="total-row">
+                            <td>Total Potongan</td>
+                            <td>{{ number_format($totalDeductions, 0, ',', '.') }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+        </div>
+
+        <!-- Take Home Pay & Bank Details Banner -->
+        <div class="thp-container">
+            <div class="bank-info">
+                <p>Transfer via Bank : <strong>BCA / Bank Mandiri</strong></p>
+                <p>Nomor Rekening : <strong>{{ $item->employee?->account_number ?? '123-456-7890' }}</strong></p>
+                <p>Nama Pemilik Rekening : <strong>{{ strtoupper($item->employee?->name ?? 'N/A') }}</strong></p>
+            </div>
+            <div class="thp-value">
+                <span>TAKE HOME PAY (GAJI BERSIH)</span>
+                <h2>Rp {{ number_format($item->net_salary, 0, ',', '.') }}</h2>
+            </div>
+        </div>
+
+        <!-- Payslip Footer Validation -->
+        <div class="payslip-footer">
+            <div class="flex items-center gap-2">
+                <span class="material-symbols-outlined text-emerald-500 text-lg">verified</span>
+                <span>Dokumen ini divalidasi secara digital & sah tanpa tanda tangan basah.</span>
+            </div>
+            <div>
+                Dicetak: {{ date('d/m/Y H:i') }} WIB • Istana Laundry System
+            </div>
+        </div>
+
     </div>
 
-    <button class="btn-print no-print" onclick="window.print()">Cetak Slip Gaji</button>
+    <!-- Print Button -->
+    <button class="btn-print no-print" onclick="window.print()">
+        <span class="material-symbols-outlined">print</span>
+        Cetak Slip Gaji (PDF)
+    </button>
 </body>
 </html>
