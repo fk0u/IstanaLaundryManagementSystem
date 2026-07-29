@@ -150,10 +150,18 @@
                                             </button>
                                         </form>
                                     @else
-                                        <div class="bg-emerald-50 dark:bg-emerald-950/10 p-3.5 rounded-xl border border-emerald-100 dark:border-emerald-900/30 text-emerald-800 dark:text-emerald-400 flex items-center gap-2">
+                                        <div class="bg-emerald-50 dark:bg-emerald-950/10 p-3.5 rounded-xl border border-emerald-100 dark:border-emerald-900/30 text-emerald-800 dark:text-emerald-400 flex items-center gap-2 mb-2">
                                             <span class="material-symbols-outlined text-xl">verified</span>
                                             <span class="text-xs font-bold">Produksi Selesai</span>
                                         </div>
+                                    @endif
+
+                                    @if(in_array($order->production_status, ['SIAP', 'DIAMBIL']))
+                                        <a href="{{ route('invoices.ready-whatsapp', $order->id) }}" target="_blank"
+                                           class="btn-touch w-full rounded-xl bg-[#25D366] hover:bg-emerald-600 text-white font-bold text-2xs py-2 px-3 flex items-center justify-center gap-1.5 transition-all shadow-sm">
+                                            <span class="material-symbols-outlined text-base">chat</span>
+                                            Kirim WA Siap Diambil
+                                        </a>
                                     @endif
                                 </div>
                                 

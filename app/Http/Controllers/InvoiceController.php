@@ -56,4 +56,23 @@ class InvoiceController extends Controller
 
         return redirect()->away($url);
     }
+
+    /**
+     * Redirect to WhatsApp with "Ready for Pickup" notification message.
+     */
+    public function sendReadyWhatsApp(Order $order, Request $request)
+    {
+        $order->load(['customer', 'branch']);
+
+        $phone = $request->query('phone') ?? $order->customer?->phone ?? null;
+
+        if (! $phone) {
+            return redirect()->back()->with('error', 'Nomor telepon pelanggan tidak tersedia.');
+        }
+
+        $message = $this->whatsAppService->generateReadyNotificationMessage($order);
+        $url = $this->whatsAppService->generateWhatsAppUrl($phone, $message);
+
+        return redirect()->away($url);
+    }
 }

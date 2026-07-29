@@ -85,6 +85,32 @@ class WhatsAppService
     }
 
     /**
+     * Generate "Ready for Pickup" notification message for WhatsApp.
+     */
+    public function generateReadyNotificationMessage(Order $order): string
+    {
+        $order->load(['customer', 'branch']);
+
+        $branchName = $order->branch?->name ?? 'Istana Laundry';
+        $customerName = $order->customer?->name ?? 'Pelanggan';
+        $trackUrl = url("/track?order_number={$order->order_number}");
+
+        $lines = [];
+        $lines[] = "🧺 *ISTANA LAUNDRY — {$branchName}*";
+        $lines[] = "Halo Kak {$customerName}, cucian Anda sudah *SELESAI & SIAP DIAMBIL!* 🎉";
+        $lines[] = '────────────────';
+        $lines[] = "📋 *No. Nota:* {$order->order_number}";
+        $lines[] = '💰 *Total Tagihan:* Rp '.number_format($order->total, 0, ',', '.');
+        $lines[] = '💳 *Status Bayar:* '.($order->payment_status === 'paid' ? '✅ LUNAS' : '⚠️ BELUM LUNAS (Rp '.number_format($order->total - $order->paid_amount, 0, ',', '.').')');
+        $lines[] = '';
+        $lines[] = "🔍 *Lacak Detail Order:* {$trackUrl}";
+        $lines[] = '';
+        $lines[] = 'Silakan datang ke outlet untuk pengambilan. Terima kasih telah mempercayakan laundry Anda kepada kami! 🙏';
+
+        return implode("\n", $lines);
+    }
+
+    /**
      * Generate WhatsApp wa.me URL.
      */
     public function generateWhatsAppUrl(string $phone, string $message): string

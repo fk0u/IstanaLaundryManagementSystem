@@ -78,6 +78,12 @@
                 <span>Rp {{ number_format($item->attendance_bonus, 0, ',', '.') }}</span>
             </div>
             @endif
+            @if($item->special_bonus > 0)
+            <div class="row">
+                <span>Bonus Umum / Spesial</span>
+                <span>Rp {{ number_format($item->special_bonus, 0, ',', '.') }}</span>
+            </div>
+            @endif
             <div class="row" style="font-weight:700; border-top:1px dashed #e2e8f0; padding-top:0.5rem; margin-top:0.25rem;">
                 <span>Total Penerimaan</span>
                 <span>Rp {{ number_format($item->total_earnings ?: $item->base_salary + $item->allowance, 0, ',', '.') }}</span>
@@ -108,9 +114,21 @@
                 <span>-Rp {{ number_format($item->damage_deduction, 0, ',', '.') }}</span>
             </div>
             @endif
+            @if($item->bpjs_kesehatan_deduction > 0)
+            <div class="row" style="color:#dc2626;">
+                <span>BPJS Kesehatan (1%)</span>
+                <span>-Rp {{ number_format($item->bpjs_kesehatan_deduction, 0, ',', '.') }}</span>
+            </div>
+            @endif
+            @if($item->bpjs_ketenagakerjaan_deduction > 0)
+            <div class="row" style="color:#dc2626;">
+                <span>BPJS Ketenagakerjaan (2%)</span>
+                <span>-Rp {{ number_format($item->bpjs_ketenagakerjaan_deduction, 0, ',', '.') }}</span>
+            </div>
+            @endif
             @if($item->bpjs_deduction > 0)
             <div class="row" style="color:#dc2626;">
-                <span>Potongan BPJS</span>
+                <span>Potongan BPJS Lainnya</span>
                 <span>-Rp {{ number_format($item->bpjs_deduction, 0, ',', '.') }}</span>
             </div>
             @endif

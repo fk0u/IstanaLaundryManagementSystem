@@ -75,6 +75,7 @@ Route::middleware(['auth', 'branch.scope'])->group(function () {
     Route::get('/invoices/{order}', [InvoiceController::class, 'show'])->name('invoices.show');
     Route::get('/invoices/{order}/receipt', [InvoiceController::class, 'receipt'])->name('invoices.receipt');
     Route::get('/invoices/{order}/whatsapp', [InvoiceController::class, 'sendWhatsApp'])->name('invoices.whatsapp');
+    Route::get('/invoices/{order}/ready-whatsapp', [InvoiceController::class, 'sendReadyWhatsApp'])->name('invoices.ready-whatsapp');
 
     // Orders — list seluruh transaksi
     Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
@@ -394,6 +395,15 @@ Route::middleware(['auth', 'branch.scope'])->group(function () {
 
             return redirect()->back()->with('success', 'Akun COA berhasil dihapus.');
         })->name('finance.destroy');
+    });
+
+    // User Management (Admin Only)
+    Route::middleware('role:Super_Admin|Owner|Developer')->group(function () {
+        Route::get('/users', [\App\Http\Controllers\UserController::class, 'index'])->name('users.index');
+        Route::post('/users', [\App\Http\Controllers\UserController::class, 'store'])->name('users.store');
+        Route::put('/users/{user}', [\App\Http\Controllers\UserController::class, 'update'])->name('users.update');
+        Route::post('/users/{user}/reset-password', [\App\Http\Controllers\UserController::class, 'resetPassword'])->name('users.reset-password');
+        Route::delete('/users/{user}', [\App\Http\Controllers\UserController::class, 'destroy'])->name('users.destroy');
     });
 
     // Audit Logs

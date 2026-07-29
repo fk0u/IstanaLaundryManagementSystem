@@ -27,69 +27,80 @@
     </div>
 
     <!-- Executive Summary Cards -->
-    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6 mb-6 md:mb-8">
+    <div class="grid grid-cols-2 lg:grid-cols-5 gap-3 md:gap-4 mb-6 md:mb-8">
         <!-- Card 1: Total Revenue -->
-        <div class="bg-white dark:bg-slate-900 border border-outline-variant dark:border-slate-800 rounded-xl p-4 md:p-6 premium-shadow flex flex-col justify-between">
+        <div class="bg-white dark:bg-slate-900 border border-outline-variant dark:border-slate-800 rounded-xl p-4 md:p-5 premium-shadow flex flex-col justify-between">
             <div class="flex justify-between items-start gap-2">
                 <div class="min-w-0">
-                    <span class="text-2xs md:text-[10px] font-bold text-slate-400 uppercase tracking-wider">Total Pendapatan</span>
-                    <h4 class="text-base md:text-xl font-extrabold text-slate-800 dark:text-slate-100 mt-1 truncate">Rp {{ number_format($totalRevenue, 0, ',', '.') }}</h4>
+                    <span class="text-2xs md:text-[10px] font-bold text-slate-400 uppercase tracking-wider">Total Omset</span>
+                    <h4 class="text-base md:text-lg font-extrabold text-slate-800 dark:text-slate-100 mt-1 truncate">Rp {{ number_format($totalRevenue, 0, ',', '.') }}</h4>
                 </div>
-                <span class="material-symbols-outlined text-primary bg-primary-container/10 p-2 md:p-2.5 rounded-lg text-lg md:text-2xl shrink-0">payments</span>
+                <span class="material-symbols-outlined text-primary bg-primary-container/10 p-2 rounded-lg text-lg md:text-xl shrink-0">payments</span>
             </div>
-            <div class="mt-3 md:mt-4 flex items-center gap-1.5 text-slate-500 text-2xs md:text-[10px] font-bold">
+            <div class="mt-3 flex items-center gap-1.5 text-slate-500 text-2xs md:text-[10px] font-bold">
                 <span class="material-symbols-outlined text-xs">info</span>
-                <span class="hidden xs:inline">Akumulasi transaksi lunas</span>
-                <span class="xs:hidden">Lunas</span>
+                <span class="truncate">Akumulasi penjualan</span>
             </div>
         </div>
 
-        <!-- Card 2: MoM Growth -->
-        <div class="bg-white dark:bg-slate-900 border border-outline-variant dark:border-slate-800 rounded-xl p-4 md:p-6 premium-shadow flex flex-col justify-between">
+        <!-- Card 2: Cash Flow Month -->
+        <div class="bg-white dark:bg-slate-900 border border-outline-variant dark:border-slate-800 rounded-xl p-4 md:p-5 premium-shadow flex flex-col justify-between">
+            <div class="flex justify-between items-start gap-2">
+                <div class="min-w-0">
+                    <span class="text-2xs md:text-[10px] font-bold text-slate-400 uppercase tracking-wider">Kas Masuk (Bln Ini)</span>
+                    <h4 class="text-base md:text-lg font-extrabold text-emerald-600 dark:text-emerald-400 mt-1 truncate">Rp {{ number_format($monthCashFlow, 0, ',', '.') }}</h4>
+                </div>
+                <span class="material-symbols-outlined text-emerald-500 bg-emerald-500/10 p-2 rounded-lg text-lg md:text-xl shrink-0">account_balance_wallet</span>
+            </div>
+            <div class="mt-3 text-2xs md:text-[10px] font-semibold text-slate-400 truncate">
+                Pembayaran diterima
+            </div>
+        </div>
+
+        <!-- Card 3: Piutang (Unpaid) -->
+        <div class="bg-white dark:bg-slate-900 border border-outline-variant dark:border-slate-800 rounded-xl p-4 md:p-5 premium-shadow flex flex-col justify-between">
+            <div class="flex justify-between items-start gap-2">
+                <div class="min-w-0">
+                    <span class="text-2xs md:text-[10px] font-bold text-slate-400 uppercase tracking-wider">Total Piutang</span>
+                    <h4 class="text-base md:text-lg font-extrabold text-rose-500 mt-1 truncate">Rp {{ number_format($totalPiutang, 0, ',', '.') }}</h4>
+                </div>
+                <span class="material-symbols-outlined text-rose-500 bg-rose-500/10 p-2 rounded-lg text-lg md:text-xl shrink-0">pending_actions</span>
+            </div>
+            <div class="mt-3 text-2xs md:text-[10px] font-semibold text-rose-400 truncate">
+                Belum lunas / invoice
+            </div>
+        </div>
+
+        <!-- Card 4: MoM Growth -->
+        <div class="bg-white dark:bg-slate-900 border border-outline-variant dark:border-slate-800 rounded-xl p-4 md:p-5 premium-shadow flex flex-col justify-between">
             <div class="flex justify-between items-start gap-2">
                 <div class="min-w-0">
                     <span class="text-2xs md:text-[10px] font-bold text-slate-400 uppercase tracking-wider">Pertumbuhan</span>
-                    <h4 class="text-base md:text-xl font-extrabold mt-1 {{ $growthPercent >= 0 ? 'text-green-500' : 'text-red-500' }}">
+                    <h4 class="text-base md:text-lg font-extrabold mt-1 {{ $growthPercent >= 0 ? 'text-green-500' : 'text-red-500' }}">
                         {{ $growthPercent >= 0 ? '+' : '' }}{{ number_format($growthPercent, 1, ',', '.') }}%
                     </h4>
                 </div>
-                <span class="material-symbols-outlined p-2 md:p-2.5 rounded-lg text-lg md:text-2xl shrink-0 {{ $growthPercent >= 0 ? 'text-green-500 bg-green-500/10' : 'text-red-500 bg-red-500/10' }}">
+                <span class="material-symbols-outlined p-2 rounded-lg text-lg md:text-xl shrink-0 {{ $growthPercent >= 0 ? 'text-green-500 bg-green-500/10' : 'text-red-500 bg-red-500/10' }}">
                     {{ $growthPercent >= 0 ? 'trending_up' : 'trending_down' }}
                 </span>
             </div>
-            <div class="mt-3 md:mt-4 text-2xs md:text-[10px] font-semibold text-slate-400 truncate">
+            <div class="mt-3 text-2xs md:text-[10px] font-semibold text-slate-400 truncate">
                 vs bulan lalu
             </div>
         </div>
 
-        <!-- Card 3: Active Orders -->
-        <div class="bg-white dark:bg-slate-900 border border-outline-variant dark:border-slate-800 rounded-xl p-4 md:p-6 premium-shadow flex flex-col justify-between">
+        <!-- Card 5: Active Orders -->
+        <div class="bg-white dark:bg-slate-900 border border-outline-variant dark:border-slate-800 rounded-xl p-4 md:p-5 premium-shadow flex flex-col justify-between">
             <div class="flex justify-between items-start gap-2">
                 <div class="min-w-0">
                     <span class="text-2xs md:text-[10px] font-bold text-slate-400 uppercase tracking-wider">Order Aktif</span>
-                    <h4 class="text-base md:text-xl font-extrabold text-slate-800 dark:text-slate-100 mt-1">{{ number_format($activeOrdersCount, 0, ',', '.') }}</h4>
+                    <h4 class="text-base md:text-lg font-extrabold text-slate-800 dark:text-slate-100 mt-1">{{ number_format($activeOrdersCount, 0, ',', '.') }}</h4>
                 </div>
-                <img alt="Istana Laundry Logo" class="w-8 h-8 md:w-10 md:h-10 object-contain shrink-0" src="{{ asset('images/logo.webp') }}"/>
+                <span class="material-symbols-outlined text-orange-500 bg-orange-500/10 p-2 rounded-lg text-lg md:text-xl shrink-0">local_laundry_service</span>
             </div>
-            <div class="mt-3 md:mt-4 flex items-center gap-1 text-2xs md:text-[10px] text-slate-500 font-bold">
+            <div class="mt-3 flex items-center gap-1 text-2xs md:text-[10px] text-slate-500 font-bold">
                 <span class="w-1.5 h-1.5 rounded-full bg-orange-500 animate-pulse shrink-0"></span>
-                <span class="truncate">Diproses di workshop</span>
-            </div>
-        </div>
-
-        <!-- Card 4: Top Performing Branch -->
-        <div class="bg-white dark:bg-slate-900 border border-outline-variant dark:border-slate-800 rounded-xl p-4 md:p-6 premium-shadow flex flex-col justify-between">
-            <div class="flex justify-between items-start gap-2">
-                <div class="min-w-0">
-                    <span class="text-2xs md:text-[10px] font-bold text-slate-400 uppercase tracking-wider">Cabang Terbaik</span>
-                    <h4 class="text-sm md:text-base font-extrabold text-slate-800 dark:text-slate-100 mt-1 truncate" title="{{ $topBranchName }}">
-                        {{ $topBranchName }}
-                    </h4>
-                </div>
-                <span class="material-symbols-outlined text-yellow-500 bg-yellow-500/10 p-2 md:p-2.5 rounded-lg text-lg md:text-2xl shrink-0">stars</span>
-            </div>
-            <div class="mt-3 md:mt-4 text-2xs md:text-[10px] text-slate-400 font-semibold truncate">
-                Rp {{ number_format($topBranchRevenue, 0, ',', '.') }}
+                <span class="truncate">Di workshop</span>
             </div>
         </div>
     </div>

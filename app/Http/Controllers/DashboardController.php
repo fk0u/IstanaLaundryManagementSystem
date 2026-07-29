@@ -51,6 +51,19 @@ class DashboardController extends Controller
 
         $totalRevenue = $ordersQuery->sum('total');
 
+        // Finance Specific Metrics
+        $piutangQuery = Order::query()->whereIn('payment_status', ['pending', 'partial']);
+        if ($branchId) {
+            $piutangQuery->where('branch_id', $branchId);
+        }
+        $totalPiutang = (float) $piutangQuery->selectRaw('SUM(total - paid_amount) as total_unpaid')->value('total_unpaid') ?? 0;
+
+        $monthCashFlowQuery = Order::query()->whereBetween('created_at', [now()->startOfMonth(), now()->endOfMonth()]);
+        if ($branchId) {
+            $monthCashFlowQuery->where('branch_id', $branchId);
+        }
+        $monthCashFlow = (float) $monthCashFlowQuery->sum('paid_amount');
+
         $activeOrdersCount = Order::query();
         if ($branchId) {
             $activeOrdersCount->where('branch_id', $branchId);
@@ -129,6 +142,8 @@ class DashboardController extends Controller
 
         return view('dashboard.owner', compact(
             'totalRevenue',
+            'totalPiutang',
+            'monthCashFlow',
             'activeOrdersCount',
             'newCustomersCount',
             'activeWorkshops',

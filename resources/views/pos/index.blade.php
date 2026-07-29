@@ -69,27 +69,48 @@
                     </x-card>
 
                     <!-- Promotion Selection -->
-                    <x-card title="Gunakan Promo" :compact="true">
+                    <x-card title="Gunakan Promo / Kupon" :compact="true">
                         <div class="flex flex-col gap-3">
-                            <label for="promo_id" class="text-2xs font-bold text-slate-400 uppercase tracking-wider">Kupon / Promo Aktif</label>
+                            <label class="text-2xs font-bold text-slate-400 uppercase tracking-wider">Kupon / Promo Aktif</label>
+                            
+                            <!-- Dropdown Select Promo -->
                             <select id="promo_id" x-model="promoId" @change="updatePromoData"
                                     class="w-full h-11 px-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 text-xs font-semibold focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all cursor-pointer">
-                                <option value="">-- Tanpa Promo --</option>
+                                <option value="">-- Pilih Promo Terdaftar --</option>
                                 @foreach ($promotions as $promo)
                                     <option value="{{ $promo->id }}" 
+                                            data-code="{{ $promo->code }}"
                                             data-type="{{ $promo->type }}" 
                                             data-value="{{ $promo->value }}"
                                             data-min="{{ $promo->min_transaction }}">
-                                        {{ $promo->name }} (Min: Rp {{ number_format($promo->min_transaction, 0, ',', '.') }})
+                                        {{ $promo->name }} ({{ $promo->code }}) - Min: Rp {{ number_format($promo->min_transaction, 0, ',', '.') }}
                                     </option>
                                 @endforeach
                             </select>
+
+                            <!-- Input Manual Kode Kupon -->
+                            <div class="flex gap-2">
+                                <input type="text" x-model="manualCouponCode" @keydown.enter.prevent="applyManualCoupon()"
+                                       placeholder="Masukkan Kode Kupon..."
+                                       class="w-full h-10 px-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 text-xs font-semibold uppercase focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all">
+                                <button type="button" @click="applyManualCoupon()"
+                                        class="btn-touch shrink-0 px-4 h-10 rounded-xl bg-slate-800 hover:bg-slate-900 dark:bg-slate-700 dark:hover:bg-slate-600 text-white text-xs font-bold transition-all cursor-pointer">
+                                    Terapkan
+                                </button>
+                            </div>
+
+                            <!-- Alert status kupon -->
+                            <div x-show="couponMessage" x-cloak class="text-2xs font-semibold px-1" :class="couponError ? 'text-rose-500' : 'text-emerald-600 dark:text-emerald-400'" x-text="couponMessage"></div>
+
                             <div x-show="promoId" class="flex gap-3 items-center bg-emerald-50/60 dark:bg-emerald-950/20 p-2.5 rounded-xl border border-emerald-100 dark:border-emerald-900/30" x-cloak>
                                 <span class="material-symbols-outlined text-emerald-600 dark:text-emerald-400 text-xl">local_activity</span>
-                                <div>
-                                    <span class="block text-2xs text-slate-400 font-bold uppercase tracking-wider">Nilai Promo</span>
+                                <div class="flex-1">
+                                    <span class="block text-2xs text-slate-400 font-bold uppercase tracking-wider">Diskon Promo</span>
                                     <span class="text-xs font-bold text-slate-700 dark:text-slate-200" x-text="promoDescription">Promo</span>
                                 </div>
+                                <button type="button" @click="clearPromo()" class="text-slate-400 hover:text-rose-500 p-1">
+                                    <span class="material-symbols-outlined text-base">close</span>
+                                </button>
                             </div>
                         </div>
                     </x-card>
@@ -467,6 +488,9 @@
                 promoValue: 0,
                 promoMin: 0,
                 promoDescription: '',
+                manualCouponCode: '',
+                couponMessage: '',
+                couponError: false,
                 pointsUsed: 0,
                 subtotal: 0,
                 discount: 0,
@@ -476,6 +500,55 @@
                 changeAmount: 0,
                 showConfirmModal: false,
                 mobileCartOpen: false,
+
+                applyManualCoupon() {
+                    let code = (this.manualCouponCode || '').trim().toUpperCase();
+                    if (!code) {
+                        this.couponMessage = 'Masukkan kode kupon terlebih dahulu.';
+                        this.couponError = true;
+                        return;
+                    }
+                    let select = document.getElementById('promo_id');
+                    let matchedOpt = Array.from(select.options).find(opt => (opt.getAttribute('data-code') || '').toUpperCase() === code);
+                    
+                    if (!matchedOpt) {
+                        this.couponMessage = `Kode kupon "${code}" tidak ditemukan atau tidak aktif.`;
+                        this.couponError = true;
+                        return;
+                    }
+
+                    let minTx = parseFloat(matchedOpt.getAttribute('data-min')) || 0;
+                    if (this.subtotal < minTx) {
+                        this.couponMessage = `Kupon "${code}" membutuhkan minimal transaksi Rp ${this.formatNumber(minTx)}. Subtotal saat ini: Rp ${this.formatNumber(this.subtotal)}.`;
+                        this.couponError = true;
+                        return;
+                    }
+
+                    this.promoId = matchedOpt.value;
+                    select.value = matchedOpt.value;
+                    this.promoType = matchedOpt.getAttribute('data-type');
+                    this.promoValue = parseFloat(matchedOpt.getAttribute('data-value')) || 0;
+                    this.promoMin = minTx;
+                    this.promoDescription = this.promoType === 'percent' ? `${this.promoValue}% (${code})` : `Rp ${this.formatNumber(this.promoValue)} (${code})`;
+                    this.couponMessage = `Kupon "${code}" berhasil diterapkan!`;
+                    this.couponError = false;
+                    this.manualCouponCode = '';
+                    this.calculateTotals();
+                },
+
+                clearPromo() {
+                    this.promoId = '';
+                    let select = document.getElementById('promo_id');
+                    if (select) select.value = '';
+                    this.promoType = '';
+                    this.promoValue = 0;
+                    this.promoMin = 0;
+                    this.promoDescription = '';
+                    this.manualCouponCode = '';
+                    this.couponMessage = '';
+                    this.couponError = false;
+                    this.calculateTotals();
+                },
 
                 addToCart(id, name, price, unit) {
                     let existing = this.cart.find(item => item.service_id === id);

@@ -127,6 +127,14 @@ class HRController extends Controller
                         $tardinessDeduction = $lateDays * 25000; // Rp25.000 per late day
                     }
 
+                    // Calculate transport allowance automatically from attendance (Rp 15.000 / present day)
+                    $presentCount = $attendanceDays ?: 26;
+                    $transportAllowance = $presentCount * 15000;
+
+                    // BPJS split calculations (Indonesian Standard: BPJS Kesehatan 1%, BPJS Ketenagakerjaan JHT 2%)
+                    $bpjsKesehatan = round($emp->base_salary * 0.01);
+                    $bpjsKetenagakerjaan = round($emp->base_salary * 0.02);
+
                     // Create payroll item with comprehensive components
                     $payrollItem = PayrollItem::create([
                         'payroll_id' => $payroll->id,
@@ -134,19 +142,22 @@ class HRController extends Controller
                         'base_salary' => $emp->base_salary,
                         'allowance' => 0,
                         'deduction' => 0,
-                        'attendance_days' => $attendanceDays ?: 26,
+                        'attendance_days' => $presentCount,
                         'work_days' => $workDays,
                         // Earnings components
                         'bonus_kg' => 0, // To be calculated based on actual workload
                         'bonus_pcs' => 0, // To be calculated based on special items
-                        'transport_allowance' => 0, // Manual input or policy-based
+                        'transport_allowance' => $transportAllowance, // Auto Rp15k/day
                         'overtime_pay' => 0, // To be calculated based on overtime hours
                         'attendance_bonus' => $attendanceBonus,
+                        'special_bonus' => 0,
                         // Deductions components
                         'tardiness_deduction' => $tardinessDeduction,
                         'loan_deduction' => 0, // Manual input from employee loans
                         'damage_deduction' => 0, // Manual input from damage claims
-                        'bpjs_deduction' => 0, // Policy-based or manual input
+                        'bpjs_deduction' => 0,
+                        'bpjs_kesehatan_deduction' => $bpjsKesehatan,
+                        'bpjs_ketenagakerjaan_deduction' => $bpjsKetenagakerjaan,
                         'net_salary' => $netSalary, // Will be recalculated
                     ]);
 
