@@ -238,8 +238,15 @@
                    :title="!desktopSidebarOpen ? 'Audit Logs' : ''">
                     <span class="material-symbols-outlined text-2xl shrink-0" style="font-variation-settings: 'FILL' {{ request()->is('audit-logs*') ? '1' : '0' }};">history_toggle_off</span>
                     <span x-show="desktopSidebarOpen" class="truncate">Audit Logs</span>
-                </a>
             @endif
+
+            <!-- Panduan & Training Staf -->
+            <a href="{{ route('guide') }}" @click="sidebarOpen = false" 
+               class="flex items-center gap-4 px-4 py-3 transition-all rounded-full text-xs md:text-sm font-bold {{ request()->is('guide*') ? 'bg-primary-container text-primary-on-container shadow-sm' : 'text-slate-600 dark:text-slate-400 hover:bg-surface-container dark:hover:bg-slate-800/60' }}"
+               :title="!desktopSidebarOpen ? 'Panduan Training' : ''">
+                <span class="material-symbols-outlined text-2xl shrink-0" style="font-variation-settings: 'FILL' {{ request()->is('guide*') ? '1' : '0' }};">school</span>
+                <span x-show="desktopSidebarOpen" class="truncate">Panduan Training Staf</span>
+            </a>
         </nav>
 
         <!-- New Order Shortcut Button (MD3 FAB Style) -->

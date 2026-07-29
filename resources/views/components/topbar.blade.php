@@ -98,9 +98,9 @@
                         <span class="material-symbols-outlined text-emerald-500 text-lg">chat</span>
                         WhatsApp IT Helpdesk
                     </a>
-                    <a href="/docs/user-guide" class="flex items-center gap-3 p-2.5 rounded-2xl hover:bg-surface-container dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold">
+                    <a href="{{ route('guide') }}" class="flex items-center gap-3 p-2.5 rounded-2xl hover:bg-surface-container dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold">
                         <span class="material-symbols-outlined text-sky-500 text-lg">auto_stories</span>
-                        Panduan Penggunaan 8 Roles
+                        Panduan Training & SOP Staf (Friendly Guide)
                     </a>
                     <a href="/production" class="flex items-center gap-3 p-2.5 rounded-2xl hover:bg-surface-container dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold">
                         <span class="material-symbols-outlined text-amber-500 text-lg">checklist</span>

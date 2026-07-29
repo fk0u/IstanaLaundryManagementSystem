@@ -54,6 +54,10 @@ Route::get('/track', function (Request $request) {
     return view('track', compact('order', 'orderNumber'));
 })->middleware('throttle:30,1')->name('track');
 
+Route::get('/guide', function () {
+    return view('guide');
+})->middleware(['auth'])->name('guide');
+
 Route::get('/dashboard', [DashboardController::class, 'index'])
     ->middleware(['auth', 'verified', 'branch.scope'])
     ->name('dashboard');
