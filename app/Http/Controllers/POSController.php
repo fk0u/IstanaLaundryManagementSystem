@@ -41,6 +41,9 @@ class POSController extends Controller
         if (! $branchId) {
             $firstBranch = Branch::first();
             $branchId = $firstBranch?->id;
+            if ($branchId) {
+                session(['scoped_branch_id' => $branchId]);
+            }
         }
 
         $branch = Branch::find($branchId);
@@ -53,9 +56,9 @@ class POSController extends Controller
             return $service;
         });
 
-        // Fetch Customers (automatically filtered if non-super due to BranchScoped global scope)
-        // Defensive: hide any Walk-In placeholder entries from POS list (T4 — no Walk-In allowed)
-        $customers = Customer::where('branch_id', $branchId)
+        // Fetch Customers explicitly by branch_id using withoutBranchScope to prevent empty results for Owner without branch_id
+        $customers = Customer::withoutBranchScope()
+            ->where('branch_id', $branchId)
             ->where(function ($q) {
                 $q->where('name', 'NOT LIKE', '%Walk-In%')
                     ->where('name', 'NOT LIKE', '%walk-in%')
@@ -66,7 +69,8 @@ class POSController extends Controller
             ->get();
 
         // Fetch active Promotions
-        $promotions = Promotion::where('is_active', true)
+        $promotions = Promotion::withoutBranchScope()
+            ->where('is_active', true)
             ->where(function ($q) use ($branchId) {
                 $q->where('branch_id', $branchId)->orWhereNull('branch_id');
             })
@@ -127,6 +131,9 @@ class POSController extends Controller
         if (! $branchId) {
             $firstBranch = Branch::first();
             $branchId = $firstBranch?->id;
+            if ($branchId) {
+                session(['scoped_branch_id' => $branchId]);
+            }
         }
 
         $validator = Validator::make($request->all(), [
@@ -149,7 +156,7 @@ class POSController extends Controller
         $data = $validator->validated();
 
         return DB::transaction(function () use ($data, $branchId) {
-            $customer = $data['customer_id'] ? Customer::find($data['customer_id']) : null;
+            $customer = $data['customer_id'] ? Customer::withoutBranchScope()->find($data['customer_id']) : null;
 
             // Calculate Subtotal
             $subtotal = 0;
