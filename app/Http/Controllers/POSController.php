@@ -78,7 +78,9 @@ class POSController extends Controller
             ->where('end_date', '>=', now()->toDateString())
             ->get();
 
-        return view('pos.index', compact('branch', 'services', 'customers', 'promotions'));
+        $branches = Branch::orderBy('name')->get();
+
+        return view('pos.index', compact('branch', 'services', 'customers', 'promotions', 'branches'));
     }
 
     /**

@@ -1,7 +1,27 @@
 <x-app-layout>
     <div x-data="posApp(@json($customers))" class="min-h-[calc(100vh-100px)] flex flex-col gap-6">
         
-        <x-page-header title="Point of Sale (POS)" :breadcrumbs="['POS' => '/pos']" />
+        <x-page-header title="Point of Sale (POS)" :breadcrumbs="['POS' => '/pos']">
+            <x-slot:actions>
+                @if(auth()->user()->hasAnyRole(['Developer', 'Owner', 'Super_Admin']))
+                    <div class="flex items-center gap-2 bg-orange-50 dark:bg-slate-800 border border-orange-200 dark:border-slate-700 px-3 py-1.5 rounded-xl">
+                        <span class="material-symbols-outlined text-primary text-base">storefront</span>
+                        <div class="text-xs">
+                            <span class="text-slate-400 block text-[10px] font-bold uppercase leading-none">Cabang Aktif</span>
+                            <span class="font-extrabold text-slate-800 dark:text-slate-200">{{ $branch?->name ?? 'Semua Cabang' }}</span>
+                        </div>
+                        <button type="button" @click="showBranchScopeModal = true" class="ml-2 btn-touch text-2xs font-bold text-primary hover:underline cursor-pointer">
+                            Ganti Cabang
+                        </button>
+                    </div>
+                @else
+                    <div class="flex items-center gap-2 bg-slate-100 dark:bg-slate-800 px-3 py-1.5 rounded-xl">
+                        <span class="material-symbols-outlined text-primary text-base">storefront</span>
+                        <span class="text-xs font-bold text-slate-800 dark:text-slate-200">{{ $branch?->name ?? 'Cabang Utama' }}</span>
+                    </div>
+                @endif
+            </x-slot:actions>
+        </x-page-header>
 
         <!-- Alert Flash Messages -->
         @if (session('success'))
@@ -379,7 +399,46 @@
             </div>
         </div>
 
-        <!-- Checkout Confirmation Modal -->
+        <!-- Branch Scope Selection Modal for Owner/SuperAdmin -->
+        @if(auth()->user()->hasAnyRole(['Developer', 'Owner', 'Super_Admin']))
+            <div x-show="showBranchScopeModal" 
+                 class="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-950/70 backdrop-blur-md p-4"
+                 x-transition x-cloak>
+                <div class="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-3xl w-full max-w-md p-6 shadow-2xl flex flex-col gap-5 text-left">
+                    <div class="flex items-center gap-3 pb-3 border-b border-slate-100 dark:border-slate-800">
+                        <div class="w-12 h-12 rounded-2xl bg-orange-100 dark:bg-orange-950/40 text-primary flex items-center justify-center shrink-0">
+                            <span class="material-symbols-outlined text-2xl">storefront</span>
+                        </div>
+                        <div>
+                            <h3 class="text-base font-black text-slate-900 dark:text-white">Pilih Cabang Transaksi</h3>
+                            <p class="text-2xs text-slate-400 font-semibold">Tentukan lokasi outlet cabang sebelum memulai POS kasir.</p>
+                        </div>
+                    </div>
+
+                    <form action="{{ route('switch-branch') }}" method="POST" class="flex flex-col gap-4">
+                        @csrf
+                        <div class="flex flex-col gap-1.5">
+                            <label class="text-2xs font-bold text-slate-400 uppercase tracking-wider">Lokasi Outlet / Cabang</label>
+                            <select name="branch_id" class="w-full h-12 px-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs font-bold text-slate-800 dark:text-slate-200 outline-none focus:border-primary cursor-pointer">
+                                @foreach($branches as $br)
+                                    <option value="{{ $br->id }}" {{ session('scoped_branch_id') == $br->id ? 'selected' : '' }}>
+                                        {{ $br->name }} — {{ $br->address ?? 'Samarinda' }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <div class="flex gap-3 pt-2">
+                            <button type="button" @click="showBranchScopeModal = false" class="flex-1 h-11 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-300 cursor-pointer">Lanjutkan</button>
+                            <button type="submit" class="flex-1 h-11 bg-primary hover:bg-primary-hover text-white font-bold rounded-xl text-xs flex items-center justify-center gap-1.5 shadow-md shadow-primary/20 cursor-pointer">
+                                <span class="material-symbols-outlined text-base">check</span>
+                                Terapkan Scope
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        @endif
         <div x-show="showConfirmModal" 
              class="fixed inset-0 z-[9999] flex items-[end] sm:items-center justify-center bg-slate-900/60 backdrop-blur-sm p-0 sm:p-4 pb-20 sm:pb-0"
              x-transition x-cloak>
@@ -472,6 +531,7 @@
     <script>
         function posApp(initialCustomers) {
             return {
+                showBranchScopeModal: {{ auth()->user()->hasAnyRole(['Developer', 'Owner', 'Super_Admin']) && !session()->has('scoped_branch_id') ? 'true' : 'false' }},
                 cart: [],
                 customers: initialCustomers || [],
                 customerId: '',
