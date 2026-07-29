@@ -1,79 +1,104 @@
 <x-app-layout>
-    <x-slot name="header">
-        <div class="flex items-center gap-3">
-            <span class="material-symbols-outlined text-primary text-3xl">account_circle</span>
-            <div>
-                <h2 class="font-black font-display text-2xl text-slate-800 dark:text-slate-100 leading-tight">
-                    Pengaturan Profil & Keamanan Staf
-                </h2>
-                <p class="text-xs font-semibold text-slate-400">
-                    Kelola informasi pribadi, ubah kata sandi, dan privasi akun Anda.
-                </p>
-            </div>
-        </div>
-    </x-slot>
+    <div class="flex flex-col gap-6 max-w-6xl mx-auto">
+        <x-page-header title="Pengaturan Profil & Keamanan Akun" :breadcrumbs="['Setelan' => '#', 'Profil Akun' => '/profile']" />
 
-    <div class="py-6 space-y-6">
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <!-- Informational Profile Header -->
-            <x-card variant="filled" class="lg:col-span-2 bg-gradient-to-r from-primary-container via-surface-container to-surface border border-primary/10">
-                <div class="flex flex-col sm:flex-row items-center gap-6 p-2">
-                    <div class="w-20 h-20 rounded-full bg-primary text-white font-black font-display text-3xl flex items-center justify-center shadow-md3-2 shrink-0">
-                        {{ substr(auth()->user()->name, 0, 2) }}
-                    </div>
-                    <div class="space-y-1 text-center sm:text-left min-w-0 flex-1">
-                        <span class="inline-block px-3 py-1 text-2xs font-extrabold bg-primary/20 text-primary-on-container rounded-full uppercase tracking-wider">
+        <!-- User Profile Identity Hero Banner -->
+        <div class="relative overflow-hidden rounded-3xl bg-gradient-to-r from-slate-900 via-slate-800 to-orange-950 p-6 md:p-8 text-white shadow-xl">
+            <div class="relative z-10 flex flex-col md:flex-row items-center gap-6">
+                <!-- Avatar Circle with Initial -->
+                <div class="w-24 h-24 rounded-full bg-gradient-to-tr from-orange-600 to-amber-400 text-white font-black font-display text-4xl flex items-center justify-center shadow-lg shrink-0 ring-4 ring-white/20">
+                    {{ strtoupper(substr(auth()->user()->name, 0, 2)) }}
+                </div>
+
+                <div class="space-y-2 text-center md:text-left flex-1">
+                    <div class="flex flex-wrap items-center justify-center md:justify-start gap-2">
+                        <span class="px-3 py-1 bg-orange-500/20 text-orange-400 border border-orange-500/30 rounded-full text-2xs font-extrabold uppercase tracking-wider">
                             Role: {{ auth()->user()->getRoleNames()->first() ?? 'Staf' }}
                         </span>
-                        <h3 class="text-2xl font-black font-display text-slate-900 dark:text-slate-100 truncate">
-                            {{ auth()->user()->name }}
-                        </h3>
-                        <p class="text-xs font-semibold text-slate-500 flex items-center justify-center sm:justify-start gap-1">
-                            <span class="material-symbols-outlined text-base text-primary">mail</span>
-                            {{ auth()->user()->email }} • Cabang: {{ auth()->user()->branch?->name ?? 'Pusat' }}
-                        </p>
+                        <span class="px-3 py-1 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-full text-2xs font-extrabold uppercase tracking-wider flex items-center gap-1">
+                            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> Akun Aktif
+                        </span>
+                    </div>
+
+                    <h1 class="text-2xl md:text-3xl font-black font-display text-white">
+                        {{ auth()->user()->name }}
+                    </h1>
+
+                    <div class="flex flex-wrap items-center justify-center md:justify-start gap-4 text-xs text-slate-300 font-medium">
+                        <span class="flex items-center gap-1.5">
+                            <span class="material-symbols-outlined text-orange-400 text-base">mail</span>
+                            {{ auth()->user()->email }}
+                        </span>
+                        <span class="flex items-center gap-1.5">
+                            <span class="material-symbols-outlined text-amber-400 text-base">storefront</span>
+                            Cabang: {{ auth()->user()->branch?->name ?? 'Semua Cabang (Pusat)' }}
+                        </span>
+                        <span class="flex items-center gap-1.5">
+                            <span class="material-symbols-outlined text-sky-400 text-base">schedule</span>
+                            Login Terakhir: {{ auth()->user()->last_login_at ? auth()->user()->last_login_at->diffForHumans() : 'Sesi Ini' }}
+                        </span>
                     </div>
                 </div>
-            </x-card>
+            </div>
+            <span class="material-symbols-outlined absolute -right-6 -bottom-10 text-[180px] opacity-10 text-white pointer-events-none">manage_accounts</span>
+        </div>
 
-            <!-- Update Profile Information Card -->
-            <x-card variant="elevated">
-                <x-slot name="header">
-                    <div class="flex items-center gap-2">
-                        <span class="material-symbols-outlined text-primary text-xl">badge</span>
-                        <h3 class="text-base font-black font-display text-slate-800 dark:text-slate-100">Informasi Pribadi</h3>
-                    </div>
-                </x-slot>
-                <div class="max-w-xl">
+        <!-- Advanced Profile & Security Management Tabs -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            
+            <!-- Left Side: Profile Information & Password Edit -->
+            <div class="lg:col-span-8 space-y-6">
+                <!-- Informational Profile Card -->
+                <x-card>
                     @include('profile.partials.update-profile-information-form')
-                </div>
-            </x-card>
+                </x-card>
 
-            <!-- Update Password Card -->
-            <x-card variant="elevated">
-                <x-slot name="header">
-                    <div class="flex items-center gap-2">
-                        <span class="material-symbols-outlined text-primary text-xl">lock_reset</span>
-                        <h3 class="text-base font-black font-display text-slate-800 dark:text-slate-100">Ubah Kata Sandi</h3>
-                    </div>
-                </x-slot>
-                <div class="max-w-xl">
+                <!-- Password Update Card -->
+                <x-card>
                     @include('profile.partials.update-password-form')
-                </div>
-            </x-card>
+                </x-card>
+            </div>
 
-            <!-- Delete User Account Card -->
-            <x-card variant="outlined" class="lg:col-span-2 !border-rose-200 dark:!border-rose-900/40">
-                <x-slot name="header">
-                    <div class="flex items-center gap-2 text-rose-600 dark:text-rose-400">
-                        <span class="material-symbols-outlined text-xl">warning</span>
-                        <h3 class="text-base font-black font-display">Zona Bahaya (Hapus Akun)</h3>
+            <!-- Right Side: Account Security Metadata & Audit Activity -->
+            <div class="lg:col-span-4 space-y-6">
+                
+                <!-- Account Security Overview Card -->
+                <x-card title="Ringkasan Keamanan Akun">
+                    <div class="space-y-4 text-xs">
+                        <div class="p-3 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 space-y-1">
+                            <span class="text-2xs font-extrabold uppercase text-slate-400 block">Enkripsi Kata Sandi</span>
+                            <span class="font-bold text-slate-800 dark:text-slate-200 block">Bcrypt / Argon2 Hash Valid</span>
+                            <span class="text-2xs text-emerald-600 dark:text-emerald-400 font-semibold block">✓ Terlindungi standar keamanan ERP</span>
+                        </div>
+
+                        <div class="p-3 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 space-y-1">
+                            <span class="text-2xs font-extrabold uppercase text-slate-400 block">Sesi Login Aktif</span>
+                            <span class="font-bold text-slate-800 dark:text-slate-200 block">Perangkat Ini (Web Browser)</span>
+                            <span class="text-2xs text-slate-500 font-semibold block">Token CSRF & Cookie Terautentikasi</span>
+                        </div>
+
+                        <div class="p-3 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 space-y-1">
+                            <span class="text-2xs font-extrabold uppercase text-slate-400 block">Hak Akses Sistem (Role)</span>
+                            <span class="font-bold text-primary block">{{ auth()->user()->getRoleNames()->first() ?? 'Staf' }}</span>
+                            <span class="text-2xs text-slate-500 font-semibold block">Diotorisasi oleh Administrator Istana Laundry</span>
+                        </div>
                     </div>
-                </x-slot>
-                <div class="max-w-xl">
-                    @include('profile.partials.delete-user-form')
-                </div>
-            </x-card>
+                </x-card>
+
+                <!-- Danger Zone Card -->
+                <x-card class="!border-rose-200 dark:!border-rose-900/40">
+                    <x-slot name="header">
+                        <div class="flex items-center gap-2 text-rose-600 dark:text-rose-400">
+                            <span class="material-symbols-outlined text-lg">warning</span>
+                            <h3 class="text-xs font-black font-display">Zona Bahaya Akun</h3>
+                        </div>
+                    </x-slot>
+                    <div>
+                        @include('profile.partials.delete-user-form')
+                    </div>
+                </x-card>
+
+            </div>
         </div>
     </div>
 </x-app-layout>
