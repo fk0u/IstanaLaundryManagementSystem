@@ -280,9 +280,14 @@ class POSController extends Controller
                 $this->loyaltyService->redeemPoints($customer, $pointsUsed, $order);
             }
 
-            // Award loyalty points if paid
+            // Award loyalty points & post double-entry journal if paid
             if ($paymentStatus === 'paid') {
                 $this->loyaltyService->awardPoints($order);
+                try {
+                    app(\App\Services\Finance\JournalService::class)->postOrderJournal($order);
+                } catch (\Exception $e) {
+                    \Illuminate\Support\Facades\Log::error("POS Journal Auto-Post failed for order #{$order->id}: {$e->getMessage()}");
+                }
             }
 
             // Update promo usage limit
