@@ -53,9 +53,34 @@
 }
 
 @layer components {
+    /* Material Design 3 Expressive Shapes & Buttons */
+    .md3-card {
+        @apply bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-expressive shadow-md3-1 hover:shadow-md3-2 transition-all duration-300;
+    }
+
+    .md3-card-filled {
+        @apply bg-surface-container dark:bg-slate-900/90 border border-transparent rounded-expressive shadow-none hover:shadow-md3-1 transition-all duration-300;
+    }
+
+    .md3-card-outlined {
+        @apply bg-transparent border border-surface-outline dark:border-slate-800 rounded-expressive hover:bg-surface-container/50 transition-all duration-300;
+    }
+
+    .md3-btn-primary {
+        @apply min-h-[48px] px-6 rounded-full bg-primary hover:bg-primary-hover active:scale-[0.98] text-white font-bold text-xs flex items-center justify-center gap-2 shadow-md3-1 hover:shadow-md3-2 transition-all duration-200;
+    }
+
+    .md3-btn-tonal {
+        @apply min-h-[48px] px-6 rounded-full bg-primary-container text-primary-on-container dark:bg-slate-800 dark:text-slate-200 hover:bg-orange-200 active:scale-[0.98] font-bold text-xs flex items-center justify-center gap-2 transition-all duration-200;
+    }
+
+    .md3-btn-outlined {
+        @apply min-h-[48px] px-6 rounded-full border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 active:scale-[0.98] font-bold text-xs flex items-center justify-center gap-2 transition-all duration-200;
+    }
+
     /* Touch-friendly button base — 44px minimum */
     .btn-touch {
-        @apply min-h-[44px] min-w-[44px] flex items-center justify-center;
+        @apply min-h-[44px] min-w-[44px] flex items-center justify-center rounded-2xl active:scale-[0.97] transition-all;
     }
 
     /* Safe bottom area for bottom nav clearance */
@@ -71,12 +96,12 @@
 
     /* Mobile card variant — compact */
     .card-mobile {
-        @apply bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-xl shadow-sm p-4;
+        @apply bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-expressive shadow-sm p-4;
     }
 
     @media (min-width: 768px) {
         .card-mobile {
-            @apply p-6 rounded-xl;
+            @apply p-6 rounded-expressive;
         }
     }
 
@@ -93,7 +118,7 @@
 
     /* Bottom sheet handle */
     .sheet-handle {
-        @apply w-10 h-1 rounded-full bg-slate-300 dark:bg-slate-600 mx-auto mb-3;
+        @apply w-12 h-1.5 rounded-full bg-slate-300 dark:bg-slate-600 mx-auto mb-4;
     }
 
     /* Horizontal scroll pills container */
@@ -114,7 +139,7 @@
 
     /* Premium shadow (interactive cards) */
     .premium-shadow {
-        @apply shadow-sm hover:shadow-md transition-all duration-300;
+        @apply shadow-md3-1 hover:shadow-md3-2 transition-all duration-300;
     }
 
     /* Status badge colors */
