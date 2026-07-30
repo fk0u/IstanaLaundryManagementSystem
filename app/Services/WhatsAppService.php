@@ -18,6 +18,8 @@ class WhatsAppService
         $branchAddress = $order->branch?->address ?? '';
         $cashierName = $order->cashier?->name ?? '-';
 
+        $trackUrl = url('/track').'?order_number='.$order->order_number;
+
         $lines = [];
         $lines[] = '🧺 *ISTANA LAUNDRY*';
         $lines[] = "📍 {$branchName}";
@@ -26,6 +28,7 @@ class WhatsAppService
         }
         $lines[] = '────────────────';
         $lines[] = "📋 *No. Order:* {$order->order_number}";
+        $lines[] = "🔍 *Lacak Status Cucian:* {$trackUrl}";
         $lines[] = "👤 Kasir: {$cashierName}";
         $lines[] = '📅 Tanggal: '.$order->created_at->format('d/m/Y H:i');
 

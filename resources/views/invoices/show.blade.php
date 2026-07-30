@@ -48,7 +48,10 @@
                             {{ $order->payment_status === 'paid' ? 'LUNAS' : strtoupper($order->payment_status) }}
                         </span>
                         <p class="text-xs text-slate-400 mt-2">
-                            <strong>No. Invoice:</strong> {{ $order->order_number }}
+                            <strong>No. Invoice:</strong> 
+                            <a href="{{ route('track', ['order_number' => $order->order_number]) }}" target="_blank" class="text-primary font-bold hover:underline font-mono">
+                                {{ $order->order_number }}
+                            </a>
                         </p>
                     </div>
                 </div>
