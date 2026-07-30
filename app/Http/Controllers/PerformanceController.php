@@ -33,12 +33,16 @@ class PerformanceController extends Controller
             ->withCount(['orders as total_orders' => function ($q) use ($branchId, $dateFrom, $dateTo) {
                 if ($branchId) {
                     $q->where('branch_id', $branchId);
+                } else {
+                    $q->withoutGlobalScopes();
                 }
                 $q->whereBetween(DB::raw('DATE(created_at)'), [$dateFrom, $dateTo]);
             }])
             ->withSum(['orders as total_revenue' => function ($q) use ($branchId, $dateFrom, $dateTo) {
                 if ($branchId) {
                     $q->where('branch_id', $branchId);
+                } else {
+                    $q->withoutGlobalScopes();
                 }
                 $q->where('payment_status', 'paid')
                   ->whereBetween(DB::raw('DATE(created_at)'), [$dateFrom, $dateTo]);
@@ -46,6 +50,8 @@ class PerformanceController extends Controller
             ->withSum(['orders as total_pending_revenue' => function ($q) use ($branchId, $dateFrom, $dateTo) {
                 if ($branchId) {
                     $q->where('branch_id', $branchId);
+                } else {
+                    $q->withoutGlobalScopes();
                 }
                 $q->whereIn('payment_status', ['pending', 'partial'])
                   ->whereBetween(DB::raw('DATE(created_at)'), [$dateFrom, $dateTo]);
@@ -55,25 +61,22 @@ class PerformanceController extends Controller
             ->filter(fn ($u) => $u->total_orders > 0)
             ->sortByDesc('total_revenue');
 
-        // 2. Cashier daily transaction details (last 7 days for selected cashier, or top cashier)
-        $cashierDailyBreakdown = collect();
-        if ($branchId || $isGlobalUser) {
-            $cashierDailyBreakdown = Order::query()
-                ->select(
-                    DB::raw('DATE(created_at) as date'),
-                    'cashier_id',
-                    DB::raw('COUNT(*) as total_orders'),
-                    DB::raw('SUM(CASE WHEN payment_status = "paid" THEN total ELSE 0 END) as paid_revenue'),
-                    DB::raw('SUM(CASE WHEN payment_status IN ("pending","partial") THEN total ELSE 0 END) as pending_revenue'),
-                    DB::raw('SUM(discount_amount) as total_discount'),
-                )
-                ->when($branchId, fn ($q) => $q->where('branch_id', $branchId))
-                ->whereBetween(DB::raw('DATE(created_at)'), [$dateFrom, $dateTo])
-                ->groupBy(DB::raw('DATE(created_at)'), 'cashier_id')
-                ->with('cashier:id,name')
-                ->orderByDesc('date')
-                ->get();
-        }
+        // 2. Cashier daily transaction details
+        $dailyOrdersQuery = $branchId ? Order::where('branch_id', $branchId) : Order::withoutGlobalScopes();
+        $cashierDailyBreakdown = $dailyOrdersQuery
+            ->select(
+                DB::raw('DATE(created_at) as date'),
+                'cashier_id',
+                DB::raw('COUNT(*) as total_orders'),
+                DB::raw('SUM(CASE WHEN payment_status = "paid" THEN total ELSE 0 END) as paid_revenue'),
+                DB::raw('SUM(CASE WHEN payment_status IN ("pending","partial") THEN total ELSE 0 END) as pending_revenue'),
+                DB::raw('SUM(discount_amount) as total_discount'),
+            )
+            ->whereBetween(DB::raw('DATE(created_at)'), [$dateFrom, $dateTo])
+            ->groupBy(DB::raw('DATE(created_at)'), 'cashier_id')
+            ->with('cashier:id,name')
+            ->orderByDesc('date')
+            ->get();
 
         // 3. Workshop Staff Productivity with date filter
         $staffProductivity = ProductionStatusLog::query()
@@ -94,11 +97,13 @@ class PerformanceController extends Controller
             ->get();
 
         // 4. Operational Performance Metrics
-        $totalActiveOrders = Order::when($branchId, fn ($q) => $q->where('branch_id', $branchId))
+        $baseOrderQuery = $branchId ? Order::where('branch_id', $branchId) : Order::withoutGlobalScopes();
+
+        $totalActiveOrders = (clone $baseOrderQuery)
             ->whereNotIn('production_status', ['DIAMBIL'])
             ->count();
 
-        $overdueOrders = Order::when($branchId, fn ($q) => $q->where('branch_id', $branchId))
+        $overdueOrders = (clone $baseOrderQuery)
             ->whereNotIn('production_status', ['DIAMBIL'])
             ->where('estimated_done_at', '<', now())
             ->count();
@@ -106,12 +111,12 @@ class PerformanceController extends Controller
         $overdueRate = $totalActiveOrders > 0 ? round(($overdueOrders / $totalActiveOrders) * 100, 1) : 0;
 
         // 5. Period summary stats
-        $periodRevenue = Order::when($branchId, fn ($q) => $q->where('branch_id', $branchId))
+        $periodRevenue = (clone $baseOrderQuery)
             ->where('payment_status', 'paid')
             ->whereBetween(DB::raw('DATE(created_at)'), [$dateFrom, $dateTo])
             ->sum('total');
 
-        $periodOrders = Order::when($branchId, fn ($q) => $q->where('branch_id', $branchId))
+        $periodOrders = (clone $baseOrderQuery)
             ->whereBetween(DB::raw('DATE(created_at)'), [$dateFrom, $dateTo])
             ->count();
 
@@ -164,12 +169,16 @@ class PerformanceController extends Controller
             ->withCount(['orders as total_orders' => function ($q) use ($branchId, $dateFrom, $dateTo) {
                 if ($branchId) {
                     $q->where('branch_id', $branchId);
+                } else {
+                    $q->withoutGlobalScopes();
                 }
                 $q->whereBetween(DB::raw('DATE(created_at)'), [$dateFrom, $dateTo]);
             }])
             ->withSum(['orders as total_revenue' => function ($q) use ($branchId, $dateFrom, $dateTo) {
                 if ($branchId) {
                     $q->where('branch_id', $branchId);
+                } else {
+                    $q->withoutGlobalScopes();
                 }
                 $q->where('payment_status', 'paid')
                   ->whereBetween(DB::raw('DATE(created_at)'), [$dateFrom, $dateTo]);
@@ -177,6 +186,8 @@ class PerformanceController extends Controller
             ->withSum(['orders as total_pending_revenue' => function ($q) use ($branchId, $dateFrom, $dateTo) {
                 if ($branchId) {
                     $q->where('branch_id', $branchId);
+                } else {
+                    $q->withoutGlobalScopes();
                 }
                 $q->whereIn('payment_status', ['pending', 'partial'])
                   ->whereBetween(DB::raw('DATE(created_at)'), [$dateFrom, $dateTo]);
@@ -185,7 +196,8 @@ class PerformanceController extends Controller
             ->filter(fn ($u) => $u->total_orders > 0)
             ->sortByDesc('total_revenue');
 
-        $cashierDailyBreakdown = Order::query()
+        $dailyOrdersQuery = $branchId ? Order::where('branch_id', $branchId) : Order::withoutGlobalScopes();
+        $cashierDailyBreakdown = $dailyOrdersQuery
             ->select(
                 DB::raw('DATE(created_at) as date'),
                 'cashier_id',
@@ -194,7 +206,6 @@ class PerformanceController extends Controller
                 DB::raw('SUM(CASE WHEN payment_status IN ("pending","partial") THEN total ELSE 0 END) as pending_revenue'),
                 DB::raw('SUM(discount_amount) as total_discount'),
             )
-            ->when($branchId, fn ($q) => $q->where('branch_id', $branchId))
             ->whereBetween(DB::raw('DATE(created_at)'), [$dateFrom, $dateTo])
             ->groupBy(DB::raw('DATE(created_at)'), 'cashier_id')
             ->with('cashier:id,name')
@@ -218,12 +229,14 @@ class PerformanceController extends Controller
             ->take(50)
             ->get();
 
-        $periodRevenue = Order::when($branchId, fn ($q) => $q->where('branch_id', $branchId))
+        $baseOrderQuery = $branchId ? Order::where('branch_id', $branchId) : Order::withoutGlobalScopes();
+
+        $periodRevenue = (clone $baseOrderQuery)
             ->where('payment_status', 'paid')
             ->whereBetween(DB::raw('DATE(created_at)'), [$dateFrom, $dateTo])
             ->sum('total');
 
-        $periodOrders = Order::when($branchId, fn ($q) => $q->where('branch_id', $branchId))
+        $periodOrders = (clone $baseOrderQuery)
             ->whereBetween(DB::raw('DATE(created_at)'), [$dateFrom, $dateTo])
             ->count();
 
@@ -294,12 +307,16 @@ class PerformanceController extends Controller
             ->withCount(['orders as total_orders' => function ($q) use ($branchId, $dateFrom, $dateTo) {
                 if ($branchId) {
                     $q->where('branch_id', $branchId);
+                } else {
+                    $q->withoutGlobalScopes();
                 }
                 $q->whereBetween(DB::raw('DATE(created_at)'), [$dateFrom, $dateTo]);
             }])
             ->withSum(['orders as total_revenue' => function ($q) use ($branchId, $dateFrom, $dateTo) {
                 if ($branchId) {
                     $q->where('branch_id', $branchId);
+                } else {
+                    $q->withoutGlobalScopes();
                 }
                 $q->where('payment_status', 'paid')
                   ->whereBetween(DB::raw('DATE(created_at)'), [$dateFrom, $dateTo]);
@@ -307,6 +324,8 @@ class PerformanceController extends Controller
             ->withSum(['orders as total_pending_revenue' => function ($q) use ($branchId, $dateFrom, $dateTo) {
                 if ($branchId) {
                     $q->where('branch_id', $branchId);
+                } else {
+                    $q->withoutGlobalScopes();
                 }
                 $q->whereIn('payment_status', ['pending', 'partial'])
                   ->whereBetween(DB::raw('DATE(created_at)'), [$dateFrom, $dateTo]);
@@ -315,7 +334,8 @@ class PerformanceController extends Controller
             ->filter(fn ($u) => $u->total_orders > 0)
             ->sortByDesc('total_revenue');
 
-        $cashierDailyBreakdown = Order::query()
+        $dailyOrdersQuery = $branchId ? Order::where('branch_id', $branchId) : Order::withoutGlobalScopes();
+        $cashierDailyBreakdown = $dailyOrdersQuery
             ->select(
                 DB::raw('DATE(created_at) as date'),
                 'cashier_id',
@@ -324,7 +344,6 @@ class PerformanceController extends Controller
                 DB::raw('SUM(CASE WHEN payment_status IN ("pending","partial") THEN total ELSE 0 END) as pending_revenue'),
                 DB::raw('SUM(discount_amount) as total_discount'),
             )
-            ->when($branchId, fn ($q) => $q->where('branch_id', $branchId))
             ->whereBetween(DB::raw('DATE(created_at)'), [$dateFrom, $dateTo])
             ->groupBy(DB::raw('DATE(created_at)'), 'cashier_id')
             ->with('cashier:id,name')
@@ -348,7 +367,8 @@ class PerformanceController extends Controller
             ->take(50)
             ->get();
 
-        $periodRevenue = Order::when($branchId, fn ($q) => $q->where('branch_id', $branchId))
+        $baseOrderQuery = $branchId ? Order::where('branch_id', $branchId) : Order::withoutGlobalScopes();
+        $periodRevenue = (clone $baseOrderQuery)
             ->where('payment_status', 'paid')
             ->whereBetween(DB::raw('DATE(created_at)'), [$dateFrom, $dateTo])
             ->sum('total');
@@ -385,12 +405,16 @@ class PerformanceController extends Controller
             ->withCount(['orders as total_orders' => function ($q) use ($branchId, $dateFrom, $dateTo) {
                 if ($branchId) {
                     $q->where('branch_id', $branchId);
+                } else {
+                    $q->withoutGlobalScopes();
                 }
                 $q->whereBetween(DB::raw('DATE(created_at)'), [$dateFrom, $dateTo]);
             }])
             ->withSum(['orders as total_revenue' => function ($q) use ($branchId, $dateFrom, $dateTo) {
                 if ($branchId) {
                     $q->where('branch_id', $branchId);
+                } else {
+                    $q->withoutGlobalScopes();
                 }
                 $q->where('payment_status', 'paid')
                   ->whereBetween(DB::raw('DATE(created_at)'), [$dateFrom, $dateTo]);
@@ -398,6 +422,8 @@ class PerformanceController extends Controller
             ->withSum(['orders as total_pending_revenue' => function ($q) use ($branchId, $dateFrom, $dateTo) {
                 if ($branchId) {
                     $q->where('branch_id', $branchId);
+                } else {
+                    $q->withoutGlobalScopes();
                 }
                 $q->whereIn('payment_status', ['pending', 'partial'])
                   ->whereBetween(DB::raw('DATE(created_at)'), [$dateFrom, $dateTo]);
@@ -406,7 +432,8 @@ class PerformanceController extends Controller
             ->filter(fn ($u) => $u->total_orders > 0)
             ->sortByDesc('total_revenue');
 
-        $cashierDailyBreakdown = Order::query()
+        $dailyOrdersQuery = $branchId ? Order::where('branch_id', $branchId) : Order::withoutGlobalScopes();
+        $cashierDailyBreakdown = $dailyOrdersQuery
             ->select(
                 DB::raw('DATE(created_at) as date'),
                 'cashier_id',
@@ -415,7 +442,6 @@ class PerformanceController extends Controller
                 DB::raw('SUM(CASE WHEN payment_status IN ("pending","partial") THEN total ELSE 0 END) as pending_revenue'),
                 DB::raw('SUM(discount_amount) as total_discount'),
             )
-            ->when($branchId, fn ($q) => $q->where('branch_id', $branchId))
             ->whereBetween(DB::raw('DATE(created_at)'), [$dateFrom, $dateTo])
             ->groupBy(DB::raw('DATE(created_at)'), 'cashier_id')
             ->with('cashier:id,name')
@@ -439,7 +465,8 @@ class PerformanceController extends Controller
             ->take(50)
             ->get();
 
-        $periodRevenue = Order::when($branchId, fn ($q) => $q->where('branch_id', $branchId))
+        $baseOrderQuery = $branchId ? Order::where('branch_id', $branchId) : Order::withoutGlobalScopes();
+        $periodRevenue = (clone $baseOrderQuery)
             ->where('payment_status', 'paid')
             ->whereBetween(DB::raw('DATE(created_at)'), [$dateFrom, $dateTo])
             ->sum('total');
