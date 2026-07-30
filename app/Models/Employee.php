@@ -9,7 +9,23 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-#[Fillable(['branch_id', 'user_id', 'nik', 'name', 'position', 'base_salary', 'is_active', 'joined_at'])]
+#[Fillable([
+    'branch_id',
+    'user_id',
+    'nik',
+    'name',
+    'position',
+    'phone',
+    'birth_place',
+    'birth_date',
+    'address',
+    'bank_name',
+    'bank_account_number',
+    'bank_account_holder',
+    'base_salary',
+    'is_active',
+    'joined_at',
+])]
 class Employee extends Model
 {
     use BranchScoped, HasFactory;
@@ -20,7 +36,13 @@ class Employee extends Model
             'base_salary' => 'decimal:2',
             'is_active' => 'boolean',
             'joined_at' => 'date',
+            'birth_date' => 'date',
         ];
+    }
+
+    public function getAgeAttribute(): ?int
+    {
+        return $this->birth_date ? (int) $this->birth_date->age : null;
     }
 
     public function branch(): BelongsTo

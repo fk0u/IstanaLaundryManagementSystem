@@ -317,28 +317,36 @@
         <!-- Employee Metadata Grid -->
         <div class="meta-grid">
             <div class="meta-item">
-                <span class="meta-label">Nama</span>
+                <span class="meta-label">Nama Lengkap Staf</span>
                 <span class="meta-value">: {{ $item->employee?->name ?? 'N/A' }}</span>
             </div>
             <div class="meta-item">
-                <span class="meta-label">Golongan / Jabatan</span>
+                <span class="meta-label">Jabatan (Sebagai Apa)</span>
                 <span class="meta-value">: {{ $item->employee?->position ?? 'Staf Operational' }}</span>
             </div>
             <div class="meta-item">
-                <span class="meta-label">ID Karyawan (NIK)</span>
+                <span class="meta-label">NIK Staf</span>
                 <span class="meta-value">: {{ $item->employee?->nik ?? '-' }}</span>
             </div>
             <div class="meta-item">
-                <span class="meta-label">Status Karyawan</span>
-                <span class="meta-value">: Karyawan Tetap</span>
+                <span class="meta-label">Cabang Penempatan</span>
+                <span class="meta-value">: {{ $item->employee?->branch?->name ?? $item->payroll?->branch?->name ?? 'Konsolidasi Utama' }}</span>
             </div>
             <div class="meta-item">
-                <span class="meta-label">Cabang Penempatan</span>
-                <span class="meta-value">: {{ $item->payroll?->branch?->name ?? 'Cabang Utama' }}</span>
+                <span class="meta-label">Tempat, Tgl Lahir (Usia)</span>
+                <span class="meta-value">: {{ $item->employee?->birth_place ?? '' }} {{ $item->employee?->birth_date ? $item->employee?->birth_date->format('d/m/Y') : '' }} {{ $item->employee?->age ? '('.$item->employee?->age.' th)' : '' }}</span>
+            </div>
+            <div class="meta-item">
+                <span class="meta-label">No. Telepon / WA</span>
+                <span class="meta-value">: {{ $item->employee?->phone ?? '-' }}</span>
             </div>
             <div class="meta-item">
                 <span class="meta-label">Total Kehadiran</span>
                 <span class="meta-value">: {{ $item->attendance_days }} / {{ $item->work_days }} Hari Kerja</span>
+            </div>
+            <div class="meta-item">
+                <span class="meta-label">Alamat Staf</span>
+                <span class="meta-value">: {{ $item->employee?->address ?? '-' }}</span>
             </div>
         </div>
 
@@ -497,9 +505,9 @@
         <!-- Take Home Pay & Bank Details Banner -->
         <div class="thp-container">
             <div class="bank-info">
-                <p>Transfer via Bank : <strong>BCA / Bank Mandiri</strong></p>
-                <p>Nomor Rekening : <strong>{{ $item->employee?->account_number ?? '123-456-7890' }}</strong></p>
-                <p>Nama Pemilik Rekening : <strong>{{ strtoupper($item->employee?->name ?? 'N/A') }}</strong></p>
+                <p>Transfer via Bank : <strong>{{ $item->employee?->bank_name ?? 'Bank BCA / Mandiri' }}</strong></p>
+                <p>Nomor Rekening : <strong>{{ $item->employee?->bank_account_number ?? '-' }}</strong></p>
+                <p>Nama Pemilik Rekening : <strong>{{ strtoupper($item->employee?->bank_account_holder ?? $item->employee?->name ?? 'N/A') }}</strong></p>
             </div>
             <div class="thp-value">
                 <span>TAKE HOME PAY (GAJI BERSIH)</span>

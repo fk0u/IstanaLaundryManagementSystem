@@ -2,6 +2,7 @@
     <div class="flex flex-col gap-4 md:gap-6" x-data="{
         showAddEmployee: false,
         showAddPayroll: false,
+        activeEditEmployee: null,
         activeEditItem: @js(request('edit_item') ? (int) request('edit_item') : null),
         activeDeletePayroll: null,
     }">
@@ -18,10 +19,10 @@
         <div class="flex flex-wrap items-center justify-between gap-3">
             <div class="flex gap-2">
                 <button type="button" @click="showAddEmployee = true" class="btn-touch px-4 py-2 bg-primary hover:bg-primary-hover text-white text-xs font-bold rounded-xl flex items-center gap-1.5 shadow-sm">
-                    <span class="material-symbols-outlined text-base">person_add</span> Tambah Karyawan
+                    <span class="material-symbols-outlined text-base">person_add</span> Tambah Karyawan Baru
                 </button>
                 <button type="button" @click="showAddPayroll = true" class="btn-touch px-4 py-2 bg-slate-900 dark:bg-slate-800 text-white text-xs font-bold rounded-xl flex items-center gap-1.5 shadow-sm">
-                    <span class="material-symbols-outlined text-base">payments</span> Generate Payroll
+                    <span class="material-symbols-outlined text-base">payments</span> Generate Payroll Periode
                 </button>
             </div>
         </div>
@@ -29,15 +30,17 @@
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
             <!-- Employees Table (7 cols) -->
             <div class="lg:col-span-7">
-                <x-card title="Daftar Karyawan">
+                <x-card title="Manajemen & Detail Staf Karyawan">
                     <div class="overflow-x-auto">
                         <table class="w-full text-left text-xs border-collapse">
                             <thead>
                                 <tr class="border-b border-slate-100 dark:border-slate-800 text-slate-400 font-bold uppercase tracking-wider">
-                                    <th class="py-2.5 px-3">NIK / Nama</th>
-                                    <th class="py-2.5 px-3">Jabatan</th>
-                                    <th class="py-2.5 px-3">Cabang</th>
+                                    <th class="py-2.5 px-3">NIK / Nama Staf</th>
+                                    <th class="py-2.5 px-3">Jabatan & Cabang</th>
+                                    <th class="py-2.5 px-3">Kontak & Usia</th>
+                                    <th class="py-2.5 px-3">Rekening Bank</th>
                                     <th class="py-2.5 px-3 text-right">Gaji Pokok</th>
+                                    <th class="py-2.5 px-3 text-center">Aksi</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-slate-50 dark:divide-slate-850">
@@ -45,21 +48,39 @@
                                     <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-900/30">
                                         <td class="py-3 px-3">
                                             <span class="font-bold text-slate-800 dark:text-slate-200 block">{{ $emp->name }}</span>
-                                            <span class="text-2xs text-slate-400 font-mono">{{ $emp->nik }}</span>
+                                            <span class="text-2xs text-slate-400 font-mono">NIK: {{ $emp->nik }}</span>
                                         </td>
-                                        <td class="py-3 px-3 text-slate-600 dark:text-slate-400 font-medium">
-                                            {{ $emp->position }}
+                                        <td class="py-3 px-3">
+                                            <span class="font-bold text-xs text-primary block">{{ $emp->position }}</span>
+                                            <span class="text-2xs text-slate-500">{{ $emp->branch?->name ?? 'Konsolidasi / Utama' }}</span>
                                         </td>
-                                        <td class="py-3 px-3 text-slate-500">
-                                            {{ $emp->branch?->name ?? 'Utama' }}
+                                        <td class="py-3 px-3">
+                                            <span class="font-medium text-slate-700 dark:text-slate-300 block">{{ $emp->phone ?? '-' }}</span>
+                                            <span class="text-2xs text-slate-400">
+                                                {{ $emp->birth_date ? $emp->birth_date->format('d/m/Y') : '' }} 
+                                                ({{ $emp->age ? $emp->age.' th' : 'Usia -' }})
+                                            </span>
+                                        </td>
+                                        <td class="py-3 px-3">
+                                            @if($emp->bank_account_number)
+                                                <span class="font-bold text-xs text-slate-800 dark:text-slate-200 block">{{ $emp->bank_name ?? 'Bank' }}: {{ $emp->bank_account_number }}</span>
+                                                <span class="text-2xs text-slate-400">a.n {{ $emp->bank_account_holder ?? $emp->name }}</span>
+                                            @else
+                                                <span class="text-2xs text-slate-400 italic">Belum ada rekening</span>
+                                            @endif
                                         </td>
                                         <td class="py-3 px-3 text-right font-mono font-bold text-slate-800 dark:text-slate-200">
                                             Rp {{ number_format($emp->base_salary, 0, ',', '.') }}
                                         </td>
+                                        <td class="py-3 px-3 text-center">
+                                            <button type="button" @click="activeEditEmployee = @js($emp)" class="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 hover:text-primary hover:bg-orange-50 transition-colors" title="Edit Staf">
+                                                <span class="material-symbols-outlined text-base">edit</span>
+                                            </button>
+                                        </td>
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="4" class="py-8 text-center text-slate-400">Belum ada karyawan terdaftar.</td>
+                                        <td colspan="6" class="py-8 text-center text-slate-400">Belum ada karyawan terdaftar.</td>
                                     </tr>
                                 @endforelse
                             </tbody>
@@ -71,52 +92,76 @@
             <!-- Payroll History & Slip Gaji (5 cols) -->
             <div class="lg:col-span-5">
                 <x-card title="Riwayat Payroll Diproses">
-                    <div class="space-y-3 max-h-[400px] overflow-y-auto pr-1">
+                    <div class="space-y-3 max-h-[500px] overflow-y-auto pr-1">
                         @forelse($payrolls as $pr)
-                            <div class="p-3 border border-slate-100 dark:border-slate-800 rounded-xl bg-slate-50/40 dark:bg-slate-900/40">
+                            <div class="p-3.5 border border-slate-100 dark:border-slate-800 rounded-2xl bg-slate-50/40 dark:bg-slate-900/40">
                                 <div class="flex items-center justify-between mb-2">
                                     <div>
-                                        <span class="font-bold text-xs text-slate-800 dark:text-slate-200 block">
+                                        <span class="font-black text-xs text-slate-800 dark:text-slate-200 block">
                                             Periode {{ date('F', mktime(0, 0, 0, $pr->month, 10)) }} {{ $pr->year }}
                                         </span>
-                                        <span class="text-2xs text-slate-400">
-                                            Cabang: {{ $pr->branch?->name }} • Status: <span class="uppercase font-bold text-emerald-600">{{ $pr->status }}</span>
+                                        <span class="text-2xs text-slate-400 block font-semibold mt-0.5">
+                                            Cabang: {{ $pr->branch?->name ?? 'Seluruh Cabang (Konsolidasi Global)' }}
                                         </span>
+                                        <div class="mt-1">
+                                            @if($pr->status === 'final')
+                                                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-2xs font-extrabold bg-emerald-100 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-400">
+                                                    <span class="material-symbols-outlined text-xs">lock</span> FINAL (DIKUNCI)
+                                                </span>
+                                            @else
+                                                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-2xs font-extrabold bg-amber-100 text-amber-800 dark:bg-amber-950/40 dark:text-amber-400">
+                                                    <span class="material-symbols-outlined text-xs">edit_document</span> DRAFT
+                                                </span>
+                                            @endif
+                                        </div>
                                     </div>
-                                    <div class="flex flex-wrap justify-end gap-2">
-                                        <a href="{{ route('hr.payrolls.show', $pr->id) }}" class="inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:border-primary hover:text-primary transition-colors">
-                                            <span class="material-symbols-outlined text-base">info</span> Detail
-                                        </a>
-                                        <button type="button" @click="activeDeletePayroll = {{ $pr->id }}" class="inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-lg bg-red-50 dark:bg-red-900/20 text-red-600 hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors">
-                                            <span class="material-symbols-outlined text-base">delete</span> Hapus Riwayat
-                                        </button>
+                                    <div class="flex flex-col items-end gap-1.5">
+                                        <div class="flex items-center gap-1.5">
+                                            <a href="{{ route('hr.payrolls.show', $pr->id) }}" class="inline-flex items-center gap-1 text-xs font-bold px-2.5 py-1.5 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:border-primary hover:text-primary transition-colors">
+                                                <span class="material-symbols-outlined text-base">info</span> Detail
+                                            </a>
+                                            @if($pr->status === 'draft')
+                                                <form action="{{ route('hr.payrolls.finalize', $pr->id) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin MEMFINALKAN payroll ini? Setelah difinalkan, payroll akan DIKUNCI dan tidak dapat diubah.')">
+                                                    @csrf
+                                                    <button type="submit" class="inline-flex items-center gap-1 text-xs font-bold px-2.5 py-1.5 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 transition-colors" title="Finalkan Payroll">
+                                                        <span class="material-symbols-outlined text-base">check_circle</span> Finalkan
+                                                    </button>
+                                                </form>
+                                            @endif
+                                            <button type="button" @click="activeDeletePayroll = {{ $pr->id }}" class="inline-flex items-center gap-1 text-xs font-bold px-2 py-1.5 rounded-lg bg-rose-50 text-rose-600 hover:bg-rose-100 transition-colors">
+                                                <span class="material-symbols-outlined text-base">delete</span>
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
-                                <div class="space-y-2">
+                                <div class="space-y-2 mt-3">
                                     @foreach($pr->items as $pItem)
-                                        <div id="payroll-item-{{ $pItem->id }}" class="flex items-center justify-between bg-white dark:bg-slate-800 p-2 rounded-lg scroll-mt-24">
-                                            <div class="flex-1 min-w-0">
+                                        <div id="payroll-item-{{ $pItem->id }}" class="flex items-center justify-between bg-white dark:bg-slate-800 p-2.5 rounded-xl border border-slate-100 dark:border-slate-700/50 scroll-mt-24">
+                                            <div class="flex-1 min-w-0 pr-2">
                                                 <p class="text-xs font-bold text-slate-800 dark:text-slate-200 truncate">{{ $pItem->employee?->name }}</p>
-                                                <p class="text-2xs text-slate-500">Gaji: Rp {{ number_format($pItem->net_salary, 0, ',', '.') }}</p>
+                                                <p class="text-2xs text-slate-500 font-semibold">{{ $pItem->employee?->position }} • {{ $pItem->employee?->branch?->name }}</p>
+                                                <p class="text-2xs font-mono font-bold text-emerald-600 mt-0.5">Gaji: Rp {{ number_format($pItem->net_salary, 0, ',', '.') }}</p>
                                             </div>
-                                            <div class="flex flex-wrap justify-end gap-1.5">
-                                                <a href="{{ route('hr.payslip', $pItem->id) }}" target="_blank" class="inline-flex items-center gap-1.5 text-xs font-bold px-2.5 py-1.5 rounded-lg bg-orange-50 text-primary hover:bg-orange-100 transition-colors">
-                                                    <span class="material-symbols-outlined text-base">receipt_long</span> Slip
+                                            <div class="flex flex-wrap justify-end gap-1">
+                                                <a href="{{ route('hr.payslip', $pItem->id) }}" target="_blank" class="inline-flex items-center gap-1 text-2xs font-bold px-2 py-1 rounded-lg bg-orange-50 text-primary hover:bg-orange-100 transition-colors">
+                                                    <span class="material-symbols-outlined text-sm">receipt_long</span> Slip
                                                 </a>
-                                                <button type="button" @click="activeEditItem = {{ $pItem->id }}" class="inline-flex items-center gap-1.5 text-xs font-bold px-2.5 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors">
-                                                    <span class="material-symbols-outlined text-base">edit</span> Edit Komponen
-                                                </button>
+                                                @if($pr->status !== 'final')
+                                                    <button type="button" @click="activeEditItem = {{ $pItem->id }}" class="inline-flex items-center gap-1 text-2xs font-bold px-2 py-1 rounded-lg bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-200 transition-colors">
+                                                        <span class="material-symbols-outlined text-sm">edit</span> Edit
+                                                    </button>
+                                                @endif
                                             </div>
                                         </div>
                                     @endforeach
                                 </div>
-                                <div class="grid grid-cols-2 gap-2 text-2xs mt-2">
-                                    <div class="bg-white dark:bg-slate-800 p-2 rounded-lg">
+                                <div class="grid grid-cols-2 gap-2 text-2xs mt-3">
+                                    <div class="bg-white dark:bg-slate-800 p-2 rounded-lg text-center">
                                         <span class="text-slate-400 block">Total Karyawan</span>
-                                        <span class="font-bold text-slate-800 dark:text-slate-200">{{ $pr->items->count() }}</span>
+                                        <span class="font-bold text-slate-800 dark:text-slate-200">{{ $pr->items->count() }} Orang</span>
                                     </div>
-                                    <div class="bg-white dark:bg-slate-800 p-2 rounded-lg">
-                                        <span class="text-slate-400 block">Total Gaji</span>
+                                    <div class="bg-white dark:bg-slate-800 p-2 rounded-lg text-center">
+                                        <span class="text-slate-400 block">Total Nominal Gaji</span>
                                         <span class="font-bold text-emerald-600">Rp {{ number_format($pr->items->sum('net_salary'), 0, ',', '.') }}</span>
                                     </div>
                                 </div>
@@ -131,41 +176,176 @@
 
         <!-- Add Employee Modal -->
         <div x-show="showAddEmployee" class="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4" x-cloak>
-            <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-md w-full p-5 shadow-2xl space-y-4">
+            <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-lg w-full p-5 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
                 <div class="flex justify-between items-center pb-2 border-b">
                     <h3 class="font-bold text-sm text-slate-800 dark:text-slate-200">Tambah Karyawan Baru</h3>
                     <button type="button" @click="showAddEmployee = false" class="text-slate-400"><span class="material-symbols-outlined">close</span></button>
                 </div>
                 <form action="{{ route('hr.employees.store') }}" method="POST" class="space-y-3">
                     @csrf
-                    <div>
-                        <label class="text-2xs font-bold text-slate-400 uppercase">NIK</label>
-                        <input type="text" name="nik" required placeholder="NIK Karyawan..." class="w-full h-9 px-3 rounded-xl border text-xs">
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="text-2xs font-bold text-slate-400 uppercase">NIK Staf</label>
+                            <input type="text" name="nik" required placeholder="NIK Karyawan..." class="w-full h-9 px-3 rounded-xl border text-xs">
+                        </div>
+                        <div>
+                            <label class="text-2xs font-bold text-slate-400 uppercase">Nama Lengkap</label>
+                            <input type="text" name="name" required placeholder="Nama Karyawan..." class="w-full h-9 px-3 rounded-xl border text-xs">
+                        </div>
                     </div>
-                    <div>
-                        <label class="text-2xs font-bold text-slate-400 uppercase">Nama Lengkap</label>
-                        <input type="text" name="name" required placeholder="Nama Karyawan..." class="w-full h-9 px-3 rounded-xl border text-xs">
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="text-2xs font-bold text-slate-400 uppercase">Jabatan / Sebagai Apa</label>
+                            <input type="text" name="position" required placeholder="Kasir / Operator Workshop / Staf..." class="w-full h-9 px-3 rounded-xl border text-xs">
+                        </div>
+                        <div>
+                            <label class="text-2xs font-bold text-slate-400 uppercase">Cabang Penempatan</label>
+                            <select name="branch_id" required class="w-full h-9 px-2 rounded-xl border text-xs">
+                                @foreach($branches as $b)
+                                    <option value="{{ $b->id }}">{{ $b->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
                     </div>
-                    <div>
-                        <label class="text-2xs font-bold text-slate-400 uppercase">Jabatan</label>
-                        <input type="text" name="position" required placeholder="Kasir / Operator / Admin..." class="w-full h-9 px-3 rounded-xl border text-xs">
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="text-2xs font-bold text-slate-400 uppercase">Nomor Telepon / WhatsApp</label>
+                            <input type="text" name="phone" placeholder="08xxxxxxxxxx" class="w-full h-9 px-3 rounded-xl border text-xs">
+                        </div>
+                        <div>
+                            <label class="text-2xs font-bold text-slate-400 uppercase">Gaji Pokok (Rp)</label>
+                            <input type="number" name="base_salary" required placeholder="3000000..." class="w-full h-9 px-3 rounded-xl border text-xs font-bold">
+                        </div>
                     </div>
-                    <div>
-                        <label class="text-2xs font-bold text-slate-400 uppercase">Gaji Pokok (Rp)</label>
-                        <input type="number" name="base_salary" required placeholder="3000000..." class="w-full h-9 px-3 rounded-xl border text-xs font-bold">
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="text-2xs font-bold text-slate-400 uppercase">Tempat Lahir</label>
+                            <input type="text" name="birth_place" placeholder="Samarinda..." class="w-full h-9 px-3 rounded-xl border text-xs">
+                        </div>
+                        <div>
+                            <label class="text-2xs font-bold text-slate-400 uppercase">Tanggal Lahir</label>
+                            <input type="date" name="birth_date" class="w-full h-9 px-3 rounded-xl border text-xs">
+                        </div>
                     </div>
+
                     <div>
-                        <label class="text-2xs font-bold text-slate-400 uppercase">Cabang</label>
-                        <select name="branch_id" required class="w-full h-9 px-2 rounded-xl border text-xs">
-                            @foreach($branches as $b)
-                                <option value="{{ $b->id }}">{{ $b->name }}</option>
-                            @endforeach
-                        </select>
+                        <label class="text-2xs font-bold text-slate-400 uppercase">Alamat Rumah</label>
+                        <input type="text" name="address" placeholder="Alamat Karyawan..." class="w-full h-9 px-3 rounded-xl border text-xs">
                     </div>
-                    <button type="submit" class="btn-touch w-full bg-primary text-white font-bold text-xs rounded-xl py-2.5">Simpan Karyawan</button>
+
+                    <div class="p-3 bg-slate-50 dark:bg-slate-800 rounded-xl space-y-2 border border-slate-100 dark:border-slate-700">
+                        <p class="text-2xs font-bold text-slate-500 uppercase">Informasi Rekening Bank Pembayaran</p>
+                        <div class="grid grid-cols-3 gap-2">
+                            <div>
+                                <label class="text-2xs font-bold text-slate-400 uppercase">Bank</label>
+                                <input type="text" name="bank_name" placeholder="BCA / Mandiri..." class="w-full h-9 px-2 rounded-xl border text-xs">
+                            </div>
+                            <div>
+                                <label class="text-2xs font-bold text-slate-400 uppercase">No. Rekening</label>
+                                <input type="text" name="bank_account_number" placeholder="1234567890..." class="w-full h-9 px-2 rounded-xl border text-xs font-mono">
+                            </div>
+                            <div>
+                                <label class="text-2xs font-bold text-slate-400 uppercase">Pemilik Rekening</label>
+                                <input type="text" name="bank_account_holder" placeholder="Nama Pemilik..." class="w-full h-9 px-2 rounded-xl border text-xs">
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn-touch w-full bg-primary text-white font-bold text-xs rounded-xl py-2.5 shadow-md">Simpan Data Karyawan</button>
                 </form>
             </div>
         </div>
+
+        <!-- Edit Employee Modal -->
+        <template x-if="activeEditEmployee">
+            <div class="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4" x-cloak @keydown.escape.window="activeEditEmployee = null">
+                <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-lg w-full p-5 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
+                    <div class="flex justify-between items-center pb-2 border-b">
+                        <h3 class="font-bold text-sm text-slate-800 dark:text-slate-200">Edit Data Staf Karyawan</h3>
+                        <button type="button" @click="activeEditEmployee = null" class="text-slate-400"><span class="material-symbols-outlined">close</span></button>
+                    </div>
+                    <form :action="'/hr/employees/' + activeEditEmployee.id" method="POST" class="space-y-3">
+                        @csrf
+                        @method('PUT')
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="text-2xs font-bold text-slate-400 uppercase">NIK Staf</label>
+                                <input type="text" name="nik" x-model="activeEditEmployee.nik" required class="w-full h-9 px-3 rounded-xl border text-xs">
+                            </div>
+                            <div>
+                                <label class="text-2xs font-bold text-slate-400 uppercase">Nama Lengkap</label>
+                                <input type="text" name="name" x-model="activeEditEmployee.name" required class="w-full h-9 px-3 rounded-xl border text-xs">
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="text-2xs font-bold text-slate-400 uppercase">Jabatan / Sebagai Apa</label>
+                                <input type="text" name="position" x-model="activeEditEmployee.position" required class="w-full h-9 px-3 rounded-xl border text-xs">
+                            </div>
+                            <div>
+                                <label class="text-2xs font-bold text-slate-400 uppercase">Cabang Penempatan</label>
+                                <select name="branch_id" x-model="activeEditEmployee.branch_id" required class="w-full h-9 px-2 rounded-xl border text-xs">
+                                    @foreach($branches as $b)
+                                        <option value="{{ $b->id }}">{{ $b->name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="text-2xs font-bold text-slate-400 uppercase">Nomor Telepon / WhatsApp</label>
+                                <input type="text" name="phone" x-model="activeEditEmployee.phone" class="w-full h-9 px-3 rounded-xl border text-xs">
+                            </div>
+                            <div>
+                                <label class="text-2xs font-bold text-slate-400 uppercase">Gaji Pokok (Rp)</label>
+                                <input type="number" name="base_salary" x-model="activeEditEmployee.base_salary" required class="w-full h-9 px-3 rounded-xl border text-xs font-bold">
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="text-2xs font-bold text-slate-400 uppercase">Tempat Lahir</label>
+                                <input type="text" name="birth_place" x-model="activeEditEmployee.birth_place" class="w-full h-9 px-3 rounded-xl border text-xs">
+                            </div>
+                            <div>
+                                <label class="text-2xs font-bold text-slate-400 uppercase">Tanggal Lahir</label>
+                                <input type="date" name="birth_date" x-model="activeEditEmployee.birth_date" class="w-full h-9 px-3 rounded-xl border text-xs">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="text-2xs font-bold text-slate-400 uppercase">Alamat Rumah</label>
+                            <input type="text" name="address" x-model="activeEditEmployee.address" class="w-full h-9 px-3 rounded-xl border text-xs">
+                        </div>
+
+                        <div class="p-3 bg-slate-50 dark:bg-slate-800 rounded-xl space-y-2 border border-slate-100 dark:border-slate-700">
+                            <p class="text-2xs font-bold text-slate-500 uppercase">Informasi Rekening Bank Pembayaran</p>
+                            <div class="grid grid-cols-3 gap-2">
+                                <div>
+                                    <label class="text-2xs font-bold text-slate-400 uppercase">Bank</label>
+                                    <input type="text" name="bank_name" x-model="activeEditEmployee.bank_name" class="w-full h-9 px-2 rounded-xl border text-xs">
+                                </div>
+                                <div>
+                                    <label class="text-2xs font-bold text-slate-400 uppercase">No. Rekening</label>
+                                    <input type="text" name="bank_account_number" x-model="activeEditEmployee.bank_account_number" class="w-full h-9 px-2 rounded-xl border text-xs font-mono">
+                                </div>
+                                <div>
+                                    <label class="text-2xs font-bold text-slate-400 uppercase">Pemilik Rekening</label>
+                                    <input type="text" name="bank_account_holder" x-model="activeEditEmployee.bank_account_holder" class="w-full h-9 px-2 rounded-xl border text-xs">
+                                </div>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn-touch w-full bg-primary text-white font-bold text-xs rounded-xl py-2.5 shadow-md">Simpan Perubahan Staf</button>
+                    </form>
+                </div>
+            </div>
+        </template>
 
         <!-- Add Payroll Modal -->
         <div x-show="showAddPayroll" class="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4" x-cloak>
@@ -189,14 +369,16 @@
                         <input type="number" name="year" value="{{ date('Y') }}" required class="w-full h-9 px-3 rounded-xl border text-xs font-bold">
                     </div>
                     <div>
-                        <label class="text-2xs font-bold text-slate-400 uppercase">Cabang</label>
-                        <select name="branch_id" required class="w-full h-9 px-2 rounded-xl border text-xs">
+                        <label class="text-2xs font-bold text-slate-400 uppercase">Pilihan Cabang Target</label>
+                        <select name="branch_id" class="w-full h-9 px-2 rounded-xl border text-xs font-semibold">
+                            <option value="all" selected>🌟 Konsolidasi Seluruh Cabang (Semua Karyawan)</option>
                             @foreach($branches as $b)
-                                <option value="{{ $b->id }}">{{ $b->name }}</option>
+                                <option value="{{ $b->id }}">Cabang {{ $b->name }}</option>
                             @endforeach
                         </select>
+                        <p class="text-2xs text-slate-400 mt-1">Pilih "Konsolidasi Seluruh Cabang" untuk generate gaji seluruh staf dari semua cabang sekaligus.</p>
                     </div>
-                    <button type="submit" class="btn-touch w-full bg-slate-900 text-white font-bold text-xs rounded-xl py-2.5">Proses Payroll</button>
+                    <button type="submit" class="btn-touch w-full bg-slate-900 text-white font-bold text-xs rounded-xl py-2.5 shadow-md">Proses Payroll</button>
                 </form>
             </div>
         </div>

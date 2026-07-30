@@ -20,11 +20,12 @@
 13. **Workload-Linked Payroll HR**: Penghitungan otomatis insentif produktivitas Kg & Pcs workshop pada slip gaji.
 14. **Closing Checklist & CSV Financial Reports Export**: Interface penutupan buku bulanan (`/finance/closing-checklist`) dan tombol ekspor CSV laporan keuangan.
 
-## Last Session (30 Jul 2026 — TEST 2 Phase)
-- **Completed**: Issues #31, #30, #29 (P0 bugs)
-  - #31: Payroll zero fix — Employee query bypasses BranchScoped global scope + float cast safety
-  - #30: Dashboard chart scope — branchId fallback logic corrected for global view
-  - #29: Timezone WITA — config/app.php reads APP_TIMEZONE env, default Asia/Makassar
-- **Branches ready for PR**: `fix/payroll-zero-calc`, `fix/dashboard-chart-scope`, `fix/timezone-wita`
-- **Remaining TEST 2 items**: #32 (Production search), #33 (CRM stats), #34 (Receipt link), #35 (Finance charts), #36 (Exports)
-- **User note**: `.env` lokal perlu manual update `APP_TIMEZONE=Asia/Makassar`
+## TEST 2 Phase Completed Tasks (#29 - #36)
+- **#29 Timezone WITA**: `config/app.php` reads `APP_TIMEZONE` env (default `Asia/Makassar` WITA, GMT+8). Branch: `fix/timezone-wita`
+- **#30 Dashboard Chart Scope**: Fixed `DashboardController` branch fallback logic so switching back to global re-populates branch comparison chart. Branch: `fix/dashboard-chart-scope`
+- **#31 Payroll Zero**: Fixed `HRController::storePayroll` Employee query by using `withoutGlobalScopes()` + empty validation + defensive float casting + topbar branch scope mismatch warning alert & toast. Branch: `fix/payroll-zero-calc`
+- **#32 Production Search & Staff Focus**: Primary search bar in `/production`, workshop staff/admin default hide list with toggle. Branch: `feat/production-order-search`
+- **#33 CRM Customer Insights**: Card/table transaction stats (count orders, total spent, last transaction info), WhatsApp follow-up button, transaction history modal. Branch: `feat/crm-customer-insights`
+- **#34 Receipt Hyperlink Tracking**: Order number hyperlinks directly to `/track?order_number=...` in thermal receipt, A4 invoice, and WhatsApp message builder. Branch: `feat/receipt-track-link`
+- **#35 Finance Report Visual Charts**: Added Chart.js bar and composition charts to all 4 tabs (Analytics, Income Statement, Balance Sheet, Trial Balance). Branch: `feat/finance-report-charts`
+- **#36 Finance Report CSV Export**: UTF-8 BOM streaming CSV export for Income, Balance Sheet, Trial Balance, and Analytics breakdown. Branch: `feat/finance-report-csv`
