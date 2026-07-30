@@ -94,8 +94,15 @@ Route::middleware(['auth', 'branch.scope'])->group(function () {
     // CRM & Customers
     Route::get('/customers', function (Request $request) {
         $q = trim($request->query('q', ''));
+        $branchId = session('scoped_branch_id') ?? auth()->user()->branch_id;
 
-        $customersQuery = Customer::with('branch')
+        $customersQuery = Customer::with(['branch', 'latestOrder', 'orders' => function ($ordQ) {
+            $ordQ->orderBy('created_at', 'desc')->take(10);
+        }])
+            ->withCount('orders')
+            ->when($branchId, function ($query) use ($branchId) {
+                $query->where('branch_id', $branchId);
+            })
             ->when($q !== '', function ($query) use ($q) {
                 $like = "%{$q}%";
                 $query->where(function ($sub) use ($like) {
