@@ -53,6 +53,13 @@ class HRController extends Controller
             'position' => 'required|string|max:255',
             'base_salary' => 'required|numeric|min:0',
             'branch_id' => 'required|exists:branches,id',
+            'phone' => 'nullable|string|max:30',
+            'birth_place' => 'nullable|string|max:100',
+            'birth_date' => 'nullable|date',
+            'address' => 'nullable|string',
+            'bank_name' => 'nullable|string|max:50',
+            'bank_account_number' => 'nullable|string|max:50',
+            'bank_account_holder' => 'nullable|string|max:100',
         ]);
 
         Employee::create([
@@ -61,6 +68,13 @@ class HRController extends Controller
             'position' => $request->position,
             'base_salary' => $request->base_salary,
             'branch_id' => $request->branch_id,
+            'phone' => $request->phone,
+            'birth_place' => $request->birth_place,
+            'birth_date' => $request->birth_date,
+            'address' => $request->address,
+            'bank_name' => $request->bank_name,
+            'bank_account_number' => $request->bank_account_number,
+            'bank_account_holder' => $request->bank_account_holder,
             'is_active' => true,
             'joined_at' => now(),
         ]);
@@ -68,27 +82,69 @@ class HRController extends Controller
         return redirect()->route('hr.index')->with('success', 'Karyawan baru berhasil ditambahkan!');
     }
 
+    public function updateEmployee(Request $request, Employee $employee)
+    {
+        $request->validate([
+            'nik' => 'required|string|unique:employees,nik,'.$employee->id,
+            'name' => 'required|string|max:255',
+            'position' => 'required|string|max:255',
+            'base_salary' => 'required|numeric|min:0',
+            'branch_id' => 'required|exists:branches,id',
+            'phone' => 'nullable|string|max:30',
+            'birth_place' => 'nullable|string|max:100',
+            'birth_date' => 'nullable|date',
+            'address' => 'nullable|string',
+            'bank_name' => 'nullable|string|max:50',
+            'bank_account_number' => 'nullable|string|max:50',
+            'bank_account_holder' => 'nullable|string|max:100',
+        ]);
+
+        $employee->update([
+            'nik' => $request->nik,
+            'name' => $request->name,
+            'position' => $request->position,
+            'base_salary' => $request->base_salary,
+            'branch_id' => $request->branch_id,
+            'phone' => $request->phone,
+            'birth_place' => $request->birth_place,
+            'birth_date' => $request->birth_date,
+            'address' => $request->address,
+            'bank_name' => $request->bank_name,
+            'bank_account_number' => $request->bank_account_number,
+            'bank_account_holder' => $request->bank_account_holder,
+        ]);
+
+        return redirect()->route('hr.index')->with('success', 'Data karyawan berhasil diperbarui!');
+    }
+
     public function storePayroll(Request $request)
     {
         $request->validate([
             'month' => 'required|integer|between:1,12',
             'year' => 'required|integer|min:2024',
-            'branch_id' => 'required|exists:branches,id',
+            'branch_id' => 'nullable|string',
         ]);
 
-        $existing = Payroll::where('branch_id', $request->branch_id)
-            ->where('month', $request->month)
-            ->where('year', $request->year)
-            ->first();
+        $targetBranchId = ($request->branch_id && $request->branch_id !== 'all') ? (int) $request->branch_id : null;
 
-        if ($existing) {
+        $existingQuery = Payroll::withoutBranchScope()
+            ->where('month', $request->month)
+            ->where('year', $request->year);
+
+        if ($targetBranchId) {
+            $existingQuery->where('branch_id', $targetBranchId);
+        } else {
+            $existingQuery->whereNull('branch_id');
+        }
+
+        if ($existingQuery->exists()) {
             return redirect()->back()->with('error', 'Payroll untuk periode tersebut sudah diproses!');
         }
 
         try {
-            DB::transaction(function () use ($request) {
+            DB::transaction(function () use ($request, $targetBranchId) {
                 $payroll = Payroll::create([
-                    'branch_id' => $request->branch_id,
+                    'branch_id' => $targetBranchId,
                     'month' => $request->month,
                     'year' => $request->year,
                     'status' => 'draft',
@@ -96,15 +152,15 @@ class HRController extends Controller
                     'processed_at' => now(),
                 ]);
 
-                // Bypass BranchScoped global scope — the branch is explicitly
-                // selected by the user, not inferred from session.
-                $employees = Employee::withoutGlobalScopes()
-                    ->where('branch_id', $request->branch_id)
-                    ->where('is_active', true)
-                    ->get();
+                // Bypass BranchScoped global scope to get active employees
+                $employeesQuery = Employee::withoutGlobalScopes()->where('is_active', true);
+                if ($targetBranchId) {
+                    $employeesQuery->where('branch_id', $targetBranchId);
+                }
+                $employees = $employeesQuery->get();
 
                 if ($employees->isEmpty()) {
-                    throw new \RuntimeException('Tidak ada karyawan aktif di cabang ini. Pastikan data karyawan sudah diinput.');
+                    throw new \RuntimeException('Tidak ada karyawan aktif untuk kriteria payroll ini. Pastikan data karyawan sudah diinput.');
                 }
 
                 foreach ($employees as $emp) {
@@ -144,7 +200,7 @@ class HRController extends Controller
                     $bpjsKesehatan = round($emp->base_salary * 0.01);
                     $bpjsKetenagakerjaan = round($emp->base_salary * 0.02);
 
-                    // Auto-calculate workload performance bonus from actual completed workshop order items
+                    // Auto-calculate workload performance bonus from actual completed workshop order items for employee's branch
                     $totalWorkloadKg = \App\Models\OrderItem::whereHas('order', function ($q) use ($emp, $request) {
                         $q->where('branch_id', $emp->branch_id)
                           ->whereYear('created_at', $request->year)
@@ -164,8 +220,8 @@ class HRController extends Controller
                     })->sum('quantity');
 
                     // Incentive rates: Rp 200/Kg & Rp 500/Pcs for workshop staff
-                    $bonusKg = ($emp->position === 'Operator Workshop') ? round($totalWorkloadKg * 200) : 0;
-                    $bonusPcs = ($emp->position === 'Operator Workshop') ? round($totalWorkloadPcs * 500) : 0;
+                    $bonusKg = (str_contains(strtolower($emp->position), 'workshop') || str_contains(strtolower($emp->position), 'operator')) ? round($totalWorkloadKg * 200) : 0;
+                    $bonusPcs = (str_contains(strtolower($emp->position), 'workshop') || str_contains(strtolower($emp->position), 'operator')) ? round($totalWorkloadPcs * 500) : 0;
 
                     // Create payroll item with comprehensive components
                     $payrollItem = PayrollItem::create([
@@ -204,6 +260,21 @@ class HRController extends Controller
         return redirect()->route('hr.index')->with('success', 'Payroll periode berhasil digenerate!');
     }
 
+    public function finalizePayroll(int $payroll)
+    {
+        $payroll = $this->resolvePayroll($payroll);
+
+        if ($payroll->status === 'final') {
+            return redirect()->back()->with('error', 'Payroll sudah berstatus FINAL!');
+        }
+
+        $payroll->update([
+            'status' => 'final',
+        ]);
+
+        return redirect()->back()->with('success', 'Payroll periode berhasil difinalkan dan dikunci!');
+    }
+
     public function showPayslip(PayrollItem $item)
     {
         $item->load(['employee', 'payroll.branch']);
@@ -231,6 +302,10 @@ class HRController extends Controller
 
     public function updatePayrollItem(Request $request, PayrollItem $item)
     {
+        if ($item->payroll && $item->payroll->status === 'final') {
+            return redirect()->back()->with('error', 'Payroll sudah berstatus FINAL dan dikunci dari perubahan!');
+        }
+
         $request->validate([
             'allowance' => 'nullable|numeric|min:0',
             'deduction' => 'nullable|numeric|min:0',

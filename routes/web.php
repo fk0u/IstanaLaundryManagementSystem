@@ -256,7 +256,9 @@ Route::middleware(['auth', 'branch.scope'])->group(function () {
     Route::middleware('role:Finance|Owner|Super_Admin|Developer')->group(function () {
         Route::get('/hr', [HRController::class, 'index'])->name('hr.index');
         Route::post('/hr/employees', [HRController::class, 'storeEmployee'])->name('hr.employees.store');
+        Route::put('/hr/employees/{employee}', [HRController::class, 'updateEmployee'])->name('hr.employees.update');
         Route::post('/hr/payrolls', [HRController::class, 'storePayroll'])->name('hr.payrolls.store');
+        Route::post('/hr/payrolls/{payroll}/finalize', [HRController::class, 'finalizePayroll'])->name('hr.payrolls.finalize');
         Route::get('/hr/payrolls/{payroll}', [HRController::class, 'showPayroll'])->name('hr.payrolls.show');
         Route::get('/hr/payslip/{item}', [HRController::class, 'showPayslip'])->name('hr.payslip');
         Route::put('/hr/payroll-item/{item}', [HRController::class, 'updatePayrollItem'])->name('hr.payroll-item.update');
