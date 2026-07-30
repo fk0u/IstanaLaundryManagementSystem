@@ -61,6 +61,6 @@ git checkout -b fix/payroll-zero   # contoh untuk #31
 
 ## Acceptance fase
 
-- [ ] Semua #29–#36 closed
-- [ ] UAT ulang A–H tanpa regresi security (#15–#20)
-- [ ] Queue worker tetap jalan untuk journal/GRN jobs (#21)
+- [x] Semua #29–#36 closed
+- [x] UAT ulang A–H tanpa regresi security (#15–#20)
+- [x] Queue worker tetap jalan untuk journal/GRN jobs (#21)

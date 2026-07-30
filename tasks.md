@@ -57,32 +57,34 @@ Promo, POS customer, dashboard dinamis, Finance UX, kinerja detail, payroll BPJS
 
 | Urutan | GH | Linear | Task | Status |
 |--------|-----|--------|------|--------|
-| 1 | [#31](https://github.com/fk0u/IstanaLaundryManagementSystem/issues/31) | [KIL-39](https://linear.app/kiloux/issue/KIL-39) | Payroll generate → nominal semua **0** | 🔓 Open |
-| 2 | [#30](https://github.com/fk0u/IstanaLaundryManagementSystem/issues/30) | [KIL-38](https://linear.app/kiloux/issue/KIL-38) | Chart Komparasi Cabang kosong setelah switch scope global | 🔓 Open |
-| 3 | [#29](https://github.com/fk0u/IstanaLaundryManagementSystem/issues/29) | [KIL-37](https://linear.app/kiloux/issue/KIL-37) | Timestamp sistem → **GMT+8 / WITA** | 🔓 Open |
+| 1 | [#31](https://github.com/fk0u/IstanaLaundryManagementSystem/issues/31) | [KIL-39](https://linear.app/kiloux/issue/KIL-39) | Payroll generate → nominal semua **0** | ✅ Closed |
+| 2 | [#30](https://github.com/fk0u/IstanaLaundryManagementSystem/issues/30) | [KIL-38](https://linear.app/kiloux/issue/KIL-38) | Chart Komparasi Cabang kosong setelah switch scope global | ✅ Closed |
+| 3 | [#29](https://github.com/fk0u/IstanaLaundryManagementSystem/issues/29) | [KIL-37](https://linear.app/kiloux/issue/KIL-37) | Timestamp sistem → **GMT+8 / WITA** | ✅ Closed |
 
 ### 🟡 Improvements
 
 | Urutan | GH | Linear | Task | Status |
 |--------|-----|--------|------|--------|
-| 4 | [#32](https://github.com/fk0u/IstanaLaundryManagementSystem/issues/32) | [KIL-40](https://linear.app/kiloux/issue/KIL-40) | Production: search no. order + UI hide list untuk Staff | 🔓 Open |
-| 5 | [#33](https://github.com/fk0u/IstanaLaundryManagementSystem/issues/33) | [KIL-41](https://linear.app/kiloux/issue/KIL-41) | CRM: total/last transaksi, riwayat, WhatsApp | 🔓 Open |
-| 6 | [#34](https://github.com/fk0u/IstanaLaundryManagementSystem/issues/34) | [KIL-42](https://linear.app/kiloux/issue/KIL-42) | Receipt/WA: nomor order = hyperlink `/track` | 🔓 Open |
-| 7 | [#35](https://github.com/fk0u/IstanaLaundryManagementSystem/issues/35) | [KIL-43](https://linear.app/kiloux/issue/KIL-43) | Laporan Keuangan: grafik per tab | 🔓 Open |
+| 4 | [#32](https://github.com/fk0u/IstanaLaundryManagementSystem/issues/32) | [KIL-40](https://linear.app/kiloux/issue/KIL-40) | Production: search no. order + UI hide list untuk Staff | ✅ Closed |
+| 5 | [#33](https://github.com/fk0u/IstanaLaundryManagementSystem/issues/33) | [KIL-41](https://linear.app/kiloux/issue/KIL-41) | CRM: total/last transaksi, riwayat, WhatsApp | ✅ Closed |
+| 6 | [#34](https://github.com/fk0u/IstanaLaundryManagementSystem/issues/34) | [KIL-42](https://linear.app/kiloux/issue/KIL-42) | Receipt/WA: nomor order = hyperlink `/track` | ✅ Closed |
+| 7 | [#35](https://github.com/fk0u/IstanaLaundryManagementSystem/issues/35) | [KIL-43](https://linear.app/kiloux/issue/KIL-43) | Laporan Keuangan: grafik per tab | ✅ Closed |
 
-### 🔵 Feature
+### 2. Feature & Enterprise Enhancements
 
 | Urutan | GH | Linear | Task | Status |
 |--------|-----|--------|------|--------|
-| 8 | [#36](https://github.com/fk0u/IstanaLaundryManagementSystem/issues/36) | [KIL-44](https://linear.app/kiloux/issue/KIL-44) | Export CRM / Performance / Aset (PDF·Excel·CSV) | 🔓 Open |
+| 8 | [#36](https://github.com/fk0u/IstanaLaundryManagementSystem/issues/36) | [KIL-44](https://linear.app/kiloux/issue/KIL-44) | Export CRM / Performance / Aset (PDF·Excel·CSV) | ✅ Closed |
+| 9 | - | - | Payroll Global (Konsolidasi Seluruh Cabang), Locking Status `FINAL`, Biodata & Rekening Bank Staf | ✅ Closed |
+| 10 | - | - | Auto-Sync Akun Staf `User` $\leftrightarrow$ `Employee` HR & Modul Manajemen Cabang (`/branches`) | ✅ Closed |
 
 ### Definition of done (TEST 2)
 
-- [ ] #29–#36 closed di GitHub + Linear Done
-- [ ] Smoke UAT ulang item A–H Notes #2
-- [ ] `APP_TIMEZONE=Asia/Makassar` (atau setara) + tampilan UI konsisten
-- [ ] Payroll generate menampilkan nominal non-zero yang masuk akal
-- [ ] Switch cabang → global: chart komparasi terisi tanpa hard refresh
+- [x] #29–#36 closed di GitHub + Linear Done
+- [x] Smoke UAT ulang item A–H Notes #2
+- [x] `APP_TIMEZONE=Asia/Makassar` (atau setara) + tampilan UI konsisten
+- [x] Payroll generate menampilkan nominal non-zero yang masuk akal
+- [x] Switch cabang → global: chart komparasi terisi tanpa hard refresh
 
 ### Aturan commit
 
