@@ -29,3 +29,4 @@
 - **#34 Receipt Hyperlink Tracking**: Order number hyperlinks directly to `/track?order_number=...` in thermal receipt, A4 invoice, and WhatsApp message builder. Branch: `feat/receipt-track-link`
 - **#35 Finance Report Visual Charts**: Added Chart.js bar and composition charts to all 4 tabs (Analytics, Income Statement, Balance Sheet, Trial Balance). Branch: `feat/finance-report-charts`
 - **#36 Finance Report CSV Export**: UTF-8 BOM streaming CSV export for Income, Balance Sheet, Trial Balance, and Analytics breakdown. Branch: `feat/finance-report-csv`
+- **#Staff-HR Auto-Sync & Branch Scope Management**: Integrated auto-sync between `User` (Manajemen Staf) and `Employee` (Manajemen HR) with `user_id` linkage, position auto-mapping, and HR NIK status badge. Added dedicated **Branch Management** module (`/branches`) with full CRUD, branch scope metrics (active staff, accounts, orders), and status toggling. Branch: `feat/staff-hr-sync-branch-management`
