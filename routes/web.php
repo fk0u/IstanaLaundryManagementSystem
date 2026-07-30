@@ -393,6 +393,16 @@ Route::middleware(['auth', 'branch.scope'])->group(function () {
             return redirect()->back()->with('success', 'Akun COA baru berhasil dibuat.');
         })->name('finance.store');
 
+        Route::delete('/finance/{id}', function ($id) {
+            $coa = ChartOfAccount::findOrFail($id);
+            if ($coa->journalLines()->exists()) {
+                return redirect()->back()->with('error', 'Akun COA tidak dapat dihapus karena sudah memiliki mutasi jurnal.');
+            }
+            $coa->delete();
+
+            return redirect()->back()->with('success', 'Akun COA berhasil dihapus.');
+        })->name('finance.destroy');
+
         // Closing Checklist Periode Akuntansi
         Route::get('/finance/closing-checklist', function () {
             $currentMonth = now()->format('Y-m');
@@ -534,7 +544,7 @@ Route::middleware(['auth', 'branch.scope'])->group(function () {
     })->name('switch-branch');
 
     // Refund Module
-    Route::middleware('role:Branch_Admin|Owner|Super_Admin|Developer')->group(function () {
+    Route::middleware('role:Cashier|Branch_Admin|Finance|Owner|Super_Admin|Developer')->group(function () {
         Route::get('/refunds', [RefundController::class, 'index'])->name('refunds.index');
         Route::post('/refunds', [RefundController::class, 'store'])->name('refunds.store');
         Route::post('/refunds/{id}/approve', [RefundController::class, 'approve'])->name('refunds.approve');

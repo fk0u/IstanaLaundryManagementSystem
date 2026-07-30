@@ -148,9 +148,11 @@ class JournalService
 
         // Determine Debit Account (Cash / Bank or Accounts Receivable)
         if (in_array($order->payment_method, ['cash', 'transfer'])) {
-            $debitAccount = ChartOfAccount::where('code', '1-1101')->first(); // Kas Kecil
+            $debitAccount = ChartOfAccount::where('code', '1-1101')->first()
+                ?? ChartOfAccount::firstOrCreate(['code' => '1-1101'], ['name' => 'Kas Kecil', 'type' => 'asset', 'normal_balance' => 'debit', 'level' => 3]);
         } else {
-            $debitAccount = ChartOfAccount::where('code', '1-1201')->first(); // Piutang Usaha
+            $debitAccount = ChartOfAccount::where('code', '1-1201')->first()
+                ?? ChartOfAccount::firstOrCreate(['code' => '1-1201'], ['name' => 'Piutang Usaha', 'type' => 'asset', 'normal_balance' => 'debit', 'level' => 3]);
         }
 
         $entries[] = [
@@ -161,7 +163,9 @@ class JournalService
         ];
 
         // Determine Credit Account (Revenue)
-        $revenueAccount = ChartOfAccount::where('code', '4-1001')->first(); // Pendapatan Jasa Laundry
+        $revenueAccount = ChartOfAccount::where('code', '4-1001')->first()
+            ?? ChartOfAccount::firstOrCreate(['code' => '4-1001'], ['name' => 'Pendapatan Jasa Laundry', 'type' => 'revenue', 'normal_balance' => 'credit', 'level' => 3]);
+
         $entries[] = [
             'account_id' => $revenueAccount->id,
             'debit' => 0,
@@ -169,20 +173,25 @@ class JournalService
             'description' => "Pendapatan jasa laundry order #{$order->order_number}",
         ];
 
-        // If there's a discount
-        if ($order->discount_amount > 0) {
-            $discountAccount = ChartOfAccount::where('code', '5-4105')->first(); // Beban Marketing & Promosi
+        // If there's a discount (promo coupon or points redemption)
+        $totalDiscount = (float) $order->subtotal + (float) $order->tax_amount - (float) $order->total;
+        if ($totalDiscount > 0.001) {
+            $discountAccount = ChartOfAccount::where('code', '5-4105')->first()
+                ?? ChartOfAccount::firstOrCreate(['code' => '5-4105'], ['name' => 'Beban Marketing & Promosi', 'type' => 'expense', 'normal_balance' => 'debit', 'level' => 3]);
+
             $entries[] = [
                 'account_id' => $discountAccount->id,
-                'debit' => $order->discount_amount,
+                'debit' => $totalDiscount,
                 'credit' => 0,
-                'description' => "Beban diskon promo order #{$order->order_number}",
+                'description' => "Beban diskon promo & poin order #{$order->order_number}",
             ];
         }
 
         // If there's tax
         if ($order->tax_amount > 0) {
-            $taxAccount = ChartOfAccount::where('code', '2-2101')->first(); // Hutang PPN
+            $taxAccount = ChartOfAccount::where('code', '2-2101')->first()
+                ?? ChartOfAccount::firstOrCreate(['code' => '2-2101'], ['name' => 'Hutang PPN', 'type' => 'liability', 'normal_balance' => 'credit', 'level' => 3]);
+
             $entries[] = [
                 'account_id' => $taxAccount->id,
                 'debit' => 0,
@@ -207,7 +216,9 @@ class JournalService
         $entries = [];
 
         // Dr: Persediaan Bahan Habis Pakai
-        $inventoryAccount = ChartOfAccount::where('code', '1-1301')->first();
+        $inventoryAccount = ChartOfAccount::where('code', '1-1301')->first()
+            ?? ChartOfAccount::firstOrCreate(['code' => '1-1301'], ['name' => 'Persediaan Bahan Habis Pakai', 'type' => 'asset', 'normal_balance' => 'debit', 'level' => 3]);
+
         $entries[] = [
             'account_id' => $inventoryAccount->id,
             'debit' => $totalCost,
@@ -216,7 +227,9 @@ class JournalService
         ];
 
         // Cr: Hutang Usaha
-        $payableAccount = ChartOfAccount::where('code', '2-1101')->first();
+        $payableAccount = ChartOfAccount::where('code', '2-1101')->first()
+            ?? ChartOfAccount::firstOrCreate(['code' => '2-1101'], ['name' => 'Hutang Usaha', 'type' => 'liability', 'normal_balance' => 'credit', 'level' => 3]);
+
         $entries[] = [
             'account_id' => $payableAccount->id,
             'debit' => 0,
@@ -237,7 +250,9 @@ class JournalService
         $entries = [];
 
         // Dr: Beban Gaji
-        $expenseAccount = ChartOfAccount::where('code', '5-3101')->first();
+        $expenseAccount = ChartOfAccount::where('code', '5-3101')->first()
+            ?? ChartOfAccount::firstOrCreate(['code' => '5-3101'], ['name' => 'Beban Gaji & Upah', 'type' => 'expense', 'normal_balance' => 'debit', 'level' => 3]);
+
         $entries[] = [
             'account_id' => $expenseAccount->id,
             'debit' => $totalNetSalary,
@@ -246,7 +261,9 @@ class JournalService
         ];
 
         // Cr: Kas Kecil
-        $cashAccount = ChartOfAccount::where('code', '1-1101')->first();
+        $cashAccount = ChartOfAccount::where('code', '1-1101')->first()
+            ?? ChartOfAccount::firstOrCreate(['code' => '1-1101'], ['name' => 'Kas Kecil', 'type' => 'asset', 'normal_balance' => 'debit', 'level' => 3]);
+
         $entries[] = [
             'account_id' => $cashAccount->id,
             'debit' => 0,
@@ -268,7 +285,9 @@ class JournalService
         $entries = [];
 
         // Dr: Beban Penyusutan Aset
-        $depExpenseAccount = ChartOfAccount::where('code', '5-4101')->first();
+        $depExpenseAccount = ChartOfAccount::where('code', '5-4101')->first()
+            ?? ChartOfAccount::firstOrCreate(['code' => '5-4101'], ['name' => 'Beban Penyusutan Aset', 'type' => 'expense', 'normal_balance' => 'debit', 'level' => 3]);
+
         $entries[] = [
             'account_id' => $depExpenseAccount->id,
             'debit' => $amount,
@@ -279,14 +298,15 @@ class JournalService
         // Cr: Akumulasi Penyusutan berdasarkan Kategori Aset
         $accCode = '1-2901'; // Default: Mesin Cuci
         if ($asset->category === 'peralatan') {
-            $accCode = '1-2901'; // Bisa disesuaikan
+            $accCode = '1-2901';
         } elseif ($asset->category === 'kendaraan') {
             $accCode = '1-2903';
         } elseif ($asset->category === 'furniture') {
             $accCode = '1-2904';
         }
 
-        $accumulatedAccount = ChartOfAccount::where('code', $accCode)->first();
+        $accumulatedAccount = ChartOfAccount::where('code', $accCode)->first()
+            ?? ChartOfAccount::firstOrCreate(['code' => $accCode], ['name' => "Akum. Penyusutan {$asset->category}", 'type' => 'asset', 'normal_balance' => 'credit', 'level' => 3]);
         $entries[] = [
             'account_id' => $accumulatedAccount->id,
             'debit' => 0,
