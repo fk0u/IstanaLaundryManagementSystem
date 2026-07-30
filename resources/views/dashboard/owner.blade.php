@@ -157,25 +157,19 @@
                         @forelse($branchRankings as $index => $rank)
                             @php
                                 $rankNum = $index + 1;
-                                $badgeColor = match($rankNum) {
-                                    1 => 'bg-amber-500 text-white shadow-xs',
-                                    2 => 'bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-200',
-                                    3 => 'bg-amber-700/20 text-amber-700 dark:text-amber-400',
-                                    default => 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400'
-                                };
-                                $barGradient = match($rankNum) {
-                                    1 => 'from-orange-500 to-amber-500',
-                                    2 => 'from-blue-500 to-cyan-500',
-                                    3 => 'from-emerald-500 to-teal-500',
-                                    default => 'from-purple-500 to-indigo-500'
-                                };
                             @endphp
                             <div class="space-y-1.5">
                                 <div class="flex justify-between items-center text-xs font-bold">
                                     <div class="flex items-center gap-1.5 min-w-0">
-                                        <span class="w-5 h-5 rounded-md flex items-center justify-center text-[10px] font-black shrink-0 {{ $badgeColor }}">
-                                            #{{ $rankNum }}
-                                        </span>
+                                        @if($rankNum === 1)
+                                            <span class="w-5 h-5 rounded-md flex items-center justify-center text-[10px] font-black shrink-0 bg-amber-500 text-white shadow-xs">#1</span>
+                                        @elseif($rankNum === 2)
+                                            <span class="w-5 h-5 rounded-md flex items-center justify-center text-[10px] font-black shrink-0 bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-200">#2</span>
+                                        @elseif($rankNum === 3)
+                                            <span class="w-5 h-5 rounded-md flex items-center justify-center text-[10px] font-black shrink-0 bg-amber-700/20 text-amber-700 dark:text-amber-400">#3</span>
+                                        @else
+                                            <span class="w-5 h-5 rounded-md flex items-center justify-center text-[10px] font-black shrink-0 bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400">#{{ $rankNum }}</span>
+                                        @endif
                                         <span class="text-slate-800 dark:text-slate-200 truncate" title="{{ $rank['name'] }}">{{ $rank['name'] }}</span>
                                         <span class="text-[10px] text-slate-400 font-semibold shrink-0">({{ $rank['orders_count'] }} Nota)</span>
                                     </div>
@@ -184,8 +178,16 @@
                                         <span class="text-primary font-black text-[11px] ml-0.5">({{ $rank['share_percent'] }}%)</span>
                                     </span>
                                 </div>
-                                <div class="w-full bg-slate-100 dark:bg-slate-800 h-2.5 rounded-full overflow-hidden flex p-0.5 shadow-inner">
-                                    <div class="bg-gradient-to-r {{ $barGradient }} h-full rounded-full transition-all duration-700 shadow-sm" style="width: {{ max($rank['share_percent'], 3) }}%"></div>
+                                <div class="w-full bg-slate-100 dark:bg-slate-800/80 h-3 rounded-full overflow-hidden flex p-0.5 border border-slate-200/60 dark:border-slate-700/60 shadow-inner">
+                                    @if($rankNum === 1)
+                                        <div class="bg-gradient-to-r from-orange-500 to-amber-500 h-full rounded-full transition-all duration-700 shadow-sm" style="width: {{ max($rank['share_percent'], 3) }}%; background: linear-gradient(to right, #ff6600, #f59e0b);"></div>
+                                    @elseif($rankNum === 2)
+                                        <div class="bg-gradient-to-r from-blue-500 to-cyan-500 h-full rounded-full transition-all duration-700 shadow-sm" style="width: {{ max($rank['share_percent'], 3) }}%; background: linear-gradient(to right, #3b82f6, #06b6d4);"></div>
+                                    @elseif($rankNum === 3)
+                                        <div class="bg-gradient-to-r from-emerald-500 to-teal-500 h-full rounded-full transition-all duration-700 shadow-sm" style="width: {{ max($rank['share_percent'], 3) }}%; background: linear-gradient(to right, #10b981, #14b8a6);"></div>
+                                    @else
+                                        <div class="bg-gradient-to-r from-purple-500 to-indigo-500 h-full rounded-full transition-all duration-700 shadow-sm" style="width: {{ max($rank['share_percent'], 3) }}%; background: linear-gradient(to right, #a855f7, #6366f1);"></div>
+                                    @endif
                                 </div>
                             </div>
                         @empty
