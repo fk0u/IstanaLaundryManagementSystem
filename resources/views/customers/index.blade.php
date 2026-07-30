@@ -41,10 +41,23 @@
             <button type="submit" class="px-5 py-2.5 bg-primary text-white rounded-xl font-semibold text-sm hover:bg-primary-hover transition-all active:scale-95 cursor-pointer">
                 Cari
             </button>
-            <a href="{{ route('customers.export', ['q' => request('q')]) }}" 
-               class="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-semibold text-sm transition-all active:scale-95 cursor-pointer flex items-center justify-center gap-1.5 shadow-sm">
-                <span class="material-symbols-outlined text-base">download</span> Ekspor CSV
-            </a>
+            <div class="flex items-center gap-1.5">
+                <a href="{{ route('customers.export.pdf', ['q' => request('q')]) }}" target="_blank"
+                   class="px-3 py-2.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl font-bold text-xs transition-all active:scale-95 cursor-pointer flex items-center justify-center gap-1 shadow-sm"
+                   title="Unduh PDF Resmi">
+                    <span class="material-symbols-outlined text-sm">picture_as_pdf</span> PDF
+                </a>
+                <a href="{{ route('customers.export.xlsx', ['q' => request('q')]) }}" 
+                   class="px-3 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-xs transition-all active:scale-95 cursor-pointer flex items-center justify-center gap-1 shadow-sm"
+                   title="Ekspor Excel Spreadsheet">
+                    <span class="material-symbols-outlined text-sm">table_chart</span> Excel (.xlsx)
+                </a>
+                <a href="{{ route('customers.export', ['q' => request('q')]) }}" 
+                   class="px-3 py-2.5 bg-slate-700 hover:bg-slate-800 text-white rounded-xl font-bold text-xs transition-all active:scale-95 cursor-pointer flex items-center justify-center gap-1 shadow-sm"
+                   title="Ekspor CSV Data">
+                    <span class="material-symbols-outlined text-sm">download</span> CSV
+                </a>
+            </div>
             @if(request('q'))
                 <a href="{{ route('customers.index') }}" class="px-5 py-2.5 text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 rounded-xl border border-slate-200 dark:border-slate-700 font-semibold text-sm transition-colors text-center">
                     Reset

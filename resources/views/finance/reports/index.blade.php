@@ -43,6 +43,27 @@
                     Terapkan Filter
                 </button>
             </form>
+
+            <div class="flex flex-wrap items-center justify-between border-t border-slate-100 dark:border-slate-800 pt-3.5 mt-4 gap-2">
+                <span class="text-xs font-bold text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
+                    <span class="material-symbols-outlined text-base text-primary">verified</span>
+                    Format Ekspor Resmi Istana Laundry ERP:
+                </span>
+                <div class="flex items-center gap-2">
+                    <a href="{{ route('finance.reports.pdf', request()->all()) }}" target="_blank"
+                       class="px-3.5 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl font-bold text-2xs transition-all flex items-center gap-1 shadow-sm cursor-pointer">
+                        <span class="material-symbols-outlined text-sm">picture_as_pdf</span> Unduh PDF
+                    </a>
+                    <a href="{{ route('finance.reports.excel', request()->all()) }}"
+                       class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-2xs transition-all flex items-center gap-1 shadow-sm cursor-pointer">
+                        <span class="material-symbols-outlined text-sm">table_chart</span> Ekspor Excel (.xlsx)
+                    </a>
+                    <a href="{{ route('finance.reports.export', array_merge(request()->all(), ['tab' => 'analytics'])) }}"
+                       class="px-3.5 py-2 bg-slate-700 hover:bg-slate-800 text-white rounded-xl font-bold text-2xs transition-all flex items-center gap-1 shadow-sm cursor-pointer">
+                        <span class="material-symbols-outlined text-sm">download</span> Ekspor CSV
+                    </a>
+                </div>
+            </div>
         </x-card>
 
         <!-- Tab Controls -->

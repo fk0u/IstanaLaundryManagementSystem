@@ -92,10 +92,14 @@ Route::middleware(['auth', 'branch.scope'])->group(function () {
     // Performance Monitoring & Export
     Route::get('/performance', [PerformanceController::class, 'index'])->name('performance.index');
     Route::get('/performance/export', [PerformanceController::class, 'exportCsv'])->name('performance.export');
+    Route::get('/performance/export/pdf', [PerformanceController::class, 'exportPdf'])->name('performance.export.pdf');
+    Route::get('/performance/export/xlsx', [PerformanceController::class, 'exportExcel'])->name('performance.export.xlsx');
 
-    // CRM & Customers — Global
+    // CRM & Customers — Global & Export
     Route::get('/customers', [CustomerController::class, 'index'])->name('customers.index');
     Route::get('/customers/export', [CustomerController::class, 'exportCsv'])->name('customers.export');
+    Route::get('/customers/export/pdf', [CustomerController::class, 'exportPdf'])->name('customers.export.pdf');
+    Route::get('/customers/export/xlsx', [CustomerController::class, 'exportExcel'])->name('customers.export.xlsx');
     Route::post('/customers', [CustomerController::class, 'store'])->name('customers.store');
     Route::put('/customers/{id}', [CustomerController::class, 'update'])->name('customers.update');
     Route::delete('/customers/{id}', [CustomerController::class, 'destroy'])->name('customers.destroy');
@@ -249,6 +253,8 @@ Route::middleware(['auth', 'branch.scope'])->group(function () {
     Route::middleware('role:Finance|Owner|Super_Admin|Developer')->group(function () {
         Route::get('/assets', [AssetController::class, 'index'])->name('assets.index');
         Route::get('/assets/export', [AssetController::class, 'exportCsv'])->name('assets.export');
+        Route::get('/assets/export/pdf', [AssetController::class, 'exportPdf'])->name('assets.export.pdf');
+        Route::get('/assets/export/xlsx', [AssetController::class, 'exportExcel'])->name('assets.export.xlsx');
         Route::post('/assets', [AssetController::class, 'store'])->name('assets.store');
         Route::get('/assets/{asset}', [AssetController::class, 'show'])->name('assets.show');
 
@@ -457,7 +463,8 @@ Route::middleware(['auth', 'branch.scope'])->group(function () {
         // Finance - Reports & Exports
         Route::get('/finance/reports', [FinancialReportController::class, 'index'])->name('finance.reports.index');
         Route::get('/finance/reports/excel', [FinancialReportController::class, 'exportExcel'])->name('finance.reports.excel');
-        Route::get('/finance/reports/pdf', [FinancialReportController::class, 'exportPowerBiPdf'])->name('finance.reports.pdf');
+        Route::get('/finance/reports/pdf', [FinancialReportController::class, 'exportPdf'])->name('finance.reports.pdf');
+        Route::get('/finance/reports/powerbi-pdf', [FinancialReportController::class, 'exportPowerBiPdf'])->name('finance.reports.powerbi-pdf');
     });
 
     // Super User - Switch Scoped Branch

@@ -21,13 +21,24 @@
             @else
                 <div></div>
             @endif
-            <div class="flex items-center gap-2">
-                <a href="{{ route('assets.export', ['branch_id' => request('branch_id')]) }}" 
-                   class="btn-touch px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl flex items-center gap-1.5 shadow-sm cursor-pointer transition-colors">
-                    <span class="material-symbols-outlined text-base">download</span> Ekspor CSV
+            <div class="flex items-center gap-1.5">
+                <a href="{{ route('assets.export.pdf', ['branch_id' => request('branch_id')]) }}" target="_blank"
+                   class="btn-touch px-3 py-2 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-xl flex items-center gap-1 shadow-sm cursor-pointer transition-colors"
+                   title="Unduh PDF Resmi">
+                    <span class="material-symbols-outlined text-sm">picture_as_pdf</span> PDF
                 </a>
-                <button type="button" @click="showAddAsset = true" class="btn-touch px-4 py-2 bg-primary hover:bg-primary-hover text-white text-xs font-bold rounded-xl flex items-center gap-1.5 shadow-sm cursor-pointer">
-                    <span class="material-symbols-outlined text-base">add_home_work</span> Tambah Aset Tetap
+                <a href="{{ route('assets.export.xlsx', ['branch_id' => request('branch_id')]) }}" 
+                   class="btn-touch px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl flex items-center gap-1 shadow-sm cursor-pointer transition-colors"
+                   title="Ekspor Excel Spreadsheet">
+                    <span class="material-symbols-outlined text-sm">table_chart</span> Excel (.xlsx)
+                </a>
+                <a href="{{ route('assets.export', ['branch_id' => request('branch_id')]) }}" 
+                   class="btn-touch px-3 py-2 bg-slate-700 hover:bg-slate-800 text-white text-xs font-bold rounded-xl flex items-center gap-1 shadow-sm cursor-pointer transition-colors"
+                   title="Ekspor CSV Data">
+                    <span class="material-symbols-outlined text-sm">download</span> CSV
+                </a>
+                <button type="button" @click="showAddAsset = true" class="btn-touch px-3.5 py-2 bg-primary hover:bg-primary-hover text-white text-xs font-bold rounded-xl flex items-center gap-1 shadow-sm cursor-pointer ml-1">
+                    <span class="material-symbols-outlined text-sm">add_home_work</span> Tambah Aset
                 </button>
             </div>
         </div>

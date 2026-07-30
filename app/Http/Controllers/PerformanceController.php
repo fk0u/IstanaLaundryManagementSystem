@@ -274,4 +274,187 @@ class PerformanceController extends Controller
 
         return response()->stream($callback, 200, $headers);
     }
+
+    public function exportPdf(Request $request)
+    {
+        $user = Auth::user();
+        $isGlobalUser = $user->hasAnyRole(['Developer', 'Owner', 'Super_Admin', 'Finance']);
+
+        $branchId = $request->query('branch_id');
+        if (! $isGlobalUser) {
+            $branchId = session('scoped_branch_id') ?? $user->branch_id;
+        }
+
+        $dateFrom = $request->query('date_from', now()->startOfMonth()->toDateString());
+        $dateTo   = $request->query('date_to', now()->toDateString());
+
+        $branchName = $branchId ? (Branch::find($branchId)?->name ?? 'Cabang Unknown') : 'Seluruh Cabang';
+
+        $cashiers = User::role(['Cashier', 'Branch_Admin', 'Owner', 'Super_Admin', 'Developer'])
+            ->withCount(['orders as total_orders' => function ($q) use ($branchId, $dateFrom, $dateTo) {
+                if ($branchId) {
+                    $q->where('branch_id', $branchId);
+                }
+                $q->whereBetween(DB::raw('DATE(created_at)'), [$dateFrom, $dateTo]);
+            }])
+            ->withSum(['orders as total_revenue' => function ($q) use ($branchId, $dateFrom, $dateTo) {
+                if ($branchId) {
+                    $q->where('branch_id', $branchId);
+                }
+                $q->where('payment_status', 'paid')
+                  ->whereBetween(DB::raw('DATE(created_at)'), [$dateFrom, $dateTo]);
+            }], 'total')
+            ->withSum(['orders as total_pending_revenue' => function ($q) use ($branchId, $dateFrom, $dateTo) {
+                if ($branchId) {
+                    $q->where('branch_id', $branchId);
+                }
+                $q->whereIn('payment_status', ['pending', 'partial'])
+                  ->whereBetween(DB::raw('DATE(created_at)'), [$dateFrom, $dateTo]);
+            }], 'total')
+            ->get()
+            ->filter(fn ($u) => $u->total_orders > 0)
+            ->sortByDesc('total_revenue');
+
+        $cashierDailyBreakdown = Order::query()
+            ->select(
+                DB::raw('DATE(created_at) as date'),
+                'cashier_id',
+                DB::raw('COUNT(*) as total_orders'),
+                DB::raw('SUM(CASE WHEN payment_status = "paid" THEN total ELSE 0 END) as paid_revenue'),
+                DB::raw('SUM(CASE WHEN payment_status IN ("pending","partial") THEN total ELSE 0 END) as pending_revenue'),
+                DB::raw('SUM(discount_amount) as total_discount'),
+            )
+            ->when($branchId, fn ($q) => $q->where('branch_id', $branchId))
+            ->whereBetween(DB::raw('DATE(created_at)'), [$dateFrom, $dateTo])
+            ->groupBy(DB::raw('DATE(created_at)'), 'cashier_id')
+            ->with('cashier:id,name')
+            ->orderByDesc('date')
+            ->get();
+
+        $staffProductivity = ProductionStatusLog::query()
+            ->join('users', 'production_status_logs.updated_by', '=', 'users.id')
+            ->join('orders', 'production_status_logs.order_id', '=', 'orders.id')
+            ->when($branchId, fn ($q) => $q->where('orders.branch_id', $branchId))
+            ->whereBetween(DB::raw('DATE(production_status_logs.created_at)'), [$dateFrom, $dateTo])
+            ->select(
+                'users.name as staff_name',
+                DB::raw('COUNT(production_status_logs.id) as total_actions'),
+                DB::raw("SUM(CASE WHEN production_status_logs.status = 'SIAP' THEN 1 ELSE 0 END) as completed_orders"),
+                DB::raw("SUM(CASE WHEN production_status_logs.status = 'DIAMBIL' THEN 1 ELSE 0 END) as picked_up_orders"),
+                DB::raw("COUNT(DISTINCT production_status_logs.order_id) as unique_orders"),
+            )
+            ->groupBy('users.id', 'users.name')
+            ->orderByDesc('total_actions')
+            ->take(50)
+            ->get();
+
+        $periodRevenue = Order::when($branchId, fn ($q) => $q->where('branch_id', $branchId))
+            ->where('payment_status', 'paid')
+            ->whereBetween(DB::raw('DATE(created_at)'), [$dateFrom, $dateTo])
+            ->sum('total');
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('exports.performance_pdf', compact(
+            'branchName',
+            'dateFrom',
+            'dateTo',
+            'cashiers',
+            'cashierDailyBreakdown',
+            'staffProductivity',
+            'periodRevenue'
+        ))->setPaper('a4', 'portrait');
+
+        return $pdf->download('laporan-kinerja-' . now()->format('Ymd-His') . '.pdf');
+    }
+
+    public function exportExcel(Request $request)
+    {
+        $user = Auth::user();
+        $isGlobalUser = $user->hasAnyRole(['Developer', 'Owner', 'Super_Admin', 'Finance']);
+
+        $branchId = $request->query('branch_id');
+        if (! $isGlobalUser) {
+            $branchId = session('scoped_branch_id') ?? $user->branch_id;
+        }
+
+        $dateFrom = $request->query('date_from', now()->startOfMonth()->toDateString());
+        $dateTo   = $request->query('date_to', now()->toDateString());
+
+        $branchName = $branchId ? (Branch::find($branchId)?->name ?? 'Cabang Unknown') : 'Seluruh Cabang';
+
+        $cashiers = User::role(['Cashier', 'Branch_Admin', 'Owner', 'Super_Admin', 'Developer'])
+            ->withCount(['orders as total_orders' => function ($q) use ($branchId, $dateFrom, $dateTo) {
+                if ($branchId) {
+                    $q->where('branch_id', $branchId);
+                }
+                $q->whereBetween(DB::raw('DATE(created_at)'), [$dateFrom, $dateTo]);
+            }])
+            ->withSum(['orders as total_revenue' => function ($q) use ($branchId, $dateFrom, $dateTo) {
+                if ($branchId) {
+                    $q->where('branch_id', $branchId);
+                }
+                $q->where('payment_status', 'paid')
+                  ->whereBetween(DB::raw('DATE(created_at)'), [$dateFrom, $dateTo]);
+            }], 'total')
+            ->withSum(['orders as total_pending_revenue' => function ($q) use ($branchId, $dateFrom, $dateTo) {
+                if ($branchId) {
+                    $q->where('branch_id', $branchId);
+                }
+                $q->whereIn('payment_status', ['pending', 'partial'])
+                  ->whereBetween(DB::raw('DATE(created_at)'), [$dateFrom, $dateTo]);
+            }], 'total')
+            ->get()
+            ->filter(fn ($u) => $u->total_orders > 0)
+            ->sortByDesc('total_revenue');
+
+        $cashierDailyBreakdown = Order::query()
+            ->select(
+                DB::raw('DATE(created_at) as date'),
+                'cashier_id',
+                DB::raw('COUNT(*) as total_orders'),
+                DB::raw('SUM(CASE WHEN payment_status = "paid" THEN total ELSE 0 END) as paid_revenue'),
+                DB::raw('SUM(CASE WHEN payment_status IN ("pending","partial") THEN total ELSE 0 END) as pending_revenue'),
+                DB::raw('SUM(discount_amount) as total_discount'),
+            )
+            ->when($branchId, fn ($q) => $q->where('branch_id', $branchId))
+            ->whereBetween(DB::raw('DATE(created_at)'), [$dateFrom, $dateTo])
+            ->groupBy(DB::raw('DATE(created_at)'), 'cashier_id')
+            ->with('cashier:id,name')
+            ->orderByDesc('date')
+            ->get();
+
+        $staffProductivity = ProductionStatusLog::query()
+            ->join('users', 'production_status_logs.updated_by', '=', 'users.id')
+            ->join('orders', 'production_status_logs.order_id', '=', 'orders.id')
+            ->when($branchId, fn ($q) => $q->where('orders.branch_id', $branchId))
+            ->whereBetween(DB::raw('DATE(production_status_logs.created_at)'), [$dateFrom, $dateTo])
+            ->select(
+                'users.name as staff_name',
+                DB::raw('COUNT(production_status_logs.id) as total_actions'),
+                DB::raw("SUM(CASE WHEN production_status_logs.status = 'SIAP' THEN 1 ELSE 0 END) as completed_orders"),
+                DB::raw("SUM(CASE WHEN production_status_logs.status = 'DIAMBIL' THEN 1 ELSE 0 END) as picked_up_orders"),
+                DB::raw("COUNT(DISTINCT production_status_logs.order_id) as unique_orders"),
+            )
+            ->groupBy('users.id', 'users.name')
+            ->orderByDesc('total_actions')
+            ->take(50)
+            ->get();
+
+        $periodRevenue = Order::when($branchId, fn ($q) => $q->where('branch_id', $branchId))
+            ->where('payment_status', 'paid')
+            ->whereBetween(DB::raw('DATE(created_at)'), [$dateFrom, $dateTo])
+            ->sum('total');
+
+        return \Maatwebsite\Excel\Facades\Excel::download(
+            new \App\Exports\GenericViewExport('exports.performance_pdf', compact(
+                'branchName',
+                'dateFrom',
+                'dateTo',
+                'cashiers',
+                'cashierDailyBreakdown',
+                'staffProductivity',
+                'periodRevenue'
+            )),
+            'laporan-kinerja-' . now()->format('Ymd-His') . '.xlsx'
+        );
+    }
 }

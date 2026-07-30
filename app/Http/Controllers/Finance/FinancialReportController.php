@@ -199,4 +199,69 @@ class FinancialReportController extends Controller
             'month'
         ));
     }
+
+    public function exportPdf(Request $request)
+    {
+        $user = Auth::user();
+        $isGlobalUser = $user->hasAnyRole(['Developer', 'Owner', 'Super_Admin', 'Finance']);
+
+        $branchId = $request->query('branch_id');
+        if (! $isGlobalUser) {
+            $branchId = session('scoped_branch_id') ?? $user->branch_id;
+        }
+
+        $year = (int) ($request->query('year') ?? date('Y'));
+        $month = $request->query('month') ? (int) $request->query('month') : null;
+
+        $selectedBranch = $branchId ? Branch::find($branchId) : null;
+
+        $trialBalance = $this->reportService->getTrialBalance($branchId, $year, $month);
+        $incomeStatement = $this->reportService->getIncomeStatement($branchId, $year, $month);
+        $balanceSheet = $this->reportService->getBalanceSheet($branchId, $year, $month);
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('exports.finance_pdf', compact(
+            'trialBalance',
+            'incomeStatement',
+            'balanceSheet',
+            'selectedBranch',
+            'branchId',
+            'year',
+            'month'
+        ))->setPaper('a4', 'portrait');
+
+        return $pdf->download('laporan-keuangan-' . now()->format('Ymd-His') . '.pdf');
+    }
+
+    public function exportExcel(Request $request)
+    {
+        $user = Auth::user();
+        $isGlobalUser = $user->hasAnyRole(['Developer', 'Owner', 'Super_Admin', 'Finance']);
+
+        $branchId = $request->query('branch_id');
+        if (! $isGlobalUser) {
+            $branchId = session('scoped_branch_id') ?? $user->branch_id;
+        }
+
+        $year = (int) ($request->query('year') ?? date('Y'));
+        $month = $request->query('month') ? (int) $request->query('month') : null;
+
+        $selectedBranch = $branchId ? Branch::find($branchId) : null;
+
+        $trialBalance = $this->reportService->getTrialBalance($branchId, $year, $month);
+        $incomeStatement = $this->reportService->getIncomeStatement($branchId, $year, $month);
+        $balanceSheet = $this->reportService->getBalanceSheet($branchId, $year, $month);
+
+        return \Maatwebsite\Excel\Facades\Excel::download(
+            new \App\Exports\GenericViewExport('exports.finance_pdf', compact(
+                'trialBalance',
+                'incomeStatement',
+                'balanceSheet',
+                'selectedBranch',
+                'branchId',
+                'year',
+                'month'
+            )),
+            'laporan-keuangan-' . now()->format('Ymd-His') . '.xlsx'
+        );
+    }
 }

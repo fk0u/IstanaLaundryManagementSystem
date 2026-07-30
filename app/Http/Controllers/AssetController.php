@@ -198,4 +198,50 @@ class AssetController extends Controller
 
         return response()->stream($callback, 200, $headers);
     }
+
+    public function exportPdf(Request $request)
+    {
+        $user = Auth::user();
+        $isGlobalUser = $user->hasAnyRole(['Developer', 'Owner', 'Super_Admin', 'Finance']);
+
+        $branchId = $request->query('branch_id');
+        if (! $isGlobalUser) {
+            $branchId = session('scoped_branch_id') ?? $user->branch_id;
+        }
+
+        $branchName = $branchId ? (Branch::find($branchId)?->name ?? 'Cabang Unknown') : 'Seluruh Cabang';
+
+        $assets = FixedAsset::with(['branch', 'account'])
+            ->when($branchId, fn ($q) => $q->where('branch_id', $branchId))
+            ->orderBy('asset_code')
+            ->get();
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('exports.assets_pdf', compact('branchName', 'assets'))
+            ->setPaper('a4', 'landscape');
+
+        return $pdf->download('laporan-aset-tetap-' . now()->format('Ymd-His') . '.pdf');
+    }
+
+    public function exportExcel(Request $request)
+    {
+        $user = Auth::user();
+        $isGlobalUser = $user->hasAnyRole(['Developer', 'Owner', 'Super_Admin', 'Finance']);
+
+        $branchId = $request->query('branch_id');
+        if (! $isGlobalUser) {
+            $branchId = session('scoped_branch_id') ?? $user->branch_id;
+        }
+
+        $branchName = $branchId ? (Branch::find($branchId)?->name ?? 'Cabang Unknown') : 'Seluruh Cabang';
+
+        $assets = FixedAsset::with(['branch', 'account'])
+            ->when($branchId, fn ($q) => $q->where('branch_id', $branchId))
+            ->orderBy('asset_code')
+            ->get();
+
+        return \Maatwebsite\Excel\Facades\Excel::download(
+            new \App\Exports\GenericViewExport('exports.assets_pdf', compact('branchName', 'assets')),
+            'laporan-aset-tetap-' . now()->format('Ymd-His') . '.xlsx'
+        );
+    }
 }

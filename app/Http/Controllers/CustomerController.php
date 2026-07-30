@@ -166,4 +166,52 @@ class CustomerController extends Controller
 
         return response()->stream($callback, 200, $headers);
     }
+
+    public function exportPdf(Request $request)
+    {
+        $q = trim($request->query('q', ''));
+
+        $customers = Customer::with(['latestOrder'])
+            ->withCount('orders')
+            ->withSum('orders', 'total')
+            ->when($q !== '', function ($query) use ($q) {
+                $like = "%{$q}%";
+                $query->where(function ($sub) use ($like) {
+                    $sub->where('name', 'LIKE', $like)
+                        ->orWhere('phone', 'LIKE', $like)
+                        ->orWhere('member_code', 'LIKE', $like);
+                });
+            })
+            ->orderBy('name', 'asc')
+            ->get();
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('exports.crm_pdf', compact('q', 'customers'))
+            ->setPaper('a4', 'portrait');
+
+        return $pdf->download('laporan-crm-pelanggan-' . now()->format('Ymd-His') . '.pdf');
+    }
+
+    public function exportExcel(Request $request)
+    {
+        $q = trim($request->query('q', ''));
+
+        $customers = Customer::with(['latestOrder'])
+            ->withCount('orders')
+            ->withSum('orders', 'total')
+            ->when($q !== '', function ($query) use ($q) {
+                $like = "%{$q}%";
+                $query->where(function ($sub) use ($like) {
+                    $sub->where('name', 'LIKE', $like)
+                        ->orWhere('phone', 'LIKE', $like)
+                        ->orWhere('member_code', 'LIKE', $like);
+                });
+            })
+            ->orderBy('name', 'asc')
+            ->get();
+
+        return \Maatwebsite\Excel\Facades\Excel::download(
+            new \App\Exports\GenericViewExport('exports.crm_pdf', compact('q', 'customers')),
+            'laporan-crm-pelanggan-' . now()->format('Ymd-His') . '.xlsx'
+        );
+    }
 }

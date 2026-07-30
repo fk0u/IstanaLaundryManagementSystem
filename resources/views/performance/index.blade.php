@@ -28,13 +28,26 @@
                 <button type="submit" class="h-9 px-4 bg-primary text-white text-xs font-bold rounded-xl flex items-center gap-1.5 cursor-pointer">
                     <span class="material-symbols-outlined text-base">filter_alt</span> Terapkan Filter
                 </button>
-                <a href="{{ route('performance.export', ['branch_id' => $branchId, 'date_from' => $dateFrom, 'date_to' => $dateTo]) }}" 
-                   class="h-9 px-4 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl flex items-center gap-1.5 transition-colors shadow-sm cursor-pointer">
-                    <span class="material-symbols-outlined text-base">download</span> Ekspor CSV
-                </a>
-                <a href="{{ route('performance.index') }}" class="h-9 px-3 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 text-xs font-bold rounded-xl flex items-center gap-1">
-                    <span class="material-symbols-outlined text-base">refresh</span>
-                </a>
+                <div class="flex items-center gap-1.5 ml-auto">
+                    <a href="{{ route('performance.export.pdf', ['branch_id' => $branchId, 'date_from' => $dateFrom, 'date_to' => $dateTo]) }}" target="_blank"
+                       class="h-9 px-3 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-xl flex items-center gap-1 transition-colors shadow-sm cursor-pointer"
+                       title="Unduh PDF Resmi">
+                        <span class="material-symbols-outlined text-sm">picture_as_pdf</span> PDF
+                    </a>
+                    <a href="{{ route('performance.export.xlsx', ['branch_id' => $branchId, 'date_from' => $dateFrom, 'date_to' => $dateTo]) }}" 
+                       class="h-9 px-3 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl flex items-center gap-1 transition-colors shadow-sm cursor-pointer"
+                       title="Ekspor Excel Spreadsheet">
+                        <span class="material-symbols-outlined text-sm">table_chart</span> Excel (.xlsx)
+                    </a>
+                    <a href="{{ route('performance.export', ['branch_id' => $branchId, 'date_from' => $dateFrom, 'date_to' => $dateTo]) }}" 
+                       class="h-9 px-3 bg-slate-700 hover:bg-slate-800 text-white text-xs font-bold rounded-xl flex items-center gap-1 transition-colors shadow-sm cursor-pointer"
+                       title="Ekspor CSV Data">
+                        <span class="material-symbols-outlined text-sm">download</span> CSV
+                    </a>
+                    <a href="{{ route('performance.index') }}" class="h-9 px-3 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 text-xs font-bold rounded-xl flex items-center gap-1">
+                        <span class="material-symbols-outlined text-base">refresh</span>
+                    </a>
+                </div>
             </form>
         </x-card>
 
