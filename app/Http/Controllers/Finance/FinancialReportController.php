@@ -52,9 +52,9 @@ class FinancialReportController extends Controller
     }
 
     /**
-     * Export report data to Excel (.csv / .xls format)
+     * Export report data to CSV format
      */
-    public function exportExcel(Request $request)
+    public function exportCsv(Request $request)
     {
         $user = Auth::user();
         $isGlobalUser = $user->hasAnyRole(['Developer', 'Owner', 'Super_Admin', 'Finance']);

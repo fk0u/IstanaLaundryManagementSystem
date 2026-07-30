@@ -62,7 +62,11 @@ class JournalController extends Controller
                     throw new JournalNotBalancedException("Debit ({$totalDebit}) harus sama dengan Kredit ({$totalCredit}). Selisih: ".abs($totalDebit - $totalCredit));
                 }
 
-                $branchId = auth()->user()->branch_id ?? 1;
+                $branchId = session('scoped_branch_id') ?? auth()->user()?->branch_id;
+                if (! $branchId || ! Branch::where('id', $branchId)->exists()) {
+                    $branchId = Branch::first()?->id;
+                }
+
                 $carbonDate = Carbon::parse($request->date);
                 $year = $carbonDate->year;
                 $month = $carbonDate->month;

@@ -50,7 +50,11 @@ class JournalService
                 throw new JournalNotBalancedException("Jurnal tidak seimbang. Total Debit: {$totalDebit}, Total Kredit: {$totalCredit}");
             }
 
-            $branchId = $sourceModel->branch_id;
+            $branchId = $sourceModel->branch_id ?? session('scoped_branch_id') ?? auth()->user()?->branch_id;
+            if (! $branchId || ! Branch::where('id', $branchId)->exists()) {
+                $branchId = Branch::first()?->id;
+            }
+
             $carbonDate = $date ? Carbon::parse($date) : now();
             $year = $carbonDate->year;
             $month = $carbonDate->month;

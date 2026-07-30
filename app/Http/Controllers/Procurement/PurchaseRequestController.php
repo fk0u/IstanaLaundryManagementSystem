@@ -33,9 +33,11 @@ class PurchaseRequestController extends Controller
             'items.*.unit_cost_estimate' => 'required|numeric|min:0',
         ]);
 
-        DB::transaction(function () use ($request) {
-            $branchId = auth()->user()->branch_id ?? 1;
-            $branchCode = auth()->user()->branch?->code ?? 'HQ';
+            $branchId = session('scoped_branch_id') ?? auth()->user()?->branch_id;
+            if (! $branchId || ! Branch::where('id', $branchId)->exists()) {
+                $branchId = Branch::first()?->id;
+            }
+            $branchCode = Branch::find($branchId)?->code ?? 'HQ';
             $yearMonth = now()->format('Ym');
 
             // Generate PR number
