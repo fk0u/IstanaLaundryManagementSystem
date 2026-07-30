@@ -65,7 +65,7 @@ class ERPDataSeeder extends Seeder
             }
         }
 
-        // 3. Seed Customers for each branch
+        // 3. Seed Customers — GLOBAL (satu akun bisa dipakai di cabang mana saja)
         $customerTemplates = [
             ['name' => 'Budi Santoso', 'phone' => '081234567890', 'email' => 'budi@gmail.com', 'address' => 'Jl. Juanda No. 12, Samarinda'],
             ['name' => 'Ani Wijaya', 'phone' => '081398765432', 'email' => 'ani@hotmail.com', 'address' => 'Jl. Pasundan Gg. 3B, Samarinda'],
@@ -74,23 +74,21 @@ class ERPDataSeeder extends Seeder
             ['name' => 'Eko Prasetyo', 'phone' => '085299998888', 'email' => 'eko@gmail.com', 'address' => 'Jl. Wijaya Kusuma, Samarinda'],
         ];
 
+        $firstBranch = $branches->first();
         $custIdx = 1;
-        foreach ($branches as $branch) {
-            foreach ($customerTemplates as $template) {
-                Customer::firstOrCreate(
-                    ['phone' => $template['phone'].'-'.$branch->code],
-                    [
-                        'branch_id' => $branch->id,
-                        'name' => $template['name'].' ('.$branch->code.')',
-                        'phone' => $template['phone'].'-'.$branch->code,
-                        'email' => $template['email'],
-                        'address' => $template['address'],
-                        'member_code' => 'CUST-'.$branch->code.'-'.str_pad($custIdx++, 4, '0', STR_PAD_LEFT),
-                        'loyalty_tier' => 'Bronze',
-                        'loyalty_points' => rand(10, 150),
-                    ]
-                );
-            }
+        foreach ($customerTemplates as $template) {
+            Customer::firstOrCreate(
+                ['phone' => $template['phone']],
+                [
+                    'branch_id' => $firstBranch->id,
+                    'name' => $template['name'],
+                    'email' => $template['email'],
+                    'address' => $template['address'],
+                    'member_code' => 'CUST-'.str_pad($custIdx++, 4, '0', STR_PAD_LEFT),
+                    'loyalty_tier' => 'Bronze',
+                    'loyalty_points' => rand(10, 150),
+                ]
+            );
         }
 
         // 4. Seed Employees for HR Module
