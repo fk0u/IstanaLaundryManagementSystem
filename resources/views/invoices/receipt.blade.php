@@ -220,7 +220,11 @@
         <!-- Meta Info -->
         <dl class="receipt-meta">
             <dt>No. Order</dt>
-            <dd>{{ $order->order_number }}</dd>
+            <dd>
+                <a href="{{ route('track', ['order_number' => $order->order_number]) }}" target="_blank" style="color: #FF6600; text-decoration: underline; font-weight: 800;">
+                    {{ $order->order_number }}
+                </a>
+            </dd>
             <dt>Tanggal</dt>
             <dd>{{ $order->created_at->format('d/m/Y H:i') }}</dd>
             <dt>Kasir</dt>
@@ -309,7 +313,8 @@
                 @if($order->estimated_done_at)
                     Estimasi selesai: {{ $order->estimated_done_at->format('d M Y') }}<br>
                 @endif
-                Simpan struk ini sebagai bukti transaksi.
+                Simpan struk ini sebagai bukti transaksi.<br>
+                Lacak status: <a href="{{ route('track', ['order_number' => $order->order_number]) }}" target="_blank" style="color:#FF6600; font-weight:bold;">{{ url('/track') }}?order_number={{ $order->order_number }}</a>
             </div>
         </div>
     </div>
@@ -320,6 +325,11 @@
             <span class="material-symbols-outlined" style="font-size:18px;">print</span>
             Cetak Struk
         </button>
+
+        <a href="{{ route('track', ['order_number' => $order->order_number]) }}" target="_blank" class="btn btn-outline" style="border-color: #FF6600; color: #FF6600;">
+            <span class="material-symbols-outlined" style="font-size:18px;">my_location</span>
+            Lacak Status Cucian Live
+        </a>
 
         @if($order->customer?->phone)
             <a href="{{ route('invoices.whatsapp', $order) }}" class="btn btn-whatsapp" target="_blank">
