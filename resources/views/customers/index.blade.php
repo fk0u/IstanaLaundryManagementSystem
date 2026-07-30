@@ -101,7 +101,7 @@
                                         </td>
                                         <td class="py-4 px-4 font-bold text-slate-800 dark:text-slate-200">
                                             <span class="block text-xs font-extrabold text-primary">{{ number_format($customer->orders_count) }} Transaksi</span>
-                                            <span class="block text-[10px] text-slate-400 font-normal">Rp {{ number_format($customer->total_spent ?? 0, 0, ',', '.') }}</span>
+                                            <span class="block text-[10px] text-slate-400 font-normal">Rp {{ number_format($customer->orders_sum_total ?? $customer->total_spent ?? 0, 0, ',', '.') }}</span>
                                         </td>
                                         <td class="py-4 px-4 text-slate-500 text-2xs">
                                             @if($customer->latestOrder)
@@ -161,8 +161,12 @@
                                         <span class="font-bold text-slate-700 dark:text-slate-200">{{ number_format($customer->orders_count) }} Nota</span>
                                     </div>
                                     <div>
+                                        <span class="text-slate-400 block">Total Belanja</span>
+                                        <span class="font-bold text-primary">Rp {{ number_format($customer->orders_sum_total ?? $customer->total_spent ?? 0, 0, ',', '.') }}</span>
+                                    </div>
+                                    <div class="col-span-2">
                                         <span class="text-slate-400 block">Nota Terakhir</span>
-                                        <span class="font-bold text-slate-700 dark:text-slate-200">{{ $customer->latestOrder ? '#' . $customer->latestOrder->order_number : '-' }}</span>
+                                        <span class="font-bold text-slate-700 dark:text-slate-200">{{ $customer->latestOrder ? '#' . $customer->latestOrder->order_number . ' — ' . $customer->latestOrder->created_at->format('d/m/Y H:i') : '-' }}</span>
                                     </div>
                                 </div>
 

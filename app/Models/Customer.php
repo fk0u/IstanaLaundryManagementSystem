@@ -46,14 +46,18 @@ class Customer extends Model
         return $this->hasMany(LoyaltyPointLog::class);
     }
 
+    /**
+     * All orders across ALL branches (bypass BranchScoped).
+     * Customers are global — their stats must aggregate cross-branch.
+     */
     public function orders(): HasMany
     {
-        return $this->hasMany(Order::class);
+        return $this->hasMany(Order::class)->withoutGlobalScope('branch_scope');
     }
 
     public function latestOrder()
     {
-        return $this->hasOne(Order::class)->latestOfMany();
+        return $this->hasOne(Order::class)->withoutGlobalScope('branch_scope')->latestOfMany();
     }
 
     public function getFormattedWaPhoneAttribute(): string
