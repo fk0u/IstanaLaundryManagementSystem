@@ -19,3 +19,12 @@
 12. **POS Tablet REST API Expansion**: Endpoint REST API berotentikasi Sanctum (`/api/pos/services`, `/api/pos/customers`, `/api/pos/orders`) untuk aplikasi POS Tablet/Mobile.
 13. **Workload-Linked Payroll HR**: Penghitungan otomatis insentif produktivitas Kg & Pcs workshop pada slip gaji.
 14. **Closing Checklist & CSV Financial Reports Export**: Interface penutupan buku bulanan (`/finance/closing-checklist`) dan tombol ekspor CSV laporan keuangan.
+
+## Last Session (30 Jul 2026 — TEST 2 Phase)
+- **Completed**: Issues #31, #30, #29 (P0 bugs)
+  - #31: Payroll zero fix — Employee query bypasses BranchScoped global scope + float cast safety
+  - #30: Dashboard chart scope — branchId fallback logic corrected for global view
+  - #29: Timezone WITA — config/app.php reads APP_TIMEZONE env, default Asia/Makassar
+- **Branches ready for PR**: `fix/payroll-zero-calc`, `fix/dashboard-chart-scope`, `fix/timezone-wita`
+- **Remaining TEST 2 items**: #32 (Production search), #33 (CRM stats), #34 (Receipt link), #35 (Finance charts), #36 (Exports)
+- **User note**: `.env` lokal perlu manual update `APP_TIMEZONE=Asia/Makassar`
