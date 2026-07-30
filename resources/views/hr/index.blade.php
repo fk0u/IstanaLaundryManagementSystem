@@ -3,6 +3,8 @@
         showAddEmployee: false,
         showAddPayroll: false,
         activeEditEmployee: null,
+        selectedPayrollBranch: 'all',
+        scopedBranchId: @js(session('scoped_branch_id')),
         activeEditItem: @js(request('edit_item') ? (int) request('edit_item') : null),
         activeDeletePayroll: null,
     }">
@@ -370,13 +372,21 @@
                     </div>
                     <div>
                         <label class="text-2xs font-bold text-slate-400 uppercase">Pilihan Cabang Target</label>
-                        <select name="branch_id" class="w-full h-9 px-2 rounded-xl border text-xs font-semibold">
+                        <select name="branch_id" x-model="selectedPayrollBranch" class="w-full h-9 px-2 rounded-xl border text-xs font-semibold">
                             <option value="all" selected>🌟 Konsolidasi Seluruh Cabang (Semua Karyawan)</option>
                             @foreach($branches as $b)
                                 <option value="{{ $b->id }}">Cabang {{ $b->name }}</option>
                             @endforeach
                         </select>
                         <p class="text-2xs text-slate-400 mt-1">Pilih "Konsolidasi Seluruh Cabang" untuk generate gaji seluruh staf dari semua cabang sekaligus.</p>
+                    </div>
+
+                    <div x-show="scopedBranchId && selectedPayrollBranch != 'all' && selectedPayrollBranch != scopedBranchId" class="p-3 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/50 rounded-xl text-amber-800 dark:text-amber-300 text-2xs space-y-1" x-cloak>
+                        <div class="flex items-center gap-1.5 font-bold">
+                            <span class="material-symbols-outlined text-sm text-amber-500">warning</span>
+                            <span>Perhatian Scope Cabang</span>
+                        </div>
+                        <p>Cabang yang dipilih di form berbeda dengan <b>Scope Header</b> aktif. Payroll tetap diproses untuk cabang di form ini.</p>
                     </div>
                     <button type="submit" class="btn-touch w-full bg-slate-900 text-white font-bold text-xs rounded-xl py-2.5 shadow-md">Proses Payroll</button>
                 </form>
