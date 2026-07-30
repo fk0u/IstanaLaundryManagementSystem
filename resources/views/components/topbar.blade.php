@@ -1,57 +1,37 @@
-<header class="flex items-center justify-between min-h-[64px] md:min-h-[72px] px-3 sm:px-6 w-full bg-white/85 dark:bg-slate-900/85 backdrop-blur-xl border-b border-slate-200/80 dark:border-slate-800/80 z-40 sticky top-0 transition-colors duration-200 shadow-2xs"
+<header class="flex flex-col w-full bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl border-b border-slate-200/80 dark:border-slate-800/80 z-40 sticky top-0 transition-colors duration-200 shadow-2xs"
         x-data="{ 
             showNotifications: false, 
             showQuickAction: false, 
             showProfileMenu: false,
             showSupportMenu: false 
         }">
-    <div class="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
-        <!-- Hamburger Menu for Mobile -->
-        <button @click="sidebarOpen = !sidebarOpen" class="p-2 text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200 md:hidden cursor-pointer rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-all shrink-0">
-            <span class="material-symbols-outlined text-[24px]">menu</span>
-        </button>
+    <!-- Tier 1: Main App Bar Row -->
+    <div class="flex items-center justify-between min-h-[58px] md:min-h-[64px] px-3 sm:px-6 w-full gap-2">
+        <div class="flex items-center gap-2.5 min-w-0">
+            <!-- Hamburger Menu for Mobile / Tablet -->
+            <button @click="sidebarOpen = !sidebarOpen" class="p-2 text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200 lg:hidden cursor-pointer rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-all shrink-0">
+                <span class="material-symbols-outlined text-[24px]">menu</span>
+            </button>
 
-        <!-- Sidebar Toggle Icon for Desktop/Tablet -->
-        <button @click="desktopSidebarOpen = !desktopSidebarOpen; localStorage.setItem('desktopSidebarOpen', desktopSidebarOpen)" 
-                class="hidden md:flex p-2 text-slate-500 hover:text-primary dark:text-slate-400 dark:hover:text-orange-400 cursor-pointer rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-all shrink-0 items-center justify-center"
-                :title="desktopSidebarOpen ? 'Ciutkan Sidebar' : 'Perluas Sidebar'">
-            <span class="material-symbols-outlined text-[24px] transition-transform duration-300"
-                  :class="{ 'rotate-180': !desktopSidebarOpen }">
-                menu_open
-            </span>
-        </button>
-
-        <!-- Brand Logo & Name - Desktop (only visible on xl screens when sidebar is present) -->
-        <div class="hidden xl:flex items-center gap-2 shrink-0">
-            <img alt="Istana Laundry Logo" class="h-8 w-auto object-contain" src="{{ asset('images/logo.webp') }}"/>
-            <h2 class="text-base font-black font-display text-primary dark:text-orange-400 tracking-tight whitespace-nowrap">Istana Laundry</h2>
-        </div>
-
-        <!-- Branch Scope Switcher -->
-        <div class="flex items-center shrink-0 ml-1 sm:ml-2">
-            @if(auth()->user()->hasAnyRole(['Developer', 'Owner', 'Super_Admin']))
-                <form action="{{ route('switch-branch') }}" method="POST" class="inline-flex items-center">
-                    @csrf
-                    <div class="relative flex items-center">
-                        <span class="material-symbols-outlined text-slate-400 text-xs absolute left-2.5 pointer-events-none">storefront</span>
-                        <select name="branch_id" onchange="this.form.submit()"
-                                class="bg-slate-100 dark:bg-slate-950 border border-slate-200/80 dark:border-slate-800 rounded-full text-2xs md:text-xs font-bold pl-7 pr-7 py-1.5 outline-none focus:ring-2 focus:ring-primary/20 text-slate-700 dark:text-slate-300 cursor-pointer max-w-[140px] sm:max-w-[200px] md:max-w-none shadow-2xs transition-all">
-                            <option value="">Global (Semua Cabang)</option>
-                            @foreach(\App\Models\Branch::orderBy('name')->get() as $br)
-                                <option value="{{ $br->id }}" {{ session('scoped_branch_id') == $br->id ? 'selected' : '' }}>
-                                    {{ $br->name }}
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
-                </form>
-            @else
-                <span class="text-2xs md:text-xs font-bold text-primary bg-primary/10 text-primary px-3 py-1 rounded-full border border-primary/20 whitespace-nowrap shadow-2xs">
-                    {{ auth()->user()->branch?->name ?? 'N/A' }}
+            <!-- Sidebar Toggle Icon for Desktop -->
+            <button @click="desktopSidebarOpen = !desktopSidebarOpen; localStorage.setItem('desktopSidebarOpen', desktopSidebarOpen)" 
+                    class="hidden lg:flex p-2 text-slate-500 hover:text-primary dark:text-slate-400 dark:hover:text-orange-400 cursor-pointer rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-all shrink-0 items-center justify-center"
+                    :title="desktopSidebarOpen ? 'Ciutkan Sidebar' : 'Perluas Sidebar'">
+                <span class="material-symbols-outlined text-[24px] transition-transform duration-300"
+                      :class="{ 'rotate-180': !desktopSidebarOpen }">
+                    menu_open
                 </span>
-            @endif
+            </button>
+
+            <!-- App Logo & Brand Header -->
+            <div class="flex items-center gap-2 shrink-0">
+                <img alt="Istana Laundry Logo" class="h-8 w-auto object-contain" src="{{ asset('images/logo.webp') }}"/>
+                <div class="hidden md:flex flex-col">
+                    <h2 class="text-sm sm:text-base font-black font-display text-primary dark:text-orange-400 tracking-tight leading-none whitespace-nowrap">Istana Laundry</h2>
+                    <span class="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest leading-none mt-0.5">Enterprise Suite</span>
+                </div>
+            </div>
         </div>
-    </div>
 
     <!-- Header Right Controls -->
     <div class="flex items-center gap-2 md:gap-3 shrink-0">
@@ -251,6 +231,62 @@
                 </div>
             </div>
         </div>
+    </div>
 
+    <!-- Tier 2: Secondary Flutter Floating Toolbar (Zero Overlap Guarantee) -->
+    <div class="px-3 sm:px-6 py-1.5 bg-slate-50/80 dark:bg-slate-950/60 border-t border-slate-200/50 dark:border-slate-800/50 flex items-center justify-between gap-2 overflow-x-auto scrollbar-none">
+        <div class="flex items-center gap-2 shrink-0">
+            <!-- Branch Scope Switcher Pill -->
+            @if(auth()->user()->hasAnyRole(['Developer', 'Owner', 'Super_Admin']))
+                <form action="{{ route('switch-branch') }}" method="POST" class="inline-flex items-center">
+                    @csrf
+                    <div class="relative flex items-center">
+                        <span class="material-symbols-outlined text-slate-400 text-xs absolute left-2.5 pointer-events-none">storefront</span>
+                        <select name="branch_id" onchange="this.form.submit()"
+                                class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-full text-2xs md:text-xs font-bold pl-7 pr-7 py-1 outline-none focus:ring-2 focus:ring-primary/20 text-slate-700 dark:text-slate-300 cursor-pointer shadow-2xs transition-all">
+                            <option value="">Global (Semua Cabang)</option>
+                            @foreach(\App\Models\Branch::orderBy('name')->get() as $br)
+                                <option value="{{ $br->id }}" {{ session('scoped_branch_id') == $br->id ? 'selected' : '' }}>
+                                    {{ $br->name }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                </form>
+            @else
+                <span class="text-2xs font-bold text-primary bg-primary/10 text-primary px-3 py-1 rounded-full border border-primary/20 whitespace-nowrap shadow-2xs flex items-center gap-1.5">
+                    <span class="material-symbols-outlined text-xs">storefront</span>
+                    {{ auth()->user()->branch?->name ?? 'N/A' }}
+                </span>
+            @endif
+
+            <!-- Active Status Badge -->
+            <div class="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-2xs font-bold border border-emerald-500/20">
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                <span>System Online</span>
+            </div>
+        </div>
+
+        <!-- Quick Access Shortcuts (Mobile/Tablet) -->
+        <div class="flex items-center gap-1.5 shrink-0">
+            @if(auth()->user()->hasAnyRole(['Developer', 'Owner', 'Super_Admin', 'Branch_Admin', 'Cashier']))
+                <a href="/pos" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-primary/10 text-primary hover:bg-primary hover:text-white transition-all text-2xs font-bold shadow-2xs">
+                    <span class="material-symbols-outlined text-xs">point_of_sale</span>
+                    <span>POS Kasir</span>
+                </a>
+            @endif
+            @if(auth()->user()->hasAnyRole(['Developer', 'Owner', 'Super_Admin', 'Branch_Admin', 'Workshop_Admin', 'Workshop_Staff']))
+                <a href="/production" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-sky-500/10 text-sky-600 dark:text-sky-400 hover:bg-sky-500 hover:text-white transition-all text-2xs font-bold shadow-2xs">
+                    <span class="material-symbols-outlined text-xs">precision_manufacturing</span>
+                    <span>Produksi</span>
+                </a>
+            @endif
+            @if(auth()->user()->hasAnyRole(['Developer', 'Owner', 'Super_Admin', 'Finance']))
+                <a href="/finance/reports" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500 hover:text-white transition-all text-2xs font-bold shadow-2xs">
+                    <span class="material-symbols-outlined text-xs">analytics</span>
+                    <span>Laporan</span>
+                </a>
+            @endif
+        </div>
     </div>
 </header>

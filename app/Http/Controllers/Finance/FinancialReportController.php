@@ -38,11 +38,16 @@ class FinancialReportController extends Controller
         $balanceSheet = $this->reportService->getBalanceSheet($branchId, $year, $month);
         $kpiAnalytics = $this->reportService->getExecutiveKpiAnalytics($branchId, $year, $month);
 
+        $historicalIncomeTrend = $this->reportService->getHistoricalIncomeTrend($branchId, $year);
+        $balanceSheetChartData = $this->reportService->getBalanceSheetChartData($branchId, $year, $month);
+
         return view('finance.reports', compact(
             'trialBalance',
             'incomeStatement',
             'balanceSheet',
             'kpiAnalytics',
+            'historicalIncomeTrend',
+            'balanceSheetChartData',
             'branches',
             'branchId',
             'year',

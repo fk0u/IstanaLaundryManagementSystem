@@ -39,17 +39,17 @@
                     </select>
                 </div>
 
-                <div class="flex items-center gap-2 mt-auto pb-0.5">
-                    <button type="submit" class="h-9 px-4 bg-primary text-white text-xs font-bold rounded-xl flex items-center gap-1 shadow-sm">
+                <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto mt-2 sm:mt-auto">
+                    <button type="submit" class="h-9 px-4 bg-primary text-white text-xs font-bold rounded-xl flex items-center gap-1 shadow-2xs cursor-pointer">
                         <span class="material-symbols-outlined text-base">filter_alt</span> Filter
                     </button>
-                    <a href="{{ route('finance.reports.excel', request()->all()) }}" class="h-9 px-3 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl flex items-center gap-1 shadow-sm">
-                        <span class="material-symbols-outlined text-base">table_view</span> Ekspor Excel (.CSV)
+                    <a href="{{ route('finance.reports.excel', request()->all()) }}" class="h-9 px-3 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl flex items-center gap-1 shadow-2xs">
+                        <span class="material-symbols-outlined text-base">table_view</span> Ekspor Excel (.xlsx)
                     </a>
-                    <a href="{{ route('finance.reports.pdf', request()->all()) }}" target="_blank" class="h-9 px-3 bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold rounded-xl flex items-center gap-1 shadow-sm">
+                    <a href="{{ route('finance.reports.pdf', request()->all()) }}" target="_blank" class="h-9 px-3 bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold rounded-xl flex items-center gap-1 shadow-2xs">
                         <span class="material-symbols-outlined text-base">analytics</span> Cetak PowerBI PDF
                     </a>
-                    <a href="{{ route('finance.closing-checklist') }}" class="h-9 px-3 bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold rounded-xl flex items-center gap-1 shadow-sm">
+                    <a href="{{ route('finance.closing-checklist') }}" class="h-9 px-3 bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold rounded-xl flex items-center gap-1 shadow-2xs">
                         <span class="material-symbols-outlined text-base">checklist</span> Closing Checklist
                     </a>
                 </div>
@@ -254,29 +254,40 @@
             </div>
         @endif
 
-        <!-- Tab 1: Income Statement -->
+        <!-- Tab 1: Income Statement (Laba Rugi) -->
         @if($tab === 'income')
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-                <!-- Visual Chart Card for Income -->
-                <div class="lg:col-span-5">
-                    <x-card title="Grafik Visual Laba Rugi">
+                <!-- Visual Historical Line Chart Card for Income -->
+                <div class="lg:col-span-12">
+                    <x-card title="Tren Historikal Laba Rugi Bulanan (Tahun {{ $year }})">
+                        <div class="flex items-center justify-between mb-4">
+                            <p class="text-2xs text-slate-400 font-medium">Perbandingan pendapatan, beban operasional, dan laba bersih per bulan</p>
+                            <div class="flex items-center gap-3 text-2xs font-bold">
+                                <span class="flex items-center gap-1 text-emerald-600"><span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span> Pendapatan</span>
+                                <span class="flex items-center gap-1 text-rose-600"><span class="w-2.5 h-2.5 rounded-full bg-rose-500"></span> Beban</span>
+                                <span class="flex items-center gap-1 text-sky-600"><span class="w-2.5 h-2.5 rounded-full bg-sky-500"></span> Laba Bersih</span>
+                            </div>
+                        </div>
                         <div class="relative h-64 md:h-80">
-                            <canvas id="incomeChart"></canvas>
+                            <canvas id="historicalIncomeChart"></canvas>
                         </div>
                     </x-card>
                 </div>
 
                 <!-- Table View for Income -->
-                <div class="lg:col-span-7">
-                    <x-card title="Laporan Laba Rugi">
+                <div class="lg:col-span-12">
+                    <x-card title="Laporan Laba Rugi Rinci (Periode: {{ $month ? date('F Y', mktime(0,0,0,$month,10,$year)) : 'Tahun '.$year }})">
                         <div class="space-y-6 py-2">
                             <div>
-                                <h4 class="text-xs font-bold uppercase tracking-wider text-emerald-600 mb-3">Pendapatan (Revenue)</h4>
+                                <h4 class="text-xs font-bold uppercase tracking-wider text-emerald-600 mb-3 flex items-center gap-2">
+                                    <span class="material-symbols-outlined text-sm">trending_up</span>
+                                    Pendapatan Operasional (Revenue)
+                                </h4>
                                 <div class="space-y-2 text-xs">
                                     @forelse($incomeStatement['revenues'] as $rev)
                                         <div class="flex justify-between border-b border-slate-50 dark:border-slate-800/50 pb-1">
-                                            <span class="text-slate-600 dark:text-slate-300">{{ $rev['code'] }} - {{ $rev['name'] }}</span>
-                                            <span class="font-mono font-bold">Rp {{ number_format($rev['amount'], 0, ',', '.') }}</span>
+                                            <span class="text-slate-600 dark:text-slate-300 font-semibold">{{ $rev['code'] }} - {{ $rev['name'] }}</span>
+                                            <span class="font-mono font-bold text-slate-800 dark:text-slate-200">Rp {{ number_format($rev['amount'], 0, ',', '.') }}</span>
                                         </div>
                                     @empty
                                         <div class="text-slate-400 text-2xs py-2">Belum ada pendapatan terposting.</div>
@@ -284,31 +295,37 @@
                                 </div>
                                 <div class="flex justify-between text-sm font-bold pt-2 mt-2 border-t-2 border-slate-200 dark:border-slate-700">
                                     <span>TOTAL PENDAPATAN</span>
-                                    <span class="text-emerald-600 font-mono">Rp {{ number_format($incomeStatement['total_revenue'], 0, ',', '.') }}</span>
+                                    <span class="text-emerald-600 font-mono font-black">Rp {{ number_format($incomeStatement['total_revenue'], 0, ',', '.') }}</span>
                                 </div>
                             </div>
 
                             <div>
-                                <h4 class="text-xs font-bold uppercase tracking-wider text-rose-600 mb-3">Beban-Beban (Expenses)</h4>
+                                <h4 class="text-xs font-bold uppercase tracking-wider text-rose-600 mb-3 flex items-center gap-2">
+                                    <span class="material-symbols-outlined text-sm">payments</span>
+                                    Beban-Beban Operasional (Expenses)
+                                </h4>
                                 <div class="space-y-2 text-xs">
                                     @forelse($incomeStatement['expenses'] as $exp)
                                         <div class="flex justify-between border-b border-slate-50 dark:border-slate-800/50 pb-1">
-                                            <span class="text-slate-600 dark:text-slate-300">{{ $exp['code'] }} - {{ $exp['name'] }}</span>
-                                            <span class="font-mono font-bold">Rp {{ number_format($exp['amount'], 0, ',', '.') }}</span>
+                                            <span class="text-slate-600 dark:text-slate-300 font-semibold">{{ $exp['code'] }} - {{ $exp['name'] }}</span>
+                                            <span class="font-mono font-bold text-slate-800 dark:text-slate-200">Rp {{ number_format($exp['amount'], 0, ',', '.') }}</span>
                                         </div>
                                     @empty
                                         <div class="text-slate-400 text-2xs py-2">Belum ada beban terposting.</div>
                                     @endforelse
                                 </div>
                                 <div class="flex justify-between text-sm font-bold pt-2 mt-2 border-t-2 border-slate-200 dark:border-slate-700">
-                                    <span>TOTAL BEBAN</span>
-                                    <span class="text-rose-600 font-mono">Rp {{ number_format($incomeStatement['total_expense'], 0, ',', '.') }}</span>
+                                    <span>TOTAL BEBAN OPERASIONAL</span>
+                                    <span class="text-rose-600 font-mono font-black">Rp {{ number_format($incomeStatement['total_expense'], 0, ',', '.') }}</span>
                                 </div>
                             </div>
 
-                            <div class="p-4 rounded-xl border {{ $incomeStatement['net_income'] >= 0 ? 'bg-emerald-50 border-emerald-200 text-emerald-900 dark:bg-emerald-950/20 dark:text-emerald-400' : 'bg-rose-50 border-rose-200 text-rose-900 dark:bg-rose-950/20 dark:text-rose-400' }} flex justify-between items-center">
-                                <span class="font-black text-sm">LABA (RUGI) BERSIH</span>
-                                <span class="font-mono text-lg font-black">Rp {{ number_format($incomeStatement['net_income'], 0, ',', '.') }}</span>
+                            <div class="p-4 rounded-2xl border {{ $incomeStatement['net_income'] >= 0 ? 'bg-emerald-50/70 border-emerald-200 text-emerald-900 dark:bg-emerald-950/30 dark:text-emerald-300' : 'bg-rose-50/70 border-rose-200 text-rose-900 dark:bg-rose-950/30 dark:text-rose-300' }} flex justify-between items-center shadow-2xs">
+                                <div class="flex items-center gap-2">
+                                    <span class="material-symbols-outlined text-xl">{{ $incomeStatement['net_income'] >= 0 ? 'account_balance_wallet' : 'warning' }}</span>
+                                    <span class="font-black text-sm uppercase tracking-tight">Laba (Rugi) Bersih Periode Ini</span>
+                                </div>
+                                <span class="font-mono text-xl font-black">Rp {{ number_format($incomeStatement['net_income'], 0, ',', '.') }}</span>
                             </div>
                         </div>
                     </x-card>
@@ -317,26 +334,72 @@
 
             <script>
                 document.addEventListener('DOMContentLoaded', () => {
-                    const ctxIncome = document.getElementById('incomeChart');
-                    if (ctxIncome) {
-                        new Chart(ctxIncome.getContext('2d'), {
-                            type: 'bar',
+                    const ctxHist = document.getElementById('historicalIncomeChart');
+                    if (ctxHist) {
+                        const trendData = @js($historicalIncomeTrend);
+                        new Chart(ctxHist.getContext('2d'), {
+                            type: 'line',
                             data: {
-                                labels: ['Total Pendapatan', 'Total Beban', 'Laba Bersih'],
-                                datasets: [{
-                                    data: [
-                                        @js($incomeStatement['total_revenue']),
-                                        @js($incomeStatement['total_expense']),
-                                        @js($incomeStatement['net_income'])
-                                    ],
-                                    backgroundColor: ['#10b981', '#ef4444', '#3b82f6'],
-                                    borderRadius: 8
-                                }]
+                                labels: trendData.labels,
+                                datasets: [
+                                    {
+                                        label: 'Pendapatan (Revenue)',
+                                        data: trendData.revenues,
+                                        borderColor: '#10b981',
+                                        backgroundColor: 'rgba(16, 185, 129, 0.12)',
+                                        borderWidth: 3,
+                                        fill: true,
+                                        tension: 0.35,
+                                        pointRadius: 4,
+                                        pointHoverRadius: 6
+                                    },
+                                    {
+                                        label: 'Beban (Expenses)',
+                                        data: trendData.expenses,
+                                        borderColor: '#ef4444',
+                                        backgroundColor: 'rgba(239, 68, 68, 0.08)',
+                                        borderWidth: 3,
+                                        fill: true,
+                                        tension: 0.35,
+                                        pointRadius: 4,
+                                        pointHoverRadius: 6
+                                    },
+                                    {
+                                        label: 'Laba Bersih (Net Income)',
+                                        data: trendData.net_incomes,
+                                        borderColor: '#0284c7',
+                                        backgroundColor: 'transparent',
+                                        borderWidth: 3,
+                                        borderDash: [5, 5],
+                                        fill: false,
+                                        tension: 0.35,
+                                        pointRadius: 4,
+                                        pointHoverRadius: 6
+                                    }
+                                ]
                             },
                             options: {
                                 responsive: true,
                                 maintainAspectRatio: false,
-                                plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => ' Rp ' + Number(c.raw).toLocaleString('id-ID') } } }
+                                plugins: {
+                                    legend: { display: false },
+                                    tooltip: {
+                                        callbacks: {
+                                            label: c => ' ' + c.dataset.label + ': Rp ' + Number(c.raw).toLocaleString('id-ID')
+                                        }
+                                    }
+                                },
+                                scales: {
+                                    y: {
+                                        ticks: {
+                                            callback: function(v) {
+                                                if (v >= 1000000) return 'Rp ' + (v/1000000).toFixed(1) + 'M';
+                                                if (v >= 1000) return 'Rp ' + (v/1000).toFixed(0) + 'k';
+                                                return 'Rp ' + v;
+                                            }
+                                        }
+                                    }
+                                }
                             }
                         });
                     }
@@ -344,13 +407,43 @@
             </script>
         @endif
 
-        <!-- Tab 2: Balance Sheet -->
+        <!-- Tab 2: Balance Sheet (Neraca) -->
         @if($tab === 'balance')
-            <div class="space-y-6">
-                <!-- Visual Chart Card for Balance Sheet -->
-                <x-card title="Grafik Komposisi Neraca (Aktiva vs Pasiva)">
-                    <div class="relative h-64 md:h-72">
-                        <canvas id="balanceChart"></canvas>
+            <div class="space-y-6" x-data="{ activeBalanceChart: 'pie' }">
+                <!-- Dual-Option Chart Card for Balance Sheet -->
+                <x-card>
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100 dark:border-slate-800">
+                        <div>
+                            <h4 class="font-extrabold text-sm text-slate-800 dark:text-slate-100">Visualisasi Analisis Neraca</h4>
+                            <p class="text-2xs text-slate-400">Pilih opsi tampilan grafik di sebelah kanan untuk melihat komposisi aset atau perbandingan neraca.</p>
+                        </div>
+                        <!-- Chart Switcher Buttons -->
+                        <div class="inline-flex p-1 bg-slate-100 dark:bg-slate-800 rounded-xl gap-1 shrink-0">
+                            <button @click="activeBalanceChart = 'pie'" 
+                                    :class="{ 'bg-white dark:bg-slate-900 text-primary shadow-2xs': activeBalanceChart === 'pie', 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300': activeBalanceChart !== 'pie' }"
+                                    class="px-3 py-1.5 rounded-lg text-2xs font-bold transition-all flex items-center gap-1.5 cursor-pointer">
+                                <span class="material-symbols-outlined text-sm">pie_chart</span>
+                                <span>Pie Chart (Aset)</span>
+                            </button>
+                            <button @click="activeBalanceChart = 'bar'" 
+                                    :class="{ 'bg-white dark:bg-slate-900 text-primary shadow-2xs': activeBalanceChart === 'bar', 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300': activeBalanceChart !== 'bar' }"
+                                    class="px-3 py-1.5 rounded-lg text-2xs font-bold transition-all flex items-center gap-1.5 cursor-pointer">
+                                <span class="material-symbols-outlined text-sm">bar_chart</span>
+                                <span >Bar Chart (Aktiva vs Pasiva)</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="relative h-64 md:h-80 pt-4">
+                        <!-- Option A: Pie / Doughnut Chart -->
+                        <div x-show="activeBalanceChart === 'pie'" class="h-full w-full">
+                            <canvas id="balanceAssetPieChart"></canvas>
+                        </div>
+
+                        <!-- Option B: Bar Chart -->
+                        <div x-show="activeBalanceChart === 'bar'" class="h-full w-full" x-cloak>
+                            <canvas id="balanceComparisonBarChart"></canvas>
+                        </div>
                     </div>
                 </x-card>
 
@@ -358,44 +451,50 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 py-2">
                         <!-- Aktiva (Assets) -->
                         <div class="space-y-4">
-                            <h4 class="text-xs font-bold uppercase tracking-wider text-sky-600 pb-2 border-b border-sky-200">AKTIVA (ASSETS)</h4>
+                            <h4 class="text-xs font-bold uppercase tracking-wider text-sky-600 pb-2 border-b border-sky-200 flex items-center gap-2">
+                                <span class="material-symbols-outlined text-sm">account_balance</span>
+                                AKTIVA (ASSETS)
+                            </h4>
                             <div class="space-y-2 text-xs">
                                 @foreach($balanceSheet['assets'] as $ast)
                                     <div class="flex justify-between border-b border-slate-50 dark:border-slate-800/50 pb-1">
-                                        <span class="text-slate-600 dark:text-slate-300">{{ $ast['code'] }} - {{ $ast['name'] }}</span>
-                                        <span class="font-mono font-bold">Rp {{ number_format($ast['amount'], 0, ',', '.') }}</span>
+                                        <span class="text-slate-600 dark:text-slate-300 font-semibold">{{ $ast['code'] }} - {{ $ast['name'] }}</span>
+                                        <span class="font-mono font-bold text-slate-800 dark:text-slate-200">Rp {{ number_format($ast['amount'], 0, ',', '.') }}</span>
                                     </div>
                                 @endforeach
                             </div>
                             <div class="flex justify-between text-sm font-black pt-3 border-t-2 border-slate-900 dark:border-slate-100">
                                 <span>TOTAL AKTIVA</span>
-                                <span class="text-sky-600 font-mono">Rp {{ number_format($balanceSheet['total_assets'], 0, ',', '.') }}</span>
+                                <span class="text-sky-600 font-mono font-black">Rp {{ number_format($balanceSheet['total_assets'], 0, ',', '.') }}</span>
                             </div>
                         </div>
 
                         <!-- Pasiva (Liabilities & Equities) -->
                         <div class="space-y-4">
-                            <h4 class="text-xs font-bold uppercase tracking-wider text-amber-600 pb-2 border-b border-amber-200">PASIVA (KEWAJIBAN & MODAL)</h4>
+                            <h4 class="text-xs font-bold uppercase tracking-wider text-amber-600 pb-2 border-b border-amber-200 flex items-center gap-2">
+                                <span class="material-symbols-outlined text-sm">real_estate_agent</span>
+                                PASIVA (KEWAJIBAN & MODAL)
+                            </h4>
                             <div class="space-y-2 text-xs">
                                 <span class="block text-2xs font-bold text-slate-400 uppercase">Kewajiban (Liabilities)</span>
                                 @foreach($balanceSheet['liabilities'] as $liab)
                                     <div class="flex justify-between border-b border-slate-50 dark:border-slate-800/50 pb-1">
-                                        <span class="text-slate-600 dark:text-slate-300">{{ $liab['code'] }} - {{ $liab['name'] }}</span>
-                                        <span class="font-mono font-bold">Rp {{ number_format($liab['amount'], 0, ',', '.') }}</span>
+                                        <span class="text-slate-600 dark:text-slate-300 font-semibold">{{ $liab['code'] }} - {{ $liab['name'] }}</span>
+                                        <span class="font-mono font-bold text-slate-800 dark:text-slate-200">Rp {{ number_format($liab['amount'], 0, ',', '.') }}</span>
                                     </div>
                                 @endforeach
 
                                 <span class="block text-2xs font-bold text-slate-400 uppercase pt-2">Ekuitas (Equities)</span>
                                 @foreach($balanceSheet['equities'] as $eq)
                                     <div class="flex justify-between border-b border-slate-50 dark:border-slate-800/50 pb-1">
-                                        <span class="text-slate-600 dark:text-slate-300">{{ $eq['code'] }} - {{ $eq['name'] }}</span>
-                                        <span class="font-mono font-bold">Rp {{ number_format($eq['amount'], 0, ',', '.') }}</span>
+                                        <span class="text-slate-600 dark:text-slate-300 font-semibold">{{ $eq['code'] }} - {{ $eq['name'] }}</span>
+                                        <span class="font-mono font-bold text-slate-800 dark:text-slate-200">Rp {{ number_format($eq['amount'], 0, ',', '.') }}</span>
                                     </div>
                                 @endforeach
                             </div>
                             <div class="flex justify-between text-sm font-black pt-3 border-t-2 border-slate-900 dark:border-slate-100">
                                 <span>TOTAL PASIVA</span>
-                                <span class="text-amber-600 font-mono">Rp {{ number_format($balanceSheet['total_liabilities_equity'], 0, ',', '.') }}</span>
+                                <span class="text-amber-600 font-mono font-black">Rp {{ number_format($balanceSheet['total_liabilities_equity'], 0, ',', '.') }}</span>
                             </div>
                         </div>
                     </div>
@@ -404,28 +503,64 @@
 
             <script>
                 document.addEventListener('DOMContentLoaded', () => {
-                    const ctxBalance = document.getElementById('balanceChart');
-                    if (ctxBalance) {
-                        new Chart(ctxBalance.getContext('2d'), {
+                    const chartData = @js($balanceSheetChartData);
+                    
+                    // 1. Pie / Doughnut Chart
+                    const ctxPie = document.getElementById('balanceAssetPieChart');
+                    if (ctxPie) {
+                        new Chart(ctxPie.getContext('2d'), {
+                            type: 'doughnut',
+                            data: {
+                                labels: chartData.pie_asset_labels,
+                                datasets: [{
+                                    data: chartData.pie_asset_values,
+                                    backgroundColor: ['#0284c7', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#64748b'],
+                                    borderWidth: 2
+                                }]
+                            },
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                plugins: {
+                                    legend: { position: 'right', labels: { font: { family: 'Inter', size: 11, weight: 'bold' } } },
+                                    tooltip: { callbacks: { label: c => ' ' + c.label + ': Rp ' + Number(c.raw).toLocaleString('id-ID') } }
+                                }
+                            }
+                        });
+                    }
+
+                    // 2. Bar Chart Comparison
+                    const ctxBar = document.getElementById('balanceComparisonBarChart');
+                    if (ctxBar) {
+                        new Chart(ctxBar.getContext('2d'), {
                             type: 'bar',
                             data: {
-                                labels: ['Total Aktiva (Assets)', 'Kewajiban (Liabilities)', 'Ekuitas (Equity)', 'Total Pasiva'],
+                                labels: chartData.bar_comparison_labels,
                                 datasets: [{
                                     label: 'Nilai (Rp)',
-                                    data: [
-                                        @js($balanceSheet['total_assets']),
-                                        @js($balanceSheet['total_liabilities']),
-                                        @js($balanceSheet['total_equities']),
-                                        @js($balanceSheet['total_liabilities_equity'])
-                                    ],
-                                    backgroundColor: ['#0284c7', '#d97706', '#8b5cf6', '#059669'],
+                                    data: chartData.bar_comparison_values,
+                                    backgroundColor: ['#0284c7', '#d97706'],
                                     borderRadius: 8
                                 }]
                             },
                             options: {
                                 responsive: true,
                                 maintainAspectRatio: false,
-                                plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => ' Rp ' + Number(c.raw).toLocaleString('id-ID') } } }
+                                plugins: {
+                                    legend: { display: false },
+                                    tooltip: { callbacks: { label: c => ' Rp ' + Number(c.raw).toLocaleString('id-ID') } }
+                                },
+                                scales: {
+                                    y: {
+                                        ticks: {
+                                            callback: function(v) {
+                                                if (v >= 1000000) return 'Rp ' + (v/1000000).toFixed(1) + 'M';
+                                                if (v >= 1000) return 'Rp ' + (v/1000).toFixed(0) + 'k';
+                                                return 'Rp ' + v;
+                                            }
+                                        }
+                                    }
+                                }
                             }
                         });
                     }

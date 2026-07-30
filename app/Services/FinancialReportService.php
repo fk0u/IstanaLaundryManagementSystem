@@ -286,4 +286,62 @@ class FinancialReportService
             'payment_methods' => $paymentMethods,
         ];
     }
+
+    /**
+     * Get 12-Month Historical Income Statement Trend (Revenues, Expenses, Net Income)
+     */
+    public function getHistoricalIncomeTrend(?int $branchId, int $year): array
+    {
+        $months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+        $revenues = [];
+        $expenses = [];
+        $netIncomes = [];
+
+        for ($m = 1; $m <= 12; $m++) {
+            $inc = $this->getIncomeStatement($branchId, $year, $m);
+            $revenues[] = (float) $inc['total_revenue'];
+            $expenses[] = (float) $inc['total_expense'];
+            $netIncomes[] = (float) $inc['net_income'];
+        }
+
+        return [
+            'labels' => $months,
+            'revenues' => $revenues,
+            'expenses' => $expenses,
+            'net_incomes' => $netIncomes,
+        ];
+    }
+
+    /**
+     * Get Balance Sheet Chart Visualization Data (Pie Chart Asset Breakdown & Bar Chart Aktiva vs Pasiva)
+     */
+    public function getBalanceSheetChartData(?int $branchId, ?int $year, ?int $month): array
+    {
+        $bs = $this->getBalanceSheet($branchId, $year, $month);
+
+        // Pie Chart: Assets Categorization
+        $assetLabels = [];
+        $assetValues = [];
+        foreach ($bs['assets'] as $ast) {
+            $assetLabels[] = $ast['name'];
+            $assetValues[] = max(0, (float) $ast['amount']);
+        }
+
+        // Fallback pie data if no assets exist yet
+        if (empty($assetValues) || array_sum($assetValues) == 0) {
+            $assetLabels = ['Kas / Bank', 'Piutang Usaha', 'Stok Bahan', 'Aset Tetap'];
+            $assetValues = [0, 0, 0, 0];
+        }
+
+        // Bar Chart: Comparison Aktiva vs Pasiva & Equity
+        $comparisonLabels = ['Total Aktiva (Assets)', 'Total Pasiva (Kewajiban & Modal)'];
+        $comparisonValues = [(float) $bs['total_assets'], (float) $bs['total_liabilities_equity']];
+
+        return [
+            'pie_asset_labels' => $assetLabels,
+            'pie_asset_values' => $assetValues,
+            'bar_comparison_labels' => $comparisonLabels,
+            'bar_comparison_values' => $comparisonValues,
+        ];
+    }
 }
