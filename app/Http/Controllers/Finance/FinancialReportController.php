@@ -130,6 +130,23 @@ class FinancialReportController extends Controller
                 }
                 fputcsv($file, ['', 'TOTAL PASIVA', '', number_format($balance['total_liabilities_equity'], 2, '.', '')]);
 
+            } elseif ($tab === 'analytics') {
+                $kpi = $reportService->getExecutiveKpiAnalytics($branchId, $year, $month);
+                fputcsv($file, ['ISTANA LAUNDRY ERP — ANALYTICS KPI & BREAKDOWN CABANG']);
+                fputcsv($file, ["Cabang: {$branchName}", "Periode: {$periodLabel}"]);
+                fputcsv($file, []);
+                fputcsv($file, ['METRIK KPI', 'NILAI']);
+                fputcsv($file, ['Total Omset Kotor', number_format($kpi['total_gross_revenue'], 2, '.', '')]);
+                fputcsv($file, ['Total Omset Terbayar (Paid)', number_format($kpi['total_paid_revenue'], 2, '.', '')]);
+                fputcsv($file, ['Total Piutang (Unpaid)', number_format($kpi['total_outstanding_piutang'], 2, '.', '')]);
+                fputcsv($file, ['Total Nota Terproses', $kpi['total_orders_count']]);
+                fputcsv($file, ['Rata-rata Nota (Basket Size)', number_format($kpi['average_basket_size'], 2, '.', '')]);
+                fputcsv($file, []);
+                fputcsv($file, ['--- BREAKDOWN PERFORMA PER CABANG ---']);
+                fputcsv($file, ['KODE CABANG', 'NAMA CABANG', 'TRANSAKSI (NOTA)', 'TOTAL OMSET (RP)', 'TERBAYAR (RP)', 'PIUTANG (RP)', 'RATA-RATA / ORDER (RP)']);
+                foreach ($kpi['branch_breakdown'] as $br) {
+                    fputcsv($file, [$br['code'], $br['name'], $br['total_orders'], number_format($br['total_revenue'], 2, '.', ''), number_format($br['paid_revenue'], 2, '.', ''), number_format($br['unpaid_revenue'], 2, '.', ''), number_format($br['avg_order_value'], 2, '.', '')]);
+                }
             } else {
                 $trial = $reportService->getTrialBalance($branchId, $year, $month);
                 fputcsv($file, ['ISTANA LAUNDRY ERP — NERACA SALDO (TRIAL BALANCE)']);
