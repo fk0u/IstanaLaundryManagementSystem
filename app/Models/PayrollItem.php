@@ -57,14 +57,14 @@ class PayrollItem extends Model
      */
     public function calculateTotalEarnings(): float
     {
-        return $this->base_salary
-            + $this->allowance
-            + ($this->bonus_kg ?? 0)
-            + ($this->bonus_pcs ?? 0)
-            + ($this->transport_allowance ?? 0)
-            + ($this->overtime_pay ?? 0)
-            + ($this->attendance_bonus ?? 0)
-            + ($this->special_bonus ?? 0);
+        return (float) $this->base_salary
+            + (float) $this->allowance
+            + (float) ($this->bonus_kg ?? 0)
+            + (float) ($this->bonus_pcs ?? 0)
+            + (float) ($this->transport_allowance ?? 0)
+            + (float) ($this->overtime_pay ?? 0)
+            + (float) ($this->attendance_bonus ?? 0)
+            + (float) ($this->special_bonus ?? 0);
     }
 
     /**
@@ -72,13 +72,13 @@ class PayrollItem extends Model
      */
     public function calculateTotalDeductions(): float
     {
-        return ($this->deduction ?? 0)
-            + ($this->tardiness_deduction ?? 0)
-            + ($this->loan_deduction ?? 0)
-            + ($this->damage_deduction ?? 0)
-            + ($this->bpjs_deduction ?? 0)
-            + ($this->bpjs_kesehatan_deduction ?? 0)
-            + ($this->bpjs_ketenagakerjaan_deduction ?? 0);
+        return (float) ($this->deduction ?? 0)
+            + (float) ($this->tardiness_deduction ?? 0)
+            + (float) ($this->loan_deduction ?? 0)
+            + (float) ($this->damage_deduction ?? 0)
+            + (float) ($this->bpjs_deduction ?? 0)
+            + (float) ($this->bpjs_kesehatan_deduction ?? 0)
+            + (float) ($this->bpjs_ketenagakerjaan_deduction ?? 0);
     }
 
     /**
