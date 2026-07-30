@@ -50,4 +50,21 @@ class Customer extends Model
     {
         return $this->hasMany(Order::class);
     }
+
+    public function latestOrder()
+    {
+        return $this->hasOne(Order::class)->latestOfMany();
+    }
+
+    public function getFormattedWaPhoneAttribute(): string
+    {
+        $phone = preg_replace('/[^0-9]/', '', $this->phone ?? '');
+        if (str_starts_with($phone, '0')) {
+            $phone = '62'.substr($phone, 1);
+        } elseif (! str_starts_with($phone, '62') && ! empty($phone)) {
+            $phone = '62'.$phone;
+        }
+
+        return $phone;
+    }
 }

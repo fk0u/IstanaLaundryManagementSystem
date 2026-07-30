@@ -1,6 +1,8 @@
 <x-app-layout>
     <div x-data="{ 
         showEditModal: false, 
+        showHistoryModal: false,
+        historyCustomer: null,
         editId: null, 
         editName: '', 
         editPhone: '', 
@@ -17,6 +19,10 @@
             this.editTier = customer.loyalty_tier;
             this.editPoints = customer.loyalty_points;
             this.showEditModal = true;
+        },
+        openHistory(customer) {
+            this.historyCustomer = customer;
+            this.showHistoryModal = true;
         }
     }" class="flex flex-col gap-4 md:gap-6">
         <x-page-header title="Customer Relationship Management (CRM)" :breadcrumbs="['CRM' => '/customers']" />
@@ -52,10 +58,10 @@
                             <thead>
                                 <tr class="border-b border-slate-100 dark:border-slate-800 text-slate-400 font-bold uppercase tracking-wider">
                                     <th class="py-3 px-4">Nama / Kode</th>
-                                    <th class="py-3 px-4">Kontak</th>
+                                    <th class="py-3 px-4">Kontak & WA</th>
                                     <th class="py-3 px-4">Loyalty Tier</th>
-                                    <th class="py-3 px-4">Poin</th>
-                                     <th class="py-3 px-4">Cabang Pendaftaran</th>
+                                    <th class="py-3 px-4">Stat Transaksi</th>
+                                    <th class="py-3 px-4">Terakhir Transaksi</th>
                                     <th class="py-3 px-4 text-right">Aksi</th>
                                 </tr>
                             </thead>
@@ -67,8 +73,18 @@
                                             <span class="text-[10px] text-slate-400 font-mono block mt-0.5">{{ $customer->member_code }}</span>
                                         </td>
                                         <td class="py-4 px-4 text-slate-600 dark:text-slate-400">
-                                            <span class="block font-semibold">{{ $customer->phone }}</span>
-                                            <span class="block text-[10px]">{{ $customer->email ?? '-' }}</span>
+                                            <div class="flex items-center gap-1.5">
+                                                <span class="font-semibold">{{ $customer->phone }}</span>
+                                                @if($customer->phone)
+                                                    <a href="https://wa.me/{{ $customer->formatted_wa_phone }}?text={{ urlencode('Halo Kak ' . $customer->name . ', terima kasih telah mencuci di Istana Laundry!') }}" 
+                                                       target="_blank" 
+                                                       class="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/40 text-[#25D366] font-bold text-[10px] hover:bg-emerald-100 transition-colors"
+                                                       title="Follow-up via WhatsApp">
+                                                        <span class="material-symbols-outlined text-xs">chat</span> WA
+                                                    </a>
+                                                @endif
+                                            </div>
+                                            <span class="block text-[10px] text-slate-400">{{ $customer->email ?? '-' }}</span>
                                         </td>
                                         <td class="py-4 px-4">
                                             @php
@@ -81,16 +97,27 @@
                                                 $badgeType = $tierColors[$customer->loyalty_tier] ?? 'gray';
                                             @endphp
                                             <x-badge :type="$badgeType">{{ $customer->loyalty_tier }}</x-badge>
+                                            <span class="block text-[10px] text-slate-400 font-bold mt-1">{{ number_format($customer->loyalty_points) }} pts</span>
                                         </td>
                                         <td class="py-4 px-4 font-bold text-slate-800 dark:text-slate-200">
-                                            {{ number_format($customer->loyalty_points) }} pts
+                                            <span class="block text-xs font-extrabold text-primary">{{ number_format($customer->orders_count) }} Transaksi</span>
+                                            <span class="block text-[10px] text-slate-400 font-normal">Rp {{ number_format($customer->total_spent ?? 0, 0, ',', '.') }}</span>
                                         </td>
-                                        <td class="py-4 px-4 text-slate-500">
-                                            <span class="font-semibold text-slate-700 dark:text-slate-300 block">{{ $customer->branch?->name ?? 'Global' }}</span>
-                                            <span class="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold block">✓ Berlaku Semua Cabang</span>
+                                        <td class="py-4 px-4 text-slate-500 text-2xs">
+                                            @if($customer->latestOrder)
+                                                <span class="font-bold text-slate-700 dark:text-slate-300 block">#{{ $customer->latestOrder->order_number }}</span>
+                                                <span class="text-slate-400 block">{{ $customer->latestOrder->created_at->format('d/m/Y H:i') }}</span>
+                                            @else
+                                                <span class="text-slate-400">-</span>
+                                            @endif
                                         </td>
                                         <td class="py-4 px-4">
-                                            <div class="flex items-center justify-end gap-2">
+                                            <div class="flex items-center justify-end gap-1.5">
+                                                <button @click="openHistory({{ $customer->toJson() }})" 
+                                                        class="px-2.5 py-1 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-2xs font-bold rounded-lg flex items-center gap-1 transition-colors cursor-pointer"
+                                                        title="Riwayat Transaksi">
+                                                    <span class="material-symbols-outlined text-xs">history</span> Riwayat
+                                                </button>
                                                 <button @click="openEdit({{ $customer->toJson() }})" class="p-1.5 text-slate-500 hover:text-primary transition-colors cursor-pointer" title="Edit">
                                                     <span class="material-symbols-outlined text-base">edit</span>
                                                 </button>
@@ -128,15 +155,35 @@
                                     <x-badge :type="$badgeType">{{ $customer->loyalty_tier }}</x-badge>
                                 </div>
 
-                                <div class="flex items-center justify-between text-xs pt-1 border-t border-slate-100 dark:border-slate-800">
+                                <div class="grid grid-cols-2 gap-2 text-2xs py-1.5 border-y border-slate-100 dark:border-slate-800">
+                                    <div>
+                                        <span class="text-slate-400 block">Total Transaksi</span>
+                                        <span class="font-bold text-slate-700 dark:text-slate-200">{{ number_format($customer->orders_count) }} Nota</span>
+                                    </div>
+                                    <div>
+                                        <span class="text-slate-400 block">Nota Terakhir</span>
+                                        <span class="font-bold text-slate-700 dark:text-slate-200">{{ $customer->latestOrder ? '#' . $customer->latestOrder->order_number : '-' }}</span>
+                                    </div>
+                                </div>
+
+                                <div class="flex items-center justify-between text-xs pt-1">
                                     <span class="font-semibold text-slate-600 dark:text-slate-400 flex items-center gap-1">
                                         <span class="material-symbols-outlined text-sm text-slate-400">call</span>
                                         {{ $customer->phone }}
                                     </span>
-                                    <span class="font-bold text-primary">{{ number_format($customer->loyalty_points) }} pts</span>
+                                    @if($customer->phone)
+                                        <a href="https://wa.me/{{ $customer->formatted_wa_phone }}?text={{ urlencode('Halo Kak ' . $customer->name . ', terima kasih telah mencuci di Istana Laundry!') }}" 
+                                           target="_blank" 
+                                           class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 text-[#25D366] font-bold text-2xs hover:bg-emerald-100 transition-colors">
+                                            <span class="material-symbols-outlined text-xs">chat</span> WA Follow-up
+                                        </a>
+                                    @endif
                                 </div>
 
-                                <div class="flex justify-end gap-2 pt-1">
+                                <div class="flex justify-end gap-2 pt-1 border-t border-slate-100 dark:border-slate-800">
+                                    <button @click="openHistory({{ $customer->toJson() }})" class="btn-touch px-3 py-1.5 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-2xs font-bold rounded-lg flex items-center gap-1">
+                                        <span class="material-symbols-outlined text-sm">history</span> Riwayat
+                                    </button>
                                     <button @click="openEdit({{ $customer->toJson() }})" class="btn-touch px-3 py-1.5 bg-orange-50 dark:bg-slate-800 text-primary text-2xs font-bold rounded-lg flex items-center gap-1">
                                         <span class="material-symbols-outlined text-sm">edit</span> Edit
                                     </button>
@@ -271,6 +318,67 @@
                         </button>
                     </div>
                 </form>
+            </div>
+        </div>
+
+        <!-- Customer Transaction History Modal -->
+        <div x-show="showHistoryModal" 
+             class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-900/60 backdrop-blur-sm"
+             x-cloak @keydown.escape.window="showHistoryModal = false">
+            <div @click.away="showHistoryModal = false"
+                 class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-t-2xl sm:rounded-2xl max-w-2xl w-full p-5 shadow-2xl transition-all duration-300 max-h-[85vh] overflow-y-auto space-y-4">
+                
+                <div class="flex justify-between items-center pb-3 border-b border-slate-100 dark:border-slate-800">
+                    <div>
+                        <h3 class="text-base font-extrabold text-slate-800 dark:text-slate-200">Riwayat Transaksi Pelanggan</h3>
+                        <p class="text-xs text-slate-400 font-semibold" x-text="historyCustomer ? historyCustomer.name + ' (' + historyCustomer.member_code + ')' : ''"></p>
+                    </div>
+                    <button @click="showHistoryModal = false" class="text-slate-400 hover:text-slate-600">
+                        <span class="material-symbols-outlined">close</span>
+                    </button>
+                </div>
+
+                <div class="space-y-2">
+                    <template x-if="historyCustomer && historyCustomer.orders && historyCustomer.orders.length > 0">
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-xs border-collapse">
+                                <thead>
+                                    <tr class="border-b border-slate-100 dark:border-slate-800 text-slate-400 font-bold uppercase tracking-wider">
+                                        <th class="py-2.5 px-3">No. Nota</th>
+                                        <th class="py-2.5 px-3">Tanggal</th>
+                                        <th class="py-2.5 px-3">Status Produksi</th>
+                                        <th class="py-2.5 px-3">Pembayaran</th>
+                                        <th class="py-2.5 px-3 text-right">Total</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-50 dark:divide-slate-850">
+                                    <template x-for="ord in historyCustomer.orders" :key="ord.id">
+                                        <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-900/30">
+                                            <td class="py-2.5 px-3 font-mono font-bold text-slate-800 dark:text-slate-200" x-text="'#' + ord.order_number"></td>
+                                            <td class="py-2.5 px-3 text-slate-500" x-text="new Date(ord.created_at).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })"></td>
+                                            <td class="py-2.5 px-3">
+                                                <span class="px-2 py-0.5 rounded-full text-2xs font-extrabold bg-primary-container/10 text-primary border border-primary/20 uppercase" x-text="ord.production_status"></span>
+                                            </td>
+                                            <td class="py-2.5 px-3">
+                                                <span class="px-2 py-0.5 rounded-full text-2xs font-extrabold uppercase" 
+                                                      :class="ord.payment_status === 'paid' ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-950/30' : 'bg-amber-50 text-amber-600 dark:bg-amber-950/30'" 
+                                                      x-text="ord.payment_status"></span>
+                                            </td>
+                                            <td class="py-2.5 px-3 text-right font-mono font-bold text-slate-800 dark:text-slate-200" x-text="'Rp ' + Number(ord.total).toLocaleString('id-ID')"></td>
+                                        </tr>
+                                    </template>
+                                </tbody>
+                            </table>
+                        </div>
+                    </template>
+
+                    <template x-if="!historyCustomer || !historyCustomer.orders || historyCustomer.orders.length === 0">
+                        <div class="text-center py-8 text-slate-400 text-xs">
+                            <span class="material-symbols-outlined text-4xl block mb-2 opacity-50">receipt_long</span>
+                            Belum ada riwayat transaksi recorded untuk pelanggan ini.
+                        </div>
+                    </template>
+                </div>
             </div>
         </div>
 
