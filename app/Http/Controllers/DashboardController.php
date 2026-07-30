@@ -92,6 +92,28 @@ class DashboardController extends Controller
         $topBranchName = $topBranch ? $topBranch->name : 'N/A';
         $topBranchRevenue = $topBranch ? (float) $topBranch->total_revenue : 0;
 
+        // Branch comparison & ranking statistics (Real backend data for owner dashboard)
+        $branchRankings = Branch::withoutGlobalScopes()
+            ->withCount(['orders as total_orders' => function ($q) {
+                $q->withoutGlobalScopes();
+            }])
+            ->withSum(['orders as total_revenue' => function ($q) {
+                $q->withoutGlobalScopes();
+            }], 'total')
+            ->orderByDesc('total_revenue')
+            ->get()
+            ->map(function ($branch) use ($totalRevenue) {
+                $rev = (float) ($branch->total_revenue ?? 0);
+                $share = $totalRevenue > 0 ? round(($rev / $totalRevenue) * 100, 1) : 0;
+                return [
+                    'id' => $branch->id,
+                    'name' => $branch->name,
+                    'revenue' => $rev,
+                    'orders_count' => $branch->total_orders ?? 0,
+                    'share_percent' => $share,
+                ];
+            });
+
         // Chart.js data
         $chartLabels = [];
         $chartValues = [];
@@ -141,7 +163,8 @@ class DashboardController extends Controller
             'growthPercent',
             'topBranchName',
             'topBranchRevenue',
-            'branchesList'
+            'branchesList',
+            'branchRankings'
         ));
     }
 

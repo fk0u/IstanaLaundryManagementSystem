@@ -267,12 +267,37 @@ class FinancialReportService
             ->groupBy('payment_method')
             ->get();
 
-        // 4. Executive KPI Summary
+        // 4. Executive KPI Summary & Financial Ratios
         $totalGrossRevenue = (float) (clone $ordersQuery)->sum('total');
         $totalPaidRevenue = (float) (clone $ordersQuery)->sum('paid_amount');
         $totalOutstandingPiutang = (float) (clone $ordersQuery)->whereIn('payment_status', ['pending', 'partial'])->sum(DB::raw('total - paid_amount'));
         $totalOrdersCount = (int) (clone $ordersQuery)->count();
         $averageBasketSize = $totalOrdersCount > 0 ? $totalGrossRevenue / $totalOrdersCount : 0;
+
+        // Calculate Balance Sheet & Income Statement Financial Health Ratios
+        $bs = $this->getBalanceSheet($branchId, $year, $month);
+        $inc = $this->getIncomeStatement($branchId, $year, $month);
+
+        $totalAssets = (float) $bs['total_assets'];
+        $totalLiabilities = (float) $bs['total_liabilities'];
+        $totalEquities = (float) $bs['total_equities'];
+        $totalRevenue = (float) $inc['total_revenue'];
+        $totalExpense = (float) $inc['total_expense'];
+        $netIncome = (float) $inc['net_income'];
+
+        $currentRatio = $totalLiabilities > 0 ? round($totalAssets / $totalLiabilities, 2) : ($totalAssets > 0 ? 100 : 0);
+        $netProfitMargin = $totalRevenue > 0 ? round(($netIncome / $totalRevenue) * 100, 1) : 0;
+        $operatingExpenseRatio = $totalRevenue > 0 ? round(($totalExpense / $totalRevenue) * 100, 1) : 0;
+        $debtToEquityRatio = $totalEquities > 0 ? round(($totalLiabilities / $totalEquities) * 100, 1) : 0;
+        $workingCapital = $totalAssets - $totalLiabilities;
+
+        $financialRatios = [
+            'current_ratio' => $currentRatio,
+            'net_profit_margin' => $netProfitMargin,
+            'operating_expense_ratio' => $operatingExpenseRatio,
+            'debt_to_equity_ratio' => $debtToEquityRatio,
+            'working_capital' => $workingCapital,
+        ];
 
         return [
             'total_gross_revenue' => $totalGrossRevenue,
@@ -284,6 +309,7 @@ class FinancialReportService
             'top_services' => $topServices,
             'least_services' => $leastServices,
             'payment_methods' => $paymentMethods,
+            'ratios' => $financialRatios,
         ];
     }
 
@@ -313,33 +339,34 @@ class FinancialReportService
     }
 
     /**
-     * Get Balance Sheet Chart Visualization Data (Pie Chart Asset Breakdown & Bar Chart Aktiva vs Pasiva)
+     * Get Balance Sheet Chart Visualization Data.
+     * Doughnut Chart: Structural Composition (Aktiva vs Kewajiban vs Ekuitas).
+     * Bar Chart: Detailed Comparison (Aktiva, Kewajiban, Ekuitas, Total Pasiva).
      */
     public function getBalanceSheetChartData(?int $branchId, ?int $year, ?int $month): array
     {
         $bs = $this->getBalanceSheet($branchId, $year, $month);
 
-        // Pie Chart: Assets Categorization
-        $assetLabels = [];
-        $assetValues = [];
-        foreach ($bs['assets'] as $ast) {
-            $assetLabels[] = $ast['name'];
-            $assetValues[] = max(0, (float) $ast['amount']);
-        }
+        // 1. Structural Composition (Aktiva vs Kewajiban vs Ekuitas)
+        $compositionLabels = ['Aktiva (Assets)', 'Kewajiban (Liabilities)', 'Ekuitas (Equity)'];
+        $compositionValues = [
+            max(0, (float) $bs['total_assets']),
+            max(0, (float) $bs['total_liabilities']),
+            max(0, (float) $bs['total_equities']),
+        ];
 
-        // Fallback pie data if no assets exist yet
-        if (empty($assetValues) || array_sum($assetValues) == 0) {
-            $assetLabels = ['Kas / Bank', 'Piutang Usaha', 'Stok Bahan', 'Aset Tetap'];
-            $assetValues = [0, 0, 0, 0];
-        }
-
-        // Bar Chart: Comparison Aktiva vs Pasiva & Equity
-        $comparisonLabels = ['Total Aktiva (Assets)', 'Total Pasiva (Kewajiban & Modal)'];
-        $comparisonValues = [(float) $bs['total_assets'], (float) $bs['total_liabilities_equity']];
+        // 2. Bar Chart Comparison
+        $comparisonLabels = ['Total Aktiva', 'Total Kewajiban', 'Total Ekuitas', 'Total Pasiva'];
+        $comparisonValues = [
+            (float) $bs['total_assets'],
+            (float) $bs['total_liabilities'],
+            (float) $bs['total_equities'],
+            (float) $bs['total_liabilities_equity'],
+        ];
 
         return [
-            'pie_asset_labels' => $assetLabels,
-            'pie_asset_values' => $assetValues,
+            'pie_asset_labels' => $compositionLabels,
+            'pie_asset_values' => $compositionValues,
             'bar_comparison_labels' => $comparisonLabels,
             'bar_comparison_values' => $comparisonValues,
         ];

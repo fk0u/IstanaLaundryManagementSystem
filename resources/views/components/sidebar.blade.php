@@ -34,7 +34,7 @@
             </div>
 
             <!-- Branch Scope Switcher inside Sidebar Header -->
-            <div class="mt-3.5" x-show="desktopSidebarOpen" x-transition.opacity>
+            <div class="mt-3.5" x-show="desktopSidebarOpen || sidebarOpen" x-transition.opacity>
                 @if(auth()->user()->hasAnyRole(['Developer', 'Owner', 'Super_Admin', 'Finance']))
                     <form action="{{ route('switch-branch') }}" method="POST">
                         @csrf

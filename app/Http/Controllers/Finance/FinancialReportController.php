@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Finance;
 
 use App\Http\Controllers\Controller;
 use App\Models\Branch;
+use App\Models\ChartOfAccount;
+use App\Models\JournalLine;
 use App\Services\FinancialReportService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -268,5 +270,84 @@ class FinancialReportController extends Controller
             ), 'Laporan Keuangan'),
             'laporan-keuangan-' . now()->format('Ymd-His') . '.xlsx'
         );
+    }
+
+    /**
+     * Get detailed posted journal transaction history for a specific account (Drill-down).
+     */
+    public function accountLedger(Request $request)
+    {
+        $user = Auth::user();
+        $isGlobalUser = $user->hasAnyRole(['Developer', 'Owner', 'Super_Admin', 'Finance']);
+
+        $branchId = $request->query('branch_id');
+        if (! $isGlobalUser) {
+            $branchId = session('scoped_branch_id') ?? $user->branch_id;
+        }
+
+        $code = $request->query('code');
+        $accountId = $request->query('account_id');
+        $year = (int) ($request->query('year') ?? date('Y'));
+        $month = $request->query('month') ? (int) $request->query('month') : null;
+
+        $coa = null;
+        if ($accountId) {
+            $coa = ChartOfAccount::find($accountId);
+        } elseif ($code) {
+            $coa = ChartOfAccount::where('code', $code)->first();
+        }
+
+        if (! $coa) {
+            return response()->json(['error' => 'Akun COA tidak ditemukan.'], 404);
+        }
+
+        $linesQuery = JournalLine::query()
+            ->join('journals', 'journal_lines.journal_id', '=', 'journals.id')
+            ->leftJoin('users', 'journals.created_by', '=', 'users.id')
+            ->where('journals.status', 'posted')
+            ->where('journal_lines.account_id', $coa->id);
+
+        if ($branchId) {
+            $linesQuery->where('journals.branch_id', $branchId);
+        }
+        if ($year) {
+            $linesQuery->whereYear('journals.date', $year);
+        }
+        if ($month) {
+            $linesQuery->whereMonth('journals.date', $month);
+        }
+
+        $lines = $linesQuery->select(
+            'journals.id as journal_id',
+            'journals.journal_number',
+            'journals.date',
+            'journals.reference',
+            'journals.description',
+            'journal_lines.debit',
+            'journal_lines.credit',
+            'users.name as creator_name'
+        )
+        ->orderBy('journals.date', 'desc')
+        ->orderBy('journals.id', 'desc')
+        ->take(150)
+        ->get();
+
+        $totalDebit = (float) $lines->sum('debit');
+        $totalCredit = (float) $lines->sum('credit');
+
+        return response()->json([
+            'account' => [
+                'id' => $coa->id,
+                'code' => $coa->code,
+                'name' => $coa->name,
+                'type' => $coa->type,
+                'normal_balance' => $coa->normal_balance,
+            ],
+            'summary' => [
+                'total_debit' => $totalDebit,
+                'total_credit' => $totalCredit,
+            ],
+            'lines' => $lines,
+        ]);
     }
 }

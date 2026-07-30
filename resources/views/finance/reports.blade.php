@@ -1,6 +1,5 @@
 <x-app-layout>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <div class="flex flex-col gap-4 md:gap-6">
+    <div class="flex flex-col gap-4 md:gap-6" x-data="financeReportState()">
         <x-page-header title="Laporan Keuangan" :breadcrumbs="['Keuangan' => '/finance', 'Laporan' => '/finance/reports']" />
 
         <!-- Filter Bar -->
@@ -113,6 +112,37 @@
                         </div>
                     </x-card>
                 </div>
+
+                <!-- Financial Health Ratios (PowerBI Advanced Analytics) -->
+                @if(isset($kpiAnalytics['ratios']))
+                    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3.5 sm:gap-4">
+                        <div class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 p-4 rounded-2xl flex flex-col justify-between shadow-xs">
+                            <span class="text-2xs font-extrabold uppercase text-slate-400">Net Margin Ratio</span>
+                            <span class="text-xl font-black font-mono mt-1 text-slate-900 dark:text-white">{{ $kpiAnalytics['ratios']['net_profit_margin'] }}%</span>
+                            <span class="text-[10px] text-emerald-600 font-bold mt-1">Laba Bersih vs Omset</span>
+                        </div>
+
+                        <div class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 p-4 rounded-2xl flex flex-col justify-between shadow-xs">
+                            <span class="text-2xs font-extrabold uppercase text-slate-400">Current Ratio (Likuiditas)</span>
+                            <span class="text-xl font-black font-mono mt-1 text-sky-600 dark:text-sky-400">{{ $kpiAnalytics['ratios']['current_ratio'] }}x</span>
+                            <span class="text-[10px] text-sky-600 font-bold mt-1">Aktiva vs Kewajiban</span>
+                        </div>
+
+                        <div class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 p-4 rounded-2xl flex flex-col justify-between shadow-xs">
+                            <span class="text-2xs font-extrabold uppercase text-slate-400">Expense Ratio</span>
+                            <span class="text-xl font-black font-mono mt-1 text-amber-600 dark:text-amber-400">{{ $kpiAnalytics['ratios']['operating_expense_ratio'] }}%</span>
+                            <span class="text-[10px] text-amber-600 font-bold mt-1">Beban vs Pendapatan</span>
+                        </div>
+
+                        <div class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 p-4 rounded-2xl flex flex-col justify-between shadow-xs">
+                            <span class="text-2xs font-extrabold uppercase text-slate-400">Working Capital</span>
+                            <span class="text-base font-black font-mono mt-1 text-emerald-600 dark:text-emerald-400 truncate" title="Rp {{ number_format($kpiAnalytics['ratios']['working_capital'], 0, ',', '.') }}">
+                                Rp {{ number_format($kpiAnalytics['ratios']['working_capital'], 0, ',', '.') }}
+                            </span>
+                            <span class="text-[10px] text-slate-400 font-bold mt-1">Modal Kerja Bersih</span>
+                        </div>
+                    </div>
+                @endif
 
                 <!-- Visual Chart Card for Analytics -->
                 <x-card title="Grafik Perbandingan Omset & Terbayar Per Cabang">
@@ -285,8 +315,13 @@
                                 </h4>
                                 <div class="space-y-2 text-xs">
                                     @forelse($incomeStatement['revenues'] as $rev)
-                                        <div class="flex justify-between border-b border-slate-50 dark:border-slate-800/50 pb-1">
-                                            <span class="text-slate-600 dark:text-slate-300 font-semibold">{{ $rev['code'] }} - {{ $rev['name'] }}</span>
+                                        <div class="flex justify-between items-center border-b border-slate-50 dark:border-slate-800/50 pb-1.5 hover:bg-slate-50/60 dark:hover:bg-slate-800/40 px-1.5 rounded-lg transition-colors">
+                                            <button @click="openAccountLedger('{{ $rev['code'] }}', '{{ $rev['name'] }}')" 
+                                                    class="group text-left text-slate-700 dark:text-slate-200 hover:text-primary dark:hover:text-orange-400 font-semibold flex items-center gap-1.5 cursor-pointer transition-colors"
+                                                    title="Klik untuk rincian mutasi jurnal ledger">
+                                                <span>{{ $rev['code'] }} - {{ $rev['name'] }}</span>
+                                                <span class="material-symbols-outlined text-xs opacity-0 group-hover:opacity-100 transition-opacity text-primary">visibility</span>
+                                            </button>
                                             <span class="font-mono font-bold text-slate-800 dark:text-slate-200">Rp {{ number_format($rev['amount'], 0, ',', '.') }}</span>
                                         </div>
                                     @empty
@@ -306,8 +341,13 @@
                                 </h4>
                                 <div class="space-y-2 text-xs">
                                     @forelse($incomeStatement['expenses'] as $exp)
-                                        <div class="flex justify-between border-b border-slate-50 dark:border-slate-800/50 pb-1">
-                                            <span class="text-slate-600 dark:text-slate-300 font-semibold">{{ $exp['code'] }} - {{ $exp['name'] }}</span>
+                                        <div class="flex justify-between items-center border-b border-slate-50 dark:border-slate-800/50 pb-1.5 hover:bg-slate-50/60 dark:hover:bg-slate-800/40 px-1.5 rounded-lg transition-colors">
+                                            <button @click="openAccountLedger('{{ $exp['code'] }}', '{{ $exp['name'] }}')" 
+                                                    class="group text-left text-slate-700 dark:text-slate-200 hover:text-primary dark:hover:text-orange-400 font-semibold flex items-center gap-1.5 cursor-pointer transition-colors"
+                                                    title="Klik untuk rincian mutasi jurnal ledger">
+                                                <span>{{ $exp['code'] }} - {{ $exp['name'] }}</span>
+                                                <span class="material-symbols-outlined text-xs opacity-0 group-hover:opacity-100 transition-opacity text-primary">visibility</span>
+                                            </button>
                                             <span class="font-mono font-bold text-slate-800 dark:text-slate-200">Rp {{ number_format($exp['amount'], 0, ',', '.') }}</span>
                                         </div>
                                     @empty
@@ -414,8 +454,8 @@
                 <x-card>
                     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100 dark:border-slate-800">
                         <div>
-                            <h4 class="font-extrabold text-sm text-slate-800 dark:text-slate-100">Visualisasi Analisis Neraca</h4>
-                            <p class="text-2xs text-slate-400">Pilih opsi tampilan grafik di sebelah kanan untuk melihat komposisi aset atau perbandingan neraca.</p>
+                            <h4 class="font-extrabold text-sm text-slate-800 dark:text-slate-100">Visualisasi Analisis Struktur Neraca</h4>
+                            <p class="text-2xs text-slate-400">Pilih opsi tampilan grafik di sebelah kanan untuk melihat komposisi Aktiva vs Pasiva atau perbandingan neraca.</p>
                         </div>
                         <!-- Chart Switcher Buttons -->
                         <div class="inline-flex p-1 bg-slate-100 dark:bg-slate-800 rounded-xl gap-1 shrink-0">
@@ -423,13 +463,13 @@
                                     :class="{ 'bg-white dark:bg-slate-900 text-primary shadow-2xs': activeBalanceChart === 'pie', 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300': activeBalanceChart !== 'pie' }"
                                     class="px-3 py-1.5 rounded-lg text-2xs font-bold transition-all flex items-center gap-1.5 cursor-pointer">
                                 <span class="material-symbols-outlined text-sm">pie_chart</span>
-                                <span>Pie Chart (Aset)</span>
+                                <span>Pie Chart (Komposisi Neraca)</span>
                             </button>
                             <button @click="activeBalanceChart = 'bar'" 
                                     :class="{ 'bg-white dark:bg-slate-900 text-primary shadow-2xs': activeBalanceChart === 'bar', 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300': activeBalanceChart !== 'bar' }"
                                     class="px-3 py-1.5 rounded-lg text-2xs font-bold transition-all flex items-center gap-1.5 cursor-pointer">
                                 <span class="material-symbols-outlined text-sm">bar_chart</span>
-                                <span >Bar Chart (Aktiva vs Pasiva)</span>
+                                <span>Bar Chart (Aktiva, Kewajiban & Modal)</span>
                             </button>
                         </div>
                     </div>
@@ -457,8 +497,13 @@
                             </h4>
                             <div class="space-y-2 text-xs">
                                 @foreach($balanceSheet['assets'] as $ast)
-                                    <div class="flex justify-between border-b border-slate-50 dark:border-slate-800/50 pb-1">
-                                        <span class="text-slate-600 dark:text-slate-300 font-semibold">{{ $ast['code'] }} - {{ $ast['name'] }}</span>
+                                    <div class="flex justify-between items-center border-b border-slate-50 dark:border-slate-800/50 pb-1.5 hover:bg-slate-50/60 dark:hover:bg-slate-800/40 px-1.5 rounded-lg transition-colors">
+                                        <button @click="openAccountLedger('{{ $ast['code'] }}', '{{ $ast['name'] }}')" 
+                                                class="group text-left text-slate-700 dark:text-slate-200 hover:text-primary dark:hover:text-orange-400 font-semibold flex items-center gap-1.5 cursor-pointer transition-colors"
+                                                title="Klik untuk rincian mutasi jurnal ledger">
+                                            <span>{{ $ast['code'] }} - {{ $ast['name'] }}</span>
+                                            <span class="material-symbols-outlined text-xs opacity-0 group-hover:opacity-100 transition-opacity text-primary">visibility</span>
+                                        </button>
                                         <span class="font-mono font-bold text-slate-800 dark:text-slate-200">Rp {{ number_format($ast['amount'], 0, ',', '.') }}</span>
                                     </div>
                                 @endforeach
@@ -478,16 +523,26 @@
                             <div class="space-y-2 text-xs">
                                 <span class="block text-2xs font-bold text-slate-400 uppercase">Kewajiban (Liabilities)</span>
                                 @foreach($balanceSheet['liabilities'] as $liab)
-                                    <div class="flex justify-between border-b border-slate-50 dark:border-slate-800/50 pb-1">
-                                        <span class="text-slate-600 dark:text-slate-300 font-semibold">{{ $liab['code'] }} - {{ $liab['name'] }}</span>
+                                    <div class="flex justify-between items-center border-b border-slate-50 dark:border-slate-800/50 pb-1.5 hover:bg-slate-50/60 dark:hover:bg-slate-800/40 px-1.5 rounded-lg transition-colors">
+                                        <button @click="openAccountLedger('{{ $liab['code'] }}', '{{ $liab['name'] }}')" 
+                                                class="group text-left text-slate-700 dark:text-slate-200 hover:text-primary dark:hover:text-orange-400 font-semibold flex items-center gap-1.5 cursor-pointer transition-colors"
+                                                title="Klik untuk rincian mutasi jurnal ledger">
+                                            <span>{{ $liab['code'] }} - {{ $liab['name'] }}</span>
+                                            <span class="material-symbols-outlined text-xs opacity-0 group-hover:opacity-100 transition-opacity text-primary">visibility</span>
+                                        </button>
                                         <span class="font-mono font-bold text-slate-800 dark:text-slate-200">Rp {{ number_format($liab['amount'], 0, ',', '.') }}</span>
                                     </div>
                                 @endforeach
 
                                 <span class="block text-2xs font-bold text-slate-400 uppercase pt-2">Ekuitas (Equities)</span>
                                 @foreach($balanceSheet['equities'] as $eq)
-                                    <div class="flex justify-between border-b border-slate-50 dark:border-slate-800/50 pb-1">
-                                        <span class="text-slate-600 dark:text-slate-300 font-semibold">{{ $eq['code'] }} - {{ $eq['name'] }}</span>
+                                    <div class="flex justify-between items-center border-b border-slate-50 dark:border-slate-800/50 pb-1.5 hover:bg-slate-50/60 dark:hover:bg-slate-800/40 px-1.5 rounded-lg transition-colors">
+                                        <button @click="openAccountLedger('{{ $eq['code'] }}', '{{ $eq['name'] }}')" 
+                                                class="group text-left text-slate-700 dark:text-slate-200 hover:text-primary dark:hover:text-orange-400 font-semibold flex items-center gap-1.5 cursor-pointer transition-colors"
+                                                title="Klik untuk rincian mutasi jurnal ledger">
+                                            <span>{{ $eq['code'] }} - {{ $eq['name'] }}</span>
+                                            <span class="material-symbols-outlined text-xs opacity-0 group-hover:opacity-100 transition-opacity text-primary">visibility</span>
+                                        </button>
                                         <span class="font-mono font-bold text-slate-800 dark:text-slate-200">Rp {{ number_format($eq['amount'], 0, ',', '.') }}</span>
                                     </div>
                                 @endforeach
@@ -505,7 +560,7 @@
                 document.addEventListener('DOMContentLoaded', () => {
                     const chartData = @js($balanceSheetChartData);
                     
-                    // 1. Pie / Doughnut Chart
+                    // 1. Doughnut / Pie Chart (Aktiva, Kewajiban, Ekuitas)
                     const ctxPie = document.getElementById('balanceAssetPieChart');
                     if (ctxPie) {
                         new Chart(ctxPie.getContext('2d'), {
@@ -514,7 +569,7 @@
                                 labels: chartData.pie_asset_labels,
                                 datasets: [{
                                     data: chartData.pie_asset_values,
-                                    backgroundColor: ['#0284c7', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#64748b'],
+                                    backgroundColor: ['#0284c7', '#ef4444', '#10b981'],
                                     borderWidth: 2
                                 }]
                             },
@@ -522,7 +577,7 @@
                                 responsive: true,
                                 maintainAspectRatio: false,
                                 plugins: {
-                                    legend: { position: 'right', labels: { font: { family: 'Inter', size: 11, weight: 'bold' } } },
+                                    legend: { position: 'right', labels: { font: { family: 'Plus Jakarta Sans', size: 12, weight: 'bold' } } },
                                     tooltip: { callbacks: { label: c => ' ' + c.label + ': Rp ' + Number(c.raw).toLocaleString('id-ID') } }
                                 }
                             }
@@ -539,7 +594,7 @@
                                 datasets: [{
                                     label: 'Nilai (Rp)',
                                     data: chartData.bar_comparison_values,
-                                    backgroundColor: ['#0284c7', '#d97706'],
+                                    backgroundColor: ['#0284c7', '#ef4444', '#10b981', '#d97706'],
                                     borderRadius: 8
                                 }]
                             },
@@ -593,8 +648,15 @@
                             <tbody class="divide-y divide-slate-100 dark:divide-slate-800 font-mono">
                                 @forelse($trialBalance['rows'] as $row)
                                     <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/30">
-                                        <td class="py-2 px-3 font-bold text-slate-800 dark:text-slate-200">{{ $row['code'] }}</td>
-                                        <td class="py-2 px-3 text-slate-700 dark:text-slate-350 font-sans">{{ $row['name'] }}</td>
+                                        <td class="py-2 px-3 font-bold text-slate-800 dark:text-slate-200">
+                                            <button @click="openAccountLedger('{{ $row['code'] }}', '{{ $row['name'] }}')" 
+                                                    class="group text-left text-slate-800 dark:text-slate-200 hover:text-primary font-bold flex items-center gap-1 cursor-pointer"
+                                                    title="Klik untuk rincian mutasi jurnal ledger">
+                                                <span>{{ $row['code'] }}</span>
+                                                <span class="material-symbols-outlined text-xs opacity-0 group-hover:opacity-100 transition-opacity text-primary">visibility</span>
+                                            </button>
+                                        </td>
+                                        <td class="py-2 px-3 text-slate-700 dark:text-slate-350 font-sans font-semibold">{{ $row['name'] }}</td>
                                         <td class="py-2 px-3 text-2xs uppercase text-slate-400 font-sans">{{ $row['type'] }}</td>
                                         <td class="py-2 px-3 text-right text-slate-700 dark:text-slate-300">
                                             {{ $row['debit'] > 0 ? 'Rp ' . number_format($row['debit'], 0, ',', '.') : '-' }}
@@ -650,5 +712,149 @@
             </script>
         @endif
 
+        <!-- Slide-Over Modal: Account Journal Ledger Drill-Down (Transparansi Audit Trail) -->
+        <div x-show="showLedgerModal" 
+             x-transition:enter="transition ease-out duration-300"
+             x-transition:enter-start="opacity-0"
+             x-transition:enter-end="opacity-100"
+             x-transition:leave="transition ease-in duration-200"
+             x-transition:leave-start="opacity-100"
+             x-transition:leave-end="opacity-0"
+             class="fixed inset-0 bg-slate-950/60 z-[999] backdrop-blur-xs flex justify-end"
+             x-cloak>
+            
+            <div @click.away="showLedgerModal = false"
+                 class="w-full max-w-2xl bg-white dark:bg-slate-900 h-full shadow-2xl flex flex-col border-l border-slate-200 dark:border-slate-800">
+                
+                <!-- Modal Header -->
+                <div class="p-4 sm:p-6 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/40 flex items-center justify-between">
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <span class="px-2 py-0.5 rounded-md bg-primary/10 text-primary text-2xs font-extrabold uppercase font-mono" x-text="ledgerAccount.code"></span>
+                            <h3 class="text-base font-black text-slate-900 dark:text-white" x-text="ledgerAccount.name"></h3>
+                        </div>
+                        <p class="text-2xs text-slate-400 font-semibold mt-1">
+                            Transparansi Rincian Jurnal Ledger • Periode {{ $month ? date('F Y', mktime(0,0,0,$month,10,$year)) : 'Tahun '.$year }}
+                        </p>
+                    </div>
+                    <button @click="showLedgerModal = false" class="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                        <span class="material-symbols-outlined text-xl">close</span>
+                    </button>
+                </div>
+
+                <!-- Modal Body -->
+                <div class="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4">
+                    <!-- Loading state -->
+                    <div x-show="isLoadingLedger" class="flex items-center justify-center py-12">
+                        <div class="flex flex-col items-center gap-2">
+                            <span class="material-symbols-outlined text-3xl text-primary animate-spin">progress_activity</span>
+                            <span class="text-xs font-bold text-slate-400">Memuat rincian mutasi jurnal...</span>
+                        </div>
+                    </div>
+
+                    <!-- Ledger Content -->
+                    <div x-show="!isLoadingLedger" class="space-y-4">
+                        <!-- Summary Stats Bar -->
+                        <div class="grid grid-cols-2 gap-3 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-800 text-xs">
+                            <div>
+                                <span class="text-2xs font-extrabold uppercase text-slate-400 block">Total Mutasi Debit</span>
+                                <span class="font-mono font-black text-slate-800 dark:text-slate-200" x-text="'Rp ' + Number(ledgerSummary.total_debit || 0).toLocaleString('id-ID')"></span>
+                            </div>
+                            <div>
+                                <span class="text-2xs font-extrabold uppercase text-slate-400 block">Total Mutasi Kredit</span>
+                                <span class="font-mono font-black text-slate-800 dark:text-slate-200" x-text="'Rp ' + Number(ledgerSummary.total_credit || 0).toLocaleString('id-ID')"></span>
+                            </div>
+                        </div>
+
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-xs border-collapse">
+                                <thead>
+                                    <tr class="border-b border-slate-200 dark:border-slate-800 text-slate-400 font-bold uppercase text-[10px]">
+                                        <th class="py-2.5 px-2 text-left">No. Jurnal & Tgl</th>
+                                        <th class="py-2.5 px-2 text-left">Referensi & Ket</th>
+                                        <th class="py-2.5 px-2 text-right">Debit</th>
+                                        <th class="py-2.5 px-2 text-right">Kredit</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-100 dark:divide-slate-800/60 font-mono">
+                                    <template x-for="line in ledgerLines" :key="line.journal_id">
+                                        <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-800/40">
+                                            <td class="py-2.5 px-2 font-sans">
+                                                <span class="font-bold text-slate-800 dark:text-slate-200 block text-2xs" x-text="line.journal_number"></span>
+                                                <span class="text-[10px] text-slate-400" x-text="line.date"></span>
+                                            </td>
+                                            <td class="py-2.5 px-2 font-sans">
+                                                <span class="font-semibold text-slate-700 dark:text-slate-350 block text-2xs" x-text="line.reference || '-'"></span>
+                                                <span class="text-[10px] text-slate-400 block truncate max-w-[200px]" x-text="line.description"></span>
+                                                <span class="text-[9px] text-primary font-bold" x-text="'Pencatat: ' + (line.creator_name || 'System')"></span>
+                                            </td>
+                                            <td class="py-2.5 px-2 text-right text-slate-700 dark:text-slate-300">
+                                                <span x-text="line.debit > 0 ? 'Rp ' + Number(line.debit).toLocaleString('id-ID') : '-'"></span>
+                                            </td>
+                                            <td class="py-2.5 px-2 text-right text-slate-700 dark:text-slate-300">
+                                                <span x-text="line.credit > 0 ? 'Rp ' + Number(line.credit).toLocaleString('id-ID') : '-'"></span>
+                                            </td>
+                                        </tr>
+                                    </template>
+                                    <template x-if="ledgerLines.length === 0">
+                                        <tr>
+                                            <td colspan="4" class="py-8 text-center text-slate-400 font-sans">
+                                                Tidak ada mutasi jurnal terposting untuk akun ini pada periode yang dipilih.
+                                            </td>
+                                        </tr>
+                                    </template>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Modal Footer -->
+                <div class="p-4 border-t border-slate-100 dark:border-slate-800 flex justify-end">
+                    <button @click="showLedgerModal = false" class="px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-bold rounded-xl hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors cursor-pointer">
+                        Tutup
+                    </button>
+                </div>
+            </div>
+        </div>
     </div>
+
+    <script>
+        function financeReportState() {
+            return {
+                showLedgerModal: false,
+                isLoadingLedger: false,
+                ledgerAccount: { code: '', name: '', type: '', normal_balance: '' },
+                ledgerSummary: { total_debit: 0, total_credit: 0 },
+                ledgerLines: [],
+                
+                async openAccountLedger(code, name) {
+                    this.showLedgerModal = true;
+                    this.isLoadingLedger = true;
+                    this.ledgerAccount = { code, name, type: '', normal_balance: '' };
+                    this.ledgerLines = [];
+                    
+                    const params = new URLSearchParams({
+                        code: code,
+                        year: @js($year),
+                        month: @js($month ?? ''),
+                        branch_id: @js($branchId ?? '')
+                    });
+
+                    try {
+                        const res = await fetch(`/finance/reports/account-ledger?${params.toString()}`);
+                        if (!res.ok) throw new Error('Gagal mengambil data jurnal.');
+                        const data = await res.json();
+                        this.ledgerAccount = data.account;
+                        this.ledgerSummary = data.summary;
+                        this.ledgerLines = data.lines;
+                    } catch (err) {
+                        console.error(err);
+                    } finally {
+                        this.isLoadingLedger = false;
+                    }
+                }
+            }
+        }
+    </script>
 </x-app-layout>

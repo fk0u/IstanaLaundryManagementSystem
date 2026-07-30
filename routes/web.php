@@ -462,6 +462,7 @@ Route::middleware(['auth', 'branch.scope'])->group(function () {
 
         // Finance - Reports & Exports
         Route::get('/finance/reports', [FinancialReportController::class, 'index'])->name('finance.reports.index');
+        Route::get('/finance/reports/account-ledger', [FinancialReportController::class, 'accountLedger'])->name('finance.reports.account-ledger');
         Route::get('/finance/reports/excel', [FinancialReportController::class, 'exportExcel'])->name('finance.reports.excel');
         Route::get('/finance/reports/pdf', [FinancialReportController::class, 'exportPdf'])->name('finance.reports.pdf');
         Route::get('/finance/reports/powerbi-pdf', [FinancialReportController::class, 'exportPowerBiPdf'])->name('finance.reports.powerbi-pdf');
