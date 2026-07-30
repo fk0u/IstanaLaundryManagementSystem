@@ -14,10 +14,16 @@ trait BranchScoped
         static::addGlobalScope('branch_scope', function (Builder $builder) {
             $branchId = session('scoped_branch_id');
 
-            // Fail-safe: if no branch scope is set, restrict to authenticated user's branch
-            // This prevents cross-branch data leaks when session is empty
+            // Fail-safe: if no branch scope is set in session
             if ($branchId === null) {
-                $branchId = auth()->user()?->branch_id;
+                $user = auth()->user();
+
+                // Global role users default to un-restricted view (All Branches) when session scope is empty
+                if ($user && $user->hasAnyRole(['Developer', 'Owner', 'Super_Admin', 'Finance', 'CS_Marketing'])) {
+                    return;
+                }
+
+                $branchId = $user?->branch_id;
             }
 
             if ($branchId !== null) {

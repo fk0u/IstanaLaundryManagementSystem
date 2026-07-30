@@ -43,74 +43,50 @@ class DashboardController extends Controller
         // the route forgets the session key → null → consolidated view.
         $branchId = session('scoped_branch_id') ?: null;
 
-        $ordersQuery = Order::query();
-        $customersQuery = Customer::query();
-        $workshopsQuery = Workshop::query();
+        $ordersQuery = $branchId ? Order::where('branch_id', $branchId) : Order::withoutGlobalScopes();
+        $customersQuery = $branchId ? Customer::where('branch_id', $branchId) : Customer::query();
+        $workshopsQuery = $branchId ? Workshop::where('branch_id', $branchId) : Workshop::query();
 
-        if ($branchId) {
-            $ordersQuery->where('branch_id', $branchId);
-            $customersQuery->where('branch_id', $branchId);
-            $workshopsQuery->where('branch_id', $branchId);
-        }
-
-        $totalRevenue = $ordersQuery->sum('total');
+        $totalRevenue = (float) $ordersQuery->sum('total');
 
         // Finance Specific Metrics
-        $piutangQuery = Order::query()->whereIn('payment_status', ['pending', 'partial']);
-        if ($branchId) {
-            $piutangQuery->where('branch_id', $branchId);
-        }
-        $totalPiutang = (float) $piutangQuery->selectRaw('SUM(total - paid_amount) as total_unpaid')->value('total_unpaid') ?? 0;
+        $piutangQuery = $branchId ? Order::where('branch_id', $branchId) : Order::withoutGlobalScopes();
+        $totalPiutang = (float) $piutangQuery->whereIn('payment_status', ['pending', 'partial'])->selectRaw('SUM(total - paid_amount) as total_unpaid')->value('total_unpaid') ?? 0;
 
-        $monthCashFlowQuery = Order::query()->whereBetween('created_at', [now()->startOfMonth(), now()->endOfMonth()]);
-        if ($branchId) {
-            $monthCashFlowQuery->where('branch_id', $branchId);
-        }
-        $monthCashFlow = (float) $monthCashFlowQuery->sum('paid_amount');
+        $monthCashFlowQuery = $branchId ? Order::where('branch_id', $branchId) : Order::withoutGlobalScopes();
+        $monthCashFlow = (float) $monthCashFlowQuery->whereBetween('created_at', [now()->startOfMonth(), now()->endOfMonth()])->sum('paid_amount');
 
-        $activeOrdersCount = Order::query();
-        if ($branchId) {
-            $activeOrdersCount->where('branch_id', $branchId);
-        }
-        $activeOrdersCount = $activeOrdersCount->where('production_status', '!=', 'DIAMBIL')->count();
+        $activeOrdersQuery = $branchId ? Order::where('branch_id', $branchId) : Order::withoutGlobalScopes();
+        $activeOrdersCount = $activeOrdersQuery->where('production_status', '!=', 'DIAMBIL')->count();
 
         $newCustomersCount = $customersQuery->where('created_at', '>=', now()->startOfMonth())->count();
         $activeWorkshops = $workshopsQuery->where('is_active', true)->count();
 
-        $totalTransactionsQuery = Order::query();
-        if ($branchId) {
-            $totalTransactionsQuery->where('branch_id', $branchId);
-        }
+        $totalTransactionsQuery = $branchId ? Order::where('branch_id', $branchId) : Order::withoutGlobalScopes();
         $totalTransactions = $totalTransactionsQuery->count();
 
         // Latest 5 orders
-        $recentOrders = Order::query();
-        if ($branchId) {
-            $recentOrders->where('branch_id', $branchId);
-        }
-        $recentOrders = $recentOrders->with(['customer', 'items.service'])
+        $recentOrdersQuery = $branchId ? Order::where('branch_id', $branchId) : Order::withoutGlobalScopes();
+        $recentOrders = $recentOrdersQuery->with(['customer', 'items.service', 'branch'])
             ->orderBy('created_at', 'desc')
             ->take(5)
             ->get();
 
         // MoM growth calculations
-        $currentMonthRev = Order::whereMonth('created_at', now()->month)
-            ->whereYear('created_at', now()->year);
-        $lastMonthRev = Order::whereMonth('created_at', now()->subMonth()->month)
-            ->whereYear('created_at', now()->subMonth()->year);
-        if ($branchId) {
-            $currentMonthRev->where('branch_id', $branchId);
-            $lastMonthRev->where('branch_id', $branchId);
-        }
-        $currentMonthTotal = (float) $currentMonthRev->sum('total');
-        $lastMonthTotal = (float) $lastMonthRev->sum('total');
+        $currentMonthRev = $branchId ? Order::where('branch_id', $branchId) : Order::withoutGlobalScopes();
+        $lastMonthRev = $branchId ? Order::where('branch_id', $branchId) : Order::withoutGlobalScopes();
+        $currentMonthTotal = (float) $currentMonthRev->whereMonth('created_at', now()->month)->whereYear('created_at', now()->year)->sum('total');
+        $lastMonthTotal = (float) $lastMonthRev->whereMonth('created_at', now()->subMonth()->month)->whereYear('created_at', now()->subMonth()->year)->sum('total');
         $growthPercent = 0;
         if ($lastMonthTotal > 0) {
             $growthPercent = (($currentMonthTotal - $lastMonthTotal) / $lastMonthTotal) * 100;
         }
 
         // Top Performing Branch
-        $topBranch = Branch::withSum('orders as total_revenue', 'total')
+        $topBranch = Branch::withoutGlobalScopes()
+            ->withSum(['orders as total_revenue' => function ($q) {
+                $q->withoutGlobalScopes();
+            }], 'total')
             ->orderByDesc('total_revenue')
             ->first();
         $topBranchName = $topBranch ? $topBranch->name : 'N/A';
@@ -120,9 +96,8 @@ class DashboardController extends Controller
         $chartLabels = [];
         $chartValues = [];
         if (! $branchId) {
-            // Global view: compare branches — one aggregated query instead of
-            // a query per branch (fixes N+1).
-            $perBranch = Order::query()
+            // Global view: compare branches — one aggregated query without global scope
+            $perBranch = Order::withoutGlobalScopes()
                 ->selectRaw('branch_id, SUM(total) as revenue')
                 ->whereNotNull('branch_id')
                 ->groupBy('branch_id')
