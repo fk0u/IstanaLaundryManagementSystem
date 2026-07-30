@@ -219,10 +219,10 @@ class FinancialReportService
                     ->when($year, fn ($q) => $q->whereYear('created_at', $year))
                     ->when($month, fn ($q) => $q->whereMonth('created_at', $month));
 
-                $totalRev = (float) $sub->sum('total');
-                $paidRev = (float) $sub->where('payment_status', 'paid')->sum('paid_amount');
-                $unpaidRev = (float) $sub->whereIn('payment_status', ['pending', 'partial'])->sum(DB::raw('total - paid_amount'));
-                $totalOrders = (int) $sub->count();
+                $totalRev = (float) (clone $sub)->sum('total');
+                $paidRev = (float) (clone $sub)->where('payment_status', 'paid')->sum('paid_amount');
+                $unpaidRev = (float) (clone $sub)->whereIn('payment_status', ['pending', 'partial'])->sum(DB::raw('total - paid_amount'));
+                $totalOrders = (int) (clone $sub)->count();
                 $avgOrderValue = $totalOrders > 0 ? $totalRev / $totalOrders : 0;
 
                 return [

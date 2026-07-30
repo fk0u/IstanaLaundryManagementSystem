@@ -240,7 +240,7 @@ class AssetController extends Controller
             ->get();
 
         return \Maatwebsite\Excel\Facades\Excel::download(
-            new \App\Exports\GenericViewExport('exports.assets_pdf', compact('branchName', 'assets')),
+            new \App\Exports\GenericViewExport('exports.assets_pdf', compact('branchName', 'assets'), 'Aset Tetap'),
             'laporan-aset-tetap-' . now()->format('Ymd-His') . '.xlsx'
         );
     }

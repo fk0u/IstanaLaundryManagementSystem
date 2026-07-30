@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <title>Rekapitulasi Aset Tetap — Istana Laundry ERP</title>
+    <title>Rekapitulasi Aset Tetap ERP</title>
     <style>
         body {
             font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
@@ -110,11 +110,11 @@
         <tr>
             <td style="width: 50%;">
                 <div class="brand-logo">🧺 ISTANA LAUNDRY</div>
-                <div class="brand-sub">Fixed Assets & Depreciation Management</div>
+                <div class="brand-sub">Fixed Assets &amp; Depreciation Management</div>
             </td>
             <td style="width: 50%;" class="text-right">
                 <div class="doc-title">REKAPITULASI ASET TETAP</div>
-                <div style="font-size: 9.5px; color: #64748b;">Daftar Perolehan & Nilai Buku Aset</div>
+                <div style="font-size: 9.5px; color: #64748b;">Daftar Perolehan &amp; Nilai Buku Aset</div>
             </td>
         </tr>
     </table>
@@ -198,7 +198,7 @@
                 <div>Dibuat Oleh,</div>
                 <div class="sig-space"></div>
                 <div class="font-bold">({{ auth()->user()?->name ?? 'Penanggung Jawab Aset' }})</div>
-                <div style="font-size: 8.5px; color: #64748b;">Staff / Manager Aset & Inventori</div>
+                <div style="font-size: 8.5px; color: #64748b;">Staff / Manager Aset &amp; Inventori</div>
             </td>
             <td style="width: 50%; text-align: center;">
                 <div>Disetujui Oleh,</div>

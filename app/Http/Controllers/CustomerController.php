@@ -210,7 +210,7 @@ class CustomerController extends Controller
             ->get();
 
         return \Maatwebsite\Excel\Facades\Excel::download(
-            new \App\Exports\GenericViewExport('exports.crm_pdf', compact('q', 'customers')),
+            new \App\Exports\GenericViewExport('exports.crm_pdf', compact('q', 'customers'), 'CRM Pelanggan'),
             'laporan-crm-pelanggan-' . now()->format('Ymd-His') . '.xlsx'
         );
     }

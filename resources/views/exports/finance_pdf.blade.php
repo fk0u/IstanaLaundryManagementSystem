@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <title>Laporan Keuangan — Istana Laundry ERP</title>
+    <title>Laporan Keuangan ERP</title>
     <style>
         body {
             font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
@@ -153,7 +153,7 @@
         <tr>
             <td style="width: 50%;">
                 <div class="brand-logo">🧺 ISTANA LAUNDRY</div>
-                <div class="brand-sub">Premium Care & Executive ERP System</div>
+                <div class="brand-sub">Premium Care &amp; Executive ERP System</div>
             </td>
             <td style="width: 50%;" class="text-right">
                 <div class="doc-title">LAPORAN KEUANGAN KONSOLIDASI</div>
@@ -262,25 +262,25 @@
                 <td class="text-right">Rp {{ number_format($balanceSheet['total_assets'], 2, ',', '.') }}</td>
             </tr>
 
-            <tr class="row-group"><td colspan="4">KEWAJIBAN & MODAL (LIABILITIES & EQUITY)</td></tr>
+            <tr class="row-group"><td colspan="4">KEWAJIBAN &amp; MODAL (LIABILITIES &amp; EQUITY)</td></tr>
             @foreach($balanceSheet['liabilities'] as $liab)
                 <tr>
-                    <td>{{ $liab['code'] }}</td>
+                    <td class="text-center font-bold">{{ $liab['code'] }}</td>
                     <td>{{ $liab['name'] }}</td>
-                    <td>Kewajiban</td>
-                    <td class="text-right">Rp {{ number_format($liab['amount'], 2, ',', '.') }}</td>
+                    <td class="text-center">Kewajiban</td>
+                    <td class="text-right">Rp {{ number_format($liab['amount'], 0, ',', '.') }}</td>
                 </tr>
             @endforeach
             @foreach($balanceSheet['equities'] as $eq)
                 <tr>
-                    <td>{{ $eq['code'] }}</td>
+                    <td class="text-center font-bold">{{ $eq['code'] }}</td>
                     <td>{{ $eq['name'] }}</td>
-                    <td>Ekuitas</td>
-                    <td class="text-right">Rp {{ number_format($eq['amount'], 2, ',', '.') }}</td>
+                    <td class="text-center">Ekuitas</td>
+                    <td class="text-right">Rp {{ number_format($eq['amount'], 0, ',', '.') }}</td>
                 </tr>
             @endforeach
             <tr class="row-total">
-                <td colspan="3" class="text-right">TOTAL PASIVA (KEWAJIBAN & MODAL):</td>
+                <td colspan="3" class="text-right">TOTAL PASIVA (KEWAJIBAN &amp; MODAL):</td>
                 <td class="text-right">Rp {{ number_format($balanceSheet['total_liabilities_equity'], 2, ',', '.') }}</td>
             </tr>
         </tbody>

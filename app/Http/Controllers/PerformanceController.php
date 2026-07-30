@@ -453,7 +453,7 @@ class PerformanceController extends Controller
                 'cashierDailyBreakdown',
                 'staffProductivity',
                 'periodRevenue'
-            )),
+            ), 'Laporan Kinerja'),
             'laporan-kinerja-' . now()->format('Ymd-His') . '.xlsx'
         );
     }

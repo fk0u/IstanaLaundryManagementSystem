@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <title>Rekapitulasi Pelanggan & CRM — Istana Laundry ERP</title>
+    <title>Rekapitulasi Pelanggan ERP</title>
     <style>
         body {
             font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
@@ -125,8 +125,8 @@
                 <div class="brand-sub">Customer Relationship Management (CRM)</div>
             </td>
             <td style="width: 50%;" class="text-right">
-                <div class="doc-title">REKAPITULASI PELANGGAN & LOYALTY</div>
-                <div style="font-size: 9.5px; color: #64748b;">Database Member & Stat Transaksi</div>
+                <div class="doc-title">REKAPITULASI PELANGGAN &amp; LOYALTY</div>
+                <div style="font-size: 9.5px; color: #64748b;">Database Member &amp; Stat Transaksi</div>
             </td>
         </tr>
     </table>
@@ -221,7 +221,7 @@
             <td style="width: 50%; text-align: center;">
                 <div>Dibuat Oleh,</div>
                 <div class="sig-space"></div>
-                <div class="font-bold">({{ auth()->user()?->name ?? 'CS & Marketing' }})</div>
+                <div class="font-bold">({{ auth()->user()?->name ?? 'CS &amp; Marketing' }})</div>
                 <div style="font-size: 8.5px; color: #64748b;">Staff / Lead Customer Relationship</div>
             </td>
             <td style="width: 50%; text-align: center;">

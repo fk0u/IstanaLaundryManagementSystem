@@ -260,7 +260,7 @@ class FinancialReportController extends Controller
                 'branchId',
                 'year',
                 'month'
-            )),
+            ), 'Laporan Keuangan'),
             'laporan-keuangan-' . now()->format('Ymd-His') . '.xlsx'
         );
     }

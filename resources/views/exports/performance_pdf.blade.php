@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <title>Laporan Kinerja & Produktivitas — Istana Laundry ERP</title>
+    <title>Laporan Kinerja ERP</title>
     <style>
         body {
             font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
@@ -121,11 +121,11 @@
         <tr>
             <td style="width: 50%;">
                 <div class="brand-logo">🧺 ISTANA LAUNDRY</div>
-                <div class="brand-sub">Premium Care & Performance Analytics</div>
+                <div class="brand-sub">Premium Care &amp; Performance Analytics</div>
             </td>
             <td style="width: 50%;" class="text-right">
-                <div class="doc-title">LAPORAN KINERJA & PRODUKTIVITAS</div>
-                <div style="font-size: 10px; color: #64748b;">Evaluasi Transaksi Kasir & Workshop</div>
+                <div class="doc-title">LAPORAN KINERJA &amp; PRODUKTIVITAS</div>
+                <div style="font-size: 10px; color: #64748b;">Evaluasi Transaksi Kasir &amp; Workshop</div>
             </td>
         </tr>
     </table>
