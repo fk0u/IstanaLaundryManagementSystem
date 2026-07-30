@@ -80,7 +80,18 @@
                         card.style.transform = 'translateY(0px)';
                     });
                 });
+
+                // Auto-dispatch session flash messages as toast
+                @if(session('success'))
+                    window.dispatchEvent(new CustomEvent('toast', { detail: { message: @js(session('success')), type: 'success' } }));
+                @endif
+                @if(session('error'))
+                    window.dispatchEvent(new CustomEvent('toast', { detail: { message: @js(session('error')), type: 'error' } }));
+                @endif
             });
+
+            // Global scope reference for branch-mismatch warnings in forms
+            window.__scopedBranchId = @js(session('scoped_branch_id'));
         </script>
         
         <!-- Global Toast Container -->
