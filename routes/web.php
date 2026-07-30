@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AssetController;
+use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Finance\AccountingPeriodController;
 use App\Http\Controllers\Finance\FinancialReportController;
@@ -88,79 +89,16 @@ Route::middleware(['auth', 'branch.scope'])->group(function () {
     Route::get('/production', [ProductionController::class, 'index'])->name('production.index');
     Route::post('/production/update/{id}', [ProductionController::class, 'updateStatus'])->name('production.update');
 
-    // Performance Monitoring
+    // Performance Monitoring & Export
     Route::get('/performance', [PerformanceController::class, 'index'])->name('performance.index');
+    Route::get('/performance/export', [PerformanceController::class, 'exportCsv'])->name('performance.export');
 
-    // CRM & Customers — Global (pelanggan bisa transaksi di cabang mana saja)
-    Route::get('/customers', function (Request $request) {
-        $q = trim($request->query('q', ''));
-
-        $customersQuery = Customer::with(['branch', 'latestOrder', 'orders' => function ($ordQ) {
-            $ordQ->orderBy('created_at', 'desc')->take(10);
-        }])
-            ->withCount('orders')
-            ->withSum('orders', 'total')
-            ->when($q !== '', function ($query) use ($q) {
-                $like = "%{$q}%";
-                $query->where(function ($sub) use ($like) {
-                    $sub->where('name', 'LIKE', $like)
-                        ->orWhere('phone', 'LIKE', $like)
-                        ->orWhere('member_code', 'LIKE', $like);
-                });
-            })
-            ->orderBy('name', 'asc');
-
-        $customers = $customersQuery->paginate(10)->withQueryString();
-
-        return view('customers.index', compact('customers', 'q'));
-    })->name('customers.index');
-
-    Route::post('/customers', function (Request $request) {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'phone' => 'required|string|unique:customers,phone',
-            'email' => 'nullable|email|max:255',
-            'address' => 'nullable|string',
-        ]);
-
-        $branchId = session('scoped_branch_id') ?? auth()->user()->branch_id ?? Branch::first()->id;
-
-        Customer::create([
-            'branch_id' => $branchId,
-            'name' => $request->name,
-            'phone' => $request->phone,
-            'email' => $request->email,
-            'address' => $request->address,
-            'member_code' => 'CUST-'.now()->format('Ymd').'-'.strtoupper(Str::random(4)),
-            'loyalty_tier' => 'Bronze',
-            'loyalty_points' => 0,
-        ]);
-
-        return redirect()->back()->with('success', 'Pelanggan baru berhasil didaftarkan.');
-    })->name('customers.store');
-
-    Route::put('/customers/{id}', function (Request $request, $id) {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'phone' => 'required|string|unique:customers,phone,'.$id,
-            'email' => 'nullable|email|max:255',
-            'address' => 'nullable|string',
-            'loyalty_tier' => 'required|in:Bronze,Silver,Gold,Platinum',
-            'loyalty_points' => 'required|integer|min:0',
-        ]);
-
-        $customer = Customer::findOrFail($id);
-        $customer->update($request->only('name', 'phone', 'email', 'address', 'loyalty_tier', 'loyalty_points'));
-
-        return redirect()->back()->with('success', 'Data pelanggan berhasil diperbarui.');
-    })->name('customers.update');
-
-    Route::delete('/customers/{id}', function ($id) {
-        $customer = Customer::findOrFail($id);
-        $customer->delete();
-
-        return redirect()->back()->with('success', 'Pelanggan berhasil dihapus.');
-    })->name('customers.destroy');
+    // CRM & Customers — Global
+    Route::get('/customers', [CustomerController::class, 'index'])->name('customers.index');
+    Route::get('/customers/export', [CustomerController::class, 'exportCsv'])->name('customers.export');
+    Route::post('/customers', [CustomerController::class, 'store'])->name('customers.store');
+    Route::put('/customers/{id}', [CustomerController::class, 'update'])->name('customers.update');
+    Route::delete('/customers/{id}', [CustomerController::class, 'destroy'])->name('customers.destroy');
 
     // Promotions
     Route::middleware('role:Branch_Admin|Owner|Super_Admin|Developer')->group(function () {
@@ -310,6 +248,7 @@ Route::middleware(['auth', 'branch.scope'])->group(function () {
     // Fixed Assets
     Route::middleware('role:Finance|Owner|Super_Admin|Developer')->group(function () {
         Route::get('/assets', [AssetController::class, 'index'])->name('assets.index');
+        Route::get('/assets/export', [AssetController::class, 'exportCsv'])->name('assets.export');
         Route::post('/assets', [AssetController::class, 'store'])->name('assets.store');
         Route::get('/assets/{asset}', [AssetController::class, 'show'])->name('assets.show');
 

@@ -25,9 +25,13 @@
                     <input type="date" name="date_to" value="{{ $dateTo }}" class="h-9 text-xs rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-2 font-semibold">
                 </div>
                 <input type="hidden" name="branch_id" value="{{ $branchId }}">
-                <button type="submit" class="h-9 px-4 bg-primary text-white text-xs font-bold rounded-xl flex items-center gap-1.5">
+                <button type="submit" class="h-9 px-4 bg-primary text-white text-xs font-bold rounded-xl flex items-center gap-1.5 cursor-pointer">
                     <span class="material-symbols-outlined text-base">filter_alt</span> Terapkan Filter
                 </button>
+                <a href="{{ route('performance.export', ['branch_id' => $branchId, 'date_from' => $dateFrom, 'date_to' => $dateTo]) }}" 
+                   class="h-9 px-4 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl flex items-center gap-1.5 transition-colors shadow-sm cursor-pointer">
+                    <span class="material-symbols-outlined text-base">download</span> Ekspor CSV
+                </a>
                 <a href="{{ route('performance.index') }}" class="h-9 px-3 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 text-xs font-bold rounded-xl flex items-center gap-1">
                     <span class="material-symbols-outlined text-base">refresh</span>
                 </a>

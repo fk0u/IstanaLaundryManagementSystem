@@ -41,6 +41,10 @@
             <button type="submit" class="px-5 py-2.5 bg-primary text-white rounded-xl font-semibold text-sm hover:bg-primary-hover transition-all active:scale-95 cursor-pointer">
                 Cari
             </button>
+            <a href="{{ route('customers.export', ['q' => request('q')]) }}" 
+               class="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-semibold text-sm transition-all active:scale-95 cursor-pointer flex items-center justify-center gap-1.5 shadow-sm">
+                <span class="material-symbols-outlined text-base">download</span> Ekspor CSV
+            </a>
             @if(request('q'))
                 <a href="{{ route('customers.index') }}" class="px-5 py-2.5 text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 rounded-xl border border-slate-200 dark:border-slate-700 font-semibold text-sm transition-colors text-center">
                     Reset

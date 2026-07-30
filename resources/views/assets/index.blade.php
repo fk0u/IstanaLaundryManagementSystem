@@ -21,9 +21,15 @@
             @else
                 <div></div>
             @endif
-            <button type="button" @click="showAddAsset = true" class="btn-touch px-4 py-2 bg-primary hover:bg-primary-hover text-white text-xs font-bold rounded-xl flex items-center gap-1.5 shadow-sm">
-                <span class="material-symbols-outlined text-base">add_home_work</span> Tambah Aset Tetap
-            </button>
+            <div class="flex items-center gap-2">
+                <a href="{{ route('assets.export', ['branch_id' => request('branch_id')]) }}" 
+                   class="btn-touch px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl flex items-center gap-1.5 shadow-sm cursor-pointer transition-colors">
+                    <span class="material-symbols-outlined text-base">download</span> Ekspor CSV
+                </a>
+                <button type="button" @click="showAddAsset = true" class="btn-touch px-4 py-2 bg-primary hover:bg-primary-hover text-white text-xs font-bold rounded-xl flex items-center gap-1.5 shadow-sm cursor-pointer">
+                    <span class="material-symbols-outlined text-base">add_home_work</span> Tambah Aset Tetap
+                </button>
+            </div>
         </div>
 
         <!-- Summary Stats -->

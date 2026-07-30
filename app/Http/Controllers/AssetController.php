@@ -108,4 +108,94 @@ class AssetController extends Controller
 
         return view('assets.show', compact('asset'));
     }
+
+    public function exportCsv(Request $request)
+    {
+        $user = Auth::user();
+        $isGlobalUser = $user->hasAnyRole(['Developer', 'Owner', 'Super_Admin', 'Finance']);
+
+        $branchId = $request->query('branch_id');
+        if (! $isGlobalUser) {
+            $branchId = session('scoped_branch_id') ?? $user->branch_id;
+        }
+
+        $branchName = $branchId ? (Branch::find($branchId)?->name ?? 'Cabang Unknown') : 'Seluruh Cabang';
+
+        $assets = FixedAsset::with(['branch', 'account'])
+            ->when($branchId, fn ($q) => $q->where('branch_id', $branchId))
+            ->orderBy('asset_code')
+            ->get();
+
+        $fileName = 'laporan-aset-tetap-' . now()->format('Ymd-His') . '.csv';
+
+        $headers = [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => "attachment; filename=\"{$fileName}\"",
+            'Pragma' => 'no-cache',
+            'Cache-Control' => 'must-revalidate, post-check=0, pre-check=0',
+            'Expires' => '0',
+        ];
+
+        $callback = function () use ($branchName, $assets) {
+            $file = fopen('php://output', 'w');
+
+            // UTF-8 BOM
+            fprintf($file, chr(0xEF).chr(0xBB).chr(0xBF));
+
+            fputcsv($file, ['ISTANA LAUNDRY ERP — REKAPITULASI DAFTAR ASET TETAP & DEPRESIASI']);
+            fputcsv($file, ["Cabang: {$branchName}", 'Tanggal Cetak: ' . now()->format('d/m/Y H:i')]);
+            fputcsv($file, []);
+
+            fputcsv($file, [
+                'KODE ASET',
+                'NAMA ASET',
+                'KATEGORI',
+                'CABANG',
+                'TGL PEROLEHAN',
+                'HARGA PEROLEHAN (RP)',
+                'NILAI SISA (RP)',
+                'UMUR MANFAAT (BLN)',
+                'METODE DEPRESIASI',
+                'AKUMULASI DEPRESIASI (RP)',
+                'NILAI BUKU / BOOK VALUE (RP)',
+                'NO. SERI',
+                'SUPPLIER',
+                'KONDISI',
+                'STATUS'
+            ]);
+
+            $totalCost = 0;
+            $totalBookValue = 0;
+
+            foreach ($assets as $asset) {
+                $totalCost += $asset->acquisition_cost;
+                $totalBookValue += $asset->book_value;
+
+                fputcsv($file, [
+                    $asset->asset_code,
+                    $asset->name,
+                    $asset->category,
+                    $asset->branch?->name ?? '-',
+                    $asset->acquisition_date?->format('d/m/Y') ?? '-',
+                    number_format($asset->acquisition_cost, 2, '.', ''),
+                    number_format($asset->salvage_value, 2, '.', ''),
+                    $asset->useful_life_months,
+                    $asset->depreciation_method === 'straight_line' ? 'Garis Lurus' : 'Saldo Menurun',
+                    number_format($asset->accumulated_depreciation, 2, '.', ''),
+                    number_format($asset->book_value, 2, '.', ''),
+                    $asset->serial_number ?? '-',
+                    $asset->supplier ?? '-',
+                    strtoupper($asset->condition ?? 'GOOD'),
+                    $asset->is_active ? 'AKTIF' : 'NON-AKTIF'
+                ]);
+            }
+
+            fputcsv($file, []);
+            fputcsv($file, ['', 'TOTAL KESELURUHAN', '', '', '', number_format($totalCost, 2, '.', ''), '', '', '', '', number_format($totalBookValue, 2, '.', '')]);
+
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
+    }
 }
