@@ -96,7 +96,16 @@ class HRController extends Controller
                     'processed_at' => now(),
                 ]);
 
-                $employees = Employee::where('branch_id', $request->branch_id)->where('is_active', true)->get();
+                // Bypass BranchScoped global scope — the branch is explicitly
+                // selected by the user, not inferred from session.
+                $employees = Employee::withoutGlobalScopes()
+                    ->where('branch_id', $request->branch_id)
+                    ->where('is_active', true)
+                    ->get();
+
+                if ($employees->isEmpty()) {
+                    throw new \RuntimeException('Tidak ada karyawan aktif di cabang ini. Pastikan data karyawan sudah diinput.');
+                }
 
                 foreach ($employees as $emp) {
                     // Calculate attendances for that month
