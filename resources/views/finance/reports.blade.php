@@ -1,4 +1,5 @@
 <x-app-layout>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <div class="flex flex-col gap-4 md:gap-6">
         <x-page-header title="Laporan Keuangan" :breadcrumbs="['Keuangan' => '/finance', 'Laporan' => '/finance/reports']" />
 
@@ -113,6 +114,13 @@
                     </x-card>
                 </div>
 
+                <!-- Visual Chart Card for Analytics -->
+                <x-card title="Grafik Perbandingan Omset & Terbayar Per Cabang">
+                    <div class="relative h-64 md:h-72">
+                        <canvas id="analyticsBranchChart"></canvas>
+                    </div>
+                </x-card>
+
                 <!-- Deep Branch Performance Ranking Table -->
                 <x-card title="Transparansi Performa Per Cabang">
                     <div class="overflow-x-auto">
@@ -213,150 +221,298 @@
                     </div>
                 </div>
 
+                <script>
+                    document.addEventListener('DOMContentLoaded', () => {
+                        const ctxBranch = document.getElementById('analyticsBranchChart');
+                        if (ctxBranch) {
+                            const branchData = @js($kpiAnalytics['branch_breakdown']);
+                            const labels = branchData.map(b => b.name);
+                            const totalRev = branchData.map(b => b.total_revenue);
+                            const paidRev = branchData.map(b => b.paid_revenue);
+                            const unpaidRev = branchData.map(b => b.unpaid_revenue);
+
+                            new Chart(ctxBranch.getContext('2d'), {
+                                type: 'bar',
+                                data: {
+                                    labels: labels,
+                                    datasets: [
+                                        { label: 'Total Omset (Rp)', data: totalRev, backgroundColor: 'rgba(255, 102, 0, 0.75)', borderRadius: 6 },
+                                        { label: 'Terbayar / Paid (Rp)', data: paidRev, backgroundColor: 'rgba(16, 185, 129, 0.75)', borderRadius: 6 },
+                                        { label: 'Piutang / Unpaid (Rp)', data: unpaidRev, backgroundColor: 'rgba(245, 158, 11, 0.75)', borderRadius: 6 }
+                                    ]
+                                },
+                                options: {
+                                    responsive: true,
+                                    maintainAspectRatio: false,
+                                    plugins: { tooltip: { callbacks: { label: c => ' ' + c.dataset.label + ': Rp ' + Number(c.raw).toLocaleString('id-ID') } } }
+                                }
+                            });
+                        }
+                    });
+                </script>
+
             </div>
         @endif
 
         <!-- Tab 1: Income Statement -->
         @if($tab === 'income')
-            <x-card title="Laporan Laba Rugi">
-                <div class="space-y-6 max-w-2xl mx-auto py-2">
-                    <div>
-                        <h4 class="text-xs font-bold uppercase tracking-wider text-emerald-600 mb-3">Pendapatan (Revenue)</h4>
-                        <div class="space-y-2 text-xs">
-                            @forelse($incomeStatement['revenues'] as $rev)
-                                <div class="flex justify-between border-b border-slate-50 dark:border-slate-800/50 pb-1">
-                                    <span class="text-slate-600 dark:text-slate-300">{{ $rev['code'] }} - {{ $rev['name'] }}</span>
-                                    <span class="font-mono font-bold">Rp {{ number_format($rev['amount'], 0, ',', '.') }}</span>
-                                </div>
-                            @empty
-                                <div class="text-slate-400 text-2xs py-2">Belum ada pendapatan terposting.</div>
-                            @endforelse
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                <!-- Visual Chart Card for Income -->
+                <div class="lg:col-span-5">
+                    <x-card title="Grafik Visual Laba Rugi">
+                        <div class="relative h-64 md:h-80">
+                            <canvas id="incomeChart"></canvas>
                         </div>
-                        <div class="flex justify-between text-sm font-bold pt-2 mt-2 border-t-2 border-slate-200 dark:border-slate-700">
-                            <span>TOTAL PENDAPATAN</span>
-                            <span class="text-emerald-600 font-mono">Rp {{ number_format($incomeStatement['total_revenue'], 0, ',', '.') }}</span>
-                        </div>
-                    </div>
-
-                    <div>
-                        <h4 class="text-xs font-bold uppercase tracking-wider text-rose-600 mb-3">Beban-Beban (Expenses)</h4>
-                        <div class="space-y-2 text-xs">
-                            @forelse($incomeStatement['expenses'] as $exp)
-                                <div class="flex justify-between border-b border-slate-50 dark:border-slate-800/50 pb-1">
-                                    <span class="text-slate-600 dark:text-slate-300">{{ $exp['code'] }} - {{ $exp['name'] }}</span>
-                                    <span class="font-mono font-bold">Rp {{ number_format($exp['amount'], 0, ',', '.') }}</span>
-                                </div>
-                            @empty
-                                <div class="text-slate-400 text-2xs py-2">Belum ada beban terposting.</div>
-                            @endforelse
-                        </div>
-                        <div class="flex justify-between text-sm font-bold pt-2 mt-2 border-t-2 border-slate-200 dark:border-slate-700">
-                            <span>TOTAL BEBAN</span>
-                            <span class="text-rose-600 font-mono">Rp {{ number_format($incomeStatement['total_expense'], 0, ',', '.') }}</span>
-                        </div>
-                    </div>
-
-                    <div class="p-4 rounded-xl border {{ $incomeStatement['net_income'] >= 0 ? 'bg-emerald-50 border-emerald-200 text-emerald-900 dark:bg-emerald-950/20 dark:text-emerald-400' : 'bg-rose-50 border-rose-200 text-rose-900 dark:bg-rose-950/20 dark:text-rose-400' }} flex justify-between items-center">
-                        <span class="font-black text-sm">LABA (RUGI) BERSIH</span>
-                        <span class="font-mono text-lg font-black">Rp {{ number_format($incomeStatement['net_income'], 0, ',', '.') }}</span>
-                    </div>
+                    </x-card>
                 </div>
-            </x-card>
+
+                <!-- Table View for Income -->
+                <div class="lg:col-span-7">
+                    <x-card title="Laporan Laba Rugi">
+                        <div class="space-y-6 py-2">
+                            <div>
+                                <h4 class="text-xs font-bold uppercase tracking-wider text-emerald-600 mb-3">Pendapatan (Revenue)</h4>
+                                <div class="space-y-2 text-xs">
+                                    @forelse($incomeStatement['revenues'] as $rev)
+                                        <div class="flex justify-between border-b border-slate-50 dark:border-slate-800/50 pb-1">
+                                            <span class="text-slate-600 dark:text-slate-300">{{ $rev['code'] }} - {{ $rev['name'] }}</span>
+                                            <span class="font-mono font-bold">Rp {{ number_format($rev['amount'], 0, ',', '.') }}</span>
+                                        </div>
+                                    @empty
+                                        <div class="text-slate-400 text-2xs py-2">Belum ada pendapatan terposting.</div>
+                                    @endforelse
+                                </div>
+                                <div class="flex justify-between text-sm font-bold pt-2 mt-2 border-t-2 border-slate-200 dark:border-slate-700">
+                                    <span>TOTAL PENDAPATAN</span>
+                                    <span class="text-emerald-600 font-mono">Rp {{ number_format($incomeStatement['total_revenue'], 0, ',', '.') }}</span>
+                                </div>
+                            </div>
+
+                            <div>
+                                <h4 class="text-xs font-bold uppercase tracking-wider text-rose-600 mb-3">Beban-Beban (Expenses)</h4>
+                                <div class="space-y-2 text-xs">
+                                    @forelse($incomeStatement['expenses'] as $exp)
+                                        <div class="flex justify-between border-b border-slate-50 dark:border-slate-800/50 pb-1">
+                                            <span class="text-slate-600 dark:text-slate-300">{{ $exp['code'] }} - {{ $exp['name'] }}</span>
+                                            <span class="font-mono font-bold">Rp {{ number_format($exp['amount'], 0, ',', '.') }}</span>
+                                        </div>
+                                    @empty
+                                        <div class="text-slate-400 text-2xs py-2">Belum ada beban terposting.</div>
+                                    @endforelse
+                                </div>
+                                <div class="flex justify-between text-sm font-bold pt-2 mt-2 border-t-2 border-slate-200 dark:border-slate-700">
+                                    <span>TOTAL BEBAN</span>
+                                    <span class="text-rose-600 font-mono">Rp {{ number_format($incomeStatement['total_expense'], 0, ',', '.') }}</span>
+                                </div>
+                            </div>
+
+                            <div class="p-4 rounded-xl border {{ $incomeStatement['net_income'] >= 0 ? 'bg-emerald-50 border-emerald-200 text-emerald-900 dark:bg-emerald-950/20 dark:text-emerald-400' : 'bg-rose-50 border-rose-200 text-rose-900 dark:bg-rose-950/20 dark:text-rose-400' }} flex justify-between items-center">
+                                <span class="font-black text-sm">LABA (RUGI) BERSIH</span>
+                                <span class="font-mono text-lg font-black">Rp {{ number_format($incomeStatement['net_income'], 0, ',', '.') }}</span>
+                            </div>
+                        </div>
+                    </x-card>
+                </div>
+            </div>
+
+            <script>
+                document.addEventListener('DOMContentLoaded', () => {
+                    const ctxIncome = document.getElementById('incomeChart');
+                    if (ctxIncome) {
+                        new Chart(ctxIncome.getContext('2d'), {
+                            type: 'bar',
+                            data: {
+                                labels: ['Total Pendapatan', 'Total Beban', 'Laba Bersih'],
+                                datasets: [{
+                                    data: [
+                                        @js($incomeStatement['total_revenue']),
+                                        @js($incomeStatement['total_expense']),
+                                        @js($incomeStatement['net_income'])
+                                    ],
+                                    backgroundColor: ['#10b981', '#ef4444', '#3b82f6'],
+                                    borderRadius: 8
+                                }]
+                            },
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => ' Rp ' + Number(c.raw).toLocaleString('id-ID') } } }
+                            }
+                        });
+                    }
+                });
+            </script>
         @endif
 
         <!-- Tab 2: Balance Sheet -->
         @if($tab === 'balance')
-            <x-card title="Laporan Neraca Keuangan">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 py-2">
-                    <!-- Aktiva (Assets) -->
-                    <div class="space-y-4">
-                        <h4 class="text-xs font-bold uppercase tracking-wider text-sky-600 pb-2 border-b border-sky-200">AKTIVA (ASSETS)</h4>
-                        <div class="space-y-2 text-xs">
-                            @foreach($balanceSheet['assets'] as $ast)
-                                <div class="flex justify-between border-b border-slate-50 dark:border-slate-800/50 pb-1">
-                                    <span class="text-slate-600 dark:text-slate-300">{{ $ast['code'] }} - {{ $ast['name'] }}</span>
-                                    <span class="font-mono font-bold">Rp {{ number_format($ast['amount'], 0, ',', '.') }}</span>
-                                </div>
-                            @endforeach
+            <div class="space-y-6">
+                <!-- Visual Chart Card for Balance Sheet -->
+                <x-card title="Grafik Komposisi Neraca (Aktiva vs Pasiva)">
+                    <div class="relative h-64 md:h-72">
+                        <canvas id="balanceChart"></canvas>
+                    </div>
+                </x-card>
+
+                <x-card title="Laporan Neraca Keuangan">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 py-2">
+                        <!-- Aktiva (Assets) -->
+                        <div class="space-y-4">
+                            <h4 class="text-xs font-bold uppercase tracking-wider text-sky-600 pb-2 border-b border-sky-200">AKTIVA (ASSETS)</h4>
+                            <div class="space-y-2 text-xs">
+                                @foreach($balanceSheet['assets'] as $ast)
+                                    <div class="flex justify-between border-b border-slate-50 dark:border-slate-800/50 pb-1">
+                                        <span class="text-slate-600 dark:text-slate-300">{{ $ast['code'] }} - {{ $ast['name'] }}</span>
+                                        <span class="font-mono font-bold">Rp {{ number_format($ast['amount'], 0, ',', '.') }}</span>
+                                    </div>
+                                @endforeach
+                            </div>
+                            <div class="flex justify-between text-sm font-black pt-3 border-t-2 border-slate-900 dark:border-slate-100">
+                                <span>TOTAL AKTIVA</span>
+                                <span class="text-sky-600 font-mono">Rp {{ number_format($balanceSheet['total_assets'], 0, ',', '.') }}</span>
+                            </div>
                         </div>
-                        <div class="flex justify-between text-sm font-black pt-3 border-t-2 border-slate-900 dark:border-slate-100">
-                            <span>TOTAL AKTIVA</span>
-                            <span class="text-sky-600 font-mono">Rp {{ number_format($balanceSheet['total_assets'], 0, ',', '.') }}</span>
+
+                        <!-- Pasiva (Liabilities & Equities) -->
+                        <div class="space-y-4">
+                            <h4 class="text-xs font-bold uppercase tracking-wider text-amber-600 pb-2 border-b border-amber-200">PASIVA (KEWAJIBAN & MODAL)</h4>
+                            <div class="space-y-2 text-xs">
+                                <span class="block text-2xs font-bold text-slate-400 uppercase">Kewajiban (Liabilities)</span>
+                                @foreach($balanceSheet['liabilities'] as $liab)
+                                    <div class="flex justify-between border-b border-slate-50 dark:border-slate-800/50 pb-1">
+                                        <span class="text-slate-600 dark:text-slate-300">{{ $liab['code'] }} - {{ $liab['name'] }}</span>
+                                        <span class="font-mono font-bold">Rp {{ number_format($liab['amount'], 0, ',', '.') }}</span>
+                                    </div>
+                                @endforeach
+
+                                <span class="block text-2xs font-bold text-slate-400 uppercase pt-2">Ekuitas (Equities)</span>
+                                @foreach($balanceSheet['equities'] as $eq)
+                                    <div class="flex justify-between border-b border-slate-50 dark:border-slate-800/50 pb-1">
+                                        <span class="text-slate-600 dark:text-slate-300">{{ $eq['code'] }} - {{ $eq['name'] }}</span>
+                                        <span class="font-mono font-bold">Rp {{ number_format($eq['amount'], 0, ',', '.') }}</span>
+                                    </div>
+                                @endforeach
+                            </div>
+                            <div class="flex justify-between text-sm font-black pt-3 border-t-2 border-slate-900 dark:border-slate-100">
+                                <span>TOTAL PASIVA</span>
+                                <span class="text-amber-600 font-mono">Rp {{ number_format($balanceSheet['total_liabilities_equity'], 0, ',', '.') }}</span>
+                            </div>
                         </div>
                     </div>
+                </x-card>
+            </div>
 
-                    <!-- Pasiva (Liabilities & Equities) -->
-                    <div class="space-y-4">
-                        <h4 class="text-xs font-bold uppercase tracking-wider text-amber-600 pb-2 border-b border-amber-200">PASIVA (KEWAJIBAN & MODAL)</h4>
-                        <div class="space-y-2 text-xs">
-                            <span class="block text-2xs font-bold text-slate-400 uppercase">Kewajiban (Liabilities)</span>
-                            @foreach($balanceSheet['liabilities'] as $liab)
-                                <div class="flex justify-between border-b border-slate-50 dark:border-slate-800/50 pb-1">
-                                    <span class="text-slate-600 dark:text-slate-300">{{ $liab['code'] }} - {{ $liab['name'] }}</span>
-                                    <span class="font-mono font-bold">Rp {{ number_format($liab['amount'], 0, ',', '.') }}</span>
-                                </div>
-                            @endforeach
-
-                            <span class="block text-2xs font-bold text-slate-400 uppercase pt-2">Ekuitas (Equities)</span>
-                            @foreach($balanceSheet['equities'] as $eq)
-                                <div class="flex justify-between border-b border-slate-50 dark:border-slate-800/50 pb-1">
-                                    <span class="text-slate-600 dark:text-slate-300">{{ $eq['code'] }} - {{ $eq['name'] }}</span>
-                                    <span class="font-mono font-bold">Rp {{ number_format($eq['amount'], 0, ',', '.') }}</span>
-                                </div>
-                            @endforeach
-                        </div>
-                        <div class="flex justify-between text-sm font-black pt-3 border-t-2 border-slate-900 dark:border-slate-100">
-                            <span>TOTAL PASIVA</span>
-                            <span class="text-amber-600 font-mono">Rp {{ number_format($balanceSheet['total_liabilities_equity'], 0, ',', '.') }}</span>
-                        </div>
-                    </div>
-                </div>
-            </x-card>
+            <script>
+                document.addEventListener('DOMContentLoaded', () => {
+                    const ctxBalance = document.getElementById('balanceChart');
+                    if (ctxBalance) {
+                        new Chart(ctxBalance.getContext('2d'), {
+                            type: 'bar',
+                            data: {
+                                labels: ['Total Aktiva (Assets)', 'Kewajiban (Liabilities)', 'Ekuitas (Equity)', 'Total Pasiva'],
+                                datasets: [{
+                                    label: 'Nilai (Rp)',
+                                    data: [
+                                        @js($balanceSheet['total_assets']),
+                                        @js($balanceSheet['total_liabilities']),
+                                        @js($balanceSheet['total_equities']),
+                                        @js($balanceSheet['total_liabilities_equity'])
+                                    ],
+                                    backgroundColor: ['#0284c7', '#d97706', '#8b5cf6', '#059669'],
+                                    borderRadius: 8
+                                }]
+                            },
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => ' Rp ' + Number(c.raw).toLocaleString('id-ID') } } }
+                            }
+                        });
+                    }
+                });
+            </script>
         @endif
 
         <!-- Tab 3: Trial Balance -->
         @if($tab === 'trial')
-            <x-card title="Laporan Neraca Saldo (Trial Balance)">
-                <div class="overflow-x-auto">
-                    <table class="w-full text-xs border-collapse">
-                        <thead>
-                            <tr class="border-b-2 border-slate-200 dark:border-slate-700 text-slate-400 font-bold uppercase tracking-wider">
-                                <th class="py-2.5 px-3 text-left">Kode Akun</th>
-                                <th class="py-2.5 px-3 text-left">Nama Akun</th>
-                                <th class="py-2.5 px-3 text-left">Kategori</th>
-                                <th class="py-2.5 px-3 text-right">Debit</th>
-                                <th class="py-2.5 px-3 text-right">Kredit</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-slate-100 dark:divide-slate-800 font-mono">
-                            @forelse($trialBalance['rows'] as $row)
-                                <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/30">
-                                    <td class="py-2 px-3 font-bold text-slate-800 dark:text-slate-200">{{ $row['code'] }}</td>
-                                    <td class="py-2 px-3 text-slate-700 dark:text-slate-350 font-sans">{{ $row['name'] }}</td>
-                                    <td class="py-2 px-3 text-2xs uppercase text-slate-400 font-sans">{{ $row['type'] }}</td>
-                                    <td class="py-2 px-3 text-right text-slate-700 dark:text-slate-300">
-                                        {{ $row['debit'] > 0 ? 'Rp ' . number_format($row['debit'], 0, ',', '.') : '-' }}
-                                    </td>
-                                    <td class="py-2 px-3 text-right text-slate-700 dark:text-slate-300">
-                                        {{ $row['credit'] > 0 ? 'Rp ' . number_format($row['credit'], 0, ',', '.') : '-' }}
-                                    </td>
+            <div class="space-y-6">
+                <!-- Visual Chart Card for Trial Balance -->
+                <x-card title="Grafik Perbandingan Total Debit vs Kredit (Trial Balance)">
+                    <div class="relative h-64 md:h-72">
+                        <canvas id="trialChart"></canvas>
+                    </div>
+                </x-card>
+
+                <x-card title="Laporan Neraca Saldo (Trial Balance)">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-xs border-collapse">
+                            <thead>
+                                <tr class="border-b-2 border-slate-200 dark:border-slate-700 text-slate-400 font-bold uppercase tracking-wider">
+                                    <th class="py-2.5 px-3 text-left">Kode Akun</th>
+                                    <th class="py-2.5 px-3 text-left">Nama Akun</th>
+                                    <th class="py-2.5 px-3 text-left">Kategori</th>
+                                    <th class="py-2.5 px-3 text-right">Debit</th>
+                                    <th class="py-2.5 px-3 text-right">Kredit</th>
                                 </tr>
-                            @empty
-                                <tr>
-                                    <td colspan="5" class="py-8 text-center text-slate-400 font-sans">Belum ada data transaksi jurnal terposting.</td>
+                            </thead>
+                            <tbody class="divide-y divide-slate-100 dark:divide-slate-800 font-mono">
+                                @forelse($trialBalance['rows'] as $row)
+                                    <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/30">
+                                        <td class="py-2 px-3 font-bold text-slate-800 dark:text-slate-200">{{ $row['code'] }}</td>
+                                        <td class="py-2 px-3 text-slate-700 dark:text-slate-350 font-sans">{{ $row['name'] }}</td>
+                                        <td class="py-2 px-3 text-2xs uppercase text-slate-400 font-sans">{{ $row['type'] }}</td>
+                                        <td class="py-2 px-3 text-right text-slate-700 dark:text-slate-300">
+                                            {{ $row['debit'] > 0 ? 'Rp ' . number_format($row['debit'], 0, ',', '.') : '-' }}
+                                        </td>
+                                        <td class="py-2 px-3 text-right text-slate-700 dark:text-slate-350">
+                                            {{ $row['credit'] > 0 ? 'Rp ' . number_format($row['credit'], 0, ',', '.') : '-' }}
+                                        </td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="5" class="py-8 text-center text-slate-400 font-sans">Belum ada data transaksi jurnal terposting.</td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                            <tfoot>
+                                <tr class="border-t-2 border-slate-900 dark:border-slate-100 font-bold font-mono text-sm">
+                                    <td colspan="3" class="py-3 px-3 font-sans font-black">TOTAL</td>
+                                    <td class="py-3 px-3 text-right text-primary">Rp {{ number_format($trialBalance['total_debit'], 0, ',', '.') }}</td>
+                                    <td class="py-3 px-3 text-right text-primary">Rp {{ number_format($trialBalance['total_credit'], 0, ',', '.') }}</td>
                                 </tr>
-                            @endforelse
-                        </tbody>
-                        <tfoot>
-                            <tr class="border-t-2 border-slate-900 dark:border-slate-100 font-bold font-mono text-sm">
-                                <td colspan="3" class="py-3 px-3 font-sans font-black">TOTAL</td>
-                                <td class="py-3 px-3 text-right text-primary">Rp {{ number_format($trialBalance['total_debit'], 0, ',', '.') }}</td>
-                                <td class="py-3 px-3 text-right text-primary">Rp {{ number_format($trialBalance['total_credit'], 0, ',', '.') }}</td>
-                            </tr>
-                        </tfoot>
-                    </table>
-                </div>
-            </x-card>
+                            </tfoot>
+                        </table>
+                    </div>
+                </x-card>
+            </div>
+
+            <script>
+                document.addEventListener('DOMContentLoaded', () => {
+                    const ctxTrial = document.getElementById('trialChart');
+                    if (ctxTrial) {
+                        new Chart(ctxTrial.getContext('2d'), {
+                            type: 'bar',
+                            data: {
+                                labels: ['Total Debit', 'Total Kredit'],
+                                datasets: [{
+                                    label: 'Saldo (Rp)',
+                                    data: [
+                                        @js($trialBalance['total_debit']),
+                                        @js($trialBalance['total_credit'])
+                                    ],
+                                    backgroundColor: ['#FF6600', '#10b981'],
+                                    borderRadius: 8
+                                }]
+                            },
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => ' Rp ' + Number(c.raw).toLocaleString('id-ID') } } }
+                            }
+                        });
+                    }
+                });
+            </script>
         @endif
 
     </div>
