@@ -151,17 +151,41 @@
                 <div class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-3xl p-5 shadow-sm flex flex-col justify-between flex-1">
                     <div class="flex items-center justify-between mb-3">
                         <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Kontribusi Pendapatan Cabang</h4>
-                        <span class="text-2xs font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full">{{ count($branchRankings) }} Cabang</span>
+                        <span class="text-2xs font-extrabold text-primary bg-primary/10 px-2.5 py-0.5 rounded-full border border-primary/20">{{ count($branchRankings) }} Cabang</span>
                     </div>
-                    <div class="space-y-3 max-h-56 overflow-y-auto pr-1">
-                        @forelse($branchRankings as $rank)
-                            <div>
-                                <div class="flex justify-between items-center text-xs font-bold mb-1">
-                                    <span class="text-slate-800 dark:text-slate-200 truncate max-w-[130px]" title="{{ $rank['name'] }}">{{ $rank['name'] }}</span>
-                                    <span class="font-mono text-slate-900 dark:text-slate-100">Rp {{ number_format($rank['revenue'], 0, ',', '.') }} <span class="text-slate-400 font-sans text-[10px]">({{ $rank['share_percent'] }}%)</span></span>
+                    <div class="space-y-3.5 max-h-60 overflow-y-auto pr-1">
+                        @forelse($branchRankings as $index => $rank)
+                            @php
+                                $rankNum = $index + 1;
+                                $badgeColor = match($rankNum) {
+                                    1 => 'bg-amber-500 text-white shadow-xs',
+                                    2 => 'bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-200',
+                                    3 => 'bg-amber-700/20 text-amber-700 dark:text-amber-400',
+                                    default => 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400'
+                                };
+                                $barGradient = match($rankNum) {
+                                    1 => 'from-orange-500 to-amber-500',
+                                    2 => 'from-blue-500 to-cyan-500',
+                                    3 => 'from-emerald-500 to-teal-500',
+                                    default => 'from-purple-500 to-indigo-500'
+                                };
+                            @endphp
+                            <div class="space-y-1.5">
+                                <div class="flex justify-between items-center text-xs font-bold">
+                                    <div class="flex items-center gap-1.5 min-w-0">
+                                        <span class="w-5 h-5 rounded-md flex items-center justify-center text-[10px] font-black shrink-0 {{ $badgeColor }}">
+                                            #{{ $rankNum }}
+                                        </span>
+                                        <span class="text-slate-800 dark:text-slate-200 truncate" title="{{ $rank['name'] }}">{{ $rank['name'] }}</span>
+                                        <span class="text-[10px] text-slate-400 font-semibold shrink-0">({{ $rank['orders_count'] }} Nota)</span>
+                                    </div>
+                                    <span class="font-mono text-slate-900 dark:text-slate-100 shrink-0">
+                                        Rp {{ number_format($rank['revenue'], 0, ',', '.') }} 
+                                        <span class="text-primary font-black text-[11px] ml-0.5">({{ $rank['share_percent'] }}%)</span>
+                                    </span>
                                 </div>
-                                <div class="w-full bg-slate-100 dark:bg-slate-800 h-2 rounded-full overflow-hidden flex">
-                                    <div class="bg-gradient-to-r from-orange-500 to-amber-500 h-full rounded-full transition-all duration-500" style="width: {{ max($rank['share_percent'], 2) }}%"></div>
+                                <div class="w-full bg-slate-100 dark:bg-slate-800 h-2.5 rounded-full overflow-hidden flex p-0.5 shadow-inner">
+                                    <div class="bg-gradient-to-r {{ $barGradient }} h-full rounded-full transition-all duration-700 shadow-sm" style="width: {{ max($rank['share_percent'], 3) }}%"></div>
                                 </div>
                             </div>
                         @empty
@@ -172,11 +196,18 @@
             </div>
         </div>
 
-        <!-- 4. Real Production Status Cards Section -->
+        <!-- 4. Real Production Status Cards Section (100% Real DB Breakdown) -->
         @php
-            $realStatusCounts = $branchId 
-                ? \App\Models\Order::where('branch_id', $branchId)->whereNotIn('production_status', ['DIAMBIL'])->selectRaw('production_status, count(*) as count')->groupBy('production_status')->pluck('count', 'production_status')
-                : \App\Models\Order::withoutGlobalScopes()->whereNotIn('production_status', ['DIAMBIL'])->selectRaw('production_status, count(*) as count')->groupBy('production_status')->pluck('count', 'production_status');
+            $pb = $productionBreakdown ?? [
+                'TERIMA' => 0, 'PILAH' => 0, 'CUCI' => 0, 'KERING' => 0,
+                'SETRIKA' => 0, 'CEK' => 0, 'PACKING' => 0, 'SIAP' => 0
+            ];
+            $terimaPilah = $pb['TERIMA'] + $pb['PILAH'];
+            $cuci = $pb['CUCI'];
+            $kering = $pb['KERING'];
+            $setrikaCek = $pb['SETRIKA'] + $pb['CEK'];
+            $packing = $pb['PACKING'];
+            $siap = $pb['SIAP'];
         @endphp
         <section class="bg-white dark:bg-slate-900 shadow-sm border border-slate-200/80 dark:border-slate-800 rounded-3xl p-5 sm:p-6 space-y-5">
             <div class="flex justify-between items-center">
@@ -184,7 +215,7 @@
                     <p class="text-[11px] font-extrabold text-slate-400 uppercase tracking-widest mb-0.5">Production Status</p>
                     <h3 class="text-lg sm:text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
                         Order Aktif Workshop
-                        <span class="bg-primary/10 text-primary px-2.5 py-0.5 rounded-full text-xs font-black">{{ $activeOrdersCount }} Nota</span>
+                        <span class="bg-primary/10 text-primary px-2.5 py-0.5 rounded-full text-xs font-black border border-primary/20">{{ $activeOrdersCount }} Nota</span>
                     </h3>
                 </div>
                 <a href="/production" class="text-primary font-bold text-xs hover:underline flex items-center gap-1">
@@ -192,48 +223,70 @@
                 </a>
             </div>
 
-            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                <!-- Pencucian -->
-                <div class="bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 p-4 rounded-2xl flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-950/50 text-blue-600 flex items-center justify-center shrink-0">
-                        <span class="material-symbols-outlined text-xl">water_drop</span>
+            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+                <!-- 1. Penerimaan & Pilah -->
+                <div class="bg-sky-50/70 dark:bg-sky-950/30 border border-sky-100 dark:border-sky-900/40 p-3.5 rounded-2xl flex items-center gap-3">
+                    <div class="w-9 h-9 rounded-xl bg-sky-100 dark:bg-sky-900/50 text-sky-600 flex items-center justify-center shrink-0">
+                        <span class="material-symbols-outlined text-lg">inbox</span>
                     </div>
-                    <div>
-                        <p class="text-2xs font-extrabold text-slate-400 uppercase mb-0.5">Pencucian</p>
-                        <p class="text-base font-black text-slate-900 dark:text-slate-100">{{ $realStatusCounts['CUCI'] ?? 0 }} <span class="text-2xs font-normal text-slate-400">Nota</span></p>
-                    </div>
-                </div>
-
-                <!-- Penyetrikaan -->
-                <div class="bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 p-4 rounded-2xl flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-full bg-orange-100 dark:bg-orange-950/50 text-orange-600 flex items-center justify-center shrink-0">
-                        <span class="material-symbols-outlined text-xl">iron</span>
-                    </div>
-                    <div>
-                        <p class="text-2xs font-extrabold text-slate-400 uppercase mb-0.5">Penyetrikaan</p>
-                        <p class="text-base font-black text-slate-900 dark:text-slate-100">{{ $realStatusCounts['SETRIKA'] ?? 0 }} <span class="text-2xs font-normal text-slate-400">Nota</span></p>
+                    <div class="min-w-0">
+                        <p class="text-[10px] font-extrabold text-sky-700 dark:text-sky-400 uppercase truncate">Terima & Pilah</p>
+                        <p class="text-base font-black text-slate-900 dark:text-slate-100">{{ $terimaPilah }} <span class="text-[10px] font-normal text-slate-400">Nota</span></p>
                     </div>
                 </div>
 
-                <!-- Packing -->
-                <div class="bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 p-4 rounded-2xl flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-full bg-purple-100 dark:bg-purple-950/50 text-purple-600 flex items-center justify-center shrink-0">
-                        <span class="material-symbols-outlined text-xl">inventory_2</span>
+                <!-- 2. Pencucian -->
+                <div class="bg-blue-50/70 dark:bg-blue-950/30 border border-blue-100 dark:border-blue-900/40 p-3.5 rounded-2xl flex items-center gap-3">
+                    <div class="w-9 h-9 rounded-xl bg-blue-100 dark:bg-blue-900/50 text-blue-600 flex items-center justify-center shrink-0">
+                        <span class="material-symbols-outlined text-lg">water_drop</span>
                     </div>
-                    <div>
-                        <p class="text-2xs font-extrabold text-slate-400 uppercase mb-0.5">Packing</p>
-                        <p class="text-base font-black text-slate-900 dark:text-slate-100">{{ $realStatusCounts['PACKING'] ?? 0 }} <span class="text-2xs font-normal text-slate-400">Nota</span></p>
+                    <div class="min-w-0">
+                        <p class="text-[10px] font-extrabold text-blue-700 dark:text-blue-400 uppercase truncate">Pencucian</p>
+                        <p class="text-base font-black text-slate-900 dark:text-slate-100">{{ $cuci }} <span class="text-[10px] font-normal text-slate-400">Nota</span></p>
                     </div>
                 </div>
 
-                <!-- Siap Diambil -->
-                <div class="bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-100 dark:border-emerald-900/50 p-4 rounded-2xl flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-full bg-emerald-100 dark:bg-emerald-900/50 text-emerald-600 flex items-center justify-center shrink-0">
-                        <span class="material-symbols-outlined text-xl">check_circle</span>
+                <!-- 3. Pengeringan -->
+                <div class="bg-amber-50/70 dark:bg-amber-950/30 border border-amber-100 dark:border-amber-900/40 p-3.5 rounded-2xl flex items-center gap-3">
+                    <div class="w-9 h-9 rounded-xl bg-amber-100 dark:bg-amber-900/50 text-amber-600 flex items-center justify-center shrink-0">
+                        <span class="material-symbols-outlined text-lg">air</span>
                     </div>
-                    <div>
-                        <p class="text-2xs font-extrabold text-emerald-800 dark:text-emerald-300 uppercase mb-0.5">Siap Diambil</p>
-                        <p class="text-base font-black text-emerald-900 dark:text-emerald-200">{{ $realStatusCounts['SELESAI'] ?? 0 }} <span class="text-2xs font-normal text-emerald-700">Nota</span></p>
+                    <div class="min-w-0">
+                        <p class="text-[10px] font-extrabold text-amber-700 dark:text-amber-400 uppercase truncate">Pengeringan</p>
+                        <p class="text-base font-black text-slate-900 dark:text-slate-100">{{ $kering }} <span class="text-[10px] font-normal text-slate-400">Nota</span></p>
+                    </div>
+                </div>
+
+                <!-- 4. Penyetrikaan & QC -->
+                <div class="bg-orange-50/70 dark:bg-orange-950/30 border border-orange-100 dark:border-orange-900/40 p-3.5 rounded-2xl flex items-center gap-3">
+                    <div class="w-9 h-9 rounded-xl bg-orange-100 dark:bg-orange-900/50 text-orange-600 flex items-center justify-center shrink-0">
+                        <span class="material-symbols-outlined text-lg">iron</span>
+                    </div>
+                    <div class="min-w-0">
+                        <p class="text-[10px] font-extrabold text-orange-700 dark:text-orange-400 uppercase truncate">Setrika & QC</p>
+                        <p class="text-base font-black text-slate-900 dark:text-slate-100">{{ $setrikaCek }} <span class="text-[10px] font-normal text-slate-400">Nota</span></p>
+                    </div>
+                </div>
+
+                <!-- 5. Packing -->
+                <div class="bg-purple-50/70 dark:bg-purple-950/30 border border-purple-100 dark:border-purple-900/40 p-3.5 rounded-2xl flex items-center gap-3">
+                    <div class="w-9 h-9 rounded-xl bg-purple-100 dark:bg-purple-900/50 text-purple-600 flex items-center justify-center shrink-0">
+                        <span class="material-symbols-outlined text-lg">inventory_2</span>
+                    </div>
+                    <div class="min-w-0">
+                        <p class="text-[10px] font-extrabold text-purple-700 dark:text-purple-400 uppercase truncate">Packing</p>
+                        <p class="text-base font-black text-slate-900 dark:text-slate-100">{{ $packing }} <span class="text-[10px] font-normal text-slate-400">Nota</span></p>
+                    </div>
+                </div>
+
+                <!-- 6. Siap Diambil -->
+                <div class="bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900/60 p-3.5 rounded-2xl flex items-center gap-3 shadow-2xs">
+                    <div class="w-9 h-9 rounded-xl bg-emerald-100 dark:bg-emerald-900/50 text-emerald-600 flex items-center justify-center shrink-0">
+                        <span class="material-symbols-outlined text-lg">check_circle</span>
+                    </div>
+                    <div class="min-w-0">
+                        <p class="text-[10px] font-extrabold text-emerald-800 dark:text-emerald-300 uppercase truncate">Siap Diambil</p>
+                        <p class="text-base font-black text-emerald-900 dark:text-emerald-200">{{ $siap }} <span class="text-[10px] font-normal text-emerald-700 dark:text-emerald-400">Nota</span></p>
                     </div>
                 </div>
             </div>

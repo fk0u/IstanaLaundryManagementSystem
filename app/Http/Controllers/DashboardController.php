@@ -82,18 +82,8 @@ class DashboardController extends Controller
             $growthPercent = (($currentMonthTotal - $lastMonthTotal) / $lastMonthTotal) * 100;
         }
 
-        // Top Performing Branch
-        $topBranch = Branch::withoutGlobalScopes()
-            ->withSum(['orders as total_revenue' => function ($q) {
-                $q->withoutGlobalScopes();
-            }], 'total')
-            ->orderByDesc('total_revenue')
-            ->first();
-        $topBranchName = $topBranch ? $topBranch->name : 'N/A';
-        $topBranchRevenue = $topBranch ? (float) $topBranch->total_revenue : 0;
-
         // Branch comparison & ranking statistics (Real backend data for owner dashboard)
-        $branchRankings = Branch::withoutGlobalScopes()
+        $branches = Branch::withoutGlobalScopes()
             ->withCount(['orders as total_orders' => function ($q) {
                 $q->withoutGlobalScopes();
             }])
@@ -101,39 +91,33 @@ class DashboardController extends Controller
                 $q->withoutGlobalScopes();
             }], 'total')
             ->orderByDesc('total_revenue')
-            ->get()
-            ->map(function ($branch) use ($totalRevenue) {
-                $rev = (float) ($branch->total_revenue ?? 0);
-                $share = $totalRevenue > 0 ? round(($rev / $totalRevenue) * 100, 1) : 0;
-                return [
-                    'id' => $branch->id,
-                    'name' => $branch->name,
-                    'revenue' => $rev,
-                    'orders_count' => $branch->total_orders ?? 0,
-                    'share_percent' => $share,
-                ];
-            });
+            ->get();
+
+        $topBranch = $branches->first();
+        $topBranchName = $topBranch ? $topBranch->name : 'N/A';
+        $topBranchRevenue = $topBranch ? (float) $topBranch->total_revenue : 0;
+
+        $branchRankings = $branches->map(function ($branch) use ($totalRevenue) {
+            $rev = (float) ($branch->total_revenue ?? 0);
+            $share = $totalRevenue > 0 ? round(($rev / $totalRevenue) * 100, 1) : 0;
+            return [
+                'id' => $branch->id,
+                'name' => $branch->name,
+                'code' => $branch->code ?? '',
+                'revenue' => $rev,
+                'orders_count' => $branch->total_orders ?? 0,
+                'share_percent' => $share,
+            ];
+        })->toArray();
 
         // Chart.js data
         $chartLabels = [];
         $chartValues = [];
         if (! $branchId) {
-            // Global view: compare branches — one aggregated query without global scope
-            $perBranch = Order::withoutGlobalScopes()
-                ->selectRaw('branch_id, SUM(total) as revenue')
-                ->whereNotNull('branch_id')
-                ->groupBy('branch_id')
-                ->pluck('revenue', 'branch_id');
-
-            $branchesListCached = Cache::remember('branches:list', 300, fn () => Branch::all());
-            foreach ($branchesListCached as $branch) {
-                if (is_object($branch) && isset($branch->name)) {
-                    $chartLabels[] = $branch->name;
-                    $chartValues[] = (float) ($perBranch[$branch->id] ?? 0);
-                } elseif (is_string($branch)) {
-                    $chartLabels[] = $branch;
-                    $chartValues[] = 0;
-                }
+            // Global view: compare branches - populate labels and values directly from $branches collection
+            foreach ($branches as $branch) {
+                $chartLabels[] = $branch->name;
+                $chartValues[] = (float) ($branch->total_revenue ?? 0);
             }
             $chartTitle = 'Komparasi Pendapatan Cabang';
             $chartSub = 'Total akumulasi pendapatan per cabang (Rupiah)';
@@ -144,7 +128,26 @@ class DashboardController extends Controller
             $chartSub = 'Data 7 hari terakhir (Rupiah)';
         }
 
-        $branchesList = Cache::remember('branches:list', 300, fn () => Branch::all());
+        // Real Production breakdown counts from DB
+        $prodStatusQuery = $branchId ? Order::where('branch_id', $branchId) : Order::withoutGlobalScopes();
+        $productionCountsRaw = $prodStatusQuery->whereNotIn('production_status', ['DIAMBIL'])
+            ->selectRaw('production_status, count(*) as count')
+            ->groupBy('production_status')
+            ->pluck('count', 'production_status')
+            ->toArray();
+
+        $productionBreakdown = [
+            'TERIMA'  => (int) ($productionCountsRaw['TERIMA'] ?? 0),
+            'PILAH'   => (int) ($productionCountsRaw['PILAH'] ?? 0),
+            'CUCI'    => (int) ($productionCountsRaw['CUCI'] ?? 0),
+            'KERING'  => (int) ($productionCountsRaw['KERING'] ?? 0),
+            'SETRIKA' => (int) ($productionCountsRaw['SETRIKA'] ?? 0),
+            'CEK'     => (int) ($productionCountsRaw['CEK'] ?? 0),
+            'PACKING' => (int) ($productionCountsRaw['PACKING'] ?? 0),
+            'SIAP'    => (int) ($productionCountsRaw['SIAP'] ?? 0),
+        ];
+
+        $branchesList = $branches;
 
         return view('dashboard.owner', compact(
             'totalRevenue',
@@ -164,7 +167,8 @@ class DashboardController extends Controller
             'topBranchName',
             'topBranchRevenue',
             'branchesList',
-            'branchRankings'
+            'branchRankings',
+            'productionBreakdown'
         ));
     }
 
