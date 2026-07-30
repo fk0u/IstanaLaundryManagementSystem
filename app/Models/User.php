@@ -67,4 +67,9 @@ class User extends Authenticatable
     {
         return $this->hasMany(Order::class, 'cashier_id');
     }
+
+    public function employee()
+    {
+        return $this->hasOne(Employee::class);
+    }
 }

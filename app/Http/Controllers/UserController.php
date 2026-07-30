@@ -20,7 +20,7 @@ class UserController extends Controller
         $roleFilter = $request->query('role');
         $branchFilter = $request->query('branch_id');
 
-        $users = User::with(['branch', 'roles'])
+        $users = User::with(['branch', 'roles', 'employee'])
             ->when($search !== '', function ($q) use ($search) {
                 $q->where(function ($sub) use ($search) {
                     $sub->where('name', 'LIKE', "%{$search}%")
@@ -44,7 +44,7 @@ class UserController extends Controller
     }
 
     /**
-     * Store a newly created user (Admin internal creation).
+     * Store a newly created user (Admin internal creation) and sync to HR Employees.
      */
     public function store(Request $request)
     {
@@ -67,11 +67,35 @@ class UserController extends Controller
 
         $user->assignRole($validated['role']);
 
-        return redirect()->back()->with('success', "Pengguna staf {$user->name} berhasil ditambahkan!");
+        // Auto-sync matching HR Employee record
+        $positionName = match ($validated['role']) {
+            'Cashier' => 'Kasir Utama',
+            'Workshop_Staff' => 'Operator Workshop',
+            'Workshop_Admin' => 'Admin Workshop',
+            'Branch_Admin' => 'Admin Cabang',
+            'Finance' => 'Staf Keuangan',
+            'CS_Marketing' => 'Staf CS & Marketing',
+            default => 'Staf Operational',
+        };
+
+        \App\Models\Employee::withoutGlobalScopes()->updateOrCreate(
+            ['user_id' => $user->id],
+            [
+                'nik' => 'NIK-STF-'.str_pad($user->id, 4, '0', STR_PAD_LEFT),
+                'name' => $user->name,
+                'position' => $positionName,
+                'branch_id' => $user->branch_id,
+                'base_salary' => 3000000.00,
+                'is_active' => $user->is_active,
+                'joined_at' => now()->toDateString(),
+            ]
+        );
+
+        return redirect()->back()->with('success', "Pengguna staf {$user->name} berhasil ditambahkan dan tersinkronisasi ke HR!");
     }
 
     /**
-     * Update existing user information and role.
+     * Update existing user information, role, and sync to HR Employee.
      */
     public function update(Request $request, User $user)
     {
@@ -93,7 +117,38 @@ class UserController extends Controller
         // Sync Spatie role
         $user->syncRoles([$validated['role']]);
 
-        return redirect()->back()->with('success', "Data pengguna {$user->name} berhasil diperbarui.");
+        // Sync HR Employee record
+        $positionName = match ($validated['role']) {
+            'Cashier' => 'Kasir Utama',
+            'Workshop_Staff' => 'Operator Workshop',
+            'Workshop_Admin' => 'Admin Workshop',
+            'Branch_Admin' => 'Admin Cabang',
+            'Finance' => 'Staf Keuangan',
+            'CS_Marketing' => 'Staf CS & Marketing',
+            default => 'Staf Operational',
+        };
+
+        if ($user->employee) {
+            $user->employee->update([
+                'name' => $validated['name'],
+                'branch_id' => $validated['branch_id'],
+                'position' => $positionName,
+                'is_active' => $validated['is_active'],
+            ]);
+        } else {
+            \App\Models\Employee::withoutGlobalScopes()->create([
+                'user_id' => $user->id,
+                'nik' => 'NIK-STF-'.str_pad($user->id, 4, '0', STR_PAD_LEFT),
+                'name' => $user->name,
+                'position' => $positionName,
+                'branch_id' => $user->branch_id,
+                'base_salary' => 3000000.00,
+                'is_active' => $user->is_active,
+                'joined_at' => now()->toDateString(),
+            ]);
+        }
+
+        return redirect()->back()->with('success', "Data pengguna {$user->name} berhasil diperbarui dan tersinkronisasi ke HR.");
     }
 
     /**
