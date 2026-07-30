@@ -1,6 +1,6 @@
 # System Overview — Istana Laundry Management System
 
-**Versi:** 1.0 · **28 Juli 2026**  
+**Versi:** 1.1 · **30 Juli 2026**  
 **Audience:** developer, tech lead, stakeholder teknis
 
 ---
@@ -11,6 +11,8 @@ Semi-ERP laundry multi-cabang berbasis **Laravel 13**, UI **Blade + Alpine.js + 
 
 Klien: **Istana Laundry Samarinda** · Dev: **KOU / Alenkosa.id**
 
+Fase aktif: **TEST 2** ([PHASE_TEST2.md](PHASE_TEST2.md) · issues #29–#36).
+
 ---
 
 ## 2. Arsitektur logis
@@ -20,128 +22,101 @@ Klien: **Istana Laundry Samarinda** · Dev: **KOU / Alenkosa.id**
 │  Presentation: Blade views, Alpine, Chart.js, Vite     │
 ├─────────────────────────────────────────────────────────┤
 │  HTTP: routes/web.php · routes/api.php · middleware     │
-│        auth, branch.scope, role (parsial)               │
+│        auth, verified?, branch.scope, role: (modul)     │
 ├─────────────────────────────────────────────────────────┤
-│  Application: Controllers → Services → Observers        │
+│  Application: Controllers → Services → Observers → Jobs │
 │    POS, Production, Finance/Journal, Loyalty, Audit     │
 ├─────────────────────────────────────────────────────────┤
-│  Domain models + BranchScoped global scope              │
+│  Domain models + BranchScoped + Auditable traits        │
 ├─────────────────────────────────────────────────────────┤
-│  MySQL │ Redis (tersedia, cache app belum optimal)      │
+│  MySQL │ Cache (database) │ Queue jobs (database)       │
 └─────────────────────────────────────────────────────────┘
 ```
 
 ### 2.1 Multi-cabang
 - Session key: `scoped_branch_id`
-- Middleware: `App\Http\Middleware\BranchScopeMiddleware`
-- Trait model: `App\Models\Traits\BranchScoped`
-- Super-role dapat `POST /switch-branch`
+- Middleware: `BranchScopeMiddleware` (tolak user `is_active=false`)
+- Trait: `BranchScoped` (fail-safe branch user jika session kosong)
+- Super-role: `POST /switch-branch`
 
 ### 2.2 Alur order utama
 
 ```text
 POS store → Order (TERIMA, payment_*) → OrderItems
                 │
-                ├─ payment paid → OrderObserver → Journal + Loyalty
-                │
-                └─ Production updateStatus (linear) → ProductionStatusLog
-                         → … → SIAP → DIAMBIL
+                ├─ payment paid → OrderObserver → PostOrderJournalJob (queue)
+                │                      → loyalty + cache bust
+                └─ Production updateStatus → ProductionStatusLog → … → DIAMBIL
 ```
 
 ### 2.3 Alur pengadaan
 
 ```text
-Supplier → PR (pending→approved) → PO (draft→sent→confirmed)
-    → GRN (draft→confirmed) → stock + journal (observer)
+Supplier → PR → PO → GRN confirm → PostGrnJournalJob (stock + journal)
 ```
 
 ---
 
 ## 3. Peta modul ↔ route utama
 
-| Modul | Route prefix / name | Controller / notes |
-|-------|---------------------|--------------------|
-| Dashboard | `/dashboard` | `DashboardController` |
-| POS | `/pos` | `POSController` + `pos.customers.store` |
-| Orders | `/orders` | `OrderController` |
-| Invoice | `/invoices/{order}` | `InvoiceController` |
-| Production | `/production` | `ProductionController` · paginate 15 |
-| Performance | `/performance` | `PerformanceController` |
-| Customers | `/customers` | Closure + search `?q=` |
-| Promotions | `/promotions` | Closure CRUD dasar |
-| Services | `/services` | `ServiceController` + `role:` |
-| Inventory | `/inventory` | Closure |
-| Suppliers | `/procurement/suppliers` | `SupplierController` |
-| PR/PO/GRN | `/procurement/*` | Procurement controllers |
-| Finance COA | `/finance` | Closure |
-| Journals | `/finance/journals` | `JournalController` |
-| Periods | `/finance/periods` | `AccountingPeriodController` |
-| Reports | `/finance/reports` | `FinancialReportController` |
-| HR | `/hr` | `HRController` |
-| Assets | `/assets` | `AssetController` |
-| Refunds | `/refunds` | `RefundController` |
-| Audit | `/audit-logs` | Closure |
-| Public track | `/track` | Closure (no auth) |
-| API | `/api/*` | Sanctum |
+| Modul | Route | Notes |
+|-------|-------|-------|
+| Dashboard | `/dashboard` | Owner chart scope-sensitive (#30 open) |
+| POS | `/pos` | + `pos.customers.store` |
+| Production | `/production` | paginate 15; search UX #32 |
+| Performance | `/performance` | export #36 |
+| Customers | `/customers` | CRM stats #33 |
+| Finance reports | `/finance/reports` | charts #35 |
+| HR | `/hr` | payroll calc #31 |
+| Assets | `/assets` | export #36 |
+| Public track | `/track` | rate-limit + masked PII |
+| API | `/api/*` | Sanctum + login throttle |
 
 ---
 
 ## 4. Stack & runtime
 
-| Komponen | Pilihan |
-|----------|---------|
-| PHP | 8.3+ (image 8.4-FPM) |
-| Framework | Laravel 13 |
-| Auth web | Breeze session |
-| Auth API | Sanctum |
-| Permission | spatie/laravel-permission v8 |
-| PDF/Excel/QR | dompdf, maatwebsite/excel, simple-qrcode |
-| Backup | spatie/laravel-backup |
-| CI | `.github/workflows/ci.yml` |
-| CD | `deploy.yml` → GHCR |
+Laravel 13 · PHP 8.3+ · Sanctum · Spatie Permission v8 · Blade/Alpine/Tailwind · Chart.js · MySQL 8 · dompdf · maatwebsite/excel · Docker · GHCR CI/CD
 
-Docker services (dev): `app`, `nginx`, `mysql`, `redis`, `node` (lihat `docker-compose.yml`).
+**Queue:** `php artisan queue:work --tries=3` wajib di lingkungan yang memproses order/GRN.
 
 ---
 
-## 5. Keamanan — posisi saat ini
+## 5. Keamanan (post #14–#20)
 
 | Area | Kondisi |
 |------|---------|
-| CSRF web | Default Laravel ON |
-| Mass assignment | `#[Fillable]` models |
-| Login web throttle/lockout | Ada |
-| Role middleware | Hampir hanya `services.*` |
-| Audit bisnis | Minim |
-| Public track | Perlu pengerasan isolasi/PII |
-
-Detail temuan & rencana: issue **#14–#21**, dokumen `PHASE_SECURITY_CACHE.md`.
-
----
-
-## 6. Performa — posisi saat ini
-
-- `Cache::` hampir tidak dipakai di app code
-- Queue connection terkonfigurasi; job domain minim
-- N+1 risk: dashboard owner loop, financial report per COA
-
-Rencana: issue **#21**, **#24**.
+| Role middleware modul sensitif | ✅ |
+| Public register | ✅ Off |
+| API / password throttle | ✅ |
+| Tenant + track PII | ✅ |
+| Audit mutasi bisnis | ✅ Auditable trait |
+| Journal race + idempotency | ✅ |
+| Docker seed guard + nginx headers | ✅ |
+| Timezone WITA | 🔓 #29 |
 
 ---
 
-## 7. Lingkungan & perintah
+## 6. Performa (post #21)
+
+| Area | Kondisi |
+|------|---------|
+| Dashboard N+1 branch/hari | ✅ Aggregated queries |
+| `branches:list` cache | ✅ TTL + invalidate on Branch save |
+| FinancialReportService batch balances | ✅ |
+| Journal/GRN via queue jobs | ✅ |
+| Redis as primary cache | Opsional backlog |
+
+---
+
+## 7. Lingkungan
 
 ```bash
-# Dev
 docker compose up -d --build
 docker compose exec app php artisan migrate --seed
+docker compose exec app php artisan queue:work --tries=3
 docker compose exec app php artisan test
-
-# Branch fase non-functional
-git checkout chore/security-and-caching
 ```
-
-Prod: `docker-compose.prod.yml` + image GHCR; secrets Actions untuk deploy SSH opsional.
 
 ---
 
@@ -149,9 +124,9 @@ Prod: `docker-compose.prod.yml` + image GHCR; secrets Actions untuk deploy SSH o
 
 | Dokumen | Isi |
 |---------|-----|
-| [SRS.md](SRS.md) | Requirement AS-IS / TO-BE |
-| [PRODUCT_ROADMAP.md](PRODUCT_ROADMAP.md) | Visi produk & gelombang rilis |
-| [PHASE_SECURITY_CACHE.md](PHASE_SECURITY_CACHE.md) | Epic security/cache |
-| [AI_PROMPTS.md](AI_PROMPTS.md) | Prompt implementasi |
-| [/tasks.md](../tasks.md) | Backlog ringkas |
-| [/README.md](../README.md) | Quick start |
+| [SRS.md](SRS.md) | Requirement |
+| [PRODUCT_ROADMAP.md](PRODUCT_ROADMAP.md) | Gelombang rilis |
+| [PHASE_TEST2.md](PHASE_TEST2.md) | Fase aktif |
+| [PHASE_SECURITY_CACHE.md](PHASE_SECURITY_CACHE.md) | Arsip security/cache |
+| [AI_PROMPTS.md](AI_PROMPTS.md) | Prompt AI |
+| [tasks.md](../tasks.md) | Backlog harian |
