@@ -3,7 +3,7 @@
            'w-72': desktopSidebarOpen, 
            'w-20': !desktopSidebarOpen,
            'translate-x-0': sidebarOpen, 
-           '-translate-x-full md:translate-x-0': !sidebarOpen 
+           '-translate-x-full lg:translate-x-0': !sidebarOpen 
        }"
        id="sidebar-nav">
     <div class="flex flex-col h-full py-6 overflow-hidden">

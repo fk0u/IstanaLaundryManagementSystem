@@ -1,19 +1,19 @@
-<header class="flex justify-between items-center h-16 md:h-20 px-4 md:px-6 lg:px-8 w-full bg-surface-bright/90 dark:bg-slate-900/90 backdrop-blur-xl border-b border-surface-outline/30 dark:border-slate-800 z-40 sticky top-0 transition-colors duration-200"
+<header class="flex items-center justify-between min-h-[64px] md:min-h-[72px] px-3 sm:px-6 w-full bg-white/85 dark:bg-slate-900/85 backdrop-blur-xl border-b border-slate-200/80 dark:border-slate-800/80 z-40 sticky top-0 transition-colors duration-200 shadow-2xs"
         x-data="{ 
             showNotifications: false, 
             showQuickAction: false, 
             showProfileMenu: false,
             showSupportMenu: false 
         }">
-    <div class="flex items-center gap-2 md:gap-4 min-w-0">
+    <div class="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
         <!-- Hamburger Menu for Mobile -->
-        <button @click="sidebarOpen = !sidebarOpen" class="p-2 text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200 md:hidden cursor-pointer rounded-2xl hover:bg-surface-container dark:hover:bg-slate-800 transition-all shrink-0">
+        <button @click="sidebarOpen = !sidebarOpen" class="p-2 text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200 md:hidden cursor-pointer rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-all shrink-0">
             <span class="material-symbols-outlined text-[24px]">menu</span>
         </button>
 
         <!-- Sidebar Toggle Icon for Desktop/Tablet -->
         <button @click="desktopSidebarOpen = !desktopSidebarOpen; localStorage.setItem('desktopSidebarOpen', desktopSidebarOpen)" 
-                class="hidden md:flex p-2.5 text-slate-500 hover:text-primary dark:text-slate-400 dark:hover:text-orange-400 cursor-pointer rounded-2xl hover:bg-surface-container dark:hover:bg-slate-800 transition-all shrink-0 items-center justify-center"
+                class="hidden md:flex p-2 text-slate-500 hover:text-primary dark:text-slate-400 dark:hover:text-orange-400 cursor-pointer rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-all shrink-0 items-center justify-center"
                 :title="desktopSidebarOpen ? 'Ciutkan Sidebar' : 'Perluas Sidebar'">
             <span class="material-symbols-outlined text-[24px] transition-transform duration-300"
                   :class="{ 'rotate-180': !desktopSidebarOpen }">
@@ -21,36 +21,32 @@
             </span>
         </button>
 
-        <!-- Brand Logo & Name - Desktop -->
-        <div class="hidden md:flex items-center gap-3">
-            <img alt="Istana Laundry Logo" class="h-9 w-auto object-contain" src="{{ asset('images/logo.webp') }}"/>
-            <h2 class="text-lg md:text-xl font-black font-display text-primary dark:text-orange-400 tracking-tight whitespace-nowrap">Istana Laundry Samarinda</h2>
-        </div>
-        
-        <!-- Mobile Brand -->
-        <div class="flex md:hidden items-center gap-2">
-            <img alt="Istana Laundry Logo" class="h-7 w-auto object-contain" src="{{ asset('images/logo.webp') }}"/>
-            <h2 class="text-base font-black font-display text-primary dark:text-orange-400 tracking-tight truncate">Istana Laundry</h2>
+        <!-- Brand Logo & Name - Desktop (only visible on xl screens when sidebar is present) -->
+        <div class="hidden xl:flex items-center gap-2 shrink-0">
+            <img alt="Istana Laundry Logo" class="h-8 w-auto object-contain" src="{{ asset('images/logo.webp') }}"/>
+            <h2 class="text-base font-black font-display text-primary dark:text-orange-400 tracking-tight whitespace-nowrap">Istana Laundry</h2>
         </div>
 
         <!-- Branch Scope Switcher -->
-        <div class="flex gap-2 md:gap-4 items-center shrink-0">
+        <div class="flex items-center shrink-0 ml-1 sm:ml-2">
             @if(auth()->user()->hasAnyRole(['Developer', 'Owner', 'Super_Admin']))
                 <form action="{{ route('switch-branch') }}" method="POST" class="inline-flex items-center">
                     @csrf
-                    <label class="text-2xs font-extrabold font-sans text-slate-400 dark:text-slate-500 mr-2 uppercase tracking-widest hidden lg:inline">Scope:</label>
-                    <select name="branch_id" onchange="this.form.submit()"
-                            class="bg-surface-container dark:bg-slate-950 border border-surface-outline/50 dark:border-slate-800 rounded-full text-2xs md:text-[11px] font-bold px-3 py-1.5 outline-none focus:border-primary text-slate-700 dark:text-slate-300 cursor-pointer max-w-[130px] md:max-w-none shadow-sm">
-                        <option value="">Global (Semua Cabang)</option>
-                        @foreach(\App\Models\Branch::orderBy('name')->get() as $br)
-                            <option value="{{ $br->id }}" {{ session('scoped_branch_id') == $br->id ? 'selected' : '' }}>
-                                {{ $br->name }}
-                            </option>
-                        @endforeach
-                    </select>
+                    <div class="relative flex items-center">
+                        <span class="material-symbols-outlined text-slate-400 text-xs absolute left-2.5 pointer-events-none">storefront</span>
+                        <select name="branch_id" onchange="this.form.submit()"
+                                class="bg-slate-100 dark:bg-slate-950 border border-slate-200/80 dark:border-slate-800 rounded-full text-2xs md:text-xs font-bold pl-7 pr-7 py-1.5 outline-none focus:ring-2 focus:ring-primary/20 text-slate-700 dark:text-slate-300 cursor-pointer max-w-[140px] sm:max-w-[200px] md:max-w-none shadow-2xs transition-all">
+                            <option value="">Global (Semua Cabang)</option>
+                            @foreach(\App\Models\Branch::orderBy('name')->get() as $br)
+                                <option value="{{ $br->id }}" {{ session('scoped_branch_id') == $br->id ? 'selected' : '' }}>
+                                    {{ $br->name }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
                 </form>
             @else
-                <span class="text-2xs md:text-xs font-bold text-primary bg-primary-container text-primary-on-container px-3 py-1 rounded-full border border-primary/20 whitespace-nowrap shadow-sm">
+                <span class="text-2xs md:text-xs font-bold text-primary bg-primary/10 text-primary px-3 py-1 rounded-full border border-primary/20 whitespace-nowrap shadow-2xs">
                     {{ auth()->user()->branch?->name ?? 'N/A' }}
                 </span>
             @endif

@@ -19,66 +19,78 @@
     </div>
 
     <!-- Scoped Summary Cards -->
-    <div class="grid grid-cols-4 gap-6 mb-8">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 md:gap-4.5 mb-6 md:mb-8">
         <!-- Revenue -->
-        <div class="col-span-4 sm:col-span-2 lg:col-span-1 bg-white dark:bg-slate-900 border border-outline-variant dark:border-slate-800 rounded-xl p-6 premium-shadow flex flex-col justify-between">
-            <div class="flex justify-between items-start">
-                <div>
-                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Total Omset Cabang</span>
-                    <h4 class="text-xl font-extrabold text-slate-800 dark:text-slate-100 mt-1">Rp {{ number_format($totalRevenue, 0, ',', '.') }}</h4>
+        <div class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-4 sm:p-5 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col justify-between">
+            <div class="flex justify-between items-start gap-2">
+                <div class="min-w-0 flex-1">
+                    <span class="text-2xs font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wider block">Total Omset Cabang</span>
+                    <h4 class="text-base sm:text-lg lg:text-xl font-black font-mono text-slate-900 dark:text-slate-100 mt-1 whitespace-nowrap overflow-hidden text-ellipsis" title="Rp {{ number_format($totalRevenue, 0, ',', '.') }}">
+                        Rp {{ number_format($totalRevenue, 0, ',', '.') }}
+                    </h4>
                 </div>
-                <span class="material-symbols-outlined text-primary bg-primary-container/10 p-2.5 rounded-lg">payments</span>
+                <div class="w-10 h-10 rounded-xl bg-primary/10 text-primary dark:bg-slate-800 dark:text-orange-400 flex items-center justify-center shrink-0 shadow-2xs">
+                    <span class="material-symbols-outlined text-xl">payments</span>
+                </div>
             </div>
-            <div class="mt-4 flex items-center gap-1.5 text-slate-550 text-[10px] font-bold">
+            <div class="mt-3 flex items-center gap-1.5 text-slate-400 dark:text-slate-500 text-2xs font-semibold">
                 <span class="material-symbols-outlined text-xs">info</span>
-                <span>Akumulasi transaksi cabang</span>
+                <span class="truncate">Akumulasi transaksi cabang</span>
             </div>
         </div>
 
         <!-- Active Orders -->
-        <div class="col-span-4 sm:col-span-2 lg:col-span-1 bg-white dark:bg-slate-900 border border-outline-variant dark:border-slate-800 rounded-xl p-6 premium-shadow flex flex-col justify-between">
-            <div class="flex justify-between items-start">
-                <div>
-                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Antrean Cucian Aktif</span>
-                    <h4 class="text-xl font-extrabold text-slate-800 dark:text-slate-100 mt-1">{{ number_format($activeOrdersCount, 0, ',', '.') }} Nota</h4>
+        <div class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-4 sm:p-5 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col justify-between">
+            <div class="flex justify-between items-start gap-2">
+                <div class="min-w-0 flex-1">
+                    <span class="text-2xs font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wider block">Antrean Cucian Aktif</span>
+                    <h4 class="text-base sm:text-lg lg:text-xl font-black font-mono text-slate-900 dark:text-slate-100 mt-1 whitespace-nowrap">
+                        {{ number_format($activeOrdersCount, 0, ',', '.') }} <span class="text-xs font-bold text-slate-400 font-sans">Nota</span>
+                    </h4>
                 </div>
-                <img alt="Istana Laundry Logo" class="w-10 h-10 object-contain" src="{{ asset('images/logo.webp') }}"/>
+                <div class="w-10 h-10 rounded-xl bg-orange-500/10 text-orange-600 dark:bg-orange-950/40 dark:text-orange-400 flex items-center justify-center shrink-0 shadow-2xs">
+                    <span class="material-symbols-outlined text-xl">local_laundry_service</span>
+                </div>
             </div>
-            <div class="mt-4 flex items-center gap-1 text-[10px] text-slate-500 font-bold">
-                <span class="w-1.5 h-1.5 rounded-full bg-orange-500 animate-pulse"></span>
-                <span>Belum berstatus DIAMBIL</span>
+            <div class="mt-3 flex items-center gap-1 text-2xs text-orange-600 dark:text-orange-400 font-semibold">
+                <span class="w-1.5 h-1.5 rounded-full bg-orange-500 animate-ping shrink-0"></span>
+                <span class="truncate">Belum berstatus DIAMBIL</span>
             </div>
         </div>
 
         <!-- Critical Stock -->
-        <div class="col-span-4 sm:col-span-2 lg:col-span-1 bg-white dark:bg-slate-900 border border-outline-variant dark:border-slate-800 rounded-xl p-6 premium-shadow flex flex-col justify-between">
-            <div class="flex justify-between items-start">
-                <div>
-                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Bahan Stok Kritis</span>
-                    <h4 class="text-xl font-extrabold mt-1 {{ $lowStockCount > 0 ? 'text-red-500' : 'text-green-500' }}">
-                        {{ number_format($lowStockCount, 0, ',', '.') }} Item
+        <div class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-4 sm:p-5 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col justify-between">
+            <div class="flex justify-between items-start gap-2">
+                <div class="min-w-0 flex-1">
+                    <span class="text-2xs font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wider block">Bahan Stok Kritis</span>
+                    <h4 class="text-base sm:text-lg lg:text-xl font-black font-mono mt-1 {{ $lowStockCount > 0 ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-400' }}">
+                        {{ number_format($lowStockCount, 0, ',', '.') }} <span class="text-xs font-bold text-slate-400 font-sans">Item</span>
                     </h4>
                 </div>
-                <span class="material-symbols-outlined p-2.5 rounded-lg {{ $lowStockCount > 0 ? 'text-red-500 bg-red-500/10' : 'text-green-500 bg-green-500/10' }}">
-                    warning
-                </span>
+                <div class="w-10 h-10 rounded-xl {{ $lowStockCount > 0 ? 'text-rose-600 bg-rose-500/10' : 'text-emerald-600 bg-emerald-500/10' }} flex items-center justify-center shrink-0 shadow-2xs">
+                    <span class="material-symbols-outlined text-xl">warning</span>
+                </div>
             </div>
-            <div class="mt-4 text-[10px] font-semibold text-slate-400">
-                Stok <span class="font-bold text-slate-500">&le; batas minimum</span>
+            <div class="mt-3 text-2xs font-semibold text-slate-400 dark:text-slate-500 truncate">
+                Stok &le; batas minimum
             </div>
         </div>
 
         <!-- Today Transactions -->
-        <div class="col-span-4 sm:col-span-2 lg:col-span-1 bg-white dark:bg-slate-900 border border-outline-variant dark:border-slate-800 rounded-xl p-6 premium-shadow flex flex-col justify-between">
-            <div class="flex justify-between items-start">
-                <div>
-                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Transaksi Hari Ini</span>
-                    <h4 class="text-xl font-extrabold text-slate-800 dark:text-slate-100 mt-1">{{ number_format($todayTransactions, 0, ',', '.') }} Nota</h4>
+        <div class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-4 sm:p-5 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col justify-between">
+            <div class="flex justify-between items-start gap-2">
+                <div class="min-w-0 flex-1">
+                    <span class="text-2xs font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wider block">Transaksi Hari Ini</span>
+                    <h4 class="text-base sm:text-lg lg:text-xl font-black font-mono text-slate-900 dark:text-slate-100 mt-1 whitespace-nowrap">
+                        {{ number_format($todayOrdersCount ?? 0, 0, ',', '.') }} <span class="text-xs font-bold text-slate-400 font-sans">Nota</span>
+                    </h4>
                 </div>
-                <span class="material-symbols-outlined text-yellow-500 bg-yellow-500/10 p-2.5 rounded-lg">history</span>
+                <div class="w-10 h-10 rounded-xl bg-sky-500/10 text-sky-600 dark:bg-sky-950/40 dark:text-sky-400 flex items-center justify-center shrink-0 shadow-2xs">
+                    <span class="material-symbols-outlined text-xl">today</span>
+                </div>
             </div>
-            <div class="mt-4 text-[10px] text-slate-400 font-semibold">
-                Dibuat tanggal <span class="font-bold text-slate-500">{{ now()->format('d M Y') }}</span>
+            <div class="mt-3 text-2xs font-semibold text-slate-400 dark:text-slate-500 truncate">
+                Dibuat {{ now()->format('d M Y') }}
             </div>
         </div>
     </div>

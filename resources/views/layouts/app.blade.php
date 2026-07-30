@@ -40,7 +40,7 @@
         <!-- Sidebar Navigation -->
         <x-sidebar />
 
-        <!-- Mobile Sidebar Backdrop Overlay -->
+        <!-- Mobile & iPad Sidebar Backdrop Overlay -->
         <div x-show="sidebarOpen" 
              x-transition:enter="transition ease-out duration-300"
              x-transition:enter-start="opacity-0"
@@ -49,18 +49,18 @@
              x-transition:leave-start="opacity-100"
              x-transition:leave-end="opacity-0"
              @click="sidebarOpen = false"
-             class="fixed inset-0 bg-slate-950/50 z-40 md:hidden backdrop-blur-[2px]"
+             class="fixed inset-0 bg-slate-950/50 z-40 lg:hidden backdrop-blur-[2px]"
              x-cloak>
         </div>
 
         <!-- Content Area Wrapper — Dynamic padding based on desktop sidebar state -->
         <div class="flex flex-col min-h-screen transition-all duration-300 ease-in-out"
-             :class="{ 'md:pl-72': desktopSidebarOpen, 'md:pl-20': !desktopSidebarOpen }">
+             :class="{ 'lg:pl-72': desktopSidebarOpen, 'lg:pl-20': !desktopSidebarOpen }">
             <!-- Top Navigation Bar -->
             <x-topbar />
 
             <!-- Page Main Content -->
-            <main class="flex-1 p-3 sm:p-4 md:p-6 lg:p-8 max-w-[1600px] mx-auto w-full pb-24 md:pb-6">
+            <main class="flex-1 p-3 sm:p-4 md:p-6 lg:p-8 max-w-[1600px] mx-auto w-full pb-24 lg:pb-6">
                 {{ $slot }}
             </main>
         </div>

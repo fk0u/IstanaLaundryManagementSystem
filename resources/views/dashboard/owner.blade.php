@@ -27,79 +27,106 @@
     </div>
 
     <!-- Executive Summary Cards -->
-    <div class="grid grid-cols-2 lg:grid-cols-5 gap-3 md:gap-4 mb-6 md:mb-8">
+    <div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-3.5 mb-6 md:mb-8">
         <!-- Card 1: Total Revenue -->
-        <div class="bg-white dark:bg-slate-900 border border-outline-variant dark:border-slate-800 rounded-xl p-4 md:p-5 premium-shadow flex flex-col justify-between">
-            <div class="flex justify-between items-start gap-2">
-                <div class="min-w-0">
-                    <span class="text-2xs md:text-[10px] font-bold text-slate-400 uppercase tracking-wider">Total Omset</span>
-                    <h4 class="text-base md:text-lg font-extrabold text-slate-800 dark:text-slate-100 mt-1 truncate">Rp {{ number_format($totalRevenue, 0, ',', '.') }}</h4>
+        <div class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-3.5 sm:p-4.5 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col justify-between">
+            <div class="flex justify-between items-start gap-1.5">
+                <div class="min-w-0 flex-1">
+                    <span class="text-2xs font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wider block">Total Omset</span>
+                    <div class="flex items-baseline gap-1 mt-1">
+                        <span class="text-xs font-bold text-slate-400 font-mono">Rp</span>
+                        <span class="text-sm sm:text-base md:text-lg font-black font-mono text-slate-900 dark:text-slate-100 tracking-tight whitespace-nowrap overflow-hidden text-ellipsis" title="Rp {{ number_format($totalRevenue, 0, ',', '.') }}">
+                            {{ number_format($totalRevenue, 0, ',', '.') }}
+                        </span>
+                    </div>
                 </div>
-                <span class="material-symbols-outlined text-primary bg-primary-container/10 p-2 rounded-lg text-lg md:text-xl shrink-0">payments</span>
+                <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-primary/10 text-primary dark:bg-slate-800 dark:text-orange-400 flex items-center justify-center shrink-0 shadow-2xs">
+                    <span class="material-symbols-outlined text-lg sm:text-xl">payments</span>
+                </div>
             </div>
-            <div class="mt-3 flex items-center gap-1.5 text-slate-500 text-2xs md:text-[10px] font-bold">
+            <div class="mt-3 flex items-center gap-1.5 text-slate-400 dark:text-slate-500 text-2xs font-semibold">
                 <span class="material-symbols-outlined text-xs">info</span>
                 <span class="truncate">Akumulasi penjualan</span>
             </div>
         </div>
 
         <!-- Card 2: Cash Flow Month -->
-        <div class="bg-white dark:bg-slate-900 border border-outline-variant dark:border-slate-800 rounded-xl p-4 md:p-5 premium-shadow flex flex-col justify-between">
-            <div class="flex justify-between items-start gap-2">
-                <div class="min-w-0">
-                    <span class="text-2xs md:text-[10px] font-bold text-slate-400 uppercase tracking-wider">Kas Masuk (Bln Ini)</span>
-                    <h4 class="text-base md:text-lg font-extrabold text-emerald-600 dark:text-emerald-400 mt-1 truncate">Rp {{ number_format($monthCashFlow, 0, ',', '.') }}</h4>
+        <div class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-3.5 sm:p-4.5 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col justify-between">
+            <div class="flex justify-between items-start gap-1.5">
+                <div class="min-w-0 flex-1">
+                    <span class="text-2xs font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wider block">Kas Masuk (Bln Ini)</span>
+                    <div class="flex items-baseline gap-1 mt-1">
+                        <span class="text-xs font-bold text-emerald-500 font-mono">Rp</span>
+                        <span class="text-sm sm:text-base md:text-lg font-black font-mono text-emerald-600 dark:text-emerald-400 tracking-tight whitespace-nowrap overflow-hidden text-ellipsis" title="Rp {{ number_format($monthCashFlow, 0, ',', '.') }}">
+                            {{ number_format($monthCashFlow, 0, ',', '.') }}
+                        </span>
+                    </div>
                 </div>
-                <span class="material-symbols-outlined text-emerald-500 bg-emerald-500/10 p-2 rounded-lg text-lg md:text-xl shrink-0">account_balance_wallet</span>
+                <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-emerald-500/10 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-400 flex items-center justify-center shrink-0 shadow-2xs">
+                    <span class="material-symbols-outlined text-lg sm:text-xl">account_balance_wallet</span>
+                </div>
             </div>
-            <div class="mt-3 text-2xs md:text-[10px] font-semibold text-slate-400 truncate">
+            <div class="mt-3 text-2xs font-semibold text-slate-400 dark:text-slate-500 truncate">
                 Pembayaran diterima
             </div>
         </div>
 
         <!-- Card 3: Piutang (Unpaid) -->
-        <div class="bg-white dark:bg-slate-900 border border-outline-variant dark:border-slate-800 rounded-xl p-4 md:p-5 premium-shadow flex flex-col justify-between">
-            <div class="flex justify-between items-start gap-2">
-                <div class="min-w-0">
-                    <span class="text-2xs md:text-[10px] font-bold text-slate-400 uppercase tracking-wider">Total Piutang</span>
-                    <h4 class="text-base md:text-lg font-extrabold text-rose-500 mt-1 truncate">Rp {{ number_format($totalPiutang, 0, ',', '.') }}</h4>
+        <div class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-3.5 sm:p-4.5 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col justify-between">
+            <div class="flex justify-between items-start gap-1.5">
+                <div class="min-w-0 flex-1">
+                    <span class="text-2xs font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wider block">Total Piutang</span>
+                    <div class="flex items-baseline gap-1 mt-1">
+                        <span class="text-xs font-bold text-rose-500 font-mono">Rp</span>
+                        <span class="text-sm sm:text-base md:text-lg font-black font-mono text-rose-600 dark:text-rose-400 tracking-tight whitespace-nowrap overflow-hidden text-ellipsis" title="Rp {{ number_format($totalPiutang, 0, ',', '.') }}">
+                            {{ number_format($totalPiutang, 0, ',', '.') }}
+                        </span>
+                    </div>
                 </div>
-                <span class="material-symbols-outlined text-rose-500 bg-rose-500/10 p-2 rounded-lg text-lg md:text-xl shrink-0">pending_actions</span>
+                <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-rose-500/10 text-rose-600 dark:bg-rose-950/40 dark:text-rose-400 flex items-center justify-center shrink-0 shadow-2xs">
+                    <span class="material-symbols-outlined text-lg sm:text-xl">pending_actions</span>
+                </div>
             </div>
-            <div class="mt-3 text-2xs md:text-[10px] font-semibold text-rose-400 truncate">
+            <div class="mt-3 text-2xs font-semibold text-rose-500 dark:text-rose-400 truncate">
                 Belum lunas / invoice
             </div>
         </div>
 
         <!-- Card 4: MoM Growth -->
-        <div class="bg-white dark:bg-slate-900 border border-outline-variant dark:border-slate-800 rounded-xl p-4 md:p-5 premium-shadow flex flex-col justify-between">
-            <div class="flex justify-between items-start gap-2">
-                <div class="min-w-0">
-                    <span class="text-2xs md:text-[10px] font-bold text-slate-400 uppercase tracking-wider">Pertumbuhan</span>
-                    <h4 class="text-base md:text-lg font-extrabold mt-1 {{ $growthPercent >= 0 ? 'text-green-500' : 'text-red-500' }}">
+        <div class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-3.5 sm:p-4.5 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col justify-between">
+            <div class="flex justify-between items-start gap-1.5">
+                <div class="min-w-0 flex-1">
+                    <span class="text-2xs font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wider block">Pertumbuhan</span>
+                    <h4 class="text-sm sm:text-base md:text-lg font-black font-mono mt-1 {{ $growthPercent >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400' }}">
                         {{ $growthPercent >= 0 ? '+' : '' }}{{ number_format($growthPercent, 1, ',', '.') }}%
                     </h4>
                 </div>
-                <span class="material-symbols-outlined p-2 rounded-lg text-lg md:text-xl shrink-0 {{ $growthPercent >= 0 ? 'text-green-500 bg-green-500/10' : 'text-red-500 bg-red-500/10' }}">
-                    {{ $growthPercent >= 0 ? 'trending_up' : 'trending_down' }}
-                </span>
+                <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-xl {{ $growthPercent >= 0 ? 'text-emerald-600 bg-emerald-500/10' : 'text-rose-600 bg-rose-500/10' }} flex items-center justify-center shrink-0 shadow-2xs">
+                    <span class="material-symbols-outlined text-lg sm:text-xl">
+                        {{ $growthPercent >= 0 ? 'trending_up' : 'trending_down' }}
+                    </span>
+                </div>
             </div>
-            <div class="mt-3 text-2xs md:text-[10px] font-semibold text-slate-400 truncate">
+            <div class="mt-3 text-2xs font-semibold text-slate-400 dark:text-slate-500 truncate">
                 vs bulan lalu
             </div>
         </div>
 
         <!-- Card 5: Active Orders -->
-        <div class="bg-white dark:bg-slate-900 border border-outline-variant dark:border-slate-800 rounded-xl p-4 md:p-5 premium-shadow flex flex-col justify-between">
-            <div class="flex justify-between items-start gap-2">
-                <div class="min-w-0">
-                    <span class="text-2xs md:text-[10px] font-bold text-slate-400 uppercase tracking-wider">Order Aktif</span>
-                    <h4 class="text-base md:text-lg font-extrabold text-slate-800 dark:text-slate-100 mt-1">{{ number_format($activeOrdersCount, 0, ',', '.') }}</h4>
+        <div class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-3.5 sm:p-4.5 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col justify-between">
+            <div class="flex justify-between items-start gap-1.5">
+                <div class="min-w-0 flex-1">
+                    <span class="text-2xs font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wider block">Order Aktif</span>
+                    <h4 class="text-sm sm:text-base md:text-lg font-black font-mono text-slate-900 dark:text-slate-100 mt-1 whitespace-nowrap">
+                        {{ number_format($activeOrdersCount, 0, ',', '.') }} <span class="text-xs font-bold text-slate-400 font-sans">Nota</span>
+                    </h4>
                 </div>
-                <span class="material-symbols-outlined text-orange-500 bg-orange-500/10 p-2 rounded-lg text-lg md:text-xl shrink-0">local_laundry_service</span>
+                <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-orange-500/10 text-orange-600 dark:bg-orange-950/40 dark:text-orange-400 flex items-center justify-center shrink-0 shadow-2xs">
+                    <span class="material-symbols-outlined text-lg sm:text-xl">local_laundry_service</span>
+                </div>
             </div>
-            <div class="mt-3 flex items-center gap-1 text-2xs md:text-[10px] text-slate-500 font-bold">
-                <span class="w-1.5 h-1.5 rounded-full bg-orange-500 animate-pulse shrink-0"></span>
+            <div class="mt-3 flex items-center gap-1 text-2xs text-orange-600 dark:text-orange-400 font-semibold">
+                <span class="w-1.5 h-1.5 rounded-full bg-orange-500 animate-ping shrink-0"></span>
                 <span class="truncate">Di workshop</span>
             </div>
         </div>

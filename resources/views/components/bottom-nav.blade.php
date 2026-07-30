@@ -1,5 +1,5 @@
-{{-- Bottom Navigation Bar — Mobile Only --}}
-<nav class="fixed bottom-0 inset-x-0 z-50 bg-white/95 dark:bg-slate-900/95 backdrop-blur-lg border-t border-slate-200/80 dark:border-slate-800/80 md:hidden safe-area-bottom"
+{{-- Bottom Navigation Bar — Mobile & Tablet --}}
+<nav class="fixed bottom-0 inset-x-0 z-50 bg-white/95 dark:bg-slate-900/95 backdrop-blur-lg border-t border-slate-200/80 dark:border-slate-800/80 lg:hidden safe-area-bottom shadow-md"
      id="bottom-nav">
     <div class="flex items-center justify-around h-16 px-2 max-w-lg mx-auto relative">
         {{-- Dashboard --}}
