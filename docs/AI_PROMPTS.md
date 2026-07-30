@@ -1,11 +1,10 @@
-# AI Prompts — Istana Laundry (Security + Caching phase)
+# AI Prompts — Istana Laundry
 
-> Updated: 2026-07-28  
-> Branch kerja: **`chore/security-and-caching`**  
-> Epic: GitHub #14
+> Updated: **2026-07-30**  
+> Phase aktif: **TEST 2** (GH #29–#36)  
+> Phase selesai: Security+Cache #14–#21 (lihat arsip prompt di bawah / git history)
 
-Pakai di AI **baru** (Cursor / Claude / dll). Satu sesi = **satu issue**.  
-Baca file nyata di repo sebelum edit. Minimal diff. Jangan refactor di luar scope.
+Satu sesi AI = **satu issue**. Baca file nyata di repo. Minimal diff.
 
 ---
 
@@ -15,176 +14,170 @@ Baca file nyata di repo sebelum edit. Minimal diff. Jangan refactor di luar scop
 Kamu senior Laravel engineer.
 
 ## Project
-- Istana Laundry Management System — semi-ERP laundry multi-cabang
-- Branch: chore/security-and-caching (JANGAN kerja di master kecuali diminta)
-- Stack: Laravel 13, PHP 8.3+, Blade, Alpine, Tailwind, MySQL, Spatie Permission, Sanctum, Docker
-- Multi-branch: trait BranchScoped + middleware branch.scope + session scoped_branch_id
-- Production status linear: TERIMA → PILAH → CUCI → KERING → LIPAT → CEK → SIAP → DIAMBIL
-- Docs: tasks.md, docs/PHASE_SECURITY_CACHE.md
+- Istana Laundry Management System — semi-ERP laundry multi-cabang (Samarinda)
+- Branch kerja: dari master, buat branch fix/* atau feat/* per issue
+- Stack: Laravel 13, PHP 8.3+, Blade, Alpine, Tailwind, Chart.js, MySQL, Spatie Permission, Sanctum, Docker
+- Multi-branch: BranchScoped + middleware branch.scope + session scoped_branch_id
+- Production status: TERIMA → PILAH → CUCI → KERING → LIPAT → CEK → SIAP → DIAMBIL
+- Security phase #15–#21 SUDAH SELESAI (RBAC, audit, journal idempotent, cache, queue jobs)
+- Docs: tasks.md, docs/PHASE_TEST2.md, docs/SRS.md
 
 ## Aturan
 1. Baca file terkait dulu. Jangan mengarang route/API.
-2. Minimal diff — tidak ada feature bisnis baru di phase ini.
-3. Hormati nama role Spatie yang ada di seeder (Super_Admin, Branch_Admin, dll).
+2. Minimal diff — jangan refactor di luar scope issue.
+3. Hormati role Spatie yang ada (Cashier, Workshop_Staff, Finance, Owner, …).
 4. Jangan commit .env / secrets.
-5. Setelah selesai: list file diubah + cara test + saran commit message dengan Refs #N.
+5. Setelah selesai: list file diubah + cara test + commit message dengan Refs #N.
 
 Konfirmasi siap, tunggu prompt issue berikutnya.
 ```
 
 ---
 
-## #15 — Role & permission middleware (P0)
+## #31 — Payroll nominal 0 (P0)
 
 ```
-Task GH #15 | Linear KIL-23 | Branch chore/security-and-caching
+Task GH #31 | Linear KIL-39 | Branch fix/payroll-zero-calc
 
 ## Goal
-Semua modul sensitif wajib role/permission, bukan hanya auth + branch.scope.
+Generate payroll tidak boleh menghasilkan semua nominal 0.
 
-## Problem
-Finance, Procurement (approve/send/confirm), HR/Payroll, POS, Refund, Inventory, dll.
-hanya middleware auth — Cashier secara teknis bisa hit endpoint kritis.
+## Investigate
+1. HRController::storePayroll — copy base_salary employee ke PayrollItem?
+2. PayrollItem::saveCalculations / calculateNetSalary — pro-rata absensi membuat net 0?
+3. View payroll detail / payslip — field yang ditampilkan salah?
+4. Data seed: employees punya base_salary > 0?
 
 ## Do
-1. Baca routes/web.php — kelompokkan route per modul.
-2. Tambah middleware role: (atau permission:) sesuai SRS:
-   - Finance / journals / periods / reports → Finance, Owner, Super_Admin, Developer
-   - Procurement approve/send/confirm → Branch_Admin+, Owner, …
-   - HR payroll → role HR/Owner/…
-   - POS tetap Cashier+ yang relevan
-3. Samakan pola dengan services.* yang sudah role:Developer|Owner|Super_Admin.
-4. Jangan putus akses Owner/Developer.
-5. Test mental: role Cashier tidak bisa close period / approve PO / store payroll.
-
-## Out of scope
-UI redesign, cache, 2FA.
-
-Jelaskan mapping role per grup route.
-```
-
----
-
-## #16 — Auth hardening (P0)
-
-```
-Task GH #16 | Linear KIL-24
-
-## Goal
-1. Nonaktifkan atau batasi self-registration publik (prefer admin-only create user).
-2. Throttle POST /api/login + cek is_active / locked_until seperti login web.
-3. Throttle eksplisit password.email / password.store di routes/auth.php.
-4. Evaluasi MustVerifyEmail — minimal dokumentasikan jika belum diaktifkan penuh.
-
-## Files
-routes/auth.php, routes/api.php, Api\AuthController, RegisteredUserController,
-AuthenticatedSessionController, LoginRequest
+- Perbaiki kalkulasi agar net_salary & komponen mencerminkan base_salary (+ absensi/bonus/potongan yang ada)
+- Jangan scope-creep ke #27 BPJS split kecuali diperlukan untuk non-zero baseline
 
 ## Acceptance
-Guest tidak mass-register ke dashboard operasional; API login ter-throttle.
+Generate payroll untuk cabang dengan karyawan aktif → minimal base_salary / net tampil non-zero yang masuk akal.
 ```
 
 ---
 
-## #17 — Tenant isolation (P0)
+## #30 — Dashboard chart kosong setelah switch global (P0)
 
 ```
-Task GH #17 | Linear KIL-25
+Task GH #30 | Linear KIL-38 | Branch fix/dashboard-chart-scope
 
 ## Goal
-Cegah data leak lintas cabang.
+Owner: buka global → chart Komparasi Pendapatan Cabang terisi.
+Switch ke cabang → chart trend OK.
+Kembali ke global → chart komparasi TERISI LAGI tanpa hard refresh.
 
-## Focus
-1. Public /track dan GET /api/track/{orderNumber} — batasi PII yang diekspos;
-   rate-limit; pertimbangkan validasi format nota; jangan andalkan session kosong = no scope.
-2. RefundController index — pastikan query order/refund ter-filter branch.
-3. BranchScopeMiddleware: set scope konsisten; tolak user is_active=false.
-4. Route sensitif wajib lewat branch.scope kecuali memang global super-user pattern.
-
-Baca: BranchScopeMiddleware, BranchScoped trait, track routes, RefundController.
-```
-
----
-
-## #18 — Audit log bisnis (P0)
-
-```
-Task GH #18 | Linear KIL-26
-
-## Goal
-Mutasi model kritis tercatat di audit_logs (bukan hanya login/logout).
-
-## Approach (pilih minimal invasif)
-- Observer generik / trait Auditable pada: Order, Journal, Payroll, Refund,
-  Supplier, PurchaseOrder, GoodsReceivedNote, Customer, Service (sesuaikan prioritas)
-- Atau panggil AuditLogService di service layer write paths
-
-## Rules
-- action string pendek atau pastikan kolom action cukup (64+)
-- Jangan log password/token
-- old_values/new_values JSON untuk field penting saja
-
-Acceptance: ubah status produksi / buat supplier / post journal → ada baris audit.
-```
-
----
-
-## #19 — Journal race-safe (P1)
-
-```
-Task GH #19 | Linear KIL-27
-
-## Goal
-JournalService anti race + anti double-post.
+## Investigate
+- DashboardController::ownerDashboard saat branchId null vs set
+- Chart.js init di owner.blade.php (destroy/recreate, empty labels)
+- Route switch-branch + full page reload vs partial
 
 ## Do
-1. lockForUpdate (atau counter table) saat generate sequence reference
-2. Idempotency: jika journal untuk source_type+source_id sudah ada → skip/return existing
-3. Unique constraint reference per branch bila feasible
-4. Observer: error journal tidak boleh silent tanpa jejak (log + optional rethrow/flag)
+Pastikan chartLabels/chartValues terisi saat scope global; re-init chart setelah navigasi bila perlu.
 
-Files: app/Services/Finance/JournalService.php, OrderObserver, GRNObserver
-
-Acceptance: concurrent paid orders tidak collision; retry tidak dobel journal.
+## Acceptance
+Tidak perlu Ctrl+F5 untuk melihat data komparasi setelah kembali ke global.
 ```
 
 ---
 
-## #20 — Docker / Nginx hygiene (P1)
+## #29 — Timezone WITA / GMT+8 (P0)
 
 ```
-Task GH #20 | Linear KIL-28
-
-## Do
-1. docker/entrypoint.sh — JANGAN db:seed jika APP_ENV=production (atau SEED_ON_BOOT=false)
-2. docker/nginx/default.conf — headers: X-Frame-Options, X-Content-Type-Options,
-   Referrer-Policy, baseline CSP, (HSTS hanya jika HTTPS terminator jelas)
-3. docker-compose.prod.yml — hindari :latest mengambang bila memungkinkan; dokumentasikan pin
-4. Pastikan .gitignore memuat .env
-
-Jangan ubah dev DX secara merusak (local tetap boleh seed).
-```
-
----
-
-## #21 — Caching + queue (Perf)
-
-```
-Task GH #21 | Linear KIL-29
+Task GH #29 | Linear KIL-37 | Branch fix/timezone-wita
 
 ## Goal
-1. Cache::remember untuk Branch list & agregat dashboard (TTL pendek + invalidasi wajar)
-2. Hilangkan N+1 DashboardController (loop sum per branch/hari → aggregated query)
-3. Kurangi query FinancialReportService per COA (batch/sum grouping)
-4. OrderObserver / GRNObserver kerja berat → Job ShouldQueue (QUEUE_CONNECTION=database ok)
-5. Dokumentasikan config:cache + route:cache di CD/deploy
+APP_TIMEZONE = Asia/Makassar (WITA, GMT+8).
+Timestamp di UI, audit, payroll period, order times konsisten zona operasional Samarinda.
 
-## Constraints
-- Invalidasi cache saat order paid / journal post / branch berubah
-- Jangan cache data lintas-tenant tanpa key branchId
-- Redis opsional; file/database cache acceptable dulu
+## Do
+1. config/app.php + .env.example dokumentasikan Asia/Makassar
+2. Cek display Carbon di Blade (hindari asumsi UTC mentah di UI)
+3. Jangan ubah historical data mass-update kecuali diperlukan
 
-Acceptance: dashboard owner tidak 1 query per cabang; observer tidak block request lama.
+## Acceptance
+now() dan created_at yang di-format di UI sesuai WITA.
+```
+
+---
+
+## #32 — Production search + role UI
+
+```
+Task GH #32 | Linear KIL-40 | Branch feat/production-order-search
+
+## Goal
+1. Search bar nomor order = kontrol utama di /production
+2. Workshop_Staff / Workshop_Admin: default HIDE list; toggle untuk tampilkan
+3. Owner/Admin/role lain: list tampil default
+
+## Files
+ProductionController, resources/views/production/index.blade.php
+
+## Acceptance
+Cari nota → order ketemu; staff landing page fokus search.
+```
+
+---
+
+## #33 — CRM card stats + riwayat + WA
+
+```
+Task GH #33 | Linear KIL-41 | Branch feat/crm-customer-insights
+
+## Goal
+Pada card/list customer:
+- Total transaksi (count orders)
+- Last transaction (tanggal / no nota terakhir)
+- Tombol buka riwayat transaksi customer
+- Tombol WhatsApp (wa.me/<phone>) follow-up
+
+Hormati branch scope. Phone format untuk wa.me (62…).
+```
+
+---
+
+## #34 — Receipt hyperlink track
+
+```
+Task GH #34 | Linear KIL-42 | Branch feat/receipt-track-link
+
+## Goal
+Template WA/receipt: nomor order menjadi URL klik ke
+url('/track') . '?order_number=' . $order->order_number
+(atau route track yang ada).
+
+Files: InvoiceController, view receipt/whatsapp message builder.
+```
+
+---
+
+## #35 — Laporan Keuangan charts
+
+```
+Task GH #35 | Linear KIL-43 | Branch feat/finance-report-charts
+
+## Goal
+Tiap tab laporan (income / balance / trial balance) punya chart visual penyerta (Chart.js sudah di stack).
+Jangan rusak angka tabel yang ada.
+```
+
+---
+
+## #36 — Export CRM / Performance / Aset
+
+```
+Task GH #36 | Linear KIL-44 | Branch feat/export-modules
+
+## Goal
+Tombol export Excel dan/atau CSV (PDF opsional) di:
+- Customers (CRM)
+- Performance
+- Assets
+
+Reuse maatwebsite/excel + pola export yang sudah ada di project jika ada.
+Hormati filter branch & role.
 ```
 
 ---
@@ -193,7 +186,14 @@ Acceptance: dashboard owner tidak 1 query per cabang; observer tidak block reque
 
 ```
 1. File yang diubah
-2. Cara test manual (role + skenario)
-3. Commit message 1 baris + Refs #N
-4. Ingatkan close GH issue + Linear Done setelah merge
+2. Cara test manual (role + skenario Notes #2)
+3. Commit 1 baris + Refs #N
+4. Close GH + Linear Done setelah merge ke master
 ```
+
+---
+
+## Arsip — Security phase prompts (#15–#21)
+
+Phase selesai. Detail implementasi: `docs/PHASE_SECURITY_CACHE.md`.  
+Prompt historis tersedia di git history commit docs sebelum 2026-07-30.
