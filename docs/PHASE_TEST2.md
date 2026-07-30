@@ -28,7 +28,8 @@ Setelah Gelombang A (security + cache #14–#21) dan penutupan #22–#28 di trac
 
 **Urutan kerja disarankan:** #31 → #30 → #29 → #32 → #33 → #34 → #35 → #36
 
-Prompts: [AI_PROMPTS.md](AI_PROMPTS.md)
+Prompts: [AI_PROMPTS.md](AI_PROMPTS.md)  
+Manual UAT Testing Guide: [MANUAL_TESTING_GUIDE.md](MANUAL_TESTING_GUIDE.md) · [PDF Export](MANUAL_TESTING_GUIDE.pdf)
 
 ---
 
