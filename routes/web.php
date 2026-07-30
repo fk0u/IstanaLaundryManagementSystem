@@ -447,6 +447,13 @@ Route::middleware(['auth', 'branch.scope'])->group(function () {
         Route::put('/users/{user}', [\App\Http\Controllers\UserController::class, 'update'])->name('users.update');
         Route::post('/users/{user}/reset-password', [\App\Http\Controllers\UserController::class, 'resetPassword'])->name('users.reset-password');
         Route::delete('/users/{user}', [\App\Http\Controllers\UserController::class, 'destroy'])->name('users.destroy');
+
+        // Branch & Scope Management
+        Route::get('/branches', [\App\Http\Controllers\BranchController::class, 'index'])->name('branches.index');
+        Route::post('/branches', [\App\Http\Controllers\BranchController::class, 'store'])->name('branches.store');
+        Route::put('/branches/{branch}', [\App\Http\Controllers\BranchController::class, 'update'])->name('branches.update');
+        Route::post('/branches/{branch}/toggle-active', [\App\Http\Controllers\BranchController::class, 'toggleActive'])->name('branches.toggle-active');
+        Route::delete('/branches/{branch}', [\App\Http\Controllers\BranchController::class, 'destroy'])->name('branches.destroy');
     });
 
     // Audit Logs

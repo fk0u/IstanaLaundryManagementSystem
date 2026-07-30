@@ -150,6 +150,16 @@
                 </a>
             @endif
 
+            <!-- Branches (Manajemen Cabang & Scope) -->
+            @if(auth()->user()->hasAnyRole(['Developer', 'Owner', 'Super_Admin']))
+                <a href="{{ route('branches.index') }}" @click="sidebarOpen = false"
+                   class="flex items-center gap-4 px-4 py-3 transition-all rounded-full text-xs md:text-sm font-bold {{ request()->is('branches*') ? 'bg-primary-container text-primary-on-container shadow-sm' : 'text-slate-600 dark:text-slate-400 hover:bg-surface-container dark:hover:bg-slate-800/60' }}"
+                   :title="!desktopSidebarOpen ? 'Manajemen Cabang' : ''">
+                    <span class="material-symbols-outlined text-2xl shrink-0" style="font-variation-settings: 'FILL' {{ request()->is('branches*') ? '1' : '0' }};">store</span>
+                    <span x-show="desktopSidebarOpen" class="truncate">Manajemen Cabang</span>
+                </a>
+            @endif
+
             <!-- Inventory & Procurement -->
             @if(auth()->user()->hasAnyRole(['Developer', 'Owner', 'Super_Admin', 'Branch_Admin', 'Workshop_Admin']))
                 <a href="/inventory" @click="sidebarOpen = false" 

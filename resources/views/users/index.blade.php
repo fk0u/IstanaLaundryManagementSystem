@@ -65,7 +65,14 @@
                             <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-900/30">
                                 <td class="py-3 px-3">
                                     <span class="font-bold text-slate-800 dark:text-slate-200 block">{{ $u->name }}</span>
-                                    <span class="text-2xs text-slate-400 font-mono">{{ $u->email }}</span>
+                                    <div class="flex items-center gap-1.5 mt-0.5">
+                                        <span class="text-2xs text-slate-400 font-mono">{{ $u->email }}</span>
+                                        @if($u->employee)
+                                            <span class="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-sky-50 text-sky-700 dark:bg-sky-950/40 dark:text-sky-400" title="Tersinkronisasi ke HR Employees">
+                                                <span class="material-symbols-outlined text-[12px]">badge</span> {{ $u->employee->nik }}
+                                            </span>
+                                        @endif
+                                    </div>
                                 </td>
                                 <td class="py-3 px-3">
                                     <x-badge :type="$roleBadge">{{ $roleName }}</x-badge>
