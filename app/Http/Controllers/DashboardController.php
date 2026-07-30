@@ -37,7 +37,11 @@ class DashboardController extends Controller
      */
     protected function ownerDashboard()
     {
-        $branchId = session('scoped_branch_id') ?? Auth::user()->branch_id;
+        // Global-role users (Owner, etc.) default to consolidated view (null).
+        // session('scoped_branch_id') overrides ONLY when it has a truthy value,
+        // i.e. user explicitly picked a branch.  After switching back to "global"
+        // the route forgets the session key → null → consolidated view.
+        $branchId = session('scoped_branch_id') ?: null;
 
         $ordersQuery = Order::query();
         $customersQuery = Customer::query();
