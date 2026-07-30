@@ -30,7 +30,19 @@ class ProductionController extends Controller
         $branch = Branch::find($branchId);
 
         $requestedStatus = $request->query('status');
+        $search = trim((string) $request->query('search'));
+
         $query = Order::where('branch_id', $branchId);
+
+        if ($search !== '') {
+            $query->where(function ($q) use ($search) {
+                $q->where('order_number', 'like', "%{$search}%")
+                  ->orWhereHas('customer', function ($cq) use ($search) {
+                      $cq->where('name', 'like', "%{$search}%")
+                        ->orWhere('phone', 'like', "%{$search}%");
+                  });
+            });
+        }
 
         if ($requestedStatus && in_array($requestedStatus, $this->statusOrder, true)) {
             // Explicit filter (including DIAMBIL) — show exactly that status.
@@ -46,7 +58,10 @@ class ProductionController extends Controller
             ->paginate(15)
             ->withQueryString();
 
-        return view('production.index', compact('branch', 'orders', 'requestedStatus'));
+        $user = Auth::user();
+        $isWorkshopRole = $user->hasAnyRole(['Workshop_Staff', 'Workshop_Admin']);
+
+        return view('production.index', compact('branch', 'orders', 'requestedStatus', 'search', 'isWorkshopRole'));
     }
 
     /**

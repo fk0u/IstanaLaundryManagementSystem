@@ -1,5 +1,5 @@
 <x-app-layout>
-    <div class="flex flex-col gap-4 md:gap-6">
+    <div class="flex flex-col gap-4 md:gap-6" x-data="{ showList: @js(!$isWorkshopRole || !empty($search) || request()->has('status')) }">
         <x-page-header title="Produksi & Pelacakan Cucian" :breadcrumbs="['Produksi' => '/production']" />
 
         <!-- Alert Flash Messages -->
@@ -10,34 +10,86 @@
             <x-alert type="danger" :message="session('error')" class="mb-2" />
         @endif
 
+        <!-- Primary Order Search Bar -->
+        <x-card :compact="true">
+            <form action="{{ route('production.index') }}" method="GET" class="flex flex-col sm:flex-row items-center gap-2">
+                @if(request('status'))
+                    <input type="hidden" name="status" value="{{ request('status') }}">
+                @endif
+                <div class="relative flex-1 w-full">
+                    <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg">search</span>
+                    <input type="text" 
+                           name="search" 
+                           value="{{ $search }}" 
+                           placeholder="Cari Nomor Nota / Nama Pelanggan / No. Telp..." 
+                           class="w-full pl-9 pr-10 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-xs font-bold text-slate-800 dark:text-slate-200 outline-none focus:border-primary">
+                    @if($search)
+                        <a href="{{ route('production.index', request()->only('status')) }}" 
+                           class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+                            <span class="material-symbols-outlined text-sm">close</span>
+                        </a>
+                    @endif
+                </div>
+                <div class="flex items-center gap-2 w-full sm:w-auto">
+                    <button type="submit" class="btn-touch w-full sm:w-auto px-5 py-2.5 bg-primary hover:bg-primary-hover text-white text-xs font-bold rounded-xl flex items-center justify-center gap-1.5 shadow-sm shrink-0">
+                        <span class="material-symbols-outlined text-base">search</span> Cari Nota
+                    </button>
+                    @if($isWorkshopRole)
+                        <button type="button" 
+                                @click="showList = !showList" 
+                                class="btn-touch w-full sm:w-auto px-4 py-2.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold rounded-xl flex items-center justify-center gap-1.5 shrink-0 transition-colors">
+                            <span class="material-symbols-outlined text-base" x-text="showList ? 'visibility_off' : 'format_list_bulleted'"></span>
+                            <span x-text="showList ? 'Sembunyikan List' : 'Tampilkan Semua List'"></span>
+                        </button>
+                    @endif
+                </div>
+            </form>
+        </x-card>
+
         <!-- Status Filter Bar — Horizontal Scroll Pills for Mobile -->
         <x-card :compact="true">
             <div class="scroll-pills">
-                <a href="{{ route('production.index') }}" 
+                <a href="{{ route('production.index', request()->only('search')) }}" 
                    class="btn-touch px-4 py-2 rounded-xl text-xs font-bold border transition-all cursor-pointer whitespace-nowrap {{ !request()->has('status') ? 'bg-primary text-white border-primary shadow-sm' : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-50' }}">
                     Semua Antrean
                 </a>
                 @foreach (['TERIMA', 'PILAH', 'CUCI', 'KERING', 'LIPAT', 'CEK', 'SIAP'] as $status)
-                    <a href="{{ route('production.index', ['status' => $status]) }}" 
+                    <a href="{{ route('production.index', array_merge(request()->only('search'), ['status' => $status])) }}" 
                        class="btn-touch px-4 py-2 rounded-xl text-xs font-bold border transition-all cursor-pointer whitespace-nowrap {{ request('status') === $status ? 'bg-primary text-white border-primary shadow-sm' : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-50' }}">
                         {{ $status }}
                     </a>
                 @endforeach
-                <a href="{{ route('production.index', ['status' => 'DIAMBIL']) }}" 
+                <a href="{{ route('production.index', array_merge(request()->only('search'), ['status' => 'DIAMBIL'])) }}" 
                    class="btn-touch px-4 py-2 rounded-xl text-xs font-bold border transition-all cursor-pointer whitespace-nowrap {{ request('status') === 'DIAMBIL' ? 'bg-emerald-600 text-white border-emerald-600 shadow-sm' : 'bg-white dark:bg-slate-900 border-emerald-200 dark:border-emerald-900/40 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/20' }}">
                     <span class="material-symbols-outlined text-xs align-middle mr-0.5">check_circle</span>DIAMBIL
                 </a>
             </div>
         </x-card>
 
+        @if($isWorkshopRole)
+            <!-- Staff Landing Focus Notice when list is hidden -->
+            <div x-show="!showList" x-cloak class="p-6 bg-slate-900 text-white rounded-2xl shadow-lg text-center space-y-3">
+                <div class="w-12 h-12 rounded-2xl bg-primary/20 text-primary flex items-center justify-center mx-auto">
+                    <span class="material-symbols-outlined text-2xl">qr_code_scanner</span>
+                </div>
+                <h4 class="text-base font-extrabold">Mode Fokus Pencarian Stasiun Kerja</h4>
+                <p class="text-xs text-slate-400 max-w-md mx-auto">
+                    Cari nomor nota di kolom pencarian di atas untuk langsung mengupdate status order, atau klik tombol <strong>Tampilkan Semua List</strong> jika ingin melihat daftar antrean.
+                </p>
+                <button type="button" @click="showList = true" class="btn-touch px-4 py-2 bg-primary text-white text-xs font-bold rounded-xl inline-flex items-center gap-1.5 shadow-sm">
+                    <span class="material-symbols-outlined text-sm">format_list_bulleted</span> Tampilkan Semua Antrean
+                </button>
+            </div>
+        @endif
+
         <!-- Orders list -->
-        <div class="grid grid-cols-1 gap-4 md:gap-6">
+        <div class="grid grid-cols-1 gap-4 md:gap-6" x-show="showList" x-cloak>
             @if ($orders->isEmpty())
                 <x-card>
                     <div class="text-center py-12 md:py-16">
                         <span class="material-symbols-outlined text-slate-350 dark:text-slate-700 text-5xl md:text-6xl mb-3">dry_cleaning</span>
                         <p class="text-xs md:text-sm font-semibold text-slate-400 dark:text-slate-500">
-                            {{ $requestedStatus === 'DIAMBIL' ? 'Belum ada order yang sudah diambil pelanggan.' : 'Tidak ada antrean cucian aktif di stasiun ini.' }}
+                            {{ $search ? "Tidak ada order ditemukan untuk pencarian '{$search}'." : ($requestedStatus === 'DIAMBIL' ? 'Belum ada order yang sudah diambil pelanggan.' : 'Tidak ada antrean cucian aktif di stasiun ini.') }}
                         </p>
                     </div>
                 </x-card>
