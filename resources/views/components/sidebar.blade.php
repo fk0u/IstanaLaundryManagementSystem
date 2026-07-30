@@ -8,36 +8,65 @@
        id="sidebar-nav">
     <div class="flex flex-col h-full py-6 overflow-hidden">
         <!-- Brand / Header -->
-        <div class="px-5 mb-6 flex items-center justify-between min-h-[44px]">
-            <div class="flex items-center gap-3.5 overflow-hidden" x-show="desktopSidebarOpen" x-transition.opacity>
-                <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-primary to-amber-500 flex items-center justify-center text-white font-black font-display text-xl shrink-0 shadow-md3-2">
-                    IL
+        <div class="px-4 mb-4">
+            <div class="flex items-center justify-between min-h-[44px]">
+                <div class="flex items-center gap-3 overflow-hidden" x-show="desktopSidebarOpen" x-transition.opacity>
+                    <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-primary to-amber-500 flex items-center justify-center text-white font-black font-display text-xl shrink-0 shadow-md3-2">
+                        <img alt="Istana Laundry Logo" class="w-6 h-6 object-contain" src="{{ asset('images/logo.webp') }}"/>
+                    </div>
+                    <div class="truncate">
+                        <h1 class="text-base font-black font-display text-slate-900 dark:text-white tracking-tight leading-none">Istana Laundry</h1>
+                        <p class="text-[9px] font-extrabold font-sans text-primary uppercase tracking-widest mt-1">Enterprise Suite</p>
+                    </div>
                 </div>
-                <div class="truncate">
-                    <h1 class="text-xl font-black font-display text-slate-900 dark:text-white tracking-tight leading-none">Istana Laundry</h1>
-                    <p class="text-[10px] font-extrabold font-sans text-primary uppercase tracking-widest mt-1">Enterprise Suite</p>
+
+                <!-- Mini Logo when collapsed -->
+                <div class="mx-auto" x-show="!desktopSidebarOpen" x-transition.opacity>
+                    <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-primary to-amber-500 flex items-center justify-center text-white font-black font-display text-xl shadow-md3-2" title="Istana Laundry Enterprise">
+                        <img alt="Istana Laundry Logo" class="w-6 h-6 object-contain" src="{{ asset('images/logo.webp') }}"/>
+                    </div>
                 </div>
+
+                <!-- Close button for mobile -->
+                <button @click="sidebarOpen = false" class="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 md:hidden cursor-pointer rounded-2xl hover:bg-surface-container dark:hover:bg-slate-800 transition-colors">
+                    <span class="material-symbols-outlined text-2xl">close</span>
+                </button>
             </div>
 
-            <!-- Mini Logo when collapsed -->
-            <div class="mx-auto" x-show="!desktopSidebarOpen" x-transition.opacity>
-                <div class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-primary to-amber-500 flex items-center justify-center text-white font-black font-display text-2xl shadow-md3-2">
-                    IL
-                </div>
+            <!-- Branch Scope Switcher inside Sidebar Header -->
+            <div class="mt-3.5" x-show="desktopSidebarOpen" x-transition.opacity>
+                @if(auth()->user()->hasAnyRole(['Developer', 'Owner', 'Super_Admin', 'Finance']))
+                    <form action="{{ route('switch-branch') }}" method="POST">
+                        @csrf
+                        <div class="relative flex items-center">
+                            <span class="material-symbols-outlined text-primary text-sm absolute left-3 pointer-events-none">storefront</span>
+                            <select name="branch_id" onchange="this.form.submit()"
+                                    class="w-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700/80 rounded-xl text-xs font-bold pl-8 pr-7 py-2 text-slate-800 dark:text-slate-200 outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer shadow-2xs transition-all appearance-none truncate">
+                                <option value="">Global (Semua Cabang)</option>
+                                @foreach(\App\Models\Branch::orderBy('name')->get() as $br)
+                                    <option value="{{ $br->id }}" {{ session('scoped_branch_id') == $br->id ? 'selected' : '' }}>
+                                        {{ $br->name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            <span class="material-symbols-outlined text-slate-400 text-sm absolute right-2.5 pointer-events-none">expand_more</span>
+                        </div>
+                    </form>
+                @else
+                    <div class="w-full bg-primary/10 border border-primary/20 rounded-xl text-xs font-bold px-3 py-2 text-primary flex items-center gap-2 truncate">
+                        <span class="material-symbols-outlined text-sm">storefront</span>
+                        <span class="truncate">{{ auth()->user()->branch?->name ?? 'Cabang Utama' }}</span>
+                    </div>
+                @endif
             </div>
-
-            <!-- Close button for mobile -->
-            <button @click="sidebarOpen = false" class="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 md:hidden cursor-pointer rounded-2xl hover:bg-surface-container dark:hover:bg-slate-800 transition-colors">
-                <span class="material-symbols-outlined text-2xl">close</span>
-            </button>
         </div>
 
         <!-- Desktop Toggle Button (Expand/Collapse Sidebar) -->
-        <div class="px-4 mb-4 hidden md:block">
+        <div class="px-4 mb-3 hidden md:block">
             <button @click="desktopSidebarOpen = !desktopSidebarOpen; localStorage.setItem('desktopSidebarOpen', desktopSidebarOpen)"
-                    class="w-full flex items-center gap-3 px-3.5 py-2.5 text-slate-400 hover:text-primary dark:hover:text-orange-400 hover:bg-surface-container dark:hover:bg-slate-800/60 rounded-full transition-all text-xs font-bold group cursor-pointer"
+                    class="w-full flex items-center gap-3 px-3 py-2 text-slate-400 hover:text-primary dark:hover:text-orange-400 hover:bg-slate-100 dark:hover:bg-slate-800/60 rounded-xl transition-all text-xs font-bold group cursor-pointer"
                     :title="desktopSidebarOpen ? 'Ciutkan Sidebar' : 'Buka Sidebar'">
-                <span class="material-symbols-outlined text-[22px] transition-transform duration-300 group-hover:scale-110"
+                <span class="material-symbols-outlined text-[20px] transition-transform duration-300 group-hover:scale-110"
                       :class="{ 'rotate-180': !desktopSidebarOpen }">
                     side_navigation
                 </span>
