@@ -16,7 +16,7 @@ return new class extends Migration
             $table->foreignId('branch_id')->constrained('branches')->onDelete('cascade');
             $table->tinyInteger('month');
             $table->smallInteger('year');
-            $table->enum('status', ['draft', 'processed', 'paid'])->default('draft');
+            $table->string('status', 30)->default('draft');
             $table->timestamp('processed_at')->nullable();
             $table->foreignId('created_by')->constrained('users')->onDelete('cascade');
             $table->timestamps();

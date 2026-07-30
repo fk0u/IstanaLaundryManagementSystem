@@ -24,6 +24,12 @@ return new class extends Migration
         Schema::table('payrolls', function (Blueprint $table) {
             $table->foreignId('branch_id')->nullable()->change();
         });
+
+        try {
+            \Illuminate\Support\Facades\DB::statement("ALTER TABLE payrolls MODIFY COLUMN status VARCHAR(30) NOT NULL DEFAULT 'draft'");
+        } catch (\Throwable $e) {
+            // Ignore if already altered
+        }
     }
 
     /**
