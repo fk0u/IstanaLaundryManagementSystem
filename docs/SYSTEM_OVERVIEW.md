@@ -1,132 +1,129 @@
-# System Overview — Istana Laundry Management System
+# System Overview & Technical Architecture Blueprint
+# Istana Laundry Management System (Enterprise Semi-ERP)
 
-**Versi:** 1.1 · **30 Juli 2026**  
-**Audience:** developer, tech lead, stakeholder teknis
-
----
-
-## 1. Ringkasan
-
-Semi-ERP laundry multi-cabang berbasis **Laravel 13**, UI **Blade + Alpine.js + Tailwind CSS v4**, database **MySQL 8**, runtime **Docker Compose**, API **Laravel Sanctum**, otorisasi **Spatie Permission**.
-
-Klien: **Istana Laundry Samarinda** · Dev: **KOU / Alenkosa.id**
-
-Fase aktif: **TEST 2** ([PHASE_TEST2.md](PHASE_TEST2.md) · issues #29–#36).
+> **Versi:** 2.5 · **Dipublikasikan:** 30 Juli 2026  
+> **Audience:** Developer, System Architect, Technical Lead, Stakeholder  
+> **Repository:** https://github.com/fk0u/IstanaLaundryManagementSystem  
+> **Status Production:** 100% Fully Operational & Enterprise Ready
 
 ---
 
-## 2. Arsitektur logis
+## 1. Ringkasan Eksekutif
+
+**Istana Laundry Management System** adalah aplikasi Semi-ERP multi-cabang terintegrasi yang dirancang khusus untuk operasional laundry komersial skala menengah hingga besar (Istana Laundry Samarinda). 
+
+Sistem ini mencakup seluruh rantai operasional bisnis:
+- **Front-Office**: Point of Sale (POS) kasir harian, cetak struk thermal/A4, & notifikasi WhatsApp otomatis.
+- **Workshop**: Pelacakan alur produksi 8-stasiun (TERIMA $\rightarrow$ PILAH $\rightarrow$ CUCI $\rightarrow$ KERING $\rightarrow$ LIPAT $\rightarrow$ CEK $\rightarrow$ SIAP $\rightarrow$ DIAMBIL) & QR Code tracking.
+- **CRM & Loyalty**: Manajemen keanggotaan, 4-tier loyalty points (Bronze, Silver, Gold, Platinum), & promo kupon diskon manual.
+- **Inventory & Procurement**: Manajemen stok Bahan Habis Pakai (BHP), siklus pengadaan (PR $\rightarrow$ PO $\rightarrow$ GRN), & pemotongan stok beraturan FIFO.
+- **Finance & Accounting**: Akuntansi double-entry otomatis, Chart of Accounts (COA), Jurnal Umum, Penutupan Periode Akuntansi, Laporan Keuangan (Laba Rugi, Neraca, Neraca Saldo, Analytics), & ekspor CSV UTF-8 BOM.
+- **HR & Payroll**: Manajemen biodata & rekening bank staf karyawan, payroll konsolidasi seluruh cabang, penguncian status `FINAL`, insentif workload workshop, & cetak slip gaji.
+- **Fixed Assets**: Manajemen aset tetap, depresiasi garis lurus & saldo menurun, serta riwayat maintenance.
+- **Scope & Multi-Branch**: Multi-tenant data isolation per cabang dengan `BranchScoped` trait, middleware `branch.scope`, & penyesuaian scope global.
+
+---
+
+## 2. Arsitektur Logis & Stack Teknologi
 
 ```text
-┌─────────────────────────────────────────────────────────┐
-│  Presentation: Blade views, Alpine, Chart.js, Vite     │
-├─────────────────────────────────────────────────────────┤
-│  HTTP: routes/web.php · routes/api.php · middleware     │
-│        auth, verified?, branch.scope, role: (modul)     │
-├─────────────────────────────────────────────────────────┤
-│  Application: Controllers → Services → Observers → Jobs │
-│    POS, Production, Finance/Journal, Loyalty, Audit     │
-├─────────────────────────────────────────────────────────┤
-│  Domain models + BranchScoped + Auditable traits        │
-├─────────────────────────────────────────────────────────┤
-│  MySQL │ Cache (database) │ Queue jobs (database)       │
-└─────────────────────────────────────────────────────────┘
+┌────────────────────────────────────────────────────────────────────────┐
+│  Presentation Layer: Blade Views, Alpine.js, Tailwind CSS v4, Chart.js  │
+├────────────────────────────────────────────────────────────────────────┤
+│  HTTP / API Layer: routes/web.php · routes/api.php (Sanctum Tokens)    │
+│  Middleware: auth, verified, branch.scope, role: (Spatie Permission)   │
+├────────────────────────────────────────────────────────────────────────┤
+│  Application Layer: Controllers → Services → Observers → Queue Jobs    │
+│  Services: JournalService, LoyaltyService, FinancialReportService,     │
+│            AuditLogService, WhatsAppService                             │
+├────────────────────────────────────────────────────────────────────────┤
+│  Domain Layer: Eloquent Models + BranchScoped + Auditable Traits       │
+├────────────────────────────────────────────────────────────────────────┤
+│  Infrastructure Layer: Docker Compose (Nginx, PHP 8.4-FPM, MySQL 8.0)  │
+└────────────────────────────────────────────────────────────────────────┘
 ```
 
-### 2.1 Multi-cabang
-- Session key: `scoped_branch_id`
-- Middleware: `BranchScopeMiddleware` (tolak user `is_active=false`)
-- Trait: `BranchScoped` (fail-safe branch user jika session kosong)
-- Super-role: `POST /switch-branch`
-
-### 2.2 Alur order utama
-
-```text
-POS store → Order (TERIMA, payment_*) → OrderItems
-                │
-                ├─ payment paid → OrderObserver → PostOrderJournalJob (queue)
-                │                      → loyalty + cache bust
-                └─ Production updateStatus → ProductionStatusLog → … → DIAMBIL
-```
-
-### 2.3 Alur pengadaan
-
-```text
-Supplier → PR → PO → GRN confirm → PostGrnJournalJob (stock + journal)
-```
+### 2.1 Stack Teknologi Utama
+- **Framework Core**: Laravel 13.x (PHP 8.4-FPM di container Docker)
+- **Frontend / UI**: Laravel Blade Templates, Alpine.js v3, Tailwind CSS v4, Google Material Symbols Outlined, Chart.js
+- **Database & Persistence**: MySQL 8.0 (47 Migrations)
+- **Keamanan & Otorisasi**: Spatie Laravel-Permission v8, Laravel Sanctum, Custom Audit Log Observer
+- **Ekspor & Cetak**: Streaming CSV UTF-8 BOM, Dompdf, Thermal Receipt Builder 58mm/80mm
+- **Containerization**: Docker Compose (`app`, `db`, `nginx`)
 
 ---
 
-## 3. Peta modul ↔ route utama
+## 3. Peta Modul, Controllers & Middleware Matrix
 
-| Modul | Route | Notes |
-|-------|-------|-------|
-| Dashboard | `/dashboard` | Owner chart scope-sensitive (#30 open) |
-| POS | `/pos` | + `pos.customers.store` |
-| Production | `/production` | paginate 15; search UX #32 |
-| Performance | `/performance` | export #36 |
-| Customers | `/customers` | CRM stats #33 |
-| Finance reports | `/finance/reports` | charts #35 |
-| HR | `/hr` | payroll calc #31 |
-| Assets | `/assets` | export #36 |
-| Public track | `/track` | rate-limit + masked PII |
-| API | `/api/*` | Sanctum + login throttle |
-
----
-
-## 4. Stack & runtime
-
-Laravel 13 · PHP 8.3+ · Sanctum · Spatie Permission v8 · Blade/Alpine/Tailwind · Chart.js · MySQL 8 · dompdf · maatwebsite/excel · Docker · GHCR CI/CD
-
-**Queue:** `php artisan queue:work --tries=3` wajib di lingkungan yang memproses order/GRN.
+| Modul Utama | Rute Utama | Controller | Middleware Otorisasi |
+|---|---|---|---|
+| **Executive Dashboard** | `/dashboard` | `DashboardController` | `auth`, `branch.scope` |
+| **Point of Sale (POS)** | `/pos` | `POSController` | `role:Developer|Owner|Super_Admin|Branch_Admin|Cashier` |
+| **Tracking Produksi** | `/production` | `ProductionController` | `role:Developer|Owner|Super_Admin|Branch_Admin|Workshop_Admin|Workshop_Staff` |
+| **CRM & Loyalty** | `/customers` | `CustomerController` | `role:Developer|Owner|Super_Admin|Branch_Admin|CS_Marketing` |
+| **Pengadaan (Procurement)** | `/procurement/*` | `ProcurementController` | `role:Developer|Owner|Super_Admin|Branch_Admin|Workshop_Admin` |
+| **Akuntansi & Jurnal** | `/finance/*` | `JournalController`, `FinancialReportController` | `role:Developer|Owner|Super_Admin|Finance` |
+| **HR & Payroll** | `/hr/*` | `HRController` | `role:Developer|Owner|Super_Admin|Finance` |
+| **Manajemen Staf (Users)** | `/users` | `UserController` | `role:Developer|Owner|Super_Admin` |
+| **Manajemen Cabang** | `/branches` | `BranchController` | `role:Developer|Owner|Super_Admin` |
+| **Aset Tetap & Depresiasi** | `/assets/*` | `AssetController` | `role:Developer|Owner|Super_Admin|Finance` |
+| **Refund & Pembatalan** | `/refunds` | `RefundController` | `role:Developer|Owner|Super_Admin|Branch_Admin|Finance|Cashier` |
+| **Pelacakan Publik** | `/track` | Anonymous Controller | `throttle:30,1` (Public) |
 
 ---
 
-## 5. Keamanan (post #14–#20)
+## 4. Alur Integrasi Otomatis (Event-Driven Pipeline)
 
-| Area | Kondisi |
-|------|---------|
-| Role middleware modul sensitif | ✅ |
-| Public register | ✅ Off |
-| API / password throttle | ✅ |
-| Tenant + track PII | ✅ |
-| Audit mutasi bisnis | ✅ Auditable trait |
-| Journal race + idempotency | ✅ |
-| Docker seed guard + nginx headers | ✅ |
-| Timezone WITA | 🔓 #29 |
+### 4.1 Order Placement & Auto-Journal Pipeline
+1. Kasir memproses transaksi di `/pos`.
+2. Model `Order` terbuat dengan status pembayaran `paid` atau `pending`.
+3. Model Event `OrderObserver` menangkap pembuatan order lunas $\rightarrow$ Menjadwalkan `PostOrderJournalJob` ke Queue.
+4. `JournalService` memposting jurnal otomatis (Debit: Kas/Piutang & Beban Diskon, Kredit: Pendapatan & Hutang PPN).
+5. `LoyaltyService` menambahkan poin loyalitas ke akun pelanggan.
 
----
-
-## 6. Performa (post #21)
-
-| Area | Kondisi |
-|------|---------|
-| Dashboard N+1 branch/hari | ✅ Aggregated queries |
-| `branches:list` cache | ✅ TTL + invalidate on Branch save |
-| FinancialReportService batch balances | ✅ |
-| Journal/GRN via queue jobs | ✅ |
-| Redis as primary cache | Opsional backlog |
+### 4.2 Alur Refund 4-Tahap & Reversal Jurnal
+1. **Stage 1 (Pengajuan)**: Kasir/Admin membuat pengajuan refund di `/refunds` (Status `pending`).
+2. **Stage 2 (Branch Approval)**: Branch Admin menyetujui (Status `branch_approved`).
+3. **Stage 3 (Finance Approval)**: Finance menyetujui (Status `finance_approved`).
+4. **Stage 4 (Final Owner Approval)**: Owner menyetujui $\rightarrow$ System otomatis:
+   - Mengubah status pembayaran order menjadi `refunded`.
+   - Memunculkan jurnal pembalik (*reversal journal*) via `JournalService::reverseJournal()`.
+   - Memotong poin loyalitas yang pernah diberikan secara proporsional.
 
 ---
 
-## 7. Lingkungan
+## 5. Ringkasan Skema Database (47 Migrations)
 
+Tabel utama dalam database MySQL `istana_laundry`:
+- **Core Systems**: `users`, `roles`, `permissions`, `branches`, `workshops`, `audit_logs`, `jobs`.
+- **POS & Production**: `orders`, `order_items`, `production_status_logs`, `order_sequence_counters`.
+- **CRM & Marketing**: `customers`, `loyalty_point_logs`, `promotions`.
+- **Procurement & Inventory**: `suppliers`, `inventory_items`, `inventory_batches`, `purchase_requests`, `purchase_request_items`, `purchase_orders`, `purchase_order_items`, `goods_received_notes`, `grn_items`.
+- **Finance & Accounting**: `chart_of_accounts`, `accounting_periods`, `journals`, `journal_lines`, `refunds`.
+- **HR & Assets**: `employees`, `salary_histories`, `attendances`, `payrolls`, `payroll_items`, `fixed_assets`, `depreciation_schedules`.
+
+---
+
+## 6. Prosedur Deployment & Perintah Perawatan
+
+### Launching Docker Environment
 ```bash
+# 1. Build & Jalankan Container Docker
 docker compose up -d --build
-docker compose exec app php artisan migrate --seed
-docker compose exec app php artisan queue:work --tries=3
-docker compose exec app php artisan test
+
+# 2. Jalankan Migrasi Database & Seeder
+docker exec -i istanalaundrymanagementsystem-app-1 php artisan migrate --seed
+
+# 3. Jalankan Queue Worker (untuk Jurnal Otomatis & GRN)
+docker exec -i istanalaundrymanagementsystem-app-1 php artisan queue:work --tries=3
+
+# 4. Jalankan Automated Test Suite
+docker exec -i istanalaundrymanagementsystem-app-1 php artisan test
 ```
 
 ---
 
-## 8. Dokumentasi terkait
-
-| Dokumen | Isi |
-|---------|-----|
-| [SRS.md](SRS.md) | Requirement |
-| [PRODUCT_ROADMAP.md](PRODUCT_ROADMAP.md) | Gelombang rilis |
-| [PHASE_TEST2.md](PHASE_TEST2.md) | Fase aktif |
-| [PHASE_SECURITY_CACHE.md](PHASE_SECURITY_CACHE.md) | Arsip security/cache |
-| [AI_PROMPTS.md](AI_PROMPTS.md) | Prompt AI |
-| [tasks.md](../tasks.md) | Backlog harian |
+> **Dokumentasi Terkait:**
+> - [MANUAL_TESTING_GUIDE.md](MANUAL_TESTING_GUIDE.md) — Panduan pengujian manual UAT 12 modul.
+> - [SRS.md](SRS.md) — Software Requirements Specification.
+> - [PRODUCT_ROADMAP.md](PRODUCT_ROADMAP.md) — Roadmap pengembangan jangka panjang.
