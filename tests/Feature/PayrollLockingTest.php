@@ -7,13 +7,13 @@ use App\Models\Employee;
 use App\Models\Payroll;
 use App\Models\PayrollItem;
 use App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
 class PayrollLockingTest extends TestCase
 {
-    use RefreshDatabase;
+    use DatabaseTransactions;
 
     protected $user;
     protected $branch;
@@ -40,6 +40,7 @@ class PayrollLockingTest extends TestCase
             'email' => 'owner@istanalaundry.com',
             'password' => bcrypt('password'),
             'branch_id' => $this->branch->id,
+            'is_active' => true,
         ]);
         $this->user->assignRole('Owner');
 
@@ -88,8 +89,8 @@ class PayrollLockingTest extends TestCase
     public function test_updating_locked_payroll_item_is_blocked_and_redirects(): void
     {
         $response = $this->actingAs($this->user, 'web')
-            ->withoutMiddleware(\App\Http\Middleware\VerifyCsrfToken::class)
-            ->put(route('hr.payroll-item.update', $this->payrollItem->id), [
+            ->post(route('hr.payroll-item.update', $this->payrollItem->id), [
+                '_method' => 'PUT',
                 'allowance' => 9999999,
             ]);
 
@@ -103,8 +104,9 @@ class PayrollLockingTest extends TestCase
     public function test_deleting_locked_payroll_is_blocked_and_redirects(): void
     {
         $response = $this->actingAs($this->user, 'web')
-            ->withoutMiddleware(\App\Http\Middleware\VerifyCsrfToken::class)
-            ->delete(route('hr.payroll.destroy', $this->payroll->id));
+            ->post(route('hr.payroll.destroy', $this->payroll->id), [
+                '_method' => 'DELETE',
+            ]);
 
         $response->assertRedirect(route('hr.payrolls.show', $this->payroll->id));
         $response->assertSessionHas('error', 'Payroll yang sudah berstatus FINAL & DIKUNCI tidak dapat dihapus!');
