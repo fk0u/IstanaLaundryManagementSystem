@@ -9,6 +9,7 @@ use App\Models\Branch;
 use App\Models\Employee;
 use App\Models\Payroll;
 use App\Models\PayrollItem;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -119,14 +120,17 @@ class HRController extends Controller
             'bank_account_number' => $request->bank_account_number,
             'bank_account_holder' => $request->bank_account_holder,
             'is_active' => true,
-            'joined_at' => now(),
+            'joined_at' => now()->toDateString(),
         ]);
 
         return redirect()->route('hr.index')->with('success', 'Karyawan baru berhasil ditambahkan' . ($userId ? ' dan akun login berhasil dibuat!' : '!'));
     }
 
-    public function updateEmployee(Request $request, Employee $employee)
+    public function updateEmployee(Request $request, $employee)
     {
+        $empId = $employee instanceof Employee ? $employee->id : $employee;
+        $employee = Employee::withoutGlobalScopes()->findOrFail($empId);
+
         $request->validate([
             'nik' => 'required|string|unique:employees,nik,'.$employee->id,
             'name' => 'required|string|max:255',
@@ -171,8 +175,11 @@ class HRController extends Controller
         return redirect()->route('hr.index')->with('success', 'Data karyawan & akun terhubung berhasil diperbarui!');
     }
 
-    public function createAccountForEmployee(Request $request, Employee $employee)
+    public function createAccountForEmployee(Request $request, $employee)
     {
+        $empId = $employee instanceof Employee ? $employee->id : $employee;
+        $employee = Employee::withoutGlobalScopes()->findOrFail($empId);
+
         $request->validate([
             'email' => 'required|email|unique:users,email',
             'password' => 'required|string|min:8',
@@ -197,8 +204,11 @@ class HRController extends Controller
         return redirect()->back()->with('success', "Akun login untuk {$employee->name} ({$request->email}) berhasil dibuat dan dihubungkan!");
     }
 
-    public function linkAccountForEmployee(Request $request, Employee $employee)
+    public function linkAccountForEmployee(Request $request, $employee)
     {
+        $empId = $employee instanceof Employee ? $employee->id : $employee;
+        $employee = Employee::withoutGlobalScopes()->findOrFail($empId);
+
         $request->validate([
             'user_id' => 'required|exists:users,id',
         ]);
@@ -209,8 +219,11 @@ class HRController extends Controller
         return redirect()->back()->with('success', "Profil karyawan {$employee->name} berhasil dihubungkan dengan akun pengguna {$user->email}.");
     }
 
-    public function resetEmployeePassword(Request $request, Employee $employee)
+    public function resetEmployeePassword(Request $request, $employee)
     {
+        $empId = $employee instanceof Employee ? $employee->id : $employee;
+        $employee = Employee::withoutGlobalScopes()->findOrFail($empId);
+
         $request->validate([
             'password' => 'required|string|min:8|confirmed',
         ]);
@@ -436,8 +449,11 @@ class HRController extends Controller
         return view('hr.payroll-detail', compact('payroll'));
     }
 
-    public function updatePayrollItem(Request $request, PayrollItem $item)
+    public function updatePayrollItem(Request $request, $item)
     {
+        $itemId = $item instanceof PayrollItem ? $item->id : $item;
+        $item = PayrollItem::with('payroll')->findOrFail($itemId);
+
         if ($item->payroll && $item->payroll->status === 'final') {
             return redirect()->route('hr.payrolls.show', $item->payroll_id)
                 ->with('error', 'Payroll sudah berstatus FINAL dan dikunci dari perubahan!');

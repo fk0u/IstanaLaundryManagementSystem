@@ -40,6 +40,11 @@ class Employee extends Model
         ];
     }
 
+    public function resolveRouteBinding($value, $field = null)
+    {
+        return $this->newQuery()->withoutGlobalScopes()->where($field ?? $this->getRouteKeyName(), $value)->first();
+    }
+
     public function getAgeAttribute(): ?int
     {
         return $this->birth_date ? (int) $this->birth_date->age : null;

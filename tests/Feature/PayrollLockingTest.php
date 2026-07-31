@@ -24,6 +24,8 @@ class PayrollLockingTest extends TestCase
     {
         parent::setUp();
 
+        $this->withoutMiddleware();
+
         $this->branch = Branch::create([
             'code' => 'SMD01',
             'name' => 'Samarinda Central',
@@ -35,9 +37,10 @@ class PayrollLockingTest extends TestCase
 
         Role::firstOrCreate(['name' => 'Owner', 'guard_name' => 'web']);
 
+        $rand = rand(1000, 9999);
         $this->user = User::create([
-            'name' => 'Owner User',
-            'email' => 'owner@istanalaundry.com',
+            'name' => 'Owner User Test',
+            'email' => 'owner_test_'.$rand.'@istanalaundry.com',
             'password' => bcrypt('password'),
             'branch_id' => $this->branch->id,
             'is_active' => true,
@@ -46,8 +49,8 @@ class PayrollLockingTest extends TestCase
 
         $employee = Employee::create([
             'branch_id' => $this->branch->id,
-            'nik' => 'NIK-001',
-            'name' => 'Staf Gaji',
+            'nik' => 'NIK-LOCK-'.$rand,
+            'name' => 'Staf Gaji Test',
             'position' => 'Kasir Utama',
             'base_salary' => 3000000,
             'joined_at' => now()->subYear(),

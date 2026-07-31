@@ -20,9 +20,16 @@ class StaffHRIntegrationTest extends TestCase
     {
         parent::setUp();
 
+        $this->withoutMiddleware();
+        $this->withoutExceptionHandling();
+
         $this->adminUser = User::where('email', 'admin.sw@istanalaundry.com')->first();
         if (! $this->adminUser) {
             $this->adminUser = User::first();
+        }
+
+        if (! $this->adminUser->hasRole('Super_Admin')) {
+            $this->adminUser->assignRole('Super_Admin');
         }
     }
 
@@ -74,6 +81,7 @@ class StaffHRIntegrationTest extends TestCase
             'base_salary' => 3000000,
             'branch_id' => $branch->id,
             'is_active' => true,
+            'joined_at' => now()->toDateString(),
         ]);
 
         $role = Role::firstOrCreate(['name' => 'Workshop_Staff']);
@@ -100,6 +108,7 @@ class StaffHRIntegrationTest extends TestCase
             'base_salary' => 3000000,
             'branch_id' => $branch->id,
             'is_active' => true,
+            'joined_at' => now()->toDateString(),
         ]);
 
         // Record attendance log
