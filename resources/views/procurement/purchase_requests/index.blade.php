@@ -50,6 +50,8 @@
                                 <td class="py-4 px-4">
                                     @if ($pr->status === 'approved')
                                         <x-badge type="success">Disetujui</x-badge>
+                                    @elseif ($pr->status === 'ordered')
+                                        <x-badge type="info">Sudah Di-PO</x-badge>
                                     @elseif ($pr->status === 'rejected')
                                         <x-badge type="danger">Ditolak</x-badge>
                                     @else
