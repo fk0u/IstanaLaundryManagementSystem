@@ -29,6 +29,16 @@ class AssetController extends Controller
             ->when($branchId, fn ($q) => $q->where('branch_id', $branchId));
 
         $allAssets = (clone $assetsQuery)->get();
+
+        // Auto-generate missing depreciation schedules for existing assets if needed
+        foreach ($allAssets as $ast) {
+            if ($ast->depreciationSchedules()->count() === 0) {
+                self::generateSchedulesForAsset($ast);
+            }
+        }
+
+        // Re-fetch updated asset values
+        $allAssets = (clone $assetsQuery)->get();
         $assets = $assetsQuery->orderBy('asset_code')->paginate(15);
 
         $accounts = ChartOfAccount::where('type', 'asset')->orderBy('code')->get();
@@ -49,8 +59,8 @@ class AssetController extends Controller
             return [
                 'name' => $catName,
                 'count' => $items->count(),
-                'total_cost' => $items->sum('acquisition_cost'),
-                'total_book_value' => $items->sum('book_value'),
+                'total_cost' => (float) $items->sum('acquisition_cost'),
+                'total_book_value' => (float) $items->sum('book_value'),
             ];
         });
 
@@ -81,7 +91,8 @@ class AssetController extends Controller
             ->sum('depreciation_amount');
 
             $monthlyDepreciationForecast[] = [
-                'month_name' => Carbon::create()->month($m)->translatedFormat('M'),
+                'month_number' => $m,
+                'month_name' => Carbon::create($year, $m, 1)->translatedFormat('F'),
                 'amount' => (float) $amount,
             ];
         }
@@ -100,6 +111,46 @@ class AssetController extends Controller
             'maintenanceUpcoming30Days',
             'monthlyDepreciationForecast'
         ));
+    }
+
+    public static function generateSchedulesForAsset(FixedAsset $asset): void
+    {
+        if ($asset->depreciationSchedules()->count() > 0) {
+            return;
+        }
+
+        $cost = (float) $asset->acquisition_cost;
+        $salvage = (float) $asset->salvage_value;
+        $months = (int) ($asset->useful_life_months ?: 48);
+        $monthlyDep = ($months > 0) ? (($cost - $salvage) / $months) : 0;
+
+        $accumulated = 0;
+        $startDate = Carbon::parse($asset->acquisition_date ?: now()->subYear())->startOfMonth();
+
+        for ($i = 1; $i <= $months; $i++) {
+            $accumulated += $monthlyDep;
+            $bookValue = max($salvage, $cost - $accumulated);
+            $periodDate = $startDate->copy()->addMonths($i - 1);
+
+            DepreciationSchedule::create([
+                'asset_id' => $asset->id,
+                'period_date' => $periodDate->format('Y-m-d'),
+                'depreciation_amount' => round($monthlyDep, 2),
+                'accumulated' => round($accumulated, 2),
+                'book_value' => round($bookValue, 2),
+                'is_posted' => $periodDate->isPast() || $periodDate->isSameMonth(now()),
+            ]);
+        }
+
+        $postedAccumulated = DepreciationSchedule::where('asset_id', $asset->id)
+            ->where('is_posted', true)
+            ->sum('depreciation_amount');
+        $currentBookValue = max($salvage, $cost - $postedAccumulated);
+
+        $asset->update([
+            'accumulated_depreciation' => round($postedAccumulated, 2),
+            'book_value' => round($currentBookValue, 2),
+        ]);
     }
 
     public function updateMaintenance(Request $request, FixedAsset $asset)

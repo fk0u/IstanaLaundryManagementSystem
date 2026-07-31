@@ -163,7 +163,7 @@ class ERPDataSeeder extends Seeder
 
         // 5. Seed Fixed Assets
         foreach ($branches as $branch) {
-            FixedAsset::firstOrCreate(
+            $fa1 = FixedAsset::firstOrCreate(
                 ['asset_code' => 'AST-'.$branch->code.'-WASH-01'],
                 [
                     'branch_id' => $branch->id,
@@ -180,8 +180,9 @@ class ERPDataSeeder extends Seeder
                     'is_active' => true,
                 ]
             );
+            \App\Http\Controllers\AssetController::generateSchedulesForAsset($fa1);
 
-            FixedAsset::firstOrCreate(
+            $fa2 = FixedAsset::firstOrCreate(
                 ['asset_code' => 'AST-'.$branch->code.'-DRY-01'],
                 [
                     'branch_id' => $branch->id,
@@ -198,6 +199,7 @@ class ERPDataSeeder extends Seeder
                     'is_active' => true,
                 ]
             );
+            \App\Http\Controllers\AssetController::generateSchedulesForAsset($fa2);
         }
 
         // 6. Seed Past & Today Orders for Dashboards

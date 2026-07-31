@@ -558,10 +558,9 @@
 
     </div>
 
-    @push('scripts')
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
-        window.assetChartInstances = {};
+        window.assetChartInstances = window.assetChartInstances || {};
 
         window.renderAssetCharts = function() {
             const isDark = document.documentElement.classList.contains('dark');
@@ -710,9 +709,12 @@
             }
         };
 
-        document.addEventListener('DOMContentLoaded', function() {
-            setTimeout(window.renderAssetCharts, 200);
-        });
+        if (document.readyState === 'complete' || document.readyState === 'interactive') {
+            setTimeout(window.renderAssetCharts, 100);
+        } else {
+            document.addEventListener('DOMContentLoaded', function() {
+                setTimeout(window.renderAssetCharts, 100);
+            });
+        }
     </script>
-    @endpush
 </x-app-layout>
