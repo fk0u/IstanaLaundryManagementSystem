@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Procurement;
 
 use App\Http\Controllers\Controller;
+use App\Models\Branch;
 use App\Models\InventoryItem;
 use App\Models\PurchaseOrder;
 use App\Models\PurchaseOrderItem;
@@ -22,8 +23,9 @@ class PurchaseOrderController extends Controller
         // Standard helpers for creating a PO
         $suppliers = Supplier::where('is_active', true)->orderBy('name', 'asc')->get();
 
-        // List approved PRs that don't have a PO yet
-        $approvedPrs = PurchaseRequest::where('status', 'approved')
+        // List approved PRs with their items and requester that don't have a PO yet
+        $approvedPrs = PurchaseRequest::with(['requestedBy', 'items.item'])
+            ->where('status', 'approved')
             ->whereNotExists(function ($query) {
                 $query->select(DB::raw(1))
                     ->from('purchase_orders')
@@ -99,9 +101,9 @@ class PurchaseOrderController extends Controller
                 ]);
             }
 
-            // If PR is linked, update its status
+            // If PR is linked, update its status to ordered
             if ($request->pr_id) {
-                PurchaseRequest::find($request->pr_id)->update(['status' => 'approved']); // Ensure marked
+                PurchaseRequest::find($request->pr_id)?->update(['status' => 'ordered']);
             }
         });
 
