@@ -17,8 +17,9 @@ class GoodsReceivedNoteController extends Controller
             ->orderBy('id', 'desc')
             ->paginate(15);
 
-        // List POs that are active/sent/confirmed and not fully received
-        $activePos = PurchaseOrder::whereIn('status', ['sent', 'confirmed', 'partial'])
+        // List POs with supplier and items that are available for receiving
+        $activePos = PurchaseOrder::with(['supplier', 'items.item'])
+            ->whereIn('status', ['draft', 'sent', 'confirmed', 'partial'])
             ->orderBy('po_number', 'asc')
             ->get();
 
