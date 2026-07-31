@@ -49,4 +49,68 @@ class OrderController extends Controller
             'isGlobalUser'
         ));
     }
+
+    public function exportPdf(Request $request)
+    {
+        $user = Auth::user();
+        $isGlobalUser = $user->hasAnyRole(['Developer', 'Owner', 'Super_Admin', 'Finance']);
+
+        $branchId = $request->query('branch_id');
+        if (! $isGlobalUser) {
+            $branchId = session('scoped_branch_id') ?? $user->branch_id;
+        }
+
+        $branchName = $branchId ? (Branch::find($branchId)?->name ?? 'Cabang Unknown') : 'Semua Cabang';
+        $status = $request->query('status');
+        $payStatus = $request->query('pay_status');
+        $search = $request->query('search');
+
+        $orders = Order::with(['customer', 'branch', 'cashier', 'items.service'])
+            ->when($branchId, fn ($q) => $q->where('branch_id', $branchId))
+            ->when($status, fn ($q) => $q->where('production_status', $status))
+            ->when($payStatus, fn ($q) => $q->where('payment_status', $payStatus))
+            ->when($search, function ($q) use ($search) {
+                $q->where('order_number', 'like', "%{$search}%")
+                    ->orWhereHas('customer', fn ($cq) => $cq->where('name', 'like', "%{$search}%"));
+            })
+            ->latest()
+            ->get();
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('exports.orders_pdf', compact('orders', 'branchName'))
+            ->setPaper('a4', 'landscape');
+
+        return $pdf->download('orders_' . now()->format('Ymd_His') . '.pdf');
+    }
+
+    public function exportExcel(Request $request)
+    {
+        $user = Auth::user();
+        $isGlobalUser = $user->hasAnyRole(['Developer', 'Owner', 'Super_Admin', 'Finance']);
+
+        $branchId = $request->query('branch_id');
+        if (! $isGlobalUser) {
+            $branchId = session('scoped_branch_id') ?? $user->branch_id;
+        }
+
+        $branchName = $branchId ? (Branch::find($branchId)?->name ?? 'Cabang Unknown') : 'Semua Cabang';
+        $status = $request->query('status');
+        $payStatus = $request->query('pay_status');
+        $search = $request->query('search');
+
+        $orders = Order::with(['customer', 'branch', 'cashier', 'items.service'])
+            ->when($branchId, fn ($q) => $q->where('branch_id', $branchId))
+            ->when($status, fn ($q) => $q->where('production_status', $status))
+            ->when($payStatus, fn ($q) => $q->where('payment_status', $payStatus))
+            ->when($search, function ($q) use ($search) {
+                $q->where('order_number', 'like', "%{$search}%")
+                    ->orWhereHas('customer', fn ($cq) => $cq->where('name', 'like', "%{$search}%"));
+            })
+            ->latest()
+            ->get();
+
+        return \Maatwebsite\Excel\Facades\Excel::download(
+            new \App\Exports\GenericViewExport('exports.orders_pdf', compact('orders', 'branchName'), 'Order Transactions'),
+            'orders_' . now()->format('Ymd_His') . '.xlsx'
+        );
+    }
 }

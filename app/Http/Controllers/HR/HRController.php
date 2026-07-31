@@ -657,4 +657,28 @@ class HRController extends Controller
             return redirect()->route('hr.index')->with('error', 'Gagal menghapus payroll: '.$e->getMessage());
         }
     }
+
+    public function exportPdf()
+    {
+        $branchId = session('scoped_branch_id') ?? auth()->user()?->branch_id;
+        $branchName = $branchId ? (Branch::find($branchId)?->name ?? 'Cabang Unknown') : 'Semua Cabang';
+        $employees = Employee::orderBy('name', 'asc')->get();
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('exports.hr_pdf', compact('employees', 'branchName'))
+            ->setPaper('a4', 'portrait');
+
+        return $pdf->download('employees_hr_' . now()->format('Ymd_His') . '.pdf');
+    }
+
+    public function exportExcel()
+    {
+        $branchId = session('scoped_branch_id') ?? auth()->user()?->branch_id;
+        $branchName = $branchId ? (Branch::find($branchId)?->name ?? 'Cabang Unknown') : 'Semua Cabang';
+        $employees = Employee::orderBy('name', 'asc')->get();
+
+        return \Maatwebsite\Excel\Facades\Excel::download(
+            new \App\Exports\GenericViewExport('exports.hr_pdf', compact('employees', 'branchName'), 'Employee HR Payroll'),
+            'employees_hr_' . now()->format('Ymd_His') . '.xlsx'
+        );
+    }
 }

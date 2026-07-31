@@ -1,11 +1,21 @@
 <x-app-layout>
     <div x-data="poApp(@js($approvedPrs))" class="flex flex-col gap-6">
-        <div class="flex justify-between items-center">
+        <div class="flex flex-wrap justify-between items-center gap-3">
             <x-page-header title="Purchase Orders (PO)" :breadcrumbs="['Pengadaan' => '#', 'PO' => '/procurement/purchase-orders']" />
-            <button @click="openModal()" class="h-11 px-5 bg-primary hover:bg-orange-600 text-white font-bold rounded-xl text-xs flex items-center gap-2 transition-all active:scale-[0.98] cursor-pointer shadow-md shadow-orange-500/10">
-                <span class="material-symbols-outlined">description</span>
-                Buat Purchase Order
-            </button>
+            <div class="flex items-center gap-2">
+                <a href="{{ route('procurement.purchase-orders.export.pdf') }}" target="_blank"
+                   class="h-11 px-4 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-xl text-xs flex items-center gap-1.5 transition-all shadow-sm cursor-pointer">
+                    <span class="material-symbols-outlined text-base">picture_as_pdf</span> Unduh PDF
+                </a>
+                <a href="{{ route('procurement.purchase-orders.export.xlsx') }}"
+                   class="h-11 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs flex items-center gap-1.5 transition-all shadow-sm cursor-pointer">
+                    <span class="material-symbols-outlined text-base">table_chart</span> Ekspor XLSX
+                </a>
+                <button @click="openModal()" class="h-11 px-5 bg-primary hover:bg-orange-600 text-white font-bold rounded-xl text-xs flex items-center gap-2 transition-all active:scale-[0.98] cursor-pointer shadow-md shadow-orange-500/10">
+                    <span class="material-symbols-outlined">description</span>
+                    Buat Purchase Order
+                </button>
+            </div>
         </div>
 
         @if (session('success'))

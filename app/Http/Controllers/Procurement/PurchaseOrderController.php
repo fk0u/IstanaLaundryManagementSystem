@@ -286,4 +286,32 @@ class PurchaseOrderController extends Controller
 
         return redirect()->back()->with('success', 'PO berhasil dihapus.');
     }
+
+    public function exportPdf()
+    {
+        $branchId = session('scoped_branch_id') ?? auth()->user()?->branch_id;
+        $branchName = $branchId ? (Branch::find($branchId)?->name ?? 'Cabang Unknown') : 'Semua Cabang';
+        $purchaseOrders = PurchaseOrder::with(['supplier', 'pr', 'items.item'])
+            ->orderBy('id', 'desc')
+            ->get();
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('exports.procurement_po_pdf', compact('purchaseOrders', 'branchName'))
+            ->setPaper('a4', 'landscape');
+
+        return $pdf->download('purchase_orders_' . now()->format('Ymd_His') . '.pdf');
+    }
+
+    public function exportExcel()
+    {
+        $branchId = session('scoped_branch_id') ?? auth()->user()?->branch_id;
+        $branchName = $branchId ? (Branch::find($branchId)?->name ?? 'Cabang Unknown') : 'Semua Cabang';
+        $purchaseOrders = PurchaseOrder::with(['supplier', 'pr', 'items.item'])
+            ->orderBy('id', 'desc')
+            ->get();
+
+        return \Maatwebsite\Excel\Facades\Excel::download(
+            new \App\Exports\GenericViewExport('exports.procurement_po_pdf', compact('purchaseOrders', 'branchName'), 'Purchase Orders'),
+            'purchase_orders_' . now()->format('Ymd_His') . '.xlsx'
+        );
+    }
 }

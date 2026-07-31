@@ -118,4 +118,32 @@ class PurchaseRequestController extends Controller
 
         return redirect()->back()->with('success', 'PR berhasil dihapus.');
     }
+
+    public function exportPdf()
+    {
+        $branchId = session('scoped_branch_id') ?? auth()->user()?->branch_id;
+        $branchName = $branchId ? (Branch::find($branchId)?->name ?? 'Cabang Unknown') : 'Semua Cabang';
+        $purchaseRequests = PurchaseRequest::with(['requestedBy', 'approvedBy', 'items.item'])
+            ->orderBy('id', 'desc')
+            ->get();
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('exports.procurement_pr_pdf', compact('purchaseRequests', 'branchName'))
+            ->setPaper('a4', 'portrait');
+
+        return $pdf->download('purchase_requests_' . now()->format('Ymd_His') . '.pdf');
+    }
+
+    public function exportExcel()
+    {
+        $branchId = session('scoped_branch_id') ?? auth()->user()?->branch_id;
+        $branchName = $branchId ? (Branch::find($branchId)?->name ?? 'Cabang Unknown') : 'Semua Cabang';
+        $purchaseRequests = PurchaseRequest::with(['requestedBy', 'approvedBy', 'items.item'])
+            ->orderBy('id', 'desc')
+            ->get();
+
+        return \Maatwebsite\Excel\Facades\Excel::download(
+            new \App\Exports\GenericViewExport('exports.procurement_pr_pdf', compact('purchaseRequests', 'branchName'), 'Purchase Requests'),
+            'purchase_requests_' . now()->format('Ymd_His') . '.xlsx'
+        );
+    }
 }

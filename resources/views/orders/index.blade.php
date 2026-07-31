@@ -1,6 +1,18 @@
 <x-app-layout>
     <div class="flex flex-col gap-4 md:gap-6">
-        <x-page-header title="Semua Transaksi" :breadcrumbs="['Transaksi' => route('orders.index')]" />
+        <div class="flex flex-wrap justify-between items-center gap-3">
+            <x-page-header title="Semua Transaksi" :breadcrumbs="['Transaksi' => route('orders.index')]" />
+            <div class="flex items-center gap-2">
+                <a href="{{ route('orders.export.pdf', request()->all()) }}" target="_blank"
+                   class="h-10 px-3.5 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-xl text-xs flex items-center gap-1.5 transition-all shadow-sm cursor-pointer">
+                    <span class="material-symbols-outlined text-base">picture_as_pdf</span> Unduh PDF
+                </a>
+                <a href="{{ route('orders.export.xlsx', request()->all()) }}"
+                   class="h-10 px-3.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs flex items-center gap-1.5 transition-all shadow-sm cursor-pointer">
+                    <span class="material-symbols-outlined text-base">table_chart</span> Ekspor XLSX
+                </a>
+            </div>
+        </div>
 
         {{-- Filter Bar --}}
         <form method="GET" action="{{ route('orders.index') }}"

@@ -1,11 +1,21 @@
 <x-app-layout>
     <div x-data="{ showCreateModal: false, items: [{ item_id: '', quantity: 1, unit_cost_estimate: 0, notes: '' }] }" class="flex flex-col gap-6">
-        <div class="flex justify-between items-center">
+        <div class="flex flex-wrap justify-between items-center gap-3">
             <x-page-header title="Purchase Requests (PR)" :breadcrumbs="['Pengadaan' => '#', 'PR' => '/procurement/purchase-requests']" />
-            <button @click="showCreateModal = true" class="h-11 px-5 bg-primary hover:bg-orange-600 text-white font-bold rounded-xl text-xs flex items-center gap-2 transition-all active:scale-[0.98] cursor-pointer shadow-md shadow-orange-500/10">
-                <span class="material-symbols-outlined">add_shopping_cart</span>
-                Buat Purchase Request
-            </button>
+            <div class="flex items-center gap-2">
+                <a href="{{ route('procurement.purchase-requests.export.pdf') }}" target="_blank"
+                   class="h-11 px-4 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-xl text-xs flex items-center gap-1.5 transition-all shadow-sm cursor-pointer">
+                    <span class="material-symbols-outlined text-base">picture_as_pdf</span> Unduh PDF
+                </a>
+                <a href="{{ route('procurement.purchase-requests.export.xlsx') }}"
+                   class="h-11 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs flex items-center gap-1.5 transition-all shadow-sm cursor-pointer">
+                    <span class="material-symbols-outlined text-base">table_chart</span> Ekspor XLSX
+                </a>
+                <button @click="showCreateModal = true" class="h-11 px-5 bg-primary hover:bg-orange-600 text-white font-bold rounded-xl text-xs flex items-center gap-2 transition-all active:scale-[0.98] cursor-pointer shadow-md shadow-orange-500/10">
+                    <span class="material-symbols-outlined">add_shopping_cart</span>
+                    Buat Purchase Request
+                </button>
+            </div>
         </div>
 
         @if (session('success'))

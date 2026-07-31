@@ -84,6 +84,8 @@ Route::middleware(['auth', 'branch.scope'])->group(function () {
 
     // Orders — list seluruh transaksi
     Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
+    Route::get('/orders/export/pdf', [OrderController::class, 'exportPdf'])->name('orders.export.pdf');
+    Route::get('/orders/export/xlsx', [OrderController::class, 'exportExcel'])->name('orders.export.xlsx');
 
     // Production Tracking
     Route::get('/production', [ProductionController::class, 'index'])->name('production.index');
@@ -160,6 +162,28 @@ Route::middleware(['auth', 'branch.scope'])->group(function () {
         return view('inventory.index', compact('inventoryItems'));
     })->name('inventory.index');
 
+    Route::get('/inventory/export/pdf', function () {
+        $branchId = session('scoped_branch_id') ?? auth()->user()?->branch_id;
+        $branchName = $branchId ? (\App\Models\Branch::find($branchId)?->name ?? 'Cabang Unknown') : 'Semua Cabang';
+        $inventoryItems = InventoryItem::orderBy('name', 'asc')->get();
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('exports.inventory_pdf', compact('inventoryItems', 'branchName'))
+            ->setPaper('a4', 'portrait');
+
+        return $pdf->download('inventory_stock_' . now()->format('Ymd_His') . '.pdf');
+    })->name('inventory.export.pdf');
+
+    Route::get('/inventory/export/xlsx', function () {
+        $branchId = session('scoped_branch_id') ?? auth()->user()?->branch_id;
+        $branchName = $branchId ? (\App\Models\Branch::find($branchId)?->name ?? 'Cabang Unknown') : 'Semua Cabang';
+        $inventoryItems = InventoryItem::orderBy('name', 'asc')->get();
+
+        return \Maatwebsite\Excel\Facades\Excel::download(
+            new \App\Exports\GenericViewExport('exports.inventory_pdf', compact('inventoryItems', 'branchName'), 'Inventory Stock'),
+            'inventory_stock_' . now()->format('Ymd_His') . '.xlsx'
+        );
+    })->name('inventory.export.xlsx');
+
     Route::middleware('role:Branch_Admin|Owner|Super_Admin|Developer')->group(function () {
         Route::post('/inventory', function (Request $request) {
             $request->validate([
@@ -201,6 +225,8 @@ Route::middleware(['auth', 'branch.scope'])->group(function () {
     // HR & Payroll
     Route::middleware('role:Finance|Owner|Super_Admin|Developer')->group(function () {
         Route::get('/hr', [HRController::class, 'index'])->name('hr.index');
+        Route::get('/hr/export/pdf', [HRController::class, 'exportPdf'])->name('hr.export.pdf');
+        Route::get('/hr/export/xlsx', [HRController::class, 'exportExcel'])->name('hr.export.xlsx');
         Route::post('/hr/employees', [HRController::class, 'storeEmployee'])->name('hr.employees.store');
         Route::put('/hr/employees/{employee}', [HRController::class, 'updateEmployee'])->name('hr.employees.update');
         Route::post('/hr/payrolls', [HRController::class, 'storePayroll'])->name('hr.payrolls.store');
@@ -436,6 +462,8 @@ Route::middleware(['auth', 'branch.scope'])->group(function () {
 
         // Procurement - PR
         Route::get('/procurement/purchase-requests', [PurchaseRequestController::class, 'index'])->name('procurement.purchase-requests.index');
+        Route::get('/procurement/purchase-requests/export/pdf', [PurchaseRequestController::class, 'exportPdf'])->name('procurement.purchase-requests.export.pdf');
+        Route::get('/procurement/purchase-requests/export/xlsx', [PurchaseRequestController::class, 'exportExcel'])->name('procurement.purchase-requests.export.xlsx');
         Route::post('/procurement/purchase-requests', [PurchaseRequestController::class, 'store'])->name('procurement.purchase-requests.store');
         Route::post('/procurement/purchase-requests/{id}/approve', [PurchaseRequestController::class, 'approve'])->name('procurement.purchase-requests.approve');
         Route::post('/procurement/purchase-requests/{id}/reject', [PurchaseRequestController::class, 'reject'])->name('procurement.purchase-requests.reject');
@@ -443,6 +471,8 @@ Route::middleware(['auth', 'branch.scope'])->group(function () {
 
         // Procurement - PO
         Route::get('/procurement/purchase-orders', [PurchaseOrderController::class, 'index'])->name('procurement.purchase-orders.index');
+        Route::get('/procurement/purchase-orders/export/pdf', [PurchaseOrderController::class, 'exportPdf'])->name('procurement.purchase-orders.export.pdf');
+        Route::get('/procurement/purchase-orders/export/xlsx', [PurchaseOrderController::class, 'exportExcel'])->name('procurement.purchase-orders.export.xlsx');
         Route::get('/procurement/purchase-orders/{id}', [PurchaseOrderController::class, 'show'])->name('procurement.purchase-orders.show');
         Route::get('/procurement/purchase-orders/{id}/whatsapp', [PurchaseOrderController::class, 'whatsapp'])->name('procurement.purchase-orders.whatsapp');
         Route::get('/procurement/purchase-orders/{id}/print', [PurchaseOrderController::class, 'print'])->name('procurement.purchase-orders.print');
