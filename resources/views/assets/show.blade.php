@@ -119,19 +119,24 @@
                 </x-card>
 
                 <!-- Maintenance Info Card -->
-                <x-card title="Riwayat Maintenance">
-                    <div class="space-y-3 text-xs">
-                        <div class="flex items-center gap-2">
-                            <span class="material-symbols-outlined text-amber-500 text-xl">build</span>
-                            <div>
-                                <span class="block text-2xs text-slate-400 font-bold uppercase">Maintenance Terakhir</span>
-                                @if($asset->last_maintenance_date)
-                                    <span class="font-bold text-slate-800 dark:text-slate-200">{{ $asset->last_maintenance_date->format('d M Y') }}</span>
-                                    <span class="text-2xs text-slate-400 block">({{ $asset->last_maintenance_date->diffForHumans() }})</span>
-                                @else
-                                    <span class="text-slate-400 italic">Belum ada catatan maintenance</span>
-                                @endif
+                <x-card title="Riwayat Maintenance & Servis">
+                    <div class="space-y-3 text-xs" x-data="{ showMaintenanceModal: false }">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-2">
+                                <span class="material-symbols-outlined text-amber-500 text-xl">build</span>
+                                <div>
+                                    <span class="block text-2xs text-slate-400 font-bold uppercase">Maintenance Terakhir</span>
+                                    @if($asset->last_maintenance_date)
+                                        <span class="font-bold text-slate-800 dark:text-slate-200">{{ $asset->last_maintenance_date->format('d M Y') }}</span>
+                                        <span class="text-2xs text-slate-400 block">({{ $asset->last_maintenance_date->diffForHumans() }})</span>
+                                    @else
+                                        <span class="text-slate-400 italic">Belum ada catatan maintenance</span>
+                                    @endif
+                                </div>
                             </div>
+                            <button type="button" @click="showMaintenanceModal = true" class="px-2.5 py-1.5 bg-amber-50 dark:bg-amber-950/30 text-amber-700 text-2xs font-bold rounded-lg hover:bg-amber-100 transition-colors shadow-sm">
+                                Update Log
+                            </button>
                         </div>
                         @if($asset->next_maintenance_date)
                             <div class="flex items-center gap-2 {{ $asset->next_maintenance_date->isPast() ? 'bg-rose-50 dark:bg-rose-950/20 border border-rose-100 rounded-xl p-2' : '' }}">
@@ -159,6 +164,50 @@
                                 <p class="text-2xs text-slate-600 dark:text-slate-400">{{ $asset->notes }}</p>
                             </div>
                         @endif
+
+                        <!-- Update Maintenance Modal -->
+                        <div x-show="showMaintenanceModal" class="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4" x-cloak @keydown.escape.window="showMaintenanceModal = false">
+                            <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-md w-full p-5 shadow-2xl space-y-4">
+                                <div class="flex justify-between items-center pb-2 border-b">
+                                    <div class="flex items-center gap-2">
+                                        <span class="material-symbols-outlined text-amber-600">build</span>
+                                        <h3 class="font-bold text-sm text-slate-800 dark:text-slate-200">Update Servis & Condition Aset</h3>
+                                    </div>
+                                    <button type="button" @click="showMaintenanceModal = false" class="text-slate-400"><span class="material-symbols-outlined">close</span></button>
+                                </div>
+
+                                <form action="{{ route('assets.maintenance.update', $asset->id) }}" method="POST" class="space-y-3">
+                                    @csrf
+                                    <div class="grid grid-cols-2 gap-3">
+                                        <div>
+                                            <label class="text-2xs font-bold text-slate-400 uppercase">Tgl Servis Terakhir</label>
+                                            <input type="date" name="last_maintenance_date" value="{{ $asset->last_maintenance_date ? $asset->last_maintenance_date->format('Y-m-d') : date('Y-m-d') }}" required class="w-full h-9 px-3 rounded-xl border text-xs font-bold">
+                                        </div>
+                                        <div>
+                                            <label class="text-2xs font-bold text-slate-400 uppercase">Tgl Servis Berikutnya</label>
+                                            <input type="date" name="next_maintenance_date" value="{{ $asset->next_maintenance_date ? $asset->next_maintenance_date->format('Y-m-d') : '' }}" class="w-full h-9 px-3 rounded-xl border text-xs">
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <label class="text-2xs font-bold text-slate-400 uppercase">Kondisi Fisik Aset</label>
+                                        <select name="condition" required class="w-full h-9 px-2 rounded-xl border text-xs font-bold">
+                                            <option value="good" {{ $asset->condition === 'good' ? 'selected' : '' }}>Baik (Siap Operasional)</option>
+                                            <option value="fair" {{ $asset->condition === 'fair' ? 'selected' : '' }}>Cukup (Perlu Pemantauan)</option>
+                                            <option value="poor" {{ $asset->condition === 'poor' ? 'selected' : '' }}>Rusak (Perlu Servis / Perbaikan)</option>
+                                            <option value="scrapped" {{ $asset->condition === 'scrapped' ? 'selected' : '' }}>Afkir (Tidak Berfungsi)</option>
+                                        </select>
+                                    </div>
+
+                                    <div>
+                                        <label class="text-2xs font-bold text-slate-400 uppercase">Catatan Servis / Perbaikan</label>
+                                        <textarea name="maintenance_notes" rows="3" placeholder="Rincian perbaikan, penggantian sparepart, teknisi..." class="w-full px-3 py-2 rounded-xl border text-xs">{{ $asset->maintenance_notes }}</textarea>
+                                    </div>
+
+                                    <button type="submit" class="btn-touch w-full bg-amber-600 text-white font-bold text-xs rounded-xl py-2.5 shadow-md">Simpan Log Servis</button>
+                                </form>
+                            </div>
+                        </div>
                     </div>
                 </x-card>
             </div>

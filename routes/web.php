@@ -260,6 +260,7 @@ Route::middleware(['auth', 'branch.scope'])->group(function () {
         Route::get('/assets/export/pdf', [AssetController::class, 'exportPdf'])->name('assets.export.pdf');
         Route::get('/assets/export/xlsx', [AssetController::class, 'exportExcel'])->name('assets.export.xlsx');
         Route::post('/assets', [AssetController::class, 'store'])->name('assets.store');
+        Route::post('/assets/{asset}/maintenance', [AssetController::class, 'updateMaintenance'])->name('assets.maintenance.update');
         Route::get('/assets/{asset}', [AssetController::class, 'show'])->name('assets.show');
 
         Route::post('/assets', function (Request $request) {

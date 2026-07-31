@@ -25,14 +25,73 @@ class AssetController extends Controller
 
         $branches = Branch::orderBy('name')->get();
 
-        $assets = FixedAsset::with(['branch', 'account'])
-            ->when($branchId, fn ($q) => $q->where('branch_id', $branchId))
-            ->orderBy('asset_code')
-            ->paginate(15);
+        $assetsQuery = FixedAsset::with(['branch', 'account'])
+            ->when($branchId, fn ($q) => $q->where('branch_id', $branchId));
+
+        $allAssets = (clone $assetsQuery)->get();
+        $assets = $assetsQuery->orderBy('asset_code')->paginate(15);
 
         $accounts = ChartOfAccount::where('type', 'asset')->orderBy('code')->get();
 
-        return view('assets.index', compact('assets', 'branches', 'branchId', 'accounts'));
+        // Analytics & Category Breakdown
+        $totalCost = $allAssets->sum('acquisition_cost');
+        $totalBookValue = $allAssets->sum('book_value');
+        $totalDepreciation = $allAssets->sum('accumulated_depreciation');
+
+        $conditionCounts = [
+            'good' => $allAssets->where('condition', 'good')->count(),
+            'fair' => $allAssets->where('condition', 'fair')->count(),
+            'poor' => $allAssets->where('condition', 'poor')->count(),
+            'scrapped' => $allAssets->where('condition', 'scrapped')->count(),
+        ];
+
+        $categoriesSummary = $allAssets->groupBy('category')->map(function ($items, $catName) {
+            return [
+                'name' => $catName,
+                'count' => $items->count(),
+                'total_cost' => $items->sum('acquisition_cost'),
+                'total_book_value' => $items->sum('book_value'),
+            ];
+        });
+
+        // Maintenance Alert Assets
+        $urgentMaintenanceAssets = $allAssets->filter(function ($ast) {
+            $isOverdue = $ast->next_maintenance_date && $ast->next_maintenance_date->isPast();
+            $isPoor = $ast->condition === 'poor';
+            return $isOverdue || $isPoor;
+        });
+
+        return view('assets.index', compact(
+            'assets',
+            'branches',
+            'branchId',
+            'accounts',
+            'totalCost',
+            'totalBookValue',
+            'totalDepreciation',
+            'conditionCounts',
+            'categoriesSummary',
+            'urgentMaintenanceAssets'
+        ));
+    }
+
+    public function updateMaintenance(Request $request, FixedAsset $asset)
+    {
+        $request->validate([
+            'last_maintenance_date' => 'required|date',
+            'next_maintenance_date' => 'nullable|date|after_or_equal:last_maintenance_date',
+            'condition' => 'required|in:good,fair,poor,scrapped',
+            'maintenance_notes' => 'nullable|string',
+        ]);
+
+        $asset->update([
+            'last_maintenance_date' => $request->last_maintenance_date,
+            'next_maintenance_date' => $request->next_maintenance_date,
+            'condition' => $request->condition,
+            'maintenance_notes' => $request->maintenance_notes,
+        ]);
+
+        return redirect()->back()->with('success', 'Catatan maintenance & kondisi aset ' . $asset->asset_code . ' berhasil diperbarui!');
     }
 
     public function store(Request $request)

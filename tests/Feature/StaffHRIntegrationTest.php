@@ -23,13 +23,16 @@ class StaffHRIntegrationTest extends TestCase
         $this->withoutMiddleware();
         $this->withoutExceptionHandling();
 
-        $this->adminUser = User::where('email', 'admin.sw@istanalaundry.com')->first();
+        $this->adminUser = User::first();
         if (! $this->adminUser) {
-            $this->adminUser = User::first();
-        }
-
-        if (! $this->adminUser->hasRole('Super_Admin')) {
-            $this->adminUser->assignRole('Super_Admin');
+            $branch = Branch::first() ?? Branch::create(['name' => 'Utama', 'code' => 'HQ', 'address' => 'HQ', 'phone' => '081234567890']);
+            $this->adminUser = User::create([
+                'name' => 'Admin Test',
+                'email' => 'admin.test@istanalaundry.com',
+                'password' => bcrypt('password'),
+                'branch_id' => $branch->id,
+                'is_active' => true,
+            ]);
         }
     }
 
