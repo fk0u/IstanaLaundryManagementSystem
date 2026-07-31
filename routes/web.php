@@ -443,6 +443,9 @@ Route::middleware(['auth', 'branch.scope'])->group(function () {
 
         // Procurement - PO
         Route::get('/procurement/purchase-orders', [PurchaseOrderController::class, 'index'])->name('procurement.purchase-orders.index');
+        Route::get('/procurement/purchase-orders/{id}', [PurchaseOrderController::class, 'show'])->name('procurement.purchase-orders.show');
+        Route::get('/procurement/purchase-orders/{id}/whatsapp', [PurchaseOrderController::class, 'whatsapp'])->name('procurement.purchase-orders.whatsapp');
+        Route::get('/procurement/purchase-orders/{id}/print', [PurchaseOrderController::class, 'print'])->name('procurement.purchase-orders.print');
         Route::post('/procurement/purchase-orders', [PurchaseOrderController::class, 'store'])->name('procurement.purchase-orders.store');
         Route::post('/procurement/purchase-orders/{id}/send', [PurchaseOrderController::class, 'send'])->name('procurement.purchase-orders.send');
         Route::post('/procurement/purchase-orders/{id}/confirm', [PurchaseOrderController::class, 'confirm'])->name('procurement.purchase-orders.confirm');

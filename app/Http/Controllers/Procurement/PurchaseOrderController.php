@@ -110,6 +110,147 @@ class PurchaseOrderController extends Controller
         return redirect()->back()->with('success', 'Purchase Order (PO) berhasil dibuat sebagai draft.');
     }
 
+    public function show($id)
+    {
+        $po = PurchaseOrder::with(['supplier', 'pr.requestedBy', 'branch', 'items.item'])->findOrFail($id);
+
+        $phone = preg_replace('/[^0-9]/', '', $po->supplier?->phone ?? '');
+        if (str_starts_with($phone, '0')) {
+            $phone = '62' . substr($phone, 1);
+        }
+
+        $itemsText = "";
+        foreach ($po->items as $idx => $item) {
+            $n = $idx + 1;
+            $name = $item->item?->name ?? 'Barang #' . $item->item_id;
+            $unit = $item->item?->unit ?? 'unit';
+            $qty = number_format($item->quantity, 0, ',', '.');
+            $cost = 'Rp ' . number_format($item->unit_cost, 0, ',', '.');
+            $sub = 'Rp ' . number_format($item->subtotal, 0, ',', '.');
+            $itemsText .= "{$n}. {$name} x {$qty} {$unit} ({$cost}) = {$sub}\n";
+        }
+
+        $orderDateStr = $po->order_date ? $po->order_date->format('d/m/Y') : date('d/m/Y');
+        $expectedDateStr = $po->expected_date ? $po->expected_date->format('d/m/Y') : '-';
+        $subtotalStr = 'Rp ' . number_format($po->subtotal, 0, ',', '.');
+        $taxStr = 'Rp ' . number_format($po->tax_amount, 0, ',', '.');
+        $totalStr = 'Rp ' . number_format($po->total, 0, ',', '.');
+
+        $message = "*PURCHASE ORDER (PO)* - Istana Laundry\n"
+            . "-----------------------------------\n"
+            . "*No PO:* {$po->po_number}\n"
+            . "*Supplier:* {$po->supplier?->name}\n"
+            . "*Tanggal Order:* {$orderDateStr}\n"
+            . "*Estimasi Diterima:* {$expectedDateStr}\n"
+            . "*Cabang Tujuan:* {$po->branch?->name}\n\n"
+            . "*DETAIL BARANG PESANAN:*\n"
+            . $itemsText . "\n"
+            . "-----------------------------------\n"
+            . "*Subtotal:* {$subtotalStr}\n"
+            . "*PPN (11%):* {$taxStr}\n"
+            . "*GRAND TOTAL PO:* {$totalStr}\n\n"
+            . "Mohon dapat dikonfirmasi & diproses pengirimannya. Terima kasih!";
+
+        $waUrl = $phone ? ("https://wa.me/{$phone}?text=" . urlencode($message)) : null;
+
+        if (request()->wantsJson() || request()->ajax()) {
+            return response()->json([
+                'po' => [
+                    'id' => $po->id,
+                    'po_number' => $po->po_number,
+                    'status' => $po->status,
+                    'order_date' => $orderDateStr,
+                    'expected_date' => $expectedDateStr,
+                    'subtotal' => $po->subtotal,
+                    'tax_amount' => $po->tax_amount,
+                    'total' => $po->total,
+                    'supplier_name' => $po->supplier?->name ?? 'Supplier',
+                    'supplier_phone' => $po->supplier?->phone ?? '-',
+                    'supplier_email' => $po->supplier?->email ?? '-',
+                    'supplier_address' => $po->supplier?->address ?? '-',
+                    'branch_name' => $po->branch?->name ?? 'Cabang',
+                    'pr_number' => $po->pr?->pr_number ?? null,
+                ],
+                'items' => $po->items->map(function ($i) {
+                    return [
+                        'id' => $i->id,
+                        'name' => $i->item?->name ?? ('Item #' . $i->item_id),
+                        'unit' => $i->item?->unit ?? 'unit',
+                        'quantity' => (float) $i->quantity,
+                        'unit_cost' => (float) $i->unit_cost,
+                        'subtotal' => (float) $i->subtotal,
+                        'received_qty' => (float) $i->received_qty,
+                    ];
+                }),
+                'wa_url' => $waUrl,
+                'message' => $message,
+            ]);
+        }
+
+        return view('procurement.purchase_orders.show', compact('po', 'waUrl', 'message'));
+    }
+
+    public function whatsapp($id)
+    {
+        $po = PurchaseOrder::with(['supplier', 'branch', 'items.item'])->findOrFail($id);
+
+        if ($po->status === 'draft') {
+            $po->update(['status' => 'sent']);
+        }
+
+        $phone = preg_replace('/[^0-9]/', '', $po->supplier?->phone ?? '');
+        if (str_starts_with($phone, '0')) {
+            $phone = '62' . substr($phone, 1);
+        }
+
+        $itemsText = "";
+        foreach ($po->items as $idx => $item) {
+            $n = $idx + 1;
+            $name = $item->item?->name ?? 'Barang #' . $item->item_id;
+            $unit = $item->item?->unit ?? 'unit';
+            $qty = number_format($item->quantity, 0, ',', '.');
+            $cost = 'Rp ' . number_format($item->unit_cost, 0, ',', '.');
+            $sub = 'Rp ' . number_format($item->subtotal, 0, ',', '.');
+            $itemsText .= "{$n}. {$name} x {$qty} {$unit} ({$cost}) = {$sub}\n";
+        }
+
+        $orderDateStr = $po->order_date ? $po->order_date->format('d/m/Y') : date('d/m/Y');
+        $expectedDateStr = $po->expected_date ? $po->expected_date->format('d/m/Y') : '-';
+        $subtotalStr = 'Rp ' . number_format($po->subtotal, 0, ',', '.');
+        $taxStr = 'Rp ' . number_format($po->tax_amount, 0, ',', '.');
+        $totalStr = 'Rp ' . number_format($po->total, 0, ',', '.');
+
+        $message = "*PURCHASE ORDER (PO)* - Istana Laundry\n"
+            . "-----------------------------------\n"
+            . "*No PO:* {$po->po_number}\n"
+            . "*Supplier:* {$po->supplier?->name}\n"
+            . "*Tanggal Order:* {$orderDateStr}\n"
+            . "*Estimasi Diterima:* {$expectedDateStr}\n"
+            . "*Cabang Tujuan:* {$po->branch?->name}\n\n"
+            . "*DETAIL BARANG PESANAN:*\n"
+            . $itemsText . "\n"
+            . "-----------------------------------\n"
+            . "*Subtotal:* {$subtotalStr}\n"
+            . "*PPN (11%):* {$taxStr}\n"
+            . "*GRAND TOTAL PO:* {$totalStr}\n\n"
+            . "Mohon dapat dikonfirmasi & diproses pengirimannya. Terima kasih!";
+
+        if (! $phone) {
+            return redirect()->back()->with('error', 'Supplier ini belum memiliki nomor telepon / WhatsApp yang valid.');
+        }
+
+        $waUrl = "https://wa.me/{$phone}?text=" . urlencode($message);
+
+        return redirect()->away($waUrl);
+    }
+
+    public function print($id)
+    {
+        $po = PurchaseOrder::with(['supplier', 'pr.requestedBy', 'branch', 'items.item'])->findOrFail($id);
+
+        return view('procurement.purchase_orders.print', compact('po'));
+    }
+
     public function send($id)
     {
         $po = PurchaseOrder::findOrFail($id);

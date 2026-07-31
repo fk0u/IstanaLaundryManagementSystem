@@ -1,5 +1,5 @@
 <x-app-layout>
-    <div x-data="poCreateApp(@js($approvedPrs))" class="flex flex-col gap-6">
+    <div x-data="poApp(@js($approvedPrs))" class="flex flex-col gap-6">
         <div class="flex justify-between items-center">
             <x-page-header title="Purchase Orders (PO)" :breadcrumbs="['Pengadaan' => '#', 'PO' => '/procurement/purchase-orders']" />
             <button @click="openModal()" class="h-11 px-5 bg-primary hover:bg-orange-600 text-white font-bold rounded-xl text-xs flex items-center gap-2 transition-all active:scale-[0.98] cursor-pointer shadow-md shadow-orange-500/10">
@@ -71,11 +71,34 @@
                                     @endif
                                 </td>
                                 <td class="py-4 px-4 text-right">
-                                    <div class="flex justify-end gap-2">
+                                    <div class="flex justify-end items-center gap-1.5">
+                                        <!-- Detail Modal Button -->
+                                        <button type="button" @click="openPODetail({{ $po->id }})" class="btn-touch px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-xl text-2xs font-extrabold flex items-center gap-1 cursor-pointer transition-all haptic-press">
+                                            <span class="material-symbols-outlined text-sm text-primary">visibility</span>
+                                            Detail
+                                        </button>
+
+                                        <!-- WhatsApp Button -->
+                                        @if ($po->supplier?->phone)
+                                            <a href="{{ route('procurement.purchase-orders.whatsapp', $po->id) }}" target="_blank"
+                                               class="btn-touch px-2.5 py-1.5 bg-[#25D366] hover:bg-emerald-600 text-white rounded-xl text-2xs font-extrabold flex items-center gap-1 cursor-pointer transition-all shadow-xs haptic-press"
+                                               title="Kirim PO ke WhatsApp Supplier">
+                                                <span class="material-symbols-outlined text-sm">chat</span>
+                                                WA
+                                            </a>
+                                        @endif
+
+                                        <!-- Print PO Button -->
+                                        <a href="{{ route('procurement.purchase-orders.print', $po->id) }}" target="_blank"
+                                           class="btn-touch px-2 py-1.5 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl text-2xs font-bold flex items-center gap-1 cursor-pointer transition-all"
+                                           title="Cetak Surat PO Official">
+                                            <span class="material-symbols-outlined text-sm">print</span>
+                                        </a>
+
                                         @if ($po->status === 'draft')
-                                            <form action="{{ route('procurement.purchase-orders.send', $po->id) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin mengirim Purchase Order ini ke supplier?')">
+                                            <form action="{{ route('procurement.purchase-orders.send', $po->id) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menandai Purchase Order ini sebagai terkirim ke supplier?')">
                                                 @csrf
-                                                <button type="submit" class="btn-touch px-2.5 py-1.5 bg-orange-500 hover:bg-orange-600 text-white rounded-lg text-[10px] font-bold cursor-pointer transition-all">
+                                                <button type="submit" class="btn-touch px-2.5 py-1.5 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-2xs font-extrabold cursor-pointer transition-all shadow-xs haptic-press">
                                                     Kirim
                                                 </button>
                                             </form>
@@ -84,7 +107,7 @@
                                         @if (in_array($po->status, ['draft', 'sent']))
                                             <form action="{{ route('procurement.purchase-orders.confirm', $po->id) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin mengonfirmasi penerimaan/pemrosesan Purchase Order ini?')">
                                                 @csrf
-                                                <button type="submit" class="btn-touch px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-[10px] font-bold cursor-pointer transition-all">
+                                                <button type="submit" class="btn-touch px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-2xs font-extrabold cursor-pointer transition-all shadow-xs haptic-press">
                                                     Konfirmasi
                                                 </button>
                                             </form>
@@ -94,7 +117,7 @@
                                             <form action="{{ route('procurement.purchase-orders.destroy', $po->id) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menghapus PO ini?')">
                                                 @csrf
                                                 @method('DELETE')
-                                                <button type="submit" class="p-1.5 text-slate-500 hover:text-red-500 transition-colors cursor-pointer" title="Hapus PO">
+                                                <button type="submit" class="p-1.5 text-slate-400 hover:text-rose-600 transition-colors cursor-pointer" title="Hapus PO">
                                                     <span class="material-symbols-outlined text-base">delete</span>
                                                 </button>
                                             </form>
@@ -144,7 +167,7 @@
                                         class="w-full h-11 px-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-xs font-bold text-slate-800 dark:text-slate-200 focus:border-primary outline-none transition-all">
                                     <option value="">-- Pilih Supplier --</option>
                                     @foreach($suppliers as $supplier)
-                                        <option value="{{ $supplier->id }}">{{ $supplier->name }}</option>
+                                        <option value="{{ $supplier->id }}">{{ $supplier->name }} ({{ $supplier->phone ?? 'No WA' }})</option>
                                     @endforeach
                                 </select>
                             </div>
@@ -282,12 +305,156 @@
             </div>
         </div>
 
+        <!-- PO Detail Preview Modal -->
+        <div x-show="showDetailModal"
+             class="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-950/70 backdrop-blur-md p-4 sm:p-6"
+             x-transition:enter="transition ease-out duration-300"
+             x-transition:enter-start="opacity-0 scale-95"
+             x-transition:enter-end="opacity-100 scale-100"
+             x-transition:leave="transition ease-in duration-200"
+             x-transition:leave-start="opacity-100 scale-100"
+             x-transition:leave-end="opacity-0 scale-95"
+             x-cloak>
+            
+            <div class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-3xl w-full max-w-4xl p-6 shadow-2xl flex flex-col max-h-[90vh] overflow-hidden"
+                 @click.away="showDetailModal = false">
+                
+                <!-- Header -->
+                <div class="flex justify-between items-start pb-4 border-b border-slate-100 dark:border-slate-800">
+                    <div class="flex items-center gap-3">
+                        <div class="w-12 h-12 rounded-2xl bg-orange-50 text-primary dark:bg-slate-800 flex items-center justify-center shrink-0">
+                            <span class="material-symbols-outlined text-2xl">description</span>
+                        </div>
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <h3 class="text-lg font-black text-slate-900 dark:text-white" x-text="poDetail?.po?.po_number || 'Loading...'"></h3>
+                                <template x-if="poDetail?.po">
+                                    <span class="px-2.5 py-0.5 rounded-full text-2xs font-extrabold uppercase tracking-wider"
+                                          :class="{
+                                              'bg-emerald-50 text-emerald-600 dark:bg-emerald-950/40 border border-emerald-200/50': poDetail.po.status === 'completed',
+                                              'bg-blue-50 text-blue-600 dark:bg-blue-950/40 border border-blue-200/50': poDetail.po.status === 'confirmed',
+                                              'bg-amber-50 text-amber-600 dark:bg-amber-950/40 border border-amber-200/50': poDetail.po.status === 'sent',
+                                              'bg-slate-100 text-slate-600 dark:bg-slate-800 border border-slate-200/50': poDetail.po.status === 'draft'
+                                          }"
+                                          x-text="poDetail.po.status">
+                                    </span>
+                                </template>
+                            </div>
+                            <p class="text-2xs text-slate-400 font-semibold mt-0.5" x-text="'Supplier: ' + (poDetail?.po?.supplier_name || '-') + ' • Cabang Tujuan: ' + (poDetail?.po?.branch_name || '-')"></p>
+                        </div>
+                    </div>
+
+                    <button type="button" @click="showDetailModal = false" class="btn-touch p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                        <span class="material-symbols-outlined text-xl">close</span>
+                    </button>
+                </div>
+
+                <!-- Body -->
+                <div class="flex-1 overflow-y-auto py-5 space-y-6 pr-1">
+                    <template x-if="detailLoading">
+                        <div class="py-16 text-center flex flex-col items-center justify-center gap-3">
+                            <span class="material-symbols-outlined text-primary text-4xl animate-spin">progress_activity</span>
+                            <span class="text-xs font-bold text-slate-400">Memuat detail Purchase Order...</span>
+                        </div>
+                    </template>
+
+                    <template x-if="!detailLoading && poDetail">
+                        <div class="space-y-6">
+                            <!-- Info Grid -->
+                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                <div class="bg-slate-50 dark:bg-slate-800/50 p-3.5 rounded-2xl border border-slate-100 dark:border-slate-800">
+                                    <span class="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block mb-1">Kontak Supplier</span>
+                                    <div class="font-bold text-xs text-slate-800 dark:text-slate-200" x-text="poDetail.po.supplier_name"></div>
+                                    <div class="text-2xs text-slate-500 mt-0.5" x-text="'📞 ' + poDetail.po.supplier_phone"></div>
+                                    <div class="text-2xs text-slate-500" x-text="'✉️ ' + poDetail.po.supplier_email"></div>
+                                </div>
+
+                                <div class="bg-slate-50 dark:bg-slate-800/50 p-3.5 rounded-2xl border border-slate-100 dark:border-slate-800">
+                                    <span class="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block mb-1">Tanggal Pesanan & Estimasi</span>
+                                    <div class="text-xs font-bold text-slate-800 dark:text-slate-200" x-text="'Order: ' + poDetail.po.order_date"></div>
+                                    <div class="text-xs font-extrabold text-primary mt-0.5" x-text="'Estimasi Masuk: ' + poDetail.po.expected_date"></div>
+                                    <template x-if="poDetail.po.pr_number">
+                                        <div class="text-2xs text-slate-400 mt-1" x-text="'Ref PR: ' + poDetail.po.pr_number"></div>
+                                    </template>
+                                </div>
+
+                                <div class="bg-slate-50 dark:bg-slate-800/50 p-3.5 rounded-2xl border border-slate-100 dark:border-slate-800 flex flex-col justify-between">
+                                    <span class="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">Total Biaya Order</span>
+                                    <div>
+                                        <span class="text-lg font-black text-primary font-mono" x-text="'Rp ' + formatNumber(poDetail.po.total)"></span>
+                                        <span class="block text-[10px] text-slate-400 font-semibold" x-text="'Termasuk PPN 11% (Rp ' + formatNumber(poDetail.po.tax_amount) + ')'"></span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Items Table -->
+                            <div class="space-y-3">
+                                <h4 class="text-xs font-black text-slate-800 dark:text-slate-200 uppercase tracking-wider">Daftar Barang yang Dipesan</h4>
+                                <div class="border border-slate-200/80 dark:border-slate-800 rounded-2xl overflow-hidden shadow-xs">
+                                    <table class="w-full text-left text-xs">
+                                        <thead class="bg-slate-50 dark:bg-slate-800/60 border-b border-slate-100 dark:border-slate-800 text-2xs font-extrabold text-slate-400 uppercase tracking-wider">
+                                            <tr>
+                                                <th class="py-2.5 px-3">Nama Barang</th>
+                                                <th class="py-2.5 px-3 text-center">Qty Dipesan</th>
+                                                <th class="py-2.5 px-3 text-center">Qty Diterima (GRN)</th>
+                                                <th class="py-2.5 px-3 text-right">Harga Satuan</th>
+                                                <th class="py-2.5 px-3 text-right">Subtotal</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody class="divide-y divide-slate-100 dark:divide-slate-800/50 bg-white dark:bg-slate-900">
+                                            <template x-for="item in poDetail.items" :key="item.id">
+                                                <tr class="hover:bg-slate-50/60 dark:hover:bg-slate-800/30 transition-colors">
+                                                    <td class="py-2.5 px-3 font-bold text-slate-800 dark:text-slate-200" x-text="item.name"></td>
+                                                    <td class="py-2.5 px-3 text-center font-bold text-slate-900 dark:text-slate-100 font-mono" x-text="item.quantity + ' ' + item.unit"></td>
+                                                    <td class="py-2.5 px-3 text-center font-bold font-mono" :class="item.received_qty >= item.quantity ? 'text-emerald-600' : 'text-amber-600'" x-text="item.received_qty + ' ' + item.unit"></td>
+                                                    <td class="py-2.5 px-3 text-right font-mono text-slate-600 dark:text-slate-400" x-text="'Rp ' + formatNumber(item.unit_cost)"></td>
+                                                    <td class="py-2.5 px-3 text-right font-black font-mono text-slate-900 dark:text-slate-100" x-text="'Rp ' + formatNumber(item.subtotal)"></td>
+                                                </tr>
+                                            </template>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+
+                <!-- Footer Action Buttons -->
+                <div class="pt-4 border-t border-slate-100 dark:border-slate-800 flex flex-wrap items-center justify-between gap-3">
+                    <button type="button" @click="showDetailModal = false"
+                            class="btn-touch px-4 h-10 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-350 font-extrabold text-xs rounded-xl transition-all cursor-pointer">
+                        Tutup
+                    </button>
+
+                    <div class="flex items-center gap-2" x-show="poDetail">
+                        <!-- Direct WhatsApp Button -->
+                        <a :href="'/procurement/purchase-orders/' + poDetail?.po?.id + '/whatsapp'" target="_blank"
+                           class="btn-touch px-4 h-10 bg-[#25D366] hover:bg-emerald-600 text-white font-extrabold text-xs rounded-xl shadow-md shadow-emerald-500/20 flex items-center gap-1.5 transition-all cursor-pointer haptic-press">
+                            <span class="material-symbols-outlined text-base">chat</span>
+                            Kirim via WhatsApp Supplier
+                        </a>
+
+                        <!-- Print Button -->
+                        <a :href="'/procurement/purchase-orders/' + poDetail?.po?.id + '/print'" target="_blank"
+                           class="btn-touch px-4 h-10 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-extrabold text-xs rounded-xl flex items-center gap-1.5 transition-all cursor-pointer">
+                            <span class="material-symbols-outlined text-base">print</span>
+                            Cetak Document
+                        </a>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
     </div>
 
     <script>
-        function poCreateApp(prsData) {
+        function poApp(prsData) {
             return {
                 showCreateModal: false,
+                showDetailModal: false,
+                detailLoading: false,
+                poDetail: null,
                 selectedPr: '',
                 prs: prsData || [],
                 items: [],
@@ -297,6 +464,29 @@
                     if (this.items.length === 0 && !this.selectedPr) {
                         this.addItemRow();
                     }
+                },
+
+                openPODetail(poId) {
+                    this.showDetailModal = true;
+                    this.detailLoading = true;
+                    this.poDetail = null;
+
+                    fetch(`/procurement/purchase-orders/${poId}`, {
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'Accept': 'application/json'
+                        }
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                        this.poDetail = data;
+                        this.detailLoading = false;
+                    })
+                    .catch(err => {
+                        console.error(err);
+                        this.detailLoading = false;
+                        window.dispatchEvent(new CustomEvent('toast', { detail: { message: 'Gagal memuat detail PO.', type: 'error' } }));
+                    });
                 },
 
                 addItemRow() {
