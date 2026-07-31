@@ -1,5 +1,6 @@
 <x-app-layout>
     <div class="flex flex-col gap-4 md:gap-6" x-data="{
+        activeTab: @js(request('tab', 'employees')),
         showAddEmployee: false,
         showAddPayroll: false,
         showAddAttendance: false,
@@ -22,284 +23,400 @@
             <x-alert type="danger" :message="session('error')" class="mb-2" />
         @endif
 
-        <!-- Action Bar -->
-        <div class="flex flex-wrap items-center justify-between gap-3">
-            <div class="flex flex-wrap gap-2">
-                <button type="button" @click="showAddEmployee = true" class="btn-touch px-4 py-2 bg-primary hover:bg-primary-hover text-white text-xs font-bold rounded-xl flex items-center gap-1.5 shadow-sm">
-                    <span class="material-symbols-outlined text-base">person_add</span> Tambah Karyawan Baru
+        <!-- Sleek Tabpane Navigation Header -->
+        <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 dark:border-slate-800 pb-3">
+            <div class="flex items-center gap-1.5 overflow-x-auto min-w-max p-1 bg-slate-100 dark:bg-slate-900 rounded-2xl">
+                <button type="button" @click="activeTab = 'employees'" :class="activeTab === 'employees' ? 'bg-primary text-white shadow-md shadow-primary/20' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'" class="px-4 py-2 rounded-xl font-bold text-xs flex items-center gap-2 transition-all cursor-pointer">
+                    <span class="material-symbols-outlined text-base">badge</span>
+                    <span>Data Staf Karyawan</span>
+                    <span class="px-2 py-0.5 rounded-full text-[10px] font-black" :class="activeTab === 'employees' ? 'bg-white/20 text-white' : 'bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300'">{{ $employees->total() }}</span>
                 </button>
-                <button type="button" @click="showAddAttendance = true" class="btn-touch px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl flex items-center gap-1.5 shadow-sm">
-                    <span class="material-symbols-outlined text-base">how_to_reg</span> Catat Presensi / Sesi Kerja
+
+                <button type="button" @click="activeTab = 'payroll'" :class="activeTab === 'payroll' ? 'bg-primary text-white shadow-md shadow-primary/20' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'" class="px-4 py-2 rounded-xl font-bold text-xs flex items-center gap-2 transition-all cursor-pointer">
+                    <span class="material-symbols-outlined text-base">payments</span>
+                    <span>Riwayat & Payroll Gaji</span>
+                    <span class="px-2 py-0.5 rounded-full text-[10px] font-black" :class="activeTab === 'payroll' ? 'bg-white/20 text-white' : 'bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300'">{{ $payrolls->count() }}</span>
                 </button>
-                <button type="button" @click="showAddPayroll = true" class="btn-touch px-4 py-2 bg-slate-900 dark:bg-slate-800 text-white text-xs font-bold rounded-xl flex items-center gap-1.5 shadow-sm">
-                    <span class="material-symbols-outlined text-base">payments</span> Generate Payroll Periode
+
+                <button type="button" @click="activeTab = 'attendance'" :class="activeTab === 'attendance' ? 'bg-primary text-white shadow-md shadow-primary/20' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'" class="px-4 py-2 rounded-xl font-bold text-xs flex items-center gap-2 transition-all cursor-pointer">
+                    <span class="material-symbols-outlined text-base">how_to_reg</span>
+                    <span>Sesi Kerja & Presensi</span>
+                    <span class="px-2 py-0.5 rounded-full text-[10px] font-black" :class="activeTab === 'attendance' ? 'bg-white/20 text-white' : 'bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300'">{{ $attendances->total() }}</span>
+                </button>
+
+                <button type="button" @click="activeTab = 'analytics'" :class="activeTab === 'analytics' ? 'bg-primary text-white shadow-md shadow-primary/20' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'" class="px-4 py-2 rounded-xl font-bold text-xs flex items-center gap-2 transition-all cursor-pointer">
+                    <span class="material-symbols-outlined text-base">analytics</span>
+                    <span>Analytics & Insentif</span>
                 </button>
             </div>
-        </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-            <!-- Employees Table (7 cols) -->
-            <div class="lg:col-span-7">
-                <x-card title="Manajemen & Detail Staf Karyawan">
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left text-xs border-collapse">
-                            <thead>
-                                <tr class="border-b border-slate-100 dark:border-slate-800 text-slate-400 font-bold uppercase tracking-wider">
-                                    <th class="py-2.5 px-3">NIK / Nama Staf</th>
-                                    <th class="py-2.5 px-3">Akun Login & Status</th>
-                                    <th class="py-2.5 px-3">Jabatan & Cabang</th>
-                                    <th class="py-2.5 px-3">Kontak & Usia</th>
-                                    <th class="py-2.5 px-3">Rekening Bank</th>
-                                    <th class="py-2.5 px-3 text-right">Gaji Pokok</th>
-                                    <th class="py-2.5 px-3 text-center">Aksi</th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-slate-50 dark:divide-slate-850">
-                                @forelse($employees as $emp)
-                                    <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-900/30">
-                                        <td class="py-3 px-3">
-                                            <span class="font-bold text-slate-800 dark:text-slate-200 block">{{ $emp->name }}</span>
-                                            <span class="text-2xs text-slate-400 font-mono">NIK: {{ $emp->nik }}</span>
-                                        </td>
-                                        <td class="py-3 px-3">
-                                            @if($emp->user)
-                                                <div class="space-y-1">
-                                                    <span class="font-bold text-2xs text-slate-700 dark:text-slate-200 block">{{ $emp->user->email }}</span>
-                                                    <div class="flex items-center gap-1 flex-wrap">
-                                                        <span class="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-black bg-blue-100 text-blue-800 dark:bg-blue-950/40 dark:text-blue-400">
-                                                            {{ $emp->user->roles->first()?->name ?? 'Staf' }}
-                                                        </span>
-                                                        <span class="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-black bg-emerald-100 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-400">
-                                                            <span class="material-symbols-outlined text-[10px]">check_circle</span> Aktif
-                                                        </span>
-                                                    </div>
-                                                </div>
-                                            @else
-                                                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-2xs font-bold bg-amber-100 text-amber-800 dark:bg-amber-950/40 dark:text-amber-400">
-                                                    <span class="material-symbols-outlined text-xs">no_accounts</span> Belum Ada Akun
-                                                </span>
-                                            @endif
-                                        </td>
-                                        <td class="py-3 px-3">
-                                            <span class="font-bold text-xs text-primary block">{{ $emp->position }}</span>
-                                            <span class="text-2xs text-slate-500">{{ $emp->branch?->name ?? 'Konsolidasi / Utama' }}</span>
-                                        </td>
-                                        <td class="py-3 px-3">
-                                            <span class="font-medium text-slate-700 dark:text-slate-300 block">{{ $emp->phone ?? '-' }}</span>
-                                            <span class="text-2xs text-slate-400">
-                                                {{ $emp->birth_date ? $emp->birth_date->format('d/m/Y') : '' }} 
-                                                ({{ $emp->age ? $emp->age.' th' : 'Usia -' }})
-                                            </span>
-                                        </td>
-                                        <td class="py-3 px-3">
-                                            @if($emp->bank_account_number)
-                                                <span class="font-bold text-xs text-slate-800 dark:text-slate-200 block">{{ $emp->bank_name ?? 'Bank' }}: {{ $emp->bank_account_number }}</span>
-                                                <span class="text-2xs text-slate-400">a.n {{ $emp->bank_account_holder ?? $emp->name }}</span>
-                                            @else
-                                                <span class="text-2xs text-slate-400 italic">Belum ada rekening</span>
-                                            @endif
-                                        </td>
-                                        <td class="py-3 px-3 text-right font-mono font-bold text-slate-800 dark:text-slate-200">
-                                            Rp {{ number_format($emp->base_salary, 0, ',', '.') }}
-                                        </td>
-                                        <td class="py-3 px-3 text-center">
-                                            <div class="flex items-center justify-center gap-1">
-                                                <button type="button" @click="activeEditEmployee = @js($emp)" class="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 hover:text-primary hover:bg-orange-50 transition-colors" title="Edit Staf & Gaji">
-                                                    <span class="material-symbols-outlined text-base">edit</span>
-                                                </button>
-                                                @if($emp->user)
-                                                    <button type="button" @click="activeResetPasswordEmp = @js($emp)" class="p-1.5 rounded-lg bg-amber-50 dark:bg-amber-950/30 text-amber-700 hover:bg-amber-100 transition-colors" title="Reset Password Akun">
-                                                        <span class="material-symbols-outlined text-base">key</span>
-                                                    </button>
-                                                @else
-                                                    <button type="button" @click="activeCreateAccountEmp = @js($emp)" class="p-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 hover:bg-emerald-100 transition-colors" title="Buat Akun Login Baru">
-                                                        <span class="material-symbols-outlined text-base">person_add</span>
-                                                    </button>
-                                                    @if($unlinkedUsers->count() > 0)
-                                                        <button type="button" @click="activeLinkAccountEmp = @js($emp)" class="p-1.5 rounded-lg bg-blue-50 dark:bg-blue-950/30 text-blue-700 hover:bg-blue-100 transition-colors" title="Tautkan ke Akun Pengguna Terdaftar">
-                                                            <span class="material-symbols-outlined text-base">link</span>
-                                                        </button>
-                                                    @endif
-                                                @endif
-                                            </div>
-                                        </td>
-                                    </tr>
-                                @empty
-                                    <tr>
-                                        <td colspan="7" class="py-8 text-center text-slate-400">Belum ada karyawan terdaftar.</td>
-                                    </tr>
-                                @endforelse
-                            </tbody>
-                        </table>
-                    </div>
-                </x-card>
-            </div>
-
-            <!-- Payroll History & Slip Gaji (5 cols) -->
-            <div class="lg:col-span-5">
-                <x-card title="Riwayat Payroll Diproses">
-                    <div class="space-y-3 max-h-[500px] overflow-y-auto pr-1">
-                        @forelse($payrolls as $pr)
-                            <div class="p-3.5 border border-slate-100 dark:border-slate-800 rounded-2xl bg-slate-50/40 dark:bg-slate-900/40">
-                                <div class="flex items-center justify-between mb-2">
-                                    <div>
-                                        <span class="font-black text-xs text-slate-800 dark:text-slate-200 block">
-                                            Periode {{ date('F', mktime(0, 0, 0, $pr->month, 10)) }} {{ $pr->year }}
-                                        </span>
-                                        <span class="text-2xs text-slate-400 block font-semibold mt-0.5">
-                                            Cabang: {{ $pr->branch?->name ?? 'Seluruh Cabang (Konsolidasi Global)' }}
-                                        </span>
-                                        <div class="mt-1">
-                                            @if($pr->status === 'final')
-                                                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-2xs font-extrabold bg-emerald-100 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-400">
-                                                    <span class="material-symbols-outlined text-xs">lock</span> FINAL (DIKUNCI)
-                                                </span>
-                                            @else
-                                                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-2xs font-extrabold bg-amber-100 text-amber-800 dark:bg-amber-950/40 dark:text-amber-400">
-                                                    <span class="material-symbols-outlined text-xs">edit_document</span> DRAFT
-                                                </span>
-                                            @endif
-                                        </div>
-                                    </div>
-                                    <div class="flex flex-col items-end gap-1.5">
-                                        <div class="flex items-center gap-1.5">
-                                            <a href="{{ route('hr.payrolls.show', $pr->id) }}" class="inline-flex items-center gap-1 text-xs font-bold px-2.5 py-1.5 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:border-primary hover:text-primary transition-colors">
-                                                <span class="material-symbols-outlined text-base">info</span> Detail
-                                            </a>
-                                            @if($pr->status === 'draft')
-                                                <form action="{{ route('hr.payrolls.finalize', $pr->id) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin MEMFINALKAN payroll ini? Setelah difinalkan, payroll akan DIKUNCI dan tidak dapat diubah.')">
-                                                    @csrf
-                                                    <button type="submit" class="inline-flex items-center gap-1 text-xs font-bold px-2.5 py-1.5 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 transition-colors" title="Finalkan Payroll">
-                                                        <span class="material-symbols-outlined text-base">check_circle</span> Finalkan
-                                                    </button>
-                                                </form>
-                                            @endif
-                                            <button type="button" @click="activeDeletePayroll = {{ $pr->id }}" class="inline-flex items-center gap-1 text-xs font-bold px-2 py-1.5 rounded-lg bg-rose-50 text-rose-600 hover:bg-rose-100 transition-colors">
-                                                <span class="material-symbols-outlined text-base">delete</span>
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="space-y-2 mt-3">
-                                    @foreach($pr->items as $pItem)
-                                        <div id="payroll-item-{{ $pItem->id }}" class="flex items-center justify-between bg-white dark:bg-slate-800 p-2.5 rounded-xl border border-slate-100 dark:border-slate-700/50 scroll-mt-24">
-                                            <div class="flex-1 min-w-0 pr-2">
-                                                <p class="text-xs font-bold text-slate-800 dark:text-slate-200 truncate">{{ $pItem->employee?->name }}</p>
-                                                <p class="text-2xs text-slate-500 font-semibold">{{ $pItem->employee?->position }} • {{ $pItem->employee?->branch?->name }}</p>
-                                                <p class="text-2xs font-mono font-bold text-emerald-600 mt-0.5">Gaji: Rp {{ number_format($pItem->net_salary, 0, ',', '.') }}</p>
-                                            </div>
-                                            <div class="flex flex-wrap justify-end gap-1">
-                                                <a href="{{ route('hr.payslip', $pItem->id) }}" target="_blank" class="inline-flex items-center gap-1 text-2xs font-bold px-2 py-1 rounded-lg bg-orange-50 text-primary hover:bg-orange-100 transition-colors">
-                                                    <span class="material-symbols-outlined text-sm">receipt_long</span> Slip
-                                                </a>
-                                                @if($pr->status !== 'final')
-                                                    <button type="button" @click="activeEditItem = {{ $pItem->id }}" class="inline-flex items-center gap-1 text-2xs font-bold px-2 py-1 rounded-lg bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-200 transition-colors">
-                                                        <span class="material-symbols-outlined text-sm">edit</span> Edit
-                                                    </button>
-                                                @endif
-                                            </div>
-                                        </div>
-                                    @endforeach
-                                </div>
-                                <div class="grid grid-cols-2 gap-2 text-2xs mt-3">
-                                    <div class="bg-white dark:bg-slate-800 p-2 rounded-lg text-center">
-                                        <span class="text-slate-400 block">Total Karyawan</span>
-                                        <span class="font-bold text-slate-800 dark:text-slate-200">{{ $pr->items->count() }} Orang</span>
-                                    </div>
-                                    <div class="bg-white dark:bg-slate-800 p-2 rounded-lg text-center">
-                                        <span class="text-slate-400 block">Total Nominal Gaji</span>
-                                        <span class="font-bold text-emerald-600">Rp {{ number_format($pr->items->sum('net_salary'), 0, ',', '.') }}</span>
-                                    </div>
-                                </div>
-                            </div>
-                        @empty
-                            <div class="py-8 text-center text-slate-400 text-xs">Belum ada data payroll diproses.</div>
-                        @endforelse
-                    </div>
-                </x-card>
-            </div>
-        </div>
-
-        <!-- Sesi Kerja & Presensi Staf Card -->
-        <x-card title="Sesi Kerja & Presensi Staf Karyawan">
-            <div class="space-y-4">
-                <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-800 pb-3">
-                    <div class="flex items-center gap-2">
-                        <span class="material-symbols-outlined text-emerald-600 text-xl">how_to_reg</span>
-                        <span class="text-xs font-bold text-slate-800 dark:text-slate-200">Riwayat Presensi & Log Jam Kerja Bulan Ini</span>
-                    </div>
-                    <button type="button" @click="showAddAttendance = true" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-colors shadow-sm">
-                        <span class="material-symbols-outlined text-base">add</span> Input Log Sesi Kerja
+            <!-- Tab Context Action Buttons -->
+            <div class="flex items-center gap-2">
+                <div x-show="activeTab === 'employees'" x-cloak>
+                    <button type="button" @click="showAddEmployee = true" class="btn-touch px-4 py-2 bg-primary hover:bg-primary-hover text-white text-xs font-bold rounded-xl flex items-center gap-1.5 shadow-sm">
+                        <span class="material-symbols-outlined text-base">person_add</span> Tambah Karyawan Baru
                     </button>
                 </div>
+                <div x-show="activeTab === 'payroll'" x-cloak>
+                    <button type="button" @click="showAddPayroll = true" class="btn-touch px-4 py-2 bg-slate-900 dark:bg-slate-800 text-white text-xs font-bold rounded-xl flex items-center gap-1.5 shadow-sm">
+                        <span class="material-symbols-outlined text-base">payments</span> Generate Payroll Periode
+                    </button>
+                </div>
+                <div x-show="activeTab === 'attendance'" x-cloak>
+                    <button type="button" @click="showAddAttendance = true" class="btn-touch px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl flex items-center gap-1.5 shadow-sm">
+                        <span class="material-symbols-outlined text-base">how_to_reg</span> Catat Log Presensi
+                    </button>
+                </div>
+            </div>
+        </div>
 
+        <!-- ==================== TAB 1: DATA KARYAWAN & STAF ==================== -->
+        <div x-show="activeTab === 'employees'" class="space-y-4" x-cloak>
+            <x-card title="Manajemen & Detail Staf Karyawan">
                 <div class="overflow-x-auto">
                     <table class="w-full text-left text-xs border-collapse">
                         <thead>
                             <tr class="border-b border-slate-100 dark:border-slate-800 text-slate-400 font-bold uppercase tracking-wider">
-                                <th class="py-2.5 px-3">Tanggal</th>
-                                <th class="py-2.5 px-3">Nama Karyawan</th>
-                                <th class="py-2.5 px-3">Cabang</th>
-                                <th class="py-2.5 px-3">Jam Masuk / Keluar</th>
-                                <th class="py-2.5 px-3">Status Presensi</th>
-                                <th class="py-2.5 px-3">Catatan / Keterangan</th>
+                                <th class="py-2.5 px-3">NIK / Nama Staf</th>
+                                <th class="py-2.5 px-3">Akun Login & Status</th>
+                                <th class="py-2.5 px-3">Jabatan & Cabang</th>
+                                <th class="py-2.5 px-3">Kontak & Usia</th>
+                                <th class="py-2.5 px-3">Rekening Bank</th>
+                                <th class="py-2.5 px-3 text-right">Gaji Pokok</th>
+                                <th class="py-2.5 px-3 text-center">Aksi</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-50 dark:divide-slate-850">
-                            @forelse($attendances as $att)
+                            @forelse($employees as $emp)
                                 <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-900/30">
-                                    <td class="py-2.5 px-3 font-bold text-slate-800 dark:text-slate-200">
-                                        {{ $att->date ? $att->date->format('d/m/Y') : '-' }}
+                                    <td class="py-3 px-3">
+                                        <span class="font-bold text-slate-800 dark:text-slate-200 block">{{ $emp->name }}</span>
+                                        <span class="text-2xs text-slate-400 font-mono">NIK: {{ $emp->nik }}</span>
                                     </td>
-                                    <td class="py-2.5 px-3">
-                                        <span class="font-bold text-slate-800 dark:text-slate-200 block">{{ $att->employee?->name ?? '-' }}</span>
-                                        <span class="text-2xs text-slate-400 font-mono">NIK: {{ $att->employee?->nik ?? '-' }}</span>
-                                    </td>
-                                    <td class="py-2.5 px-3 font-medium text-slate-600 dark:text-slate-400">
-                                        {{ $att->employee?->branch?->name ?? '-' }}
-                                    </td>
-                                    <td class="py-2.5 px-3 font-mono font-bold text-slate-700 dark:text-slate-300">
-                                        {{ $att->check_in ? date('H:i', strtotime($att->check_in)) : '--:--' }} - {{ $att->check_out ? date('H:i', strtotime($att->check_out)) : '--:--' }}
-                                    </td>
-                                    <td class="py-2.5 px-3">
-                                        @if(in_array($att->status, ['hadir', 'present']))
-                                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-2xs font-extrabold bg-emerald-100 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-400">
-                                                <span class="material-symbols-outlined text-xs">check_circle</span> HADIR
-                                            </span>
-                                        @elseif(in_array($att->status, ['terlambat', 'late']))
-                                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-2xs font-extrabold bg-amber-100 text-amber-800 dark:bg-amber-950/40 dark:text-amber-400">
-                                                <span class="material-symbols-outlined text-xs">schedule</span> TERLAMBAT
-                                            </span>
-                                        @elseif(in_array($att->status, ['izin']))
-                                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-2xs font-extrabold bg-blue-100 text-blue-800 dark:bg-blue-950/40 dark:text-blue-400">
-                                                <span class="material-symbols-outlined text-xs">info</span> IZIN
-                                            </span>
+                                    <td class="py-3 px-3">
+                                        @if($emp->user)
+                                            <div class="space-y-1">
+                                                <span class="font-bold text-2xs text-slate-700 dark:text-slate-200 block">{{ $emp->user->email }}</span>
+                                                <div class="flex items-center gap-1 flex-wrap">
+                                                    <span class="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-black bg-blue-100 text-blue-800 dark:bg-blue-950/40 dark:text-blue-400">
+                                                        {{ $emp->user->roles->first()?->name ?? 'Staf' }}
+                                                    </span>
+                                                    <span class="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-black bg-emerald-100 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-400">
+                                                        <span class="material-symbols-outlined text-[10px]">check_circle</span> Aktif
+                                                    </span>
+                                                </div>
+                                            </div>
                                         @else
-                                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-2xs font-extrabold bg-rose-100 text-rose-800 dark:bg-rose-950/40 dark:text-rose-400">
-                                                <span class="material-symbols-outlined text-xs">cancel</span> ALPA
+                                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-2xs font-bold bg-amber-100 text-amber-800 dark:bg-amber-950/40 dark:text-amber-400">
+                                                <span class="material-symbols-outlined text-xs">no_accounts</span> Belum Ada Akun
                                             </span>
                                         @endif
                                     </td>
-                                    <td class="py-2.5 px-3 text-slate-500 text-2xs italic">
-                                        {{ $att->notes ?? 'Presensi Sesi Kerja Reguler' }}
+                                    <td class="py-3 px-3">
+                                        <span class="font-bold text-xs text-primary block">{{ $emp->position }}</span>
+                                        <span class="text-2xs text-slate-500">{{ $emp->branch?->name ?? 'Konsolidasi / Utama' }}</span>
+                                    </td>
+                                    <td class="py-3 px-3">
+                                        <span class="font-medium text-slate-700 dark:text-slate-300 block">{{ $emp->phone ?? '-' }}</span>
+                                        <span class="text-2xs text-slate-400">
+                                            {{ $emp->birth_date ? $emp->birth_date->format('d/m/Y') : '' }} 
+                                            ({{ $emp->age ? $emp->age.' th' : 'Usia -' }})
+                                        </span>
+                                    </td>
+                                    <td class="py-3 px-3">
+                                        @if($emp->bank_account_number)
+                                            <span class="font-bold text-xs text-slate-800 dark:text-slate-200 block">{{ $emp->bank_name ?? 'Bank' }}: {{ $emp->bank_account_number }}</span>
+                                            <span class="text-2xs text-slate-400">a.n {{ $emp->bank_account_holder ?? $emp->name }}</span>
+                                        @else
+                                            <span class="text-2xs text-slate-400 italic">Belum ada rekening</span>
+                                        @endif
+                                    </td>
+                                    <td class="py-3 px-3 text-right font-mono font-bold text-slate-800 dark:text-slate-200">
+                                        Rp {{ number_format($emp->base_salary, 0, ',', '.') }}
+                                    </td>
+                                    <td class="py-3 px-3 text-center">
+                                        <div class="flex items-center justify-center gap-1">
+                                            <button type="button" @click="activeEditEmployee = @js($emp)" class="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 hover:text-primary hover:bg-orange-50 transition-colors" title="Edit Staf & Gaji">
+                                                <span class="material-symbols-outlined text-base">edit</span>
+                                            </button>
+                                            @if($emp->user)
+                                                <button type="button" @click="activeResetPasswordEmp = @js($emp)" class="p-1.5 rounded-lg bg-amber-50 dark:bg-amber-950/30 text-amber-700 hover:bg-amber-100 transition-colors" title="Reset Password Akun">
+                                                    <span class="material-symbols-outlined text-base">key</span>
+                                                </button>
+                                            @else
+                                                <button type="button" @click="activeCreateAccountEmp = @js($emp)" class="p-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 hover:bg-emerald-100 transition-colors" title="Buat Akun Login Baru">
+                                                    <span class="material-symbols-outlined text-base">person_add</span>
+                                                </button>
+                                                @if($unlinkedUsers->count() > 0)
+                                                    <button type="button" @click="activeLinkAccountEmp = @js($emp)" class="p-1.5 rounded-lg bg-blue-50 dark:bg-blue-950/30 text-blue-700 hover:bg-blue-100 transition-colors" title="Tautkan ke Akun Pengguna Terdaftar">
+                                                        <span class="material-symbols-outlined text-base">link</span>
+                                                    </button>
+                                                @endif
+                                            @endif
+                                        </div>
                                     </td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="6" class="py-6 text-center text-slate-400">Belum ada riwayat sesi kerja & presensi staf dicatat bulan ini.</td>
+                                    <td colspan="7" class="py-8 text-center text-slate-400">Belum ada karyawan terdaftar.</td>
                                 </tr>
                             @endforelse
                         </tbody>
                     </table>
                 </div>
-
-                @if($attendances->hasPages())
-                    <div class="mt-2">
-                        {{ $attendances->links() }}
+                @if($employees->hasPages())
+                    <div class="mt-3">
+                        {{ $employees->links() }}
                     </div>
                 @endif
+            </x-card>
+        </div>
+
+        <!-- ==================== TAB 2: RIWAYAT & PAYROLL GAJI ==================== -->
+        <div x-show="activeTab === 'payroll'" class="space-y-4" x-cloak>
+            <x-card title="Riwayat & Dokumen Pemrosesan Payroll Gaji">
+                <div class="space-y-3 max-h-[650px] overflow-y-auto pr-1">
+                    @forelse($payrolls as $pr)
+                        <div class="p-4 border border-slate-100 dark:border-slate-800 rounded-2xl bg-slate-50/40 dark:bg-slate-900/40 space-y-3">
+                            <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200/50 dark:border-slate-800 pb-2.5">
+                                <div>
+                                    <span class="font-black text-sm text-slate-800 dark:text-slate-200 block">
+                                        Periode {{ date('F', mktime(0, 0, 0, $pr->month, 10)) }} {{ $pr->year }}
+                                    </span>
+                                    <span class="text-2xs text-slate-400 block font-semibold mt-0.5">
+                                        Cabang: {{ $pr->branch?->name ?? 'Seluruh Cabang (Konsolidasi Global)' }} • Diproses Oleh: {{ $pr->createdByUser?->name ?? 'System' }}
+                                    </span>
+                                    <div class="mt-1 flex items-center gap-2">
+                                        @if($pr->status === 'final')
+                                            <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-2xs font-extrabold bg-emerald-100 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-400">
+                                                <span class="material-symbols-outlined text-xs">lock</span> FINAL (DIKUNCI)
+                                            </span>
+                                        @else
+                                            <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-2xs font-extrabold bg-amber-100 text-amber-800 dark:bg-amber-950/40 dark:text-amber-400">
+                                                <span class="material-symbols-outlined text-xs">edit_document</span> DRAFT
+                                            </span>
+                                        @endif
+                                        <span class="text-2xs font-mono font-bold text-slate-500">Total: {{ $pr->items->count() }} Staf</span>
+                                        <span class="text-2xs font-mono font-bold text-emerald-600">Rp {{ number_format($pr->items->sum('net_salary'), 0, ',', '.') }}</span>
+                                    </div>
+                                </div>
+                                <div class="flex items-center gap-1.5">
+                                    <a href="{{ route('hr.payrolls.show', $pr->id) }}" class="inline-flex items-center gap-1 text-xs font-bold px-3 py-1.5 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:border-primary hover:text-primary transition-colors shadow-sm">
+                                        <span class="material-symbols-outlined text-base">info</span> Detail & Cetak
+                                    </a>
+                                    @if($pr->status === 'draft')
+                                        <form action="{{ route('hr.payrolls.finalize', $pr->id) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin MEMFINALKAN payroll ini? Setelah difinalkan, payroll akan DIKUNCI dan tidak dapat diubah.')">
+                                            @csrf
+                                            <button type="submit" class="inline-flex items-center gap-1 text-xs font-bold px-3 py-1.5 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 transition-colors shadow-sm" title="Finalkan Payroll">
+                                                <span class="material-symbols-outlined text-base">check_circle</span> Finalkan
+                                            </button>
+                                        </form>
+                                    @endif
+                                    <button type="button" @click="activeDeletePayroll = {{ $pr->id }}" class="inline-flex items-center gap-1 text-xs font-bold px-2 py-1.5 rounded-lg bg-rose-50 text-rose-600 hover:bg-rose-100 transition-colors" title="Hapus Riwayat Payroll">
+                                        <span class="material-symbols-outlined text-base">delete</span>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 mt-2">
+                                @foreach($pr->items as $pItem)
+                                    <div id="payroll-item-{{ $pItem->id }}" class="flex items-center justify-between bg-white dark:bg-slate-800 p-2.5 rounded-xl border border-slate-100 dark:border-slate-700/50">
+                                        <div class="flex-1 min-w-0 pr-2">
+                                            <p class="text-xs font-bold text-slate-800 dark:text-slate-200 truncate">{{ $pItem->employee?->name }}</p>
+                                            <p class="text-2xs text-slate-500 font-semibold truncate">{{ $pItem->employee?->position }} • {{ $pItem->employee?->branch?->name }}</p>
+                                            <p class="text-2xs font-mono font-bold text-emerald-600 mt-0.5">Gaji: Rp {{ number_format($pItem->net_salary, 0, ',', '.') }}</p>
+                                        </div>
+                                        <div class="flex items-center gap-1">
+                                            <a href="{{ route('hr.payslip', $pItem->id) }}" target="_blank" class="inline-flex items-center gap-1 text-2xs font-bold px-2 py-1 rounded-lg bg-orange-50 text-primary hover:bg-orange-100 transition-colors">
+                                                <span class="material-symbols-outlined text-sm">receipt_long</span> Slip
+                                            </a>
+                                            @if($pr->status !== 'final')
+                                                <button type="button" @click="activeEditItem = {{ $pItem->id }}" class="inline-flex items-center gap-1 text-2xs font-bold px-2 py-1 rounded-lg bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-200 transition-colors">
+                                                    <span class="material-symbols-outlined text-sm">edit</span>
+                                                </button>
+                                            @endif
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+                    @empty
+                        <div class="py-12 text-center text-slate-400 text-xs">Belum ada data payroll diproses. Klik "Generate Payroll Periode" untuk memproses payroll baru.</div>
+                    @endforelse
+                </div>
+            </x-card>
+        </div>
+
+        <!-- ==================== TAB 3: SESI KERJA & PRESENSI ==================== -->
+        <div x-show="activeTab === 'attendance'" class="space-y-4" x-cloak>
+            <x-card title="Sesi Kerja & Presensi Staf Karyawan">
+                <div class="space-y-4">
+                    <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-800 pb-3">
+                        <div class="flex items-center gap-2">
+                            <span class="material-symbols-outlined text-emerald-600 text-xl">how_to_reg</span>
+                            <span class="text-xs font-bold text-slate-800 dark:text-slate-200">Riwayat Presensi & Log Jam Kerja Bulan Ini</span>
+                        </div>
+                        <button type="button" @click="showAddAttendance = true" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-colors shadow-sm">
+                            <span class="material-symbols-outlined text-base">add</span> Input Log Sesi Kerja
+                        </button>
+                    </div>
+
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-xs border-collapse">
+                            <thead>
+                                <tr class="border-b border-slate-100 dark:border-slate-800 text-slate-400 font-bold uppercase tracking-wider">
+                                    <th class="py-2.5 px-3">Tanggal</th>
+                                    <th class="py-2.5 px-3">Nama Karyawan</th>
+                                    <th class="py-2.5 px-3">Cabang</th>
+                                    <th class="py-2.5 px-3">Jam Masuk / Keluar</th>
+                                    <th class="py-2.5 px-3">Status Presensi</th>
+                                    <th class="py-2.5 px-3">Catatan / Keterangan</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-50 dark:divide-slate-850">
+                                @forelse($attendances as $att)
+                                    <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-900/30">
+                                        <td class="py-2.5 px-3 font-bold text-slate-800 dark:text-slate-200">
+                                            {{ $att->date ? $att->date->format('d/m/Y') : '-' }}
+                                        </td>
+                                        <td class="py-2.5 px-3">
+                                            <span class="font-bold text-slate-800 dark:text-slate-200 block">{{ $att->employee?->name ?? '-' }}</span>
+                                            <span class="text-2xs text-slate-400 font-mono">NIK: {{ $att->employee?->nik ?? '-' }}</span>
+                                        </td>
+                                        <td class="py-2.5 px-3 font-medium text-slate-600 dark:text-slate-400">
+                                            {{ $att->employee?->branch?->name ?? '-' }}
+                                        </td>
+                                        <td class="py-2.5 px-3 font-mono font-bold text-slate-700 dark:text-slate-300">
+                                            {{ $att->check_in ? date('H:i', strtotime($att->check_in)) : '--:--' }} - {{ $att->check_out ? date('H:i', strtotime($att->check_out)) : '--:--' }}
+                                        </td>
+                                        <td class="py-2.5 px-3">
+                                            @if(in_array($att->status, ['hadir', 'present']))
+                                                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-2xs font-extrabold bg-emerald-100 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-400">
+                                                    <span class="material-symbols-outlined text-xs">check_circle</span> HADIR
+                                                </span>
+                                            @elseif(in_array($att->status, ['terlambat', 'late']))
+                                                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-2xs font-extrabold bg-amber-100 text-amber-800 dark:bg-amber-950/40 dark:text-amber-400">
+                                                    <span class="material-symbols-outlined text-xs">schedule</span> TERLAMBAT
+                                                </span>
+                                            @elseif(in_array($att->status, ['izin']))
+                                                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-2xs font-extrabold bg-blue-100 text-blue-800 dark:bg-blue-950/40 dark:text-blue-400">
+                                                    <span class="material-symbols-outlined text-xs">info</span> IZIN
+                                                </span>
+                                            @else
+                                                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-2xs font-extrabold bg-rose-100 text-rose-800 dark:bg-rose-950/40 dark:text-rose-400">
+                                                    <span class="material-symbols-outlined text-xs">cancel</span> ALPA
+                                                </span>
+                                            @endif
+                                        </td>
+                                        <td class="py-2.5 px-3 text-slate-500 text-2xs italic">
+                                            {{ $att->notes ?? 'Presensi Sesi Kerja Reguler' }}
+                                        </td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="6" class="py-6 text-center text-slate-400">Belum ada riwayat sesi kerja & presensi staf dicatat bulan ini.</td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+
+                    @if($attendances->hasPages())
+                        <div class="mt-2">
+                            {{ $attendances->links() }}
+                        </div>
+                    @endif
+                </div>
+            </x-card>
+        </div>
+
+        <!-- ==================== TAB 4: ANALYTICS & INSENTIF ==================== -->
+        <div x-show="activeTab === 'analytics'" class="space-y-4" x-cloak>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="p-4 bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm space-y-2">
+                    <div class="flex items-center justify-between">
+                        <span class="text-2xs font-bold text-slate-400 uppercase">Total Staf Aktif</span>
+                        <span class="p-2 rounded-xl bg-blue-50 text-blue-600 dark:bg-blue-950/40 dark:text-blue-400">
+                            <span class="material-symbols-outlined text-base">badge</span>
+                        </span>
+                    </div>
+                    <p class="text-2xl font-black text-slate-800 dark:text-slate-100 font-mono">{{ $totalActiveEmployees }} Staf</p>
+                    <p class="text-2xs text-slate-500 font-medium">Akun Terhubung: <strong>{{ $linkedAccountsCount }}/{{ $totalActiveEmployees }}</strong> ({{ $totalActiveEmployees > 0 ? round(($linkedAccountsCount/$totalActiveEmployees)*100) : 0 }}%)</p>
+                </div>
+
+                <div class="p-4 bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm space-y-2">
+                    <div class="flex items-center justify-between">
+                        <span class="text-2xs font-bold text-slate-400 uppercase">Beban Gaji Bulan Ini</span>
+                        <span class="p-2 rounded-xl bg-emerald-50 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-400">
+                            <span class="material-symbols-outlined text-base">payments</span>
+                        </span>
+                    </div>
+                    <p class="text-2xl font-black text-emerald-600 font-mono">Rp {{ number_format($totalMonthSalaryExpense, 0, ',', '.') }}</p>
+                    <p class="text-2xs text-slate-500 font-medium">Total penggajian bulan berjalan</p>
+                </div>
+
+                <div class="p-4 bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm space-y-2">
+                    <div class="flex items-center justify-between">
+                        <span class="text-2xs font-bold text-slate-400 uppercase">Insentif Workshop (Kg)</span>
+                        <span class="p-2 rounded-xl bg-orange-50 text-primary dark:bg-orange-950/40">
+                            <span class="material-symbols-outlined text-base">scale</span>
+                        </span>
+                    </div>
+                    <p class="text-2xl font-black text-slate-800 dark:text-slate-100 font-mono">Rp {{ number_format($totalMonthBonusKg, 0, ',', '.') }}</p>
+                    <p class="text-2xs text-slate-500 font-medium">Bonus performa laundry Kg</p>
+                </div>
+
+                <div class="p-4 bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm space-y-2">
+                    <div class="flex items-center justify-between">
+                        <span class="text-2xs font-bold text-slate-400 uppercase">Insentif Workshop (Pcs)</span>
+                        <span class="p-2 rounded-xl bg-purple-50 text-purple-600 dark:bg-purple-950/40 dark:text-purple-400">
+                            <span class="material-symbols-outlined text-base">checkroom</span>
+                        </span>
+                    </div>
+                    <p class="text-2xl font-black text-slate-800 dark:text-slate-100 font-mono">Rp {{ number_format($totalMonthBonusPcs, 0, ',', '.') }}</p>
+                    <p class="text-2xs text-slate-500 font-medium">Bonus performa satuan Pcs</p>
+                </div>
             </div>
-        </x-card>
+
+            <x-card title="Ringkasan Distribusi Penggajian Staf Per Cabang">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-xs border-collapse">
+                        <thead>
+                            <tr class="border-b border-slate-100 dark:border-slate-800 text-slate-400 font-bold uppercase tracking-wider">
+                                <th class="py-2.5 px-3">Cabang Penempatan</th>
+                                <th class="py-2.5 px-3 text-center">Jumlah Karyawan</th>
+                                <th class="py-2.5 px-3 text-right">Rata-rata Gaji Pokok</th>
+                                <th class="py-2.5 px-3 text-right">Total Beban Gaji Pokok</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-50 dark:divide-slate-850">
+                            @foreach($branches as $b)
+                                @php
+                                    $bEmployees = $employees->where('branch_id', $b->id);
+                                    $bCount = $bEmployees->count();
+                                    $bAvgSalary = $bCount > 0 ? $bEmployees->avg('base_salary') : 0;
+                                    $bTotalSalary = $bEmployees->sum('base_salary');
+                                @endphp
+                                <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-900/30">
+                                    <td class="py-3 px-3 font-bold text-slate-800 dark:text-slate-200">
+                                        Cabang {{ $b->name }}
+                                    </td>
+                                    <td class="py-3 px-3 text-center font-bold font-mono">
+                                        {{ $bCount }} Staf
+                                    </td>
+                                    <td class="py-3 px-3 text-right font-mono text-slate-700 dark:text-slate-300">
+                                        Rp {{ number_format($bAvgSalary, 0, ',', '.') }}
+                                    </td>
+                                    <td class="py-3 px-3 text-right font-mono font-bold text-emerald-600">
+                                        Rp {{ number_format($bTotalSalary, 0, ',', '.') }}
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            </x-card>
+        </div>
 
         <!-- Add Employee Modal -->
         <div x-show="showAddEmployee" class="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4" x-cloak>

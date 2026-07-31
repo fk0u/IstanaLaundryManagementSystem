@@ -66,7 +66,42 @@ class HRController extends Controller
             ->orderByDesc('month')
             ->get();
 
-        return view('hr.index', compact('employees', 'payrolls', 'branches', 'branchId', 'unlinkedUsers', 'roles', 'attendances'));
+        // Analytics Metrics
+        $totalActiveEmployees = Employee::withoutGlobalScopes()
+            ->when($branchId, fn ($q) => $q->where('branch_id', $branchId))
+            ->where('is_active', true)
+            ->count();
+
+        $linkedAccountsCount = Employee::withoutGlobalScopes()
+            ->when($branchId, fn ($q) => $q->where('branch_id', $branchId))
+            ->whereNotNull('user_id')
+            ->count();
+
+        $currentMonthPayrolls = Payroll::withoutBranchScope()
+            ->when($branchId, fn ($q) => $q->where('branch_id', $branchId))
+            ->where('month', now()->month)
+            ->where('year', now()->year)
+            ->with('items')
+            ->get();
+
+        $totalMonthSalaryExpense = $currentMonthPayrolls->flatMap->items->sum('net_salary');
+        $totalMonthBonusKg = $currentMonthPayrolls->flatMap->items->sum('bonus_kg');
+        $totalMonthBonusPcs = $currentMonthPayrolls->flatMap->items->sum('bonus_pcs');
+
+        return view('hr.index', compact(
+            'employees',
+            'payrolls',
+            'branches',
+            'branchId',
+            'unlinkedUsers',
+            'roles',
+            'attendances',
+            'totalActiveEmployees',
+            'linkedAccountsCount',
+            'totalMonthSalaryExpense',
+            'totalMonthBonusKg',
+            'totalMonthBonusPcs'
+        ));
     }
 
     public function storeEmployee(Request $request)
