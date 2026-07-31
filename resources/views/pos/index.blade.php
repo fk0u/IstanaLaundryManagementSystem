@@ -142,31 +142,81 @@
                     </x-card>
                 </div>
 
-                <!-- Services Grid -->
-                <x-card title="Layanan Cuci">
+                <!-- Services Grid & Filters -->
+                <x-card title="Pilih Layanan Cuci">
+                    <!-- Category Scroll Pills & Search Bar -->
+                    <div class="flex flex-col sm:flex-row gap-3 mb-4 items-stretch sm:items-center justify-between">
+                        <!-- Scrollable Category Pills -->
+                        <div class="scroll-pills flex-1 max-w-full">
+                            <button type="button" @click="activeCategory = 'all'"
+                                    :class="activeCategory === 'all' ? 'bg-primary text-white font-extrabold shadow-md shadow-primary/25 scale-[1.02]' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'"
+                                    class="pill-item">
+                                <span class="material-symbols-outlined text-base">apps</span>
+                                Semua
+                            </button>
+                            @php
+                                $types = $services->pluck('type')->unique()->values();
+                            @endphp
+                            @foreach($types as $type)
+                                <button type="button" @click="activeCategory = '{{ $type }}'"
+                                        :class="activeCategory === '{{ $type }}' ? 'bg-primary text-white font-extrabold shadow-md shadow-primary/25 scale-[1.02]' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'"
+                                        class="pill-item">
+                                    <span class="material-symbols-outlined text-base">
+                                        {{ strtolower($type) === 'kiloan' ? 'weight' : (strtolower($type) === 'satuan' ? 'dry_cleaning' : (strtolower($type) === 'express' ? 'bolt' : 'local_laundry_service')) }}
+                                    </span>
+                                    {{ ucfirst($type) }}
+                                </button>
+                            @endforeach
+                        </div>
+
+                        <!-- Live Service Search -->
+                        <div class="relative w-full sm:w-60 shrink-0">
+                            <span class="material-symbols-outlined text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 text-base">search</span>
+                            <input type="text" x-model="serviceSearch" placeholder="Cari layanan..."
+                                   class="w-full h-10 pl-9 pr-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950 text-slate-800 dark:text-slate-200 text-xs font-semibold focus:border-primary outline-none transition-all">
+                        </div>
+                    </div>
+
                     <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
                         @foreach ($services as $service)
-                            <div class="border border-slate-100 dark:border-slate-800 rounded-xl p-4 hover:border-primary/50 dark:hover:border-orange-500/50 transition-all flex flex-col justify-between bg-white dark:bg-slate-900 shadow-sm relative group">
+                            <div x-show="(activeCategory === 'all' || activeCategory === '{{ $service->type }}') && matchesServiceSearch('{{ addslashes($service->name) }}', '{{ addslashes($service->type) }}')"
+                                 class="border border-slate-200/80 dark:border-slate-800/80 rounded-2xl p-4 hover:border-primary/60 dark:hover:border-orange-500/60 transition-all flex flex-col justify-between bg-white dark:bg-slate-900 shadow-xs hover:shadow-md relative group select-none">
                                 <div>
                                     <div class="flex justify-between items-start mb-2 gap-2">
-                                        <h4 class="font-bold text-sm text-slate-800 dark:text-slate-200 group-hover:text-primary dark:group-hover:text-orange-400 transition-colors">
+                                        <h4 class="font-extrabold text-sm text-slate-800 dark:text-slate-100 group-hover:text-primary dark:group-hover:text-orange-400 transition-colors">
                                             {{ $service->name }}
                                         </h4>
                                         <x-badge type="primary">{{ $service->type }}</x-badge>
                                     </div>
                                     <p class="text-2xs text-slate-400 dark:text-slate-500 mb-3 line-clamp-2">
-                                        {{ $service->description ?? 'Layanan laundry profesional.' }}
+                                        {{ $service->description ?? 'Layanan laundry profesional higienis.' }}
                                     </p>
                                 </div>
-                                <div class="flex items-center justify-between mt-2 pt-2.5 border-t border-slate-50 dark:border-slate-800/30">
+                                <div class="flex items-center justify-between mt-2 pt-2.5 border-t border-slate-100 dark:border-slate-800/60">
                                     <div>
-                                        <span class="block text-[9px] text-slate-400 font-bold uppercase tracking-wider">Per {{ $service->unit }}</span>
-                                        <span class="text-sm font-extrabold text-primary">Rp {{ number_format($service->price, 0, ',', '.') }}</span>
+                                        <span class="block text-[9px] text-slate-400 font-extrabold uppercase tracking-wider">Per {{ $service->unit }}</span>
+                                        <span class="text-sm font-black text-primary">Rp {{ number_format($service->price, 0, ',', '.') }}</span>
                                     </div>
-                                    <button type="button" @click="addToCart({{ $service->id }}, '{{ addslashes($service->name) }}', {{ $service->price }}, '{{ $service->unit }}')"
-                                            class="w-9 h-9 rounded-xl bg-orange-50 hover:bg-primary hover:text-white dark:bg-slate-800 dark:text-orange-400 dark:hover:bg-orange-500/30 text-primary flex items-center justify-center cursor-pointer transition-all active:scale-95 shadow-sm">
-                                        <span class="material-symbols-outlined text-lg">add_shopping_cart</span>
-                                    </button>
+
+                                    <template x-if="getItemQuantity({{ $service->id }}) > 0">
+                                        <div class="flex items-center gap-1 bg-orange-50 dark:bg-slate-800/80 p-1 rounded-xl border border-orange-200/60 dark:border-slate-700">
+                                            <button type="button" @click="decrementServiceQuantity({{ $service->id }})" class="w-8 h-8 rounded-lg bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 font-extrabold text-sm shadow-xs hover:bg-rose-50 hover:text-rose-600 transition-all flex items-center justify-center cursor-pointer active:scale-90">
+                                                -
+                                            </button>
+                                            <span class="w-7 text-center text-xs font-black text-primary" x-text="getItemQuantity({{ $service->id }})"></span>
+                                            <button type="button" @click="addToCart({{ $service->id }}, '{{ addslashes($service->name) }}', {{ $service->price }}, '{{ $service->unit }}')" class="w-8 h-8 rounded-lg bg-primary text-white font-extrabold text-sm shadow-xs hover:bg-primary-hover transition-all flex items-center justify-center cursor-pointer active:scale-90">
+                                                +
+                                            </button>
+                                        </div>
+                                    </template>
+
+                                    <template x-if="getItemQuantity({{ $service->id }}) === 0">
+                                        <button type="button" @click="addToCart({{ $service->id }}, '{{ addslashes($service->name) }}', {{ $service->price }}, '{{ $service->unit }}')"
+                                                class="btn-touch h-9 px-3 rounded-xl bg-orange-50 hover:bg-primary hover:text-white dark:bg-slate-800 dark:text-orange-400 dark:hover:bg-primary text-primary font-extrabold text-xs flex items-center justify-center gap-1.5 cursor-pointer transition-all active:scale-95 shadow-xs">
+                                            <span class="material-symbols-outlined text-base">add_shopping_cart</span>
+                                            Tambah
+                                        </button>
+                                    </template>
                                 </div>
                             </div>
                         @endforeach
@@ -259,6 +309,22 @@
                                     <input type="number" name="paid_amount" x-model.number="paidAmount" @input="calculateTotals()"
                                            class="w-full h-9 px-2.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-xs font-bold text-slate-800 dark:text-slate-200 outline-none focus:border-primary">
                                 </div>
+                            </div>
+
+                            <!-- Quick Cash Buttons -->
+                            <div class="flex flex-wrap gap-1.5 pt-1" x-show="paymentMethod === 'cash'" x-cloak>
+                                <button type="button" @click="setQuickPaid('exact')" class="px-2.5 py-1 rounded-lg bg-orange-50 dark:bg-slate-800 text-primary dark:text-orange-400 border border-orange-200/60 dark:border-slate-700 text-2xs font-extrabold hover:bg-primary hover:text-white transition-all cursor-pointer haptic-press">
+                                    Uang Pas
+                                </button>
+                                <button type="button" @click="setQuickPaid(50000)" class="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-2xs font-bold hover:bg-primary hover:text-white transition-all cursor-pointer haptic-press">
+                                    50rb
+                                </button>
+                                <button type="button" @click="setQuickPaid(100000)" class="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-2xs font-bold hover:bg-primary hover:text-white transition-all cursor-pointer haptic-press">
+                                    100rb
+                                </button>
+                                <button type="button" @click="setQuickPaid(200000)" class="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-2xs font-bold hover:bg-primary hover:text-white transition-all cursor-pointer haptic-press">
+                                    200rb
+                                </button>
                             </div>
 
                             <div class="flex justify-between text-xs pt-1" x-show="paymentMethod !== 'invoice'">
@@ -569,6 +635,40 @@
                 changeAmount: 0,
                 showConfirmModal: false,
                 mobileCartOpen: false,
+                activeCategory: 'all',
+                serviceSearch: '',
+
+                getItemQuantity(serviceId) {
+                    let item = this.cart.find(i => i.service_id === serviceId);
+                    return item ? item.quantity : 0;
+                },
+
+                decrementServiceQuantity(serviceId) {
+                    let index = this.cart.findIndex(i => i.service_id === serviceId);
+                    if (index !== -1) {
+                        if (this.cart[index].quantity > 1) {
+                            this.cart[index].quantity -= 1;
+                        } else {
+                            this.cart.splice(index, 1);
+                        }
+                        this.calculateTotals();
+                    }
+                },
+
+                matchesServiceSearch(name, type) {
+                    let q = (this.serviceSearch || '').trim().toLowerCase();
+                    if (!q) return true;
+                    return name.toLowerCase().includes(q) || type.toLowerCase().includes(q);
+                },
+
+                setQuickPaid(val) {
+                    if (val === 'exact') {
+                        this.paidAmount = this.total;
+                    } else {
+                        this.paidAmount = Number(val);
+                    }
+                    this.calculateTotals();
+                },
 
                 applyManualCoupon() {
                     let code = (this.manualCouponCode || '').trim().toUpperCase();

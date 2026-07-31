@@ -463,6 +463,7 @@ Route::middleware(['auth', 'branch.scope'])->group(function () {
 
         // Finance - Accounting Periods
         Route::get('/finance/periods', [AccountingPeriodController::class, 'index'])->name('finance.periods.index');
+        Route::get('/finance/periods/{id}', [AccountingPeriodController::class, 'show'])->name('finance.periods.show');
         Route::post('/finance/periods/{id}/close', [AccountingPeriodController::class, 'close'])->name('finance.periods.close');
 
         // Finance - Reports & Exports

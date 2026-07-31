@@ -99,7 +99,25 @@
 
     /* Touch-friendly button base — 44px minimum */
     .btn-touch {
-        @apply min-h-[44px] min-w-[44px] flex items-center justify-center rounded-2xl active:scale-[0.97] transition-all;
+        @apply min-h-[44px] min-w-[44px] flex items-center justify-center rounded-2xl active:scale-[0.97] transition-all cursor-pointer;
+    }
+
+    .touch-target {
+        @apply min-h-[44px] min-w-[44px] flex items-center justify-center;
+    }
+
+    .haptic-press {
+        @apply active:scale-[0.95] transition-transform duration-150 ease-out;
+    }
+
+    /* Glassmorphism Panel */
+    .glass-panel {
+        @apply bg-white/85 dark:bg-slate-900/85 backdrop-blur-xl border border-slate-200/60 dark:border-slate-800/80 shadow-md;
+    }
+
+    /* Bottom Sheet Container for Mobile & Tablet */
+    .bottom-sheet {
+        @apply fixed inset-x-0 bottom-0 z-50 bg-white dark:bg-slate-900 rounded-t-[28px] border-t border-slate-200/80 dark:border-slate-800 shadow-2xl max-h-[90vh] flex flex-col transition-all duration-300;
     }
 
     /* Safe bottom area for bottom nav clearance */
@@ -107,7 +125,7 @@
         padding-bottom: 5.5rem;
     }
 
-    @media (min-width: 768px) {
+    @media (min-width: 1024px) {
         .safe-bottom {
             padding-bottom: 0;
         }
@@ -115,7 +133,7 @@
 
     /* Mobile card variant — compact */
     .card-mobile {
-        @apply bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-expressive shadow-sm p-4;
+        @apply bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 rounded-expressive shadow-sm p-4 hover:shadow-md transition-all;
     }
 
     @media (min-width: 768px) {
@@ -124,25 +142,9 @@
         }
     }
 
-    /* Table to card responsive utility */
-    .responsive-table-wrapper {
-        @apply overflow-x-auto -mx-4 px-4;
-    }
-
-    @media (min-width: 768px) {
-        .responsive-table-wrapper {
-            @apply mx-0 px-0;
-        }
-    }
-
-    /* Bottom sheet handle */
-    .sheet-handle {
-        @apply w-12 h-1.5 rounded-full bg-slate-300 dark:bg-slate-600 mx-auto mb-4;
-    }
-
-    /* Horizontal scroll pills container */
+    /* Horizontal scroll pills container for Categories & Filters */
     .scroll-pills {
-        @apply flex gap-2 overflow-x-auto pb-2 -mx-4 px-4 scrollbar-none;
+        @apply flex gap-2 overflow-x-auto pb-2 -mx-4 px-4 scrollbar-none snap-x snap-mandatory;
         -ms-overflow-style: none;
         scrollbar-width: none;
     }
@@ -156,16 +158,15 @@
         }
     }
 
-    /* Premium shadow (interactive cards) */
-    .premium-shadow {
-        @apply shadow-md3-1 hover:shadow-md3-2 transition-all duration-300;
+    .pill-item {
+        @apply snap-start shrink-0 px-4 py-2.5 rounded-2xl text-xs font-bold transition-all duration-200 flex items-center gap-2 cursor-pointer haptic-press select-none;
     }
 
     /* Status badge colors */
-    .status-pending { @apply bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/30 dark:text-amber-400 dark:border-amber-800/50; }
-    .status-active { @apply bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/30 dark:text-emerald-400 dark:border-emerald-800/50; }
-    .status-completed { @apply bg-sky-50 text-sky-700 border-sky-200 dark:bg-sky-950/30 dark:text-sky-400 dark:border-sky-800/50; }
-    .status-cancelled { @apply bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/30 dark:text-rose-400 dark:border-rose-800/50; }
+    .status-pending { @apply bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-950/30 dark:text-amber-400 dark:border-amber-800/50; }
+    .status-active { @apply bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/30 dark:text-emerald-400 dark:border-emerald-800/50; }
+    .status-completed { @apply bg-sky-50 text-sky-700 border border-sky-200 dark:bg-sky-950/30 dark:text-sky-400 dark:border-sky-800/50; }
+    .status-cancelled { @apply bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-950/30 dark:text-rose-400 dark:border-rose-800/50; }
 }
 
 @layer utilities {

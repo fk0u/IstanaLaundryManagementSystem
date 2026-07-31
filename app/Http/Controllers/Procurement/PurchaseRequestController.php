@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Procurement;
 
 use App\Http\Controllers\Controller;
+use App\Models\Branch;
 use App\Models\InventoryItem;
 use App\Models\PurchaseRequest;
 use App\Models\PurchaseRequestItem;
@@ -33,6 +34,7 @@ class PurchaseRequestController extends Controller
             'items.*.unit_cost_estimate' => 'required|numeric|min:0',
         ]);
 
+        DB::transaction(function () use ($request) {
             $branchId = session('scoped_branch_id') ?? auth()->user()?->branch_id;
             if (! $branchId || ! Branch::where('id', $branchId)->exists()) {
                 $branchId = Branch::first()?->id;
