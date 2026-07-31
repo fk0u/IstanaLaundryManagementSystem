@@ -139,10 +139,17 @@
                         <a href="{{ route('hr.index') }}" class="inline-flex w-full items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-slate-900 dark:bg-slate-800 text-white text-xs font-bold hover:opacity-90 transition-opacity">
                             <span class="material-symbols-outlined text-base">dashboard</span> Kembali ke Riwayat
                         </a>
-                        @if($payroll->items->first())
+                        @if($payroll->status !== 'final' && $payroll->items->first())
                             <a href="{{ route('hr.index', ['edit_item' => $payroll->items->first()->id]) }}#payroll-item-{{ $payroll->items->first()->id }}" class="inline-flex w-full items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-primary text-white text-xs font-bold hover:bg-primary-hover transition-colors">
                                 <span class="material-symbols-outlined text-base">edit</span> Edit Item Pertama
                             </a>
+                        @elseif($payroll->status === 'final')
+                            <div class="p-3 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-900/50 rounded-xl text-center">
+                                <span class="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-700 dark:text-emerald-400">
+                                    <span class="material-symbols-outlined text-base">lock</span> Payroll Difinalkan & Dikunci
+                                </span>
+                                <p class="text-2xs text-emerald-600 dark:text-emerald-500 mt-0.5">Komponen gaji tidak dapat diubah lagi.</p>
+                            </div>
                         @endif
                     </div>
                 </x-card>

@@ -26,6 +26,14 @@ class HRController extends Controller
             $branchId = session('scoped_branch_id') ?? $user->branch_id;
         }
 
+        if ($request->query('edit_item')) {
+            $editItem = PayrollItem::with('payroll')->find($request->query('edit_item'));
+            if ($editItem && $editItem->payroll && $editItem->payroll->status === 'final') {
+                return redirect()->route('hr.payrolls.show', $editItem->payroll_id)
+                    ->with('error', 'Payroll ini sudah difinalkan dan dikunci! Data tidak dapat diubah.');
+            }
+        }
+
         $branches = Branch::orderBy('name')->get();
 
         $employees = Employee::with('branch')
@@ -303,7 +311,8 @@ class HRController extends Controller
     public function updatePayrollItem(Request $request, PayrollItem $item)
     {
         if ($item->payroll && $item->payroll->status === 'final') {
-            return redirect()->back()->with('error', 'Payroll sudah berstatus FINAL dan dikunci dari perubahan!');
+            return redirect()->route('hr.payrolls.show', $item->payroll_id)
+                ->with('error', 'Payroll sudah berstatus FINAL dan dikunci dari perubahan!');
         }
 
         $request->validate([
@@ -394,6 +403,10 @@ class HRController extends Controller
         try {
             // Bypass BranchScoped global scope to ensure record is always found
             $payroll = $this->resolvePayroll($payroll);
+            if ($payroll->status === 'final') {
+                return redirect()->route('hr.payrolls.show', $payroll->id)
+                    ->with('error', 'Payroll yang sudah berstatus FINAL & DIKUNCI tidak dapat dihapus!');
+            }
             $payroll->load(['branch', 'items.employee']);
             $snapshot = [
                 'payroll' => [
