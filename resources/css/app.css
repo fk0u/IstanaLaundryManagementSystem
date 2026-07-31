@@ -1,6 +1,9 @@
+@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
 
 @layer base {
     /* Smooth scrolling & overscroll behavior */
@@ -53,6 +56,22 @@
 }
 
 @layer components {
+    .material-symbols-outlined {
+        font-family: 'Material Symbols Outlined' !important;
+        font-weight: normal;
+        font-style: normal;
+        font-size: 24px;
+        line-height: 1;
+        letter-spacing: normal;
+        text-transform: none;
+        display: inline-block;
+        white-space: nowrap;
+        word-wrap: normal;
+        direction: ltr;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        font-feature-settings: 'liga';
+    }
     /* Material Design 3 Expressive Shapes & Buttons */
     .md3-card {
         @apply bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-expressive shadow-md3-1 hover:shadow-md3-2 transition-all duration-300;

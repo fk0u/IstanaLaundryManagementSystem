@@ -10,6 +10,10 @@ export default {
         './resources/views/**/*.blade.php',
     ],
 
+    safelist: [
+        'material-symbols-outlined',
+    ],
+
     theme: {
         extend: {
             fontFamily: {
