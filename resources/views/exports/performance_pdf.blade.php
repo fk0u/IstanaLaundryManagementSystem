@@ -2,11 +2,11 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <title>Laporan Kinerja ERP</title>
+    <title>Laporan Kinerja &amp; Produktivitas Operational</title>
     <style>
         body {
             font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-            font-size: 11px;
+            font-size: 10px;
             color: #1e293b;
             margin: 0;
             padding: 15px;
@@ -15,16 +15,16 @@
         .header-table {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
             border-bottom: 3px solid #ff6600;
-            padding-bottom: 10px;
+            padding-bottom: 8px;
         }
         .brand-logo {
             background-color: #ff6600;
             color: #ffffff;
             font-weight: 900;
             font-size: 18px;
-            padding: 8px 15px;
+            padding: 6px 12px;
             border-radius: 6px;
             display: inline-block;
             letter-spacing: 1px;
@@ -37,7 +37,7 @@
             margin-top: 3px;
         }
         .doc-title {
-            font-size: 16px;
+            font-size: 15px;
             font-weight: 800;
             color: #0f172a;
             text-align: right;
@@ -46,21 +46,21 @@
             background-color: #f8fafc;
             border: 1px solid #e2e8f0;
             border-radius: 6px;
-            padding: 10px 15px;
-            margin-bottom: 20px;
+            padding: 8px 12px;
+            margin-bottom: 15px;
         }
         .meta-table {
             width: 100%;
             border-collapse: collapse;
         }
         .meta-label {
-            font-size: 9px;
+            font-size: 8.5px;
             color: #64748b;
             text-transform: uppercase;
             font-weight: 700;
         }
         .meta-val {
-            font-size: 11px;
+            font-size: 10.5px;
             color: #0f172a;
             font-weight: 700;
         }
@@ -69,7 +69,7 @@
             font-weight: 800;
             color: #ffffff;
             background-color: #1e293b;
-            padding: 6px 12px;
+            padding: 6px 10px;
             border-radius: 4px;
             margin-top: 15px;
             margin-bottom: 8px;
@@ -81,19 +81,19 @@
             margin-bottom: 15px;
         }
         .data-table th {
-            background-color: #334155;
+            background-color: #1e293b;
             color: #ffffff;
-            font-size: 9.5px;
+            font-size: 9px;
             font-weight: 700;
             text-transform: uppercase;
             padding: 6px 8px;
             text-align: left;
-            border: 1px solid #334155;
+            border: 1px solid #1e293b;
         }
         .data-table td {
             padding: 5px 8px;
             border: 1px solid #e2e8f0;
-            font-size: 10px;
+            font-size: 9px;
         }
         .data-table tr:nth-child(even) {
             background-color: #f8fafc;
@@ -108,153 +108,138 @@
         }
         .footer-table {
             width: 100%;
-            margin-top: 30px;
+            margin-top: 25px;
             border-collapse: collapse;
         }
-        .sig-space { height: 45px; }
+        .sig-space { height: 40px; }
     </style>
 </head>
 <body>
 
     <!-- Header Banner -->
-    <table class="header-table">
+    <table class="header-table" width="100%">
         <tr>
-            <td style="width: 50%;">
-                <div class="brand-logo">🧺 ISTANA LAUNDRY</div>
-                <div class="brand-sub">Premium Care &amp; Performance Analytics</div>
+            <td width="50%" style="vertical-align: middle;">
+                <div class="brand-logo" style="background-color: #ff6600; color: #ffffff; font-weight: 900; font-size: 18px; padding: 6px 12px; border-radius: 6px; display: inline-block;">ISTANA LAUNDRY</div>
+                <div class="brand-sub" style="font-size: 9px; color: #64748b; text-transform: uppercase; margin-top: 3px;">Premium Care &amp; Performance Analytics</div>
             </td>
-            <td style="width: 50%;" class="text-right">
-                <div class="doc-title">LAPORAN KINERJA &amp; PRODUKTIVITAS</div>
-                <div style="font-size: 10px; color: #64748b;">Evaluasi Transaksi Kasir &amp; Workshop</div>
+            <td width="50%" style="text-align: right; vertical-align: middle;">
+                <div class="doc-title" style="font-size: 15px; font-weight: 800; color: #0f172a;">LAPORAN KINERJA &amp; PRODUKTIVITAS</div>
+                <div style="font-size: 9px; color: #64748b; margin-top: 3px;">
+                    Dicetak Pada: {{ now()->translatedFormat('d F Y H:i') }} WIB
+                </div>
             </td>
         </tr>
     </table>
 
     <!-- Metadata Grid -->
-    <div class="meta-box">
-        <table class="meta-table">
+    <div class="meta-box" style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 8px 12px; margin-bottom: 15px;">
+        <table class="meta-table" width="100%">
             <tr>
-                <td style="width: 25%;">
-                    <div class="meta-label">Cabang Scope</div>
-                    <div class="meta-val">{{ $branchName }}</div>
+                <td width="25%">
+                    <div class="meta-label" style="font-size: 8.5px; color: #64748b; text-transform: uppercase; font-weight: 700;">Cabang Scope</div>
+                    <div class="meta-val" style="font-size: 10.5px; color: #0f172a; font-weight: 700;">{{ $branchName }}</div>
                 </td>
-                <td style="width: 25%;">
-                    <div class="meta-label">Periode Tanggal</div>
-                    <div class="meta-val">{{ $dateFrom }} s/d {{ $dateTo }}</div>
+                <td width="25%">
+                    <div class="meta-label" style="font-size: 8.5px; color: #64748b; text-transform: uppercase; font-weight: 700;">Periode Tanggal</div>
+                    <div class="meta-val" style="font-size: 10.5px; color: #0f172a; font-weight: 700;">{{ $dateFrom }} s/d {{ $dateTo }}</div>
                 </td>
-                <td style="width: 25%;">
-                    <div class="meta-label">Tanggal Dicetak</div>
-                    <div class="meta-val">{{ now()->format('d/m/Y H:i') }} WITA</div>
+                <td width="25%">
+                    <div class="meta-label" style="font-size: 8.5px; color: #64748b; text-transform: uppercase; font-weight: 700;">Tanggal Dicetak</div>
+                    <div class="meta-val" style="font-size: 10.5px; color: #0f172a; font-weight: 700;">{{ now()->format('d/m/Y H:i') }} WIB</div>
                 </td>
-                <td style="width: 25%;">
-                    <div class="meta-label">Dicetak Oleh</div>
-                    <div class="meta-val">{{ auth()->user()?->name ?? 'System Admin' }}</div>
+                <td width="25%" style="text-align: right;">
+                    <div class="meta-label" style="font-size: 8.5px; color: #64748b; text-transform: uppercase; font-weight: 700;">Dicetak Oleh</div>
+                    <div class="meta-val" style="font-size: 10.5px; color: #0f172a; font-weight: 700;">{{ auth()->user()?->name ?? 'System Admin' }}</div>
                 </td>
             </tr>
         </table>
     </div>
 
     <!-- Section 1: Leaderboard Kasir -->
-    <div class="section-title">1. LEADERBOARD OMSET TRANSAKSI KASIR</div>
-    <table class="data-table">
+    <div class="section-title" style="font-size: 11px; font-weight: 800; color: #ffffff; background-color: #1e293b; padding: 6px 10px; border-radius: 4px; margin-top: 15px; margin-bottom: 8px;">1. LEADERBOARD OMSET TRANSAKSI KASIR</div>
+    <table class="data-table" width="100%" border="1" cellpadding="6" cellspacing="0" style="border-collapse: collapse;">
         <thead>
-            <tr>
-                <th style="width: 5%;">No</th>
-                <th style="width: 40%;">Nama Kasir / Staf</th>
-                <th style="width: 15%;" class="text-center">Total Nota</th>
-                <th style="width: 20%;" class="text-right">Omset Lunas (Rp)</th>
-                <th style="width: 20%;" class="text-right">Omset Pending (Rp)</th>
+            <tr style="background-color: #1e293b; color: #ffffff;">
+                <th width="5%" style="text-align: center; background-color: #1e293b; color: #ffffff;">Peringkat</th>
+                <th width="30%" style="background-color: #1e293b; color: #ffffff;">Nama Kasir</th>
+                <th width="15%" style="text-align: center; background-color: #1e293b; color: #ffffff;">Total Nota</th>
+                <th width="25%" style="text-align: right; background-color: #1e293b; color: #ffffff;">Pendapatan Lunas (Rp)</th>
+                <th width="25%" style="text-align: right; background-color: #1e293b; color: #ffffff;">Pendapatan Pending (Rp)</th>
             </tr>
         </thead>
         <tbody>
-            @forelse($cashiers as $index => $c)
-                <tr>
-                    <td class="text-center">{{ $loop->iteration }}</td>
-                    <td class="font-bold">{{ $c->name }}</td>
-                    <td class="text-center">{{ number_format($c->total_orders) }} Nota</td>
-                    <td class="text-right">Rp {{ number_format($c->total_revenue ?? 0, 2, ',', '.') }}</td>
-                    <td class="text-right">Rp {{ number_format($c->total_pending_revenue ?? 0, 2, ',', '.') }}</td>
+            @php
+                $totOrders = 0;
+                $totPaid = 0;
+                $totPending = 0;
+            @endphp
+            @forelse($cashiers as $idx => $cashier)
+                @php
+                    $totOrders += $cashier->total_orders;
+                    $totPaid += $cashier->total_revenue ?? 0;
+                    $totPending += $cashier->total_pending_revenue ?? 0;
+                @endphp
+                <tr style="{{ $idx % 2 == 1 ? 'background-color: #f8fafc;' : 'background-color: #ffffff;' }}">
+                    <td style="text-align: center; font-weight: bold;">#{{ $idx + 1 }}</td>
+                    <td style="font-weight: bold;">{{ $cashier->name }}</td>
+                    <td style="text-align: center; font-weight: bold;">{{ number_format($cashier->total_orders) }} Nota</td>
+                    <td style="text-align: right; font-weight: bold; color: #16a34a;">Rp {{ number_format($cashier->total_revenue ?? 0, 0, ',', '.') }}</td>
+                    <td style="text-align: right; color: #d97706;">Rp {{ number_format($cashier->total_pending_revenue ?? 0, 0, ',', '.') }}</td>
                 </tr>
             @empty
-                <tr><td colspan="5" class="text-center">Belum ada transaksi recorded pada periode ini.</td></tr>
+                <tr><td colspan="5" style="text-align: center; color: #94a3b8; padding: 15px;">Belum ada data transaksi kasir pada periode ini.</td></tr>
             @endforelse
-            <tr class="row-total">
-                <td colspan="3" class="text-right">TOTAL PENDAPATAN PERIODE INI:</td>
-                <td class="text-right" colspan="2">Rp {{ number_format($periodRevenue, 2, ',', '.') }}</td>
+            <tr class="row-total" style="background-color: #fff7ed; font-weight: bold; color: #c2410c;">
+                <td colspan="2" style="text-align: right; font-weight: bold; background-color: #fff7ed; color: #c2410c;">TOTAL AKUMULASI KASIR:</td>
+                <td style="text-align: center; font-weight: bold; background-color: #fff7ed; color: #c2410c;">{{ number_format($totOrders) }} Nota</td>
+                <td style="text-align: right; font-weight: bold; background-color: #fff7ed; color: #c2410c;">Rp {{ number_format($totPaid, 0, ',', '.') }}</td>
+                <td style="text-align: right; font-weight: bold; background-color: #fff7ed; color: #c2410c;">Rp {{ number_format($totPending, 0, ',', '.') }}</td>
             </tr>
         </tbody>
     </table>
 
-    <!-- Section 2: Rincian Harian -->
-    <div class="section-title">2. RINCIAN HARIAN TRANSAKSI PER KASIR</div>
-    <table class="data-table">
+    <!-- Section 2: Produktivitas Staff Workshop -->
+    <div class="section-title" style="font-size: 11px; font-weight: 800; color: #ffffff; background-color: #1e293b; padding: 6px 10px; border-radius: 4px; margin-top: 15px; margin-bottom: 8px;">2. PRODUKTIVITAS OPERASIONAL STAFF WORKSHOP</div>
+    <table class="data-table" width="100%" border="1" cellpadding="6" cellspacing="0" style="border-collapse: collapse;">
         <thead>
-            <tr>
-                <th style="width: 15%;">Tanggal</th>
-                <th style="width: 35%;">Nama Kasir</th>
-                <th style="width: 12%;" class="text-center">Jumlah Nota</th>
-                <th style="width: 15%;" class="text-right">Omset Lunas (Rp)</th>
-                <th style="width: 13%;" class="text-right">Pending (Rp)</th>
-                <th style="width: 10%;" class="text-right">Diskon (Rp)</th>
+            <tr style="background-color: #1e293b; color: #ffffff;">
+                <th width="5%" style="text-align: center; background-color: #1e293b; color: #ffffff;">No</th>
+                <th width="35%" style="background-color: #1e293b; color: #ffffff;">Nama Staff Operational</th>
+                <th width="20%" style="text-align: center; background-color: #1e293b; color: #ffffff;">Total Aksi Update</th>
+                <th width="20%" style="text-align: center; background-color: #1e293b; color: #ffffff;">Pesanan Selesai (SIAP)</th>
+                <th width="20%" style="text-align: center; background-color: #1e293b; color: #ffffff;">Pesanan Diambil</th>
             </tr>
         </thead>
         <tbody>
-            @forelse($cashierDailyBreakdown as $row)
-                <tr>
-                    <td>{{ $row->date }}</td>
-                    <td>{{ $row->cashier?->name ?? '-' }}</td>
-                    <td class="text-center">{{ $row->total_orders }}</td>
-                    <td class="text-right">Rp {{ number_format($row->paid_revenue, 2, ',', '.') }}</td>
-                    <td class="text-right">Rp {{ number_format($row->pending_revenue, 2, ',', '.') }}</td>
-                    <td class="text-right">Rp {{ number_format($row->total_discount, 2, ',', '.') }}</td>
+            @forelse($staffProductivity as $sIdx => $staff)
+                <tr style="{{ $sIdx % 2 == 1 ? 'background-color: #f8fafc;' : 'background-color: #ffffff;' }}">
+                    <td style="text-align: center;">{{ $sIdx + 1 }}</td>
+                    <td style="font-weight: bold;">{{ $staff->staff_name }}</td>
+                    <td style="text-align: center; font-weight: bold;">{{ number_format($staff->total_actions) }} Aksi</td>
+                    <td style="text-align: center; font-weight: bold; color: #16a34a;">{{ number_format($staff->completed_orders) }} Nota</td>
+                    <td style="text-align: center; color: #0284c7;">{{ number_format($staff->picked_up_orders) }} Nota</td>
                 </tr>
             @empty
-                <tr><td colspan="6" class="text-center">Belum ada data rincian harian.</td></tr>
-            @endforelse
-        </tbody>
-    </table>
-
-    <!-- Section 3: Produktivitas Workshop -->
-    <div class="section-title">3. PRODUKTIVITAS STAF WORKSHOP</div>
-    <table class="data-table">
-        <thead>
-            <tr>
-                <th style="width: 5%;">No</th>
-                <th style="width: 45%;">Nama Staf Workshop</th>
-                <th style="width: 15%;" class="text-center">Total Aksi Status</th>
-                <th style="width: 15%;" class="text-center">Order Selesai (SIAP)</th>
-                <th style="width: 20%;" class="text-center">Order Diambil</th>
-            </tr>
-        </thead>
-        <tbody>
-            @forelse($staffProductivity as $st)
-                <tr>
-                    <td class="text-center">{{ $loop->iteration }}</td>
-                    <td class="font-bold">{{ $st->staff_name }}</td>
-                    <td class="text-center">{{ number_format($st->total_actions) }} Aksi</td>
-                    <td class="text-center font-bold" style="color: #16a34a;">{{ number_format($st->completed_orders) }} Nota</td>
-                    <td class="text-center">{{ number_format($st->picked_up_orders) }} Nota</td>
-                </tr>
-            @empty
-                <tr><td colspan="5" class="text-center">Belum ada aktivitas produksi recorded.</td></tr>
+                <tr><td colspan="5" style="text-align: center; color: #94a3b8; padding: 15px;">Belum ada aktivitas workshop pada periode ini.</td></tr>
             @endforelse
         </tbody>
     </table>
 
     <!-- Signature Footer -->
-    <table class="footer-table">
+    <table class="footer-table" width="100%">
         <tr>
-            <td style="width: 50%; text-align: center;">
-                <div>Dibuat Oleh,</div>
-                <div class="sig-space"></div>
-                <div class="font-bold">({{ auth()->user()?->name ?? 'Supervisor Operational' }})</div>
-                <div style="font-size: 9px; color: #64748b;">Staff / Manager Operational</div>
+            <td width="50%" style="text-align: center;">
+                <div style="font-size: 8.5px; color: #64748b; font-weight: bold;">SUPERVISOR / MANAGER</div>
+                <div class="sig-space" style="height: 40px;"></div>
+                <div style="font-weight: bold; text-decoration: underline;">{{ auth()->user()?->name ?? 'Manager Operasional' }}</div>
+                <div style="font-size: 8px; color: #64748b;">Tim Pengawas Kinerja</div>
             </td>
-            <td style="width: 50%; text-align: center;">
-                <div>Disetujui Oleh,</div>
-                <div class="sig-space"></div>
-                <div class="font-bold">( Owner / Direksi )</div>
-                <div style="font-size: 9px; color: #64748b;">Istana Laundry Samarinda</div>
+            <td width="50%" style="text-align: center;">
+                <div style="font-size: 8.5px; color: #64748b; font-weight: bold;">DISETUJUI OLEH (MANAGEMENT)</div>
+                <div class="sig-space" style="height: 40px;"></div>
+                <div style="font-weight: bold; text-decoration: underline;">Owner / Direksi</div>
+                <div style="font-size: 8px; color: #64748b;">Istana Laundry ERP</div>
             </td>
         </tr>
     </table>

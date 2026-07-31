@@ -4,15 +4,15 @@ namespace App\Exports;
 
 use Illuminate\Contracts\View\View;
 use Maatwebsite\Excel\Concerns\FromView;
-use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithEvents;
 use Maatwebsite\Excel\Concerns\WithStyles;
 use Maatwebsite\Excel\Concerns\WithTitle;
 use Maatwebsite\Excel\Events\AfterSheet;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
-use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
+use PhpOffice\PhpSpreadsheet\Style\Border;
+use PhpOffice\PhpSpreadsheet\Style\Fill;
 
-class GenericViewExport implements FromView, ShouldAutoSize, WithTitle, WithStyles, WithEvents
+class GenericViewExport implements FromView, WithTitle, WithStyles, WithEvents
 {
     protected string $viewName;
 
@@ -52,13 +52,142 @@ class GenericViewExport implements FromView, ShouldAutoSize, WithTitle, WithStyl
                 $highestRow = $sheet->getHighestRow();
                 $highestColumn = $sheet->getHighestColumn();
 
-                if ($highestRow > 0 && ! empty($highestColumn)) {
-                    $cellRange = "A1:{$highestColumn}{$highestRow}";
-                    $sheet->getStyle($cellRange)->getFont()->setName('Calibri');
-                    $sheet->getStyle($cellRange)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
+                if ($highestRow <= 0 || empty($highestColumn)) {
+                    return;
+                }
+
+                // 1. Set global font
+                $fullRange = "A1:{$highestColumn}{$highestRow}";
+                $sheet->getStyle($fullRange)->getFont()->setName('Calibri');
+                $sheet->getStyle($fullRange)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
+
+                // 2. Identify Table Header Row dynamically
+                $headerRow = null;
+                for ($r = 1; $r <= min(15, $highestRow); $r++) {
+                    $valA = mb_strtoupper(trim((string) $sheet->getCell("A{$r}")->getValue()));
+                    $valB = mb_strtoupper(trim((string) $sheet->getCell("B{$r}")->getValue()));
+
+                    if (
+                        str_contains($valA, 'NO') || str_contains($valA, 'KODE') || str_contains($valA, 'SKU') ||
+                        str_contains($valB, 'NAMA') || str_contains($valB, 'NOMOR') || str_contains($valB, 'TANGGAL')
+                    ) {
+                        $headerRow = $r;
+                        break;
+                    }
+                }
+
+                // Fallback to row 5 or 6 if not detected
+                if (! $headerRow) {
+                    $headerRow = $highestRow >= 6 ? 6 : 1;
+                }
+
+                // 3. Style Header Row (Corporate Dark Navy #0F172A with Bold White Text)
+                $headerRange = "A{$headerRow}:{$highestColumn}{$headerRow}";
+                $sheet->getRowDimension($headerRow)->setRowHeight(28);
+                $sheet->getStyle($headerRange)->applyFromArray([
+                    'font' => [
+                        'bold' => true,
+                        'color' => ['rgb' => 'FFFFFF'],
+                        'size' => 10,
+                    ],
+                    'fill' => [
+                        'fillType' => Fill::FILL_SOLID,
+                        'startColor' => ['rgb' => '0F172A'],
+                    ],
+                    'alignment' => [
+                        'vertical' => Alignment::VERTICAL_CENTER,
+                        'wrapText' => true,
+                    ],
+                    'borders' => [
+                        'bottom' => [
+                            'borderStyle' => Border::BORDER_MEDIUM,
+                            'color' => ['rgb' => 'FF6600'],
+                        ],
+                    ],
+                ]);
+
+                // 4. Freeze Panes below table header so table headers stay locked on scroll
+                $sheet->freezePane('A'.($headerRow + 1));
+
+                // 5. Apply AutoFilter on table header
+                try {
+                    $sheet->setAutoFilter("A{$headerRow}:{$highestColumn}{$highestRow}");
+                } catch (\Throwable $e) {
+                    // Ignore if sheet range is invalid for autofilter
+                }
+
+                // 6. Style Data Rows (Zebra striping + Borders + Row Heights + Totals Row)
+                for ($r = $headerRow + 1; $r <= $highestRow; $r++) {
+                    $valA = mb_strtoupper(trim((string) $sheet->getCell("A{$r}")->getValue()));
+                    $valB = mb_strtoupper(trim((string) $sheet->getCell("B{$r}")->getValue()));
+
+                    $isTotalRow = str_contains($valA, 'TOTAL') || str_contains($valA, 'GRAND') ||
+                                  str_contains($valB, 'TOTAL') || str_contains($valB, 'AKUMULASI');
+
+                    if ($isTotalRow) {
+                        $sheet->getRowDimension($r)->setRowHeight(26);
+                        $sheet->getStyle("A{$r}:{$highestColumn}{$r}")->applyFromArray([
+                            'font' => [
+                                'bold' => true,
+                                'color' => ['rgb' => 'C2410C'],
+                                'size' => 10.5,
+                            ],
+                            'fill' => [
+                                'fillType' => Fill::FILL_SOLID,
+                                'startColor' => ['rgb' => 'FFF7ED'],
+                            ],
+                            'borders' => [
+                                'top' => [
+                                    'borderStyle' => Border::BORDER_THIN,
+                                    'color' => ['rgb' => 'EA580C'],
+                                ],
+                                'bottom' => [
+                                    'borderStyle' => Border::BORDER_DOUBLE,
+                                    'color' => ['rgb' => 'EA580C'],
+                                ],
+                            ],
+                        ]);
+                    } else {
+                        $sheet->getRowDimension($r)->setRowHeight(22);
+                        $bg = ($r % 2 === 0) ? 'F8FAFC' : 'FFFFFF';
+                        $sheet->getStyle("A{$r}:{$highestColumn}{$r}")->applyFromArray([
+                            'fill' => [
+                                'fillType' => Fill::FILL_SOLID,
+                                'startColor' => ['rgb' => $bg],
+                            ],
+                            'borders' => [
+                                'allBorders' => [
+                                    'borderStyle' => Border::BORDER_THIN,
+                                    'color' => ['rgb' => 'E2E8F0'],
+                                ],
+                            ],
+                        ]);
+                    }
+                }
+
+                // 7. Lock Column Widths (MINIMUM 20 - 35 units per column so table NEVER shrinks!)
+                $currCol = 'A';
+                while (true) {
+                    $maxLen = 0;
+                    for ($r = 1; $r <= $highestRow; $r++) {
+                        $cellVal = (string) $sheet->getCell("{$currCol}{$r}")->getValue();
+                        $maxLen = max($maxLen, mb_strlen(strip_tags($cellVal)));
+                    }
+
+                    // Enforce a generous locked column width (minimum 20, max 45)
+                    $lockedWidth = min(45, max(20, $maxLen + 4));
+
+                    $sheet->getColumnDimension($currCol)->setAutoSize(false);
+                    $sheet->getColumnDimension($currCol)->setWidth($lockedWidth);
+
+                    if ($currCol === $highestColumn) {
+                        break;
+                    }
+                    $currCol++;
                 }
             },
         ];
     }
 }
+
 

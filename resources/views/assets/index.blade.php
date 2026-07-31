@@ -14,35 +14,102 @@
             });
         }
     }">
+        <!-- Page Header -->
         <x-page-header title="Aset Tetap & Depresiasi (Fixed Assets)" :breadcrumbs="['Aset Tetap' => '/assets']" />
 
         @if (session('success'))
             <x-alert type="success" :message="session('success')" class="mb-2" />
         @endif
 
-        <!-- Executive Stat Cards -->
-        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
-            <x-stat-card title="Total Unit Aset" :value="$assets->total() . ' Unit'" icon="inventory" description="Terdaftar di sistem" />
-            <x-stat-card title="Total Perolehan (Capex)" :value="'Rp ' . number_format($totalCost, 0, ',', '.')" icon="account_balance" description="Harga beli semua aset" />
-            <x-stat-card title="Akumulasi Depresiasi" :value="'Rp ' . number_format($totalDepreciation, 0, ',', '.')" icon="trending_down" trendType="danger" description="Nilai penyusutan terpakai" />
-            <x-stat-card title="Total Nilai Buku" :value="'Rp ' . number_format($totalBookValue, 0, ',', '.')" icon="price_check" trendType="success" description="Nilai ekuitas aset saat ini" />
+        <!-- Executive Stat Cards (Redesigned - Non-truncated, Premium Grid) -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <!-- 1. Total Unit Aset -->
+            <div class="relative overflow-hidden bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 p-4 sm:p-5 rounded-2xl shadow-sm hover:shadow-md transition-all flex items-center justify-between gap-3 select-none">
+                <div class="flex-1 min-w-0">
+                    <span class="text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest block mb-1">
+                        TOTAL UNIT ASET
+                    </span>
+                    <h3 class="text-2xl lg:text-3xl font-black font-display text-slate-900 dark:text-slate-100 leading-tight mb-1">
+                        {{ $assets->total() }} <span class="text-xs font-bold text-slate-500">Unit</span>
+                    </h3>
+                    <span class="text-2xs text-slate-400 font-semibold block">Terdaftar di sistem</span>
+                </div>
+                <div class="w-12 h-12 rounded-2xl bg-orange-500/10 text-primary dark:text-orange-400 flex items-center justify-center shrink-0 border border-orange-500/20">
+                    <span class="material-symbols-outlined text-2xl">inventory_2</span>
+                </div>
+            </div>
+
+            <!-- 2. Total Perolehan (Capex) -->
+            <div class="relative overflow-hidden bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 p-4 sm:p-5 rounded-2xl shadow-sm hover:shadow-md transition-all flex items-center justify-between gap-3 select-none">
+                <div class="flex-1 min-w-0">
+                    <span class="text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest block mb-1">
+                        TOTAL PEROLEHAN (CAPEX)
+                    </span>
+                    <h3 class="text-base sm:text-lg xl:text-xl font-black font-mono text-slate-900 dark:text-slate-100 leading-tight mb-1 tracking-tight">
+                        Rp {{ number_format($totalCost, 0, ',', '.') }}
+                    </h3>
+                    <span class="text-2xs text-slate-400 font-semibold block">Harga perolehan awal</span>
+                </div>
+                <div class="w-12 h-12 rounded-2xl bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0 border border-blue-500/20">
+                    <span class="material-symbols-outlined text-2xl">account_balance</span>
+                </div>
+            </div>
+
+            <!-- 3. Akumulasi Depresiasi -->
+            <div class="relative overflow-hidden bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 p-4 sm:p-5 rounded-2xl shadow-sm hover:shadow-md transition-all flex items-center justify-between gap-3 select-none">
+                <div class="flex-1 min-w-0">
+                    <span class="text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest block mb-1">
+                        AKUMULASI DEPRESIASI
+                    </span>
+                    <h3 class="text-base sm:text-lg xl:text-xl font-black font-mono text-rose-600 dark:text-rose-400 leading-tight mb-1 tracking-tight">
+                        Rp {{ number_format($totalDepreciation, 0, ',', '.') }}
+                    </h3>
+                    <span class="text-2xs text-slate-400 font-semibold block">Nilai penyusutan terpakai</span>
+                </div>
+                <div class="w-12 h-12 rounded-2xl bg-rose-500/10 text-rose-600 dark:text-rose-400 flex items-center justify-center shrink-0 border border-rose-500/20">
+                    <span class="material-symbols-outlined text-2xl">trending_down</span>
+                </div>
+            </div>
+
+            <!-- 4. Total Nilai Buku -->
+            <div class="relative overflow-hidden bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 p-4 sm:p-5 rounded-2xl shadow-sm hover:shadow-md transition-all flex items-center justify-between gap-3 select-none">
+                <div class="flex-1 min-w-0">
+                    <span class="text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest block mb-1">
+                        TOTAL NILAI BUKU
+                    </span>
+                    <h3 class="text-base sm:text-lg xl:text-xl font-black font-mono text-emerald-600 dark:text-emerald-400 leading-tight mb-1 tracking-tight">
+                        Rp {{ number_format($totalBookValue, 0, ',', '.') }}
+                    </h3>
+                    <span class="text-2xs text-slate-400 font-semibold block">Nilai ekuitas aset saat ini</span>
+                </div>
+                <div class="w-12 h-12 rounded-2xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 border border-emerald-500/20">
+                    <span class="material-symbols-outlined text-2xl">price_check</span>
+                </div>
+            </div>
         </div>
 
-        <!-- Sleek Tabpane Navigation Header -->
-        <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 dark:border-slate-800 pb-3">
-            <div class="flex items-center gap-1.5 overflow-x-auto min-w-max p-1 bg-slate-100 dark:bg-slate-900 rounded-2xl">
-                <button type="button" @click="switchTab('catalog')" :class="activeTab === 'catalog' ? 'bg-primary text-white shadow-md shadow-primary/20 scale-[1.02]' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'" class="px-4 py-2 rounded-xl font-bold text-xs flex items-center gap-2 transition-all cursor-pointer">
+        <!-- Sleek Control Toolbar Card (Tabs + Filters + Action Buttons) -->
+        <div class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 p-3 sm:p-4 rounded-2xl shadow-sm flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
+            <!-- Left: Tabs -->
+            <div class="flex items-center gap-1.5 overflow-x-auto min-w-max p-1 bg-slate-100 dark:bg-slate-950 rounded-xl">
+                <button type="button" @click="switchTab('catalog')"
+                        :class="activeTab === 'catalog' ? 'bg-primary text-white shadow-md shadow-orange-500/20 scale-[1.01]' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'"
+                        class="px-3.5 py-2 rounded-lg font-bold text-xs flex items-center gap-2 transition-all cursor-pointer">
                     <span class="material-symbols-outlined text-base">inventory_2</span>
                     <span>Katalog & Daftar Aset</span>
                     <span class="px-2 py-0.5 rounded-full text-[10px] font-black" :class="activeTab === 'catalog' ? 'bg-white/20 text-white' : 'bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300'">{{ $assets->total() }}</span>
                 </button>
 
-                <button type="button" @click="switchTab('depreciation')" :class="activeTab === 'depreciation' ? 'bg-primary text-white shadow-md shadow-primary/20 scale-[1.02]' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'" class="px-4 py-2 rounded-xl font-bold text-xs flex items-center gap-2 transition-all cursor-pointer">
+                <button type="button" @click="switchTab('depreciation')"
+                        :class="activeTab === 'depreciation' ? 'bg-primary text-white shadow-md shadow-orange-500/20 scale-[1.01]' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'"
+                        class="px-3.5 py-2 rounded-lg font-bold text-xs flex items-center gap-2 transition-all cursor-pointer">
                     <span class="material-symbols-outlined text-base">show_chart</span>
                     <span>Grafik Depresiasi</span>
                 </button>
 
-                <button type="button" @click="switchTab('maintenance')" :class="activeTab === 'maintenance' ? 'bg-primary text-white shadow-md shadow-primary/20 scale-[1.02]' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'" class="px-4 py-2 rounded-xl font-bold text-xs flex items-center gap-2 transition-all cursor-pointer">
+                <button type="button" @click="switchTab('maintenance')"
+                        :class="activeTab === 'maintenance' ? 'bg-primary text-white shadow-md shadow-orange-500/20 scale-[1.01]' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'"
+                        class="px-3.5 py-2 rounded-lg font-bold text-xs flex items-center gap-2 transition-all cursor-pointer">
                     <span class="material-symbols-outlined text-base">build</span>
                     <span>Maintenance & Servis</span>
                     @if($urgentMaintenanceAssets->count() > 0)
@@ -50,17 +117,19 @@
                     @endif
                 </button>
 
-                <button type="button" @click="switchTab('analytics')" :class="activeTab === 'analytics' ? 'bg-primary text-white shadow-md shadow-primary/20 scale-[1.02]' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'" class="px-4 py-2 rounded-xl font-bold text-xs flex items-center gap-2 transition-all cursor-pointer">
+                <button type="button" @click="switchTab('analytics')"
+                        :class="activeTab === 'analytics' ? 'bg-primary text-white shadow-md shadow-orange-500/20 scale-[1.01]' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'"
+                        class="px-3.5 py-2 rounded-lg font-bold text-xs flex items-center gap-2 transition-all cursor-pointer">
                     <span class="material-symbols-outlined text-base">pie_chart</span>
                     <span>Portfolio & Analytics</span>
                 </button>
             </div>
 
-            <!-- Tab Context Action Buttons -->
-            <div class="flex items-center gap-2">
+            <!-- Right: Branch Filter & Action Buttons -->
+            <div class="flex flex-wrap items-center gap-2 shrink-0">
                 @if(auth()->user()->hasAnyRole(['Developer', 'Owner', 'Super_Admin', 'Finance']))
                     <form method="GET" action="{{ route('assets.index') }}" class="flex items-center gap-2">
-                        <select name="branch_id" onchange="this.form.submit()" class="h-9 text-xs rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 font-semibold px-2">
+                        <select name="branch_id" onchange="this.form.submit()" class="h-9 text-xs rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 font-bold px-3 text-slate-700 dark:text-slate-200 outline-none focus:border-primary">
                             <option value="">Semua Cabang</option>
                             @foreach($branches as $b)
                                 <option value="{{ $b->id }}" {{ request('branch_id') == $b->id ? 'selected' : '' }}>Cabang {{ $b->name }}</option>
@@ -69,21 +138,19 @@
                     </form>
                 @endif
 
-                <div class="flex items-center gap-1">
-                    <a href="{{ route('assets.export.pdf', ['branch_id' => request('branch_id')]) }}" target="_blank"
-                       class="btn-touch px-3 py-2 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-xl flex items-center gap-1 shadow-sm cursor-pointer transition-colors"
-                       title="Unduh PDF Resmi">
-                        <span class="material-symbols-outlined text-sm">picture_as_pdf</span> PDF
-                    </a>
-                    <a href="{{ route('assets.export.xlsx', ['branch_id' => request('branch_id')]) }}" 
-                       class="btn-touch px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl flex items-center gap-1 shadow-sm cursor-pointer transition-colors"
-                       title="Ekspor Excel Spreadsheet">
-                        <span class="material-symbols-outlined text-sm">table_chart</span> Excel
-                    </a>
-                    <button type="button" @click="showAddAsset = true" class="btn-touch px-3.5 py-2 bg-primary hover:bg-primary-hover text-white text-xs font-bold rounded-xl flex items-center gap-1 shadow-sm cursor-pointer ml-1">
-                        <span class="material-symbols-outlined text-sm">add_home_work</span> Tambah Aset
-                    </button>
-                </div>
+                <a href="{{ route('assets.export.pdf', ['branch_id' => request('branch_id')]) }}" target="_blank"
+                   class="h-9 px-3 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-xl flex items-center gap-1.5 shadow-xs cursor-pointer transition-colors"
+                   title="Unduh PDF Resmi">
+                    <span class="material-symbols-outlined text-base">picture_as_pdf</span> Unduh PDF
+                </a>
+                <a href="{{ route('assets.export.xlsx', ['branch_id' => request('branch_id')]) }}" 
+                   class="h-9 px-3 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl flex items-center gap-1.5 shadow-xs cursor-pointer transition-colors"
+                   title="Ekspor Excel Spreadsheet">
+                    <span class="material-symbols-outlined text-base">table_chart</span> Ekspor XLSX
+                </a>
+                <button type="button" @click="showAddAsset = true" class="h-9 px-4 bg-primary hover:bg-orange-600 text-white text-xs font-bold rounded-xl flex items-center gap-1.5 shadow-md shadow-orange-500/10 cursor-pointer transition-all active:scale-[0.98]">
+                    <span class="material-symbols-outlined text-base">add_home_work</span> Tambah Aset
+                </button>
             </div>
         </div>
 
@@ -94,24 +161,24 @@
                     <table class="w-full text-left text-xs border-collapse">
                         <thead>
                             <tr class="border-b border-slate-100 dark:border-slate-800 text-slate-400 font-bold uppercase tracking-wider">
-                                <th class="py-2.5 px-3">Kode / Nama Aset</th>
-                                <th class="py-2.5 px-3">Kategori & Cabang</th>
-                                <th class="py-2.5 px-3">Tgl Beli & Usia</th>
-                                <th class="py-2.5 px-3 text-center">Kondisi Fisik</th>
-                                <th class="py-2.5 px-3 text-right">Harga Beli</th>
-                                <th class="py-2.5 px-3 text-right">Penyusutan</th>
-                                <th class="py-2.5 px-3 text-right">Nilai Buku</th>
-                                <th class="py-2.5 px-3 text-center">Aksi</th>
+                                <th class="py-3 px-4">Kode / Nama Aset</th>
+                                <th class="py-3 px-4">Kategori & Cabang</th>
+                                <th class="py-3 px-4">Tgl Beli & Usia</th>
+                                <th class="py-3 px-4 text-center">Kondisi Fisik</th>
+                                <th class="py-3 px-4 text-right">Harga Beli</th>
+                                <th class="py-3 px-4 text-right">Penyusutan</th>
+                                <th class="py-3 px-4 text-right">Nilai Buku</th>
+                                <th class="py-3 px-4 text-center">Aksi</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-50 dark:divide-slate-850">
                             @forelse($assets as $ast)
                                 @php
                                     $conditionColor = match($ast->condition ?? 'good') {
-                                        'good' => 'text-emerald-600 bg-emerald-50 dark:bg-emerald-950/20 border-emerald-100',
-                                        'fair' => 'text-amber-600 bg-amber-50 dark:bg-amber-950/20 border-amber-100',
-                                        'poor' => 'text-rose-600 bg-rose-50 dark:bg-rose-950/20 border-rose-100',
-                                        'scrapped' => 'text-slate-500 bg-slate-100 dark:bg-slate-800 border-slate-200',
+                                        'good' => 'text-emerald-600 bg-emerald-50 dark:bg-emerald-950/20 border-emerald-200/60 dark:border-emerald-800/50',
+                                        'fair' => 'text-amber-600 bg-amber-50 dark:bg-amber-950/20 border-amber-200/60 dark:border-amber-800/50',
+                                        'poor' => 'text-rose-600 bg-rose-50 dark:bg-rose-950/20 border-rose-200/60 dark:border-rose-800/50',
+                                        'scrapped' => 'text-slate-500 bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700',
                                         default => 'text-emerald-600 bg-emerald-50',
                                     };
                                     $conditionLabel = match($ast->condition ?? 'good') {
@@ -124,34 +191,34 @@
                                     $ageMonths = $ast->age_in_months;
                                     $depProgress = min(100, $ast->depreciation_progress);
                                 @endphp
-                                <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-900/30">
-                                    <td class="py-3 px-3">
-                                        <span class="font-bold text-slate-800 dark:text-slate-200 block">{{ $ast->name }}</span>
+                                <tr class="hover:bg-slate-50/60 dark:hover:bg-slate-900/40 transition-colors">
+                                    <td class="py-3.5 px-4">
+                                        <span class="font-bold text-slate-800 dark:text-slate-200 block text-xs">{{ $ast->name }}</span>
                                         <span class="text-2xs text-slate-400 font-mono">Kode: {{ $ast->asset_code }}</span>
                                         @if($ast->serial_number)
                                             <span class="text-2xs text-slate-400 block font-mono">SN: {{ $ast->serial_number }}</span>
                                         @endif
                                     </td>
-                                    <td class="py-3 px-3">
+                                    <td class="py-3.5 px-4">
                                         <span class="block text-slate-700 dark:text-slate-300 font-bold text-2xs">{{ $ast->category }}</span>
                                         <span class="text-2xs text-primary font-semibold flex items-center gap-0.5 mt-0.5">
                                             <span class="material-symbols-outlined text-xs">store</span>
                                             Cabang {{ $ast->branch?->name ?? 'Konsolidasi' }}
                                         </span>
                                     </td>
-                                    <td class="py-3 px-3 text-slate-500">
+                                    <td class="py-3.5 px-4 text-slate-500">
                                         <span class="block font-bold text-slate-700 dark:text-slate-300">{{ $ast->acquisition_date?->format('d/m/Y') }}</span>
                                         <span class="text-2xs text-slate-400">{{ $ageMonths }} bulan ({{ $ast->useful_life_months }} bln max)</span>
                                     </td>
-                                    <td class="py-3 px-3 text-center">
+                                    <td class="py-3.5 px-4 text-center">
                                         <span class="px-2.5 py-1 rounded-full text-2xs font-extrabold border {{ $conditionColor }}">
                                             {{ $conditionLabel }}
                                         </span>
                                     </td>
-                                    <td class="py-3 px-3 text-right font-mono font-bold text-slate-800 dark:text-slate-200">
+                                    <td class="py-3.5 px-4 text-right font-mono font-bold text-slate-800 dark:text-slate-200">
                                         Rp {{ number_format($ast->acquisition_cost, 0, ',', '.') }}
                                     </td>
-                                    <td class="py-3 px-3 text-right">
+                                    <td class="py-3.5 px-4 text-right">
                                         <span class="block font-mono text-rose-600 font-bold">
                                             Rp {{ number_format($ast->accumulated_depreciation, 0, ',', '.') }}
                                         </span>
@@ -160,11 +227,11 @@
                                         </div>
                                         <span class="text-[10px] text-slate-400 font-mono">{{ $depProgress }}% tersusut</span>
                                     </td>
-                                    <td class="py-3 px-3 text-right font-mono font-black text-emerald-600">
+                                    <td class="py-3.5 px-4 text-right font-mono font-black text-emerald-600 dark:text-emerald-400">
                                         Rp {{ number_format($ast->book_value, 0, ',', '.') }}
                                     </td>
-                                    <td class="py-3 px-3 text-center">
-                                        <div class="flex items-center justify-center gap-1">
+                                    <td class="py-3.5 px-4 text-center">
+                                        <div class="flex items-center justify-center gap-1.5">
                                             <a href="{{ route('assets.show', $ast->id) }}" class="p-1.5 rounded-lg bg-orange-50 text-primary dark:bg-slate-800 hover:bg-orange-100 transition-colors" title="Jadwal Depresiasi & Detail">
                                                 <span class="material-symbols-outlined text-base">calendar_month</span>
                                             </a>
@@ -256,22 +323,22 @@
         <div x-show="activeTab === 'maintenance'" class="space-y-4" x-cloak>
             <!-- Maintenance Metrics Bar -->
             <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                <div class="p-3.5 bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm space-y-1">
+                <div class="p-4 bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm space-y-1">
                     <span class="text-2xs font-bold text-slate-400 uppercase">Jatuh Tempo Urgent</span>
                     <p class="text-2xl font-black text-rose-600 font-mono">{{ $urgentMaintenanceAssets->count() }} Aset</p>
                     <p class="text-2xs text-slate-500">Perlu perbaikan / lewat tanggal</p>
                 </div>
-                <div class="p-3.5 bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm space-y-1">
+                <div class="p-4 bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm space-y-1">
                     <span class="text-2xs font-bold text-slate-400 uppercase">Servis 30 Hari Kedepan</span>
                     <p class="text-2xl font-black text-amber-600 font-mono">{{ $maintenanceUpcoming30Days->count() }} Aset</p>
                     <p class="text-2xs text-slate-500">Jadwal pemeliharaan rutin</p>
                 </div>
-                <div class="p-3.5 bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm space-y-1">
+                <div class="p-4 bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm space-y-1">
                     <span class="text-2xs font-bold text-slate-400 uppercase">Kondisi Baik</span>
                     <p class="text-2xl font-black text-emerald-600 font-mono">{{ $conditionCounts['good'] }} Unit</p>
                     <p class="text-2xs text-slate-500">Siap operasional 100%</p>
                 </div>
-                <div class="p-3.5 bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm space-y-1">
+                <div class="p-4 bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm space-y-1">
                     <span class="text-2xs font-bold text-slate-400 uppercase">Sudah Afkir</span>
                     <p class="text-2xl font-black text-slate-500 font-mono">{{ $conditionCounts['scrapped'] }} Unit</p>
                     <p class="text-2xs text-slate-500">Tidak berfungsi</p>
