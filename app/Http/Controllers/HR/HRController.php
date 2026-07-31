@@ -36,10 +36,25 @@ class HRController extends Controller
 
         $branches = Branch::orderBy('name')->get();
 
-        $employees = Employee::with('branch')
+        $employees = Employee::with(['branch', 'user.roles', 'attendances'])
             ->when($branchId, fn ($q) => $q->where('branch_id', $branchId))
             ->orderBy('name')
             ->paginate(15);
+
+        // Fetch unlinked users for account linking modal
+        $unlinkedUsers = User::doesntHave('employee')
+            ->orderBy('name')
+            ->get();
+
+        // Roles for account creation modal
+        $roles = \Spatie\Permission\Models\Role::orderBy('name')->get();
+
+        // Recent Attendances for Sesi Kerja & Presensi tab
+        $attendances = Attendance::with('employee.branch')
+            ->whereMonth('date', now()->month)
+            ->whereYear('date', now()->year)
+            ->orderByDesc('date')
+            ->paginate(20, ['*'], 'att_page');
 
         // withoutBranchScope prevents global scope from hiding payrolls
         // when a non-scoped user (Owner/Developer) accesses /hr without session branch scope.
@@ -50,7 +65,7 @@ class HRController extends Controller
             ->orderByDesc('month')
             ->get();
 
-        return view('hr.index', compact('employees', 'payrolls', 'branches', 'branchId'));
+        return view('hr.index', compact('employees', 'payrolls', 'branches', 'branchId', 'unlinkedUsers', 'roles', 'attendances'));
     }
 
     public function storeEmployee(Request $request)
@@ -68,9 +83,29 @@ class HRController extends Controller
             'bank_name' => 'nullable|string|max:50',
             'bank_account_number' => 'nullable|string|max:50',
             'bank_account_holder' => 'nullable|string|max:100',
+            'create_account' => 'nullable|boolean',
+            'email' => 'required_if:create_account,1|nullable|email|unique:users,email',
+            'password' => 'required_if:create_account,1|nullable|string|min:8',
+            'role' => 'required_if:create_account,1|nullable|exists:roles,name',
         ]);
 
+        $userId = null;
+        if ($request->boolean('create_account') && $request->email && $request->password) {
+            $user = User::create([
+                'name' => $request->name,
+                'email' => $request->email,
+                'password' => \Illuminate\Support\Facades\Hash::make($request->password),
+                'branch_id' => $request->branch_id,
+                'is_active' => true,
+            ]);
+            if ($request->role) {
+                $user->assignRole($request->role);
+            }
+            $userId = $user->id;
+        }
+
         Employee::create([
+            'user_id' => $userId,
             'nik' => $request->nik,
             'name' => $request->name,
             'position' => $request->position,
@@ -87,7 +122,7 @@ class HRController extends Controller
             'joined_at' => now(),
         ]);
 
-        return redirect()->route('hr.index')->with('success', 'Karyawan baru berhasil ditambahkan!');
+        return redirect()->route('hr.index')->with('success', 'Karyawan baru berhasil ditambahkan' . ($userId ? ' dan akun login berhasil dibuat!' : '!'));
     }
 
     public function updateEmployee(Request $request, Employee $employee)
@@ -105,6 +140,7 @@ class HRController extends Controller
             'bank_name' => 'nullable|string|max:50',
             'bank_account_number' => 'nullable|string|max:50',
             'bank_account_holder' => 'nullable|string|max:100',
+            'is_active' => 'nullable|boolean',
         ]);
 
         $employee->update([
@@ -120,9 +156,101 @@ class HRController extends Controller
             'bank_name' => $request->bank_name,
             'bank_account_number' => $request->bank_account_number,
             'bank_account_holder' => $request->bank_account_holder,
+            'is_active' => $request->has('is_active') ? $request->boolean('is_active') : $employee->is_active,
         ]);
 
-        return redirect()->route('hr.index')->with('success', 'Data karyawan berhasil diperbarui!');
+        // Sync with linked user if present
+        if ($employee->user) {
+            $employee->user->update([
+                'name' => $request->name,
+                'branch_id' => $request->branch_id,
+                'is_active' => $employee->is_active,
+            ]);
+        }
+
+        return redirect()->route('hr.index')->with('success', 'Data karyawan & akun terhubung berhasil diperbarui!');
+    }
+
+    public function createAccountForEmployee(Request $request, Employee $employee)
+    {
+        $request->validate([
+            'email' => 'required|email|unique:users,email',
+            'password' => 'required|string|min:8',
+            'role' => 'required|exists:roles,name',
+        ]);
+
+        if ($employee->user_id) {
+            return redirect()->back()->with('error', 'Karyawan ini sudah memiliki akun login terhubung!');
+        }
+
+        $user = User::create([
+            'name' => $employee->name,
+            'email' => $request->email,
+            'password' => \Illuminate\Support\Facades\Hash::make($request->password),
+            'branch_id' => $employee->branch_id,
+            'is_active' => $employee->is_active,
+        ]);
+
+        $user->assignRole($request->role);
+        $employee->update(['user_id' => $user->id]);
+
+        return redirect()->back()->with('success', "Akun login untuk {$employee->name} ({$request->email}) berhasil dibuat dan dihubungkan!");
+    }
+
+    public function linkAccountForEmployee(Request $request, Employee $employee)
+    {
+        $request->validate([
+            'user_id' => 'required|exists:users,id',
+        ]);
+
+        $user = User::findOrFail($request->user_id);
+        $employee->update(['user_id' => $user->id]);
+
+        return redirect()->back()->with('success', "Profil karyawan {$employee->name} berhasil dihubungkan dengan akun pengguna {$user->email}.");
+    }
+
+    public function resetEmployeePassword(Request $request, Employee $employee)
+    {
+        $request->validate([
+            'password' => 'required|string|min:8|confirmed',
+        ]);
+
+        if (! $employee->user) {
+            return redirect()->back()->with('error', 'Karyawan ini belum memiliki akun login terhubung.');
+        }
+
+        $employee->user->update([
+            'password' => \Illuminate\Support\Facades\Hash::make($request->password),
+        ]);
+
+        return redirect()->back()->with('success', "Password untuk akun {$employee->user->email} ({$employee->name}) berhasil di-reset!");
+    }
+
+    public function storeAttendance(Request $request)
+    {
+        $request->validate([
+            'employee_id' => 'required|exists:employees,id',
+            'date' => 'required|date',
+            'status' => 'required|in:hadir,terlambat,izin,alpa,present,late,absent',
+            'check_in' => 'nullable|string',
+            'check_out' => 'nullable|string',
+            'notes' => 'nullable|string|max:500',
+        ]);
+
+        Attendance::updateOrCreate(
+            [
+                'employee_id' => $request->employee_id,
+                'date' => $request->date,
+            ],
+            [
+                'status' => $request->status,
+                'check_in' => $request->check_in,
+                'check_out' => $request->check_out,
+                'notes' => $request->notes,
+            ]
+        );
+
+        return redirect()->back()->with('success', 'Pencatatan sesi kerja & presensi staf berhasil disimpan!');
     }
 
     public function storePayroll(Request $request)

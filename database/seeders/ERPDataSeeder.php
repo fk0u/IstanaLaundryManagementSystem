@@ -141,6 +141,26 @@ class ERPDataSeeder extends Seeder
             }
         }
 
+        // 5. Seed Attendance (Work Sessions & Presensi) for recent days
+        $allEmployees = Employee::withoutGlobalScopes()->get();
+        foreach ($allEmployees as $emp) {
+            for ($i = 0; $i < 15; $i++) {
+                $date = now()->subDays($i);
+                if ($date->isSunday()) {
+                    continue;
+                }
+                \App\Models\Attendance::firstOrCreate(
+                    ['employee_id' => $emp->id, 'date' => $date->toDateString()],
+                    [
+                        'status' => $i % 7 === 0 ? 'terlambat' : 'hadir',
+                        'check_in' => $i % 7 === 0 ? '08:45:00' : '07:55:00',
+                        'check_out' => '17:05:00',
+                        'notes' => $i % 7 === 0 ? 'Terlambat 45 menit karena macet' : 'Presensi Sesi Kerja Reguler',
+                    ]
+                );
+            }
+        }
+
         // 5. Seed Fixed Assets
         foreach ($branches as $branch) {
             FixedAsset::firstOrCreate(

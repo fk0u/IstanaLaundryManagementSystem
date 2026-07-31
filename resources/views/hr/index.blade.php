@@ -2,11 +2,16 @@
     <div class="flex flex-col gap-4 md:gap-6" x-data="{
         showAddEmployee: false,
         showAddPayroll: false,
+        showAddAttendance: false,
         activeEditEmployee: null,
+        activeCreateAccountEmp: null,
+        activeLinkAccountEmp: null,
+        activeResetPasswordEmp: null,
         selectedPayrollBranch: 'all',
         scopedBranchId: @js(session('scoped_branch_id')),
         activeEditItem: @js(request('edit_item') ? (int) request('edit_item') : null),
         activeDeletePayroll: null,
+        createAccountChecked: false,
     }">
         <x-page-header title="HR & Penggajian (Payroll)" :breadcrumbs="['HR & Payroll' => '/hr']" />
 
@@ -19,9 +24,12 @@
 
         <!-- Action Bar -->
         <div class="flex flex-wrap items-center justify-between gap-3">
-            <div class="flex gap-2">
+            <div class="flex flex-wrap gap-2">
                 <button type="button" @click="showAddEmployee = true" class="btn-touch px-4 py-2 bg-primary hover:bg-primary-hover text-white text-xs font-bold rounded-xl flex items-center gap-1.5 shadow-sm">
                     <span class="material-symbols-outlined text-base">person_add</span> Tambah Karyawan Baru
+                </button>
+                <button type="button" @click="showAddAttendance = true" class="btn-touch px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl flex items-center gap-1.5 shadow-sm">
+                    <span class="material-symbols-outlined text-base">how_to_reg</span> Catat Presensi / Sesi Kerja
                 </button>
                 <button type="button" @click="showAddPayroll = true" class="btn-touch px-4 py-2 bg-slate-900 dark:bg-slate-800 text-white text-xs font-bold rounded-xl flex items-center gap-1.5 shadow-sm">
                     <span class="material-symbols-outlined text-base">payments</span> Generate Payroll Periode
@@ -38,6 +46,7 @@
                             <thead>
                                 <tr class="border-b border-slate-100 dark:border-slate-800 text-slate-400 font-bold uppercase tracking-wider">
                                     <th class="py-2.5 px-3">NIK / Nama Staf</th>
+                                    <th class="py-2.5 px-3">Akun Login & Status</th>
                                     <th class="py-2.5 px-3">Jabatan & Cabang</th>
                                     <th class="py-2.5 px-3">Kontak & Usia</th>
                                     <th class="py-2.5 px-3">Rekening Bank</th>
@@ -51,6 +60,25 @@
                                         <td class="py-3 px-3">
                                             <span class="font-bold text-slate-800 dark:text-slate-200 block">{{ $emp->name }}</span>
                                             <span class="text-2xs text-slate-400 font-mono">NIK: {{ $emp->nik }}</span>
+                                        </td>
+                                        <td class="py-3 px-3">
+                                            @if($emp->user)
+                                                <div class="space-y-1">
+                                                    <span class="font-bold text-2xs text-slate-700 dark:text-slate-200 block">{{ $emp->user->email }}</span>
+                                                    <div class="flex items-center gap-1 flex-wrap">
+                                                        <span class="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-black bg-blue-100 text-blue-800 dark:bg-blue-950/40 dark:text-blue-400">
+                                                            {{ $emp->user->roles->first()?->name ?? 'Staf' }}
+                                                        </span>
+                                                        <span class="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-black bg-emerald-100 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-400">
+                                                            <span class="material-symbols-outlined text-[10px]">check_circle</span> Aktif
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            @else
+                                                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-2xs font-bold bg-amber-100 text-amber-800 dark:bg-amber-950/40 dark:text-amber-400">
+                                                    <span class="material-symbols-outlined text-xs">no_accounts</span> Belum Ada Akun
+                                                </span>
+                                            @endif
                                         </td>
                                         <td class="py-3 px-3">
                                             <span class="font-bold text-xs text-primary block">{{ $emp->position }}</span>
@@ -75,14 +103,30 @@
                                             Rp {{ number_format($emp->base_salary, 0, ',', '.') }}
                                         </td>
                                         <td class="py-3 px-3 text-center">
-                                            <button type="button" @click="activeEditEmployee = @js($emp)" class="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 hover:text-primary hover:bg-orange-50 transition-colors" title="Edit Staf">
-                                                <span class="material-symbols-outlined text-base">edit</span>
-                                            </button>
+                                            <div class="flex items-center justify-center gap-1">
+                                                <button type="button" @click="activeEditEmployee = @js($emp)" class="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 hover:text-primary hover:bg-orange-50 transition-colors" title="Edit Staf & Gaji">
+                                                    <span class="material-symbols-outlined text-base">edit</span>
+                                                </button>
+                                                @if($emp->user)
+                                                    <button type="button" @click="activeResetPasswordEmp = @js($emp)" class="p-1.5 rounded-lg bg-amber-50 dark:bg-amber-950/30 text-amber-700 hover:bg-amber-100 transition-colors" title="Reset Password Akun">
+                                                        <span class="material-symbols-outlined text-base">key</span>
+                                                    </button>
+                                                @else
+                                                    <button type="button" @click="activeCreateAccountEmp = @js($emp)" class="p-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 hover:bg-emerald-100 transition-colors" title="Buat Akun Login Baru">
+                                                        <span class="material-symbols-outlined text-base">person_add</span>
+                                                    </button>
+                                                    @if($unlinkedUsers->count() > 0)
+                                                        <button type="button" @click="activeLinkAccountEmp = @js($emp)" class="p-1.5 rounded-lg bg-blue-50 dark:bg-blue-950/30 text-blue-700 hover:bg-blue-100 transition-colors" title="Tautkan ke Akun Pengguna Terdaftar">
+                                                            <span class="material-symbols-outlined text-base">link</span>
+                                                        </button>
+                                                    @endif
+                                                @endif
+                                            </div>
                                         </td>
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="6" class="py-8 text-center text-slate-400">Belum ada karyawan terdaftar.</td>
+                                        <td colspan="7" class="py-8 text-center text-slate-400">Belum ada karyawan terdaftar.</td>
                                     </tr>
                                 @endforelse
                             </tbody>
@@ -175,6 +219,87 @@
                 </x-card>
             </div>
         </div>
+
+        <!-- Sesi Kerja & Presensi Staf Card -->
+        <x-card title="Sesi Kerja & Presensi Staf Karyawan">
+            <div class="space-y-4">
+                <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-800 pb-3">
+                    <div class="flex items-center gap-2">
+                        <span class="material-symbols-outlined text-emerald-600 text-xl">how_to_reg</span>
+                        <span class="text-xs font-bold text-slate-800 dark:text-slate-200">Riwayat Presensi & Log Jam Kerja Bulan Ini</span>
+                    </div>
+                    <button type="button" @click="showAddAttendance = true" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-colors shadow-sm">
+                        <span class="material-symbols-outlined text-base">add</span> Input Log Sesi Kerja
+                    </button>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-xs border-collapse">
+                        <thead>
+                            <tr class="border-b border-slate-100 dark:border-slate-800 text-slate-400 font-bold uppercase tracking-wider">
+                                <th class="py-2.5 px-3">Tanggal</th>
+                                <th class="py-2.5 px-3">Nama Karyawan</th>
+                                <th class="py-2.5 px-3">Cabang</th>
+                                <th class="py-2.5 px-3">Jam Masuk / Keluar</th>
+                                <th class="py-2.5 px-3">Status Presensi</th>
+                                <th class="py-2.5 px-3">Catatan / Keterangan</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-50 dark:divide-slate-850">
+                            @forelse($attendances as $att)
+                                <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-900/30">
+                                    <td class="py-2.5 px-3 font-bold text-slate-800 dark:text-slate-200">
+                                        {{ $att->date ? $att->date->format('d/m/Y') : '-' }}
+                                    </td>
+                                    <td class="py-2.5 px-3">
+                                        <span class="font-bold text-slate-800 dark:text-slate-200 block">{{ $att->employee?->name ?? '-' }}</span>
+                                        <span class="text-2xs text-slate-400 font-mono">NIK: {{ $att->employee?->nik ?? '-' }}</span>
+                                    </td>
+                                    <td class="py-2.5 px-3 font-medium text-slate-600 dark:text-slate-400">
+                                        {{ $att->employee?->branch?->name ?? '-' }}
+                                    </td>
+                                    <td class="py-2.5 px-3 font-mono font-bold text-slate-700 dark:text-slate-300">
+                                        {{ $att->check_in ? date('H:i', strtotime($att->check_in)) : '--:--' }} - {{ $att->check_out ? date('H:i', strtotime($att->check_out)) : '--:--' }}
+                                    </td>
+                                    <td class="py-2.5 px-3">
+                                        @if(in_array($att->status, ['hadir', 'present']))
+                                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-2xs font-extrabold bg-emerald-100 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-400">
+                                                <span class="material-symbols-outlined text-xs">check_circle</span> HADIR
+                                            </span>
+                                        @elseif(in_array($att->status, ['terlambat', 'late']))
+                                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-2xs font-extrabold bg-amber-100 text-amber-800 dark:bg-amber-950/40 dark:text-amber-400">
+                                                <span class="material-symbols-outlined text-xs">schedule</span> TERLAMBAT
+                                            </span>
+                                        @elseif(in_array($att->status, ['izin']))
+                                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-2xs font-extrabold bg-blue-100 text-blue-800 dark:bg-blue-950/40 dark:text-blue-400">
+                                                <span class="material-symbols-outlined text-xs">info</span> IZIN
+                                            </span>
+                                        @else
+                                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-2xs font-extrabold bg-rose-100 text-rose-800 dark:bg-rose-950/40 dark:text-rose-400">
+                                                <span class="material-symbols-outlined text-xs">cancel</span> ALPA
+                                            </span>
+                                        @endif
+                                    </td>
+                                    <td class="py-2.5 px-3 text-slate-500 text-2xs italic">
+                                        {{ $att->notes ?? 'Presensi Sesi Kerja Reguler' }}
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="6" class="py-6 text-center text-slate-400">Belum ada riwayat sesi kerja & presensi staf dicatat bulan ini.</td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+
+                @if($attendances->hasPages())
+                    <div class="mt-2">
+                        {{ $attendances->links() }}
+                    </div>
+                @endif
+            </div>
+        </x-card>
 
         <!-- Add Employee Modal -->
         <div x-show="showAddEmployee" class="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4" x-cloak>
@@ -571,6 +696,175 @@
                 </div>
             @endif
         @endforeach
+
+        <!-- Add Attendance Log Modal -->
+        <div x-show="showAddAttendance" class="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4" x-cloak @keydown.escape.window="showAddAttendance = false">
+            <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-md w-full p-5 shadow-2xl space-y-4">
+                <div class="flex justify-between items-center pb-2 border-b">
+                    <h3 class="font-bold text-sm text-slate-800 dark:text-slate-200">Catat Log Sesi Kerja & Presensi</h3>
+                    <button type="button" @click="showAddAttendance = false" class="text-slate-400"><span class="material-symbols-outlined">close</span></button>
+                </div>
+                <form action="{{ route('hr.attendances.store') }}" method="POST" class="space-y-3">
+                    @csrf
+                    <div>
+                        <label class="text-2xs font-bold text-slate-400 uppercase">Pilih Staf Karyawan</label>
+                        <select name="employee_id" required class="w-full h-9 px-2 rounded-xl border text-xs">
+                            @foreach($employees as $emp)
+                                <option value="{{ $emp->id }}">{{ $emp->name }} ({{ $emp->nik }}) - {{ $emp->position }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="text-2xs font-bold text-slate-400 uppercase">Tanggal Presensi</label>
+                            <input type="date" name="date" value="{{ date('Y-m-d') }}" required class="w-full h-9 px-3 rounded-xl border text-xs font-bold">
+                        </div>
+                        <div>
+                            <label class="text-2xs font-bold text-slate-400 uppercase">Status Kehadiran</label>
+                            <select name="status" required class="w-full h-9 px-2 rounded-xl border text-xs font-bold">
+                                <option value="hadir" selected>HADIR (Tepat Waktu)</option>
+                                <option value="terlambat">TERLAMBAT</option>
+                                <option value="izin">IZIN / SAKIT</option>
+                                <option value="alpa">ALPA (Tanpa Keterangan)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="text-2xs font-bold text-slate-400 uppercase">Jam Masuk (Check-In)</label>
+                            <input type="time" name="check_in" value="08:00" class="w-full h-9 px-3 rounded-xl border text-xs font-mono">
+                        </div>
+                        <div>
+                            <label class="text-2xs font-bold text-slate-400 uppercase">Jam Keluar (Check-Out)</label>
+                            <input type="time" name="check_out" value="17:00" class="w-full h-9 px-3 rounded-xl border text-xs font-mono">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="text-2xs font-bold text-slate-400 uppercase">Catatan / Keterangan Sesi</label>
+                        <input type="text" name="notes" placeholder="Contoh: Terlambat 15 menit karena hujan..." class="w-full h-9 px-3 rounded-xl border text-xs">
+                    </div>
+
+                    <button type="submit" class="btn-touch w-full bg-emerald-600 text-white font-bold text-xs rounded-xl py-2.5 shadow-md">Simpan Log Presensi</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Create Account Modal (Dynamic) -->
+        <template x-if="activeCreateAccountEmp">
+            <div x-show="activeCreateAccountEmp" class="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4" x-cloak @keydown.escape.window="activeCreateAccountEmp = null">
+                <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-md w-full p-5 shadow-2xl space-y-4">
+                    <div class="flex justify-between items-center pb-2 border-b">
+                        <div class="flex items-center gap-2">
+                            <span class="material-symbols-outlined text-emerald-600">person_add</span>
+                            <h3 class="font-bold text-sm text-slate-800 dark:text-slate-200">Buat Akun Login Akses Sistem</h3>
+                        </div>
+                        <button type="button" @click="activeCreateAccountEmp = null" class="text-slate-400"><span class="material-symbols-outlined">close</span></button>
+                    </div>
+
+                    <div class="p-3 bg-slate-50 dark:bg-slate-800 rounded-xl">
+                        <p class="text-xs font-bold text-slate-800 dark:text-slate-200" x-text="activeCreateAccountEmp.name"></p>
+                        <p class="text-2xs text-slate-500" x-text="'NIK: ' + activeCreateAccountEmp.nik + ' • Jabatan: ' + activeCreateAccountEmp.position"></p>
+                    </div>
+
+                    <form :action="'/hr/employees/' + activeCreateAccountEmp.id + '/create-account'" method="POST" class="space-y-3">
+                        @csrf
+                        <div>
+                            <label class="text-2xs font-bold text-slate-400 uppercase">Alamat Email Login</label>
+                            <input type="email" name="email" required placeholder="email@istanalaundry.com" class="w-full h-9 px-3 rounded-xl border text-xs">
+                        </div>
+
+                        <div>
+                            <label class="text-2xs font-bold text-slate-400 uppercase">Password Akses</label>
+                            <input type="password" name="password" required minlength="8" placeholder="Minimal 8 karakter..." class="w-full h-9 px-3 rounded-xl border text-xs">
+                        </div>
+
+                        <div>
+                            <label class="text-2xs font-bold text-slate-400 uppercase">Hak Akses Role Spatie</label>
+                            <select name="role" required class="w-full h-9 px-2 rounded-xl border text-xs font-bold">
+                                @foreach($roles as $r)
+                                    <option value="{{ $r->name }}">{{ $r->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <button type="submit" class="btn-touch w-full bg-primary text-white font-bold text-xs rounded-xl py-2.5 shadow-md">Buat & Hubungkan Akun Login</button>
+                    </form>
+                </div>
+            </div>
+        </template>
+
+        <!-- Link Existing User Account Modal (Dynamic) -->
+        <template x-if="activeLinkAccountEmp">
+            <div x-show="activeLinkAccountEmp" class="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4" x-cloak @keydown.escape.window="activeLinkAccountEmp = null">
+                <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-md w-full p-5 shadow-2xl space-y-4">
+                    <div class="flex justify-between items-center pb-2 border-b">
+                        <div class="flex items-center gap-2">
+                            <span class="material-symbols-outlined text-blue-600">link</span>
+                            <h3 class="font-bold text-sm text-slate-800 dark:text-slate-200">Tautkan ke Akun Terdaftar</h3>
+                        </div>
+                        <button type="button" @click="activeLinkAccountEmp = null" class="text-slate-400"><span class="material-symbols-outlined">close</span></button>
+                    </div>
+
+                    <div class="p-3 bg-slate-50 dark:bg-slate-800 rounded-xl">
+                        <p class="text-xs font-bold text-slate-800 dark:text-slate-200" x-text="activeLinkAccountEmp.name"></p>
+                        <p class="text-2xs text-slate-500" x-text="'NIK: ' + activeLinkAccountEmp.nik"></p>
+                    </div>
+
+                    <form :action="'/hr/employees/' + activeLinkAccountEmp.id + '/link-account'" method="POST" class="space-y-3">
+                        @csrf
+                        <div>
+                            <label class="text-2xs font-bold text-slate-400 uppercase">Pilih Akun Pengguna Terdaftar</label>
+                            <select name="user_id" required class="w-full h-9 px-2 rounded-xl border text-xs font-bold">
+                                @foreach($unlinkedUsers as $uUser)
+                                    <option value="{{ $uUser->id }}">{{ $uUser->name }} ({{ $uUser->email }})</option>
+                                @endforeach
+                            </select>
+                            <p class="text-2xs text-slate-400 mt-1">Hanya menampilkan akun pengguna yang belum terhubung ke profil karyawan mana pun.</p>
+                        </div>
+
+                        <button type="submit" class="btn-touch w-full bg-blue-600 text-white font-bold text-xs rounded-xl py-2.5 shadow-md">Tautkan Akun</button>
+                    </form>
+                </div>
+            </div>
+        </template>
+
+        <!-- Reset Password Modal (Dynamic) -->
+        <template x-if="activeResetPasswordEmp">
+            <div x-show="activeResetPasswordEmp" class="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4" x-cloak @keydown.escape.window="activeResetPasswordEmp = null">
+                <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-md w-full p-5 shadow-2xl space-y-4">
+                    <div class="flex justify-between items-center pb-2 border-b">
+                        <div class="flex items-center gap-2">
+                            <span class="material-symbols-outlined text-amber-600">key</span>
+                            <h3 class="font-bold text-sm text-slate-800 dark:text-slate-200">Reset Password Akun Staf</h3>
+                        </div>
+                        <button type="button" @click="activeResetPasswordEmp = null" class="text-slate-400"><span class="material-symbols-outlined">close</span></button>
+                    </div>
+
+                    <div class="p-3 bg-slate-50 dark:bg-slate-800 rounded-xl">
+                        <p class="text-xs font-bold text-slate-800 dark:text-slate-200" x-text="activeResetPasswordEmp.name"></p>
+                        <p class="text-2xs text-slate-500" x-text="'Email: ' + (activeResetPasswordEmp.user ? activeResetPasswordEmp.user.email : '-')"></p>
+                    </div>
+
+                    <form :action="'/hr/employees/' + activeResetPasswordEmp.id + '/reset-password'" method="POST" class="space-y-3">
+                        @csrf
+                        <div>
+                            <label class="text-2xs font-bold text-slate-400 uppercase">Password Baru</label>
+                            <input type="password" name="password" required minlength="8" placeholder="Minimal 8 karakter..." class="w-full h-9 px-3 rounded-xl border text-xs">
+                        </div>
+
+                        <div>
+                            <label class="text-2xs font-bold text-slate-400 uppercase">Konfirmasi Password Baru</label>
+                            <input type="password" name="password_confirmation" required minlength="8" placeholder="Ulangi password baru..." class="w-full h-9 px-3 rounded-xl border text-xs">
+                        </div>
+
+                        <button type="submit" class="btn-touch w-full bg-amber-600 text-white font-bold text-xs rounded-xl py-2.5 shadow-md">Reset Password Staf</button>
+                    </form>
+                </div>
+            </div>
+        </template>
 
     </div>
 </x-app-layout>

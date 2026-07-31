@@ -172,6 +172,45 @@ class UserSeeder extends Seeder
             if (! $user->hasRole($userData['role'])) {
                 $user->assignRole($userData['role']);
             }
+
+            // Position mapping based on Spatie role
+            $positionName = match ($userData['role']) {
+                'Cashier' => 'Kasir Utama',
+                'Workshop_Staff' => 'Operator Workshop',
+                'Workshop_Admin' => 'Admin Workshop',
+                'Branch_Admin' => 'Admin Cabang',
+                'Finance' => 'Staf Keuangan',
+                'CS_Marketing' => 'Staf CS & Marketing',
+                'Super_Admin' => 'Super Administrator',
+                'Owner' => 'Pemilik Utama',
+                'Developer' => 'Developer Sistem',
+                default => 'Staf Operational',
+            };
+
+            $branchId = $userData['branch_id'] ?? $branchWjk->id;
+
+            \App\Models\Employee::withoutGlobalScopes()->updateOrCreate(
+                ['user_id' => $user->id],
+                [
+                    'nik' => 'NIK-STF-'.str_pad($user->id, 4, '0', STR_PAD_LEFT),
+                    'name' => $user->name,
+                    'position' => $positionName,
+                    'branch_id' => $branchId,
+                    'base_salary' => match ($userData['role']) {
+                        'Developer', 'Owner' => 15000000.00,
+                        'Super_Admin', 'Finance' => 8000000.00,
+                        'Branch_Admin', 'Workshop_Admin' => 5000000.00,
+                        'Cashier' => 3200000.00,
+                        default => 2800000.00,
+                    },
+                    'phone' => '0812'.rand(10000000, 99999999),
+                    'bank_name' => 'Bank BCA',
+                    'bank_account_number' => '8830'.rand(100000, 999999),
+                    'bank_account_holder' => $user->name,
+                    'is_active' => true,
+                    'joined_at' => now()->subMonths(rand(3, 24))->toDateString(),
+                ]
+            );
         }
     }
 }

@@ -65,17 +65,22 @@
                             <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-900/30">
                                 <td class="py-3 px-3">
                                     <span class="font-bold text-slate-800 dark:text-slate-200 block">{{ $u->name }}</span>
-                                    <div class="flex items-center gap-1.5 mt-0.5">
+                                    <div class="flex items-center gap-1.5 mt-0.5 flex-wrap">
                                         <span class="text-2xs text-slate-400 font-mono">{{ $u->email }}</span>
                                         @if($u->employee)
                                             <span class="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-sky-50 text-sky-700 dark:bg-sky-950/40 dark:text-sky-400" title="Tersinkronisasi ke HR Employees">
-                                                <span class="material-symbols-outlined text-[12px]">badge</span> {{ $u->employee->nik }}
+                                                <span class="material-symbols-outlined text-[12px]">badge</span> {{ $u->employee->nik }} ({{ $u->employee->position }})
                                             </span>
                                         @endif
                                     </div>
                                 </td>
                                 <td class="py-3 px-3">
                                     <x-badge :type="$roleBadge">{{ $roleName }}</x-badge>
+                                    @if($u->employee)
+                                        <span class="block text-2xs font-mono font-bold text-emerald-600 mt-1">
+                                            Gaji: Rp {{ number_format($u->employee->base_salary, 0, ',', '.') }}
+                                        </span>
+                                    @endif
                                 </td>
                                 <td class="py-3 px-3">
                                     <span class="font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1">
@@ -91,6 +96,9 @@
                                     @endif
                                 </td>
                                 <td class="py-3 px-3 text-right flex items-center justify-end gap-1.5">
+                                    <a href="/hr" class="px-2 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded-lg text-2xs font-bold flex items-center gap-0.5" title="Lihat Profil & Payroll HR">
+                                        <span class="material-symbols-outlined text-xs">payments</span> HR
+                                    </a>
                                     <button type="button" @click="editUser = { id: {{ $u->id }}, name: '{{ addslashes($u->name) }}', email: '{{ addslashes($u->email) }}', branch_id: '{{ $u->branch_id }}', role: '{{ $roleName }}', is_active: {{ $u->is_active ? 1 : 0 }} }" 
                                             class="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-2xs font-bold flex items-center gap-0.5">
                                         <span class="material-symbols-outlined text-xs">edit</span> Edit
