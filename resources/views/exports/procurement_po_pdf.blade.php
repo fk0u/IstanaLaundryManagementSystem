@@ -122,7 +122,7 @@
         <tr>
             <td width="50%" style="vertical-align: middle;">
                 <div class="brand-logo">ISTANA LAUNDRY</div>
-                <div class="brand-sub">ERP & Management System</div>
+                <div class="brand-sub">ERP &amp; Management System</div>
             </td>
             <td width="50%" style="text-align: right; vertical-align: middle;">
                 <div class="doc-title">REKAPITULASI PURCHASE ORDERS</div>
@@ -163,7 +163,7 @@
                 <th width="14%" style="background-color: #1e293b; color: #ffffff;">Nomor PO</th>
                 <th width="10%" style="background-color: #1e293b; color: #ffffff;">Tanggal</th>
                 <th width="18%" style="background-color: #1e293b; color: #ffffff;">Supplier</th>
-                <th width="28%" style="background-color: #1e293b; color: #ffffff;">Rincian Item & Qty</th>
+                <th width="28%" style="background-color: #1e293b; color: #ffffff;">Rincian Item &amp; Qty</th>
                 <th width="13%" style="text-align: right; background-color: #1e293b; color: #ffffff;">Total Nilai (Rp)</th>
                 <th width="12%" style="text-align: center; background-color: #1e293b; color: #ffffff;">Status</th>
             </tr>

@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <title>Laporan SDM & Payroll Karyawan</title>
+    <title>Laporan SDM &amp; Payroll Karyawan</title>
     <style>
         body {
             font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
@@ -120,10 +120,10 @@
         <tr>
             <td width="50%" style="vertical-align: middle;">
                 <div class="brand-logo">ISTANA LAUNDRY</div>
-                <div class="brand-sub">ERP & Management System</div>
+                <div class="brand-sub">ERP &amp; Management System</div>
             </td>
             <td width="50%" style="text-align: right; vertical-align: middle;">
-                <div class="doc-title">REKAPITULASI SDM & KARYAWAN</div>
+                <div class="doc-title">REKAPITULASI SDM &amp; KARYAWAN</div>
                 <div style="font-size: 9px; color: #64748b; margin-top: 3px;">
                     Dicetak Pada: {{ now()->translatedFormat('d F Y H:i') }} WIB
                 </div>
@@ -193,11 +193,11 @@
         </tbody>
         <tfoot>
             <tr class="row-total" style="background-color: #fff7ed; font-weight: bold; color: #c2410c;">
-                <td colspan="5" style="text-align: right; font-weight: bold;">TOTAL BEBAN GAJI POKOK:</td>
-                <td style="text-align: right; font-weight: bold;">
+                <td colspan="5" style="text-align: right; font-weight: bold; background-color: #fff7ed; color: #c2410c;">TOTAL BEBAN GAJI POKOK:</td>
+                <td style="text-align: right; font-weight: bold; background-color: #fff7ed; color: #c2410c;">
                     Rp {{ number_format($employees->sum('base_salary'), 0, ',', '.') }}
                 </td>
-                <td></td>
+                <td style="background-color: #fff7ed;"></td>
             </tr>
         </tfoot>
     </table>

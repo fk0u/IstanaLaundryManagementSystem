@@ -117,7 +117,7 @@
         <tr>
             <td width="50%" style="vertical-align: middle;">
                 <div class="brand-logo">ISTANA LAUNDRY</div>
-                <div class="brand-sub">ERP & Management System</div>
+                <div class="brand-sub">ERP &amp; Management System</div>
             </td>
             <td width="50%" style="text-align: right; vertical-align: middle;">
                 <div class="doc-title">REKAPITULASI PURCHASE REQUESTS</div>
