@@ -476,34 +476,114 @@
 
         <!-- Add Payroll Modal -->
         <div x-show="showAddPayroll" class="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4" x-cloak>
-            <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-md w-full p-5 shadow-2xl space-y-4">
+            <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-lg w-full p-5 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
                 <div class="flex justify-between items-center pb-2 border-b">
-                    <h3 class="font-bold text-sm text-slate-800 dark:text-slate-200">Generate Payroll Periode</h3>
+                    <div class="flex items-center gap-2">
+                        <span class="material-symbols-outlined text-primary">payments</span>
+                        <h3 class="font-bold text-sm text-slate-800 dark:text-slate-200">Generate & Konfigurasi Komponen Payroll</h3>
+                    </div>
                     <button type="button" @click="showAddPayroll = false" class="text-slate-400"><span class="material-symbols-outlined">close</span></button>
                 </div>
-                <form action="{{ route('hr.payrolls.store') }}" method="POST" class="space-y-3">
+                <form action="{{ route('hr.payrolls.store') }}" method="POST" class="space-y-4">
                     @csrf
-                    <div>
-                        <label class="text-2xs font-bold text-slate-400 uppercase">Bulan</label>
-                        <select name="month" required class="w-full h-9 px-2 rounded-xl border text-xs">
-                            @foreach([1=>'Januari', 2=>'Februari', 3=>'Maret', 4=>'April', 5=>'Mei', 6=>'Juni', 7=>'Juli', 8=>'Agustus', 9=>'September', 10=>'Oktober', 11=>'November', 12=>'Desember'] as $mNum => $mName)
-                                <option value="{{ $mNum }}" {{ date('n') == $mNum ? 'selected' : '' }}>{{ $mName }}</option>
-                            @endforeach
-                        </select>
+                    
+                    {{-- Periode & Target Cabang --}}
+                    <div class="p-3 bg-slate-50 dark:bg-slate-800/60 rounded-xl space-y-3 border border-slate-100 dark:border-slate-800">
+                        <p class="text-2xs font-bold text-slate-500 uppercase tracking-wider">1. Periode & Cabang Target</p>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="text-2xs font-bold text-slate-400 uppercase">Bulan</label>
+                                <select name="month" required class="w-full h-9 px-2 rounded-xl border text-xs">
+                                    @foreach([1=>'Januari', 2=>'Februari', 3=>'Maret', 4=>'April', 5=>'Mei', 6=>'Juni', 7=>'Juli', 8=>'Agustus', 9=>'September', 10=>'Oktober', 11=>'November', 12=>'Desember'] as $mNum => $mName)
+                                        <option value="{{ $mNum }}" {{ date('n') == $mNum ? 'selected' : '' }}>{{ $mName }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div>
+                                <label class="text-2xs font-bold text-slate-400 uppercase">Tahun</label>
+                                <input type="number" name="year" value="{{ date('Y') }}" required class="w-full h-9 px-3 rounded-xl border text-xs font-bold">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="text-2xs font-bold text-slate-400 uppercase">Pilihan Cabang Target</label>
+                            <select name="branch_id" x-model="selectedPayrollBranch" class="w-full h-9 px-2 rounded-xl border text-xs font-semibold">
+                                <option value="all" selected>🌟 Konsolidasi Seluruh Cabang (Semua Karyawan)</option>
+                                @foreach($branches as $b)
+                                    <option value="{{ $b->id }}">Cabang {{ $b->name }}</option>
+                                @endforeach
+                            </select>
+                            <p class="text-2xs text-slate-400 mt-1">Pilih "Konsolidasi Seluruh Cabang" untuk generate gaji seluruh staf dari semua cabang sekaligus.</p>
+                        </div>
                     </div>
-                    <div>
-                        <label class="text-2xs font-bold text-slate-400 uppercase">Tahun</label>
-                        <input type="number" name="year" value="{{ date('Y') }}" required class="w-full h-9 px-3 rounded-xl border text-xs font-bold">
+
+                    {{-- Komponen Tunjangan & Kehadiran --}}
+                    <div class="p-3 bg-emerald-50/50 dark:bg-emerald-950/20 rounded-xl space-y-3 border border-emerald-100 dark:border-emerald-900/40">
+                        <div class="flex items-center gap-1.5">
+                            <span class="material-symbols-outlined text-base text-emerald-600">settings_suggest</span>
+                            <p class="text-2xs font-bold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">2. Komponen Tunjangan & Kehadiran (Earnings)</p>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="text-2xs font-bold text-slate-500 uppercase">Hari Kerja Standar / Bln</label>
+                                <input type="number" name="work_days" value="26" min="1" required class="w-full h-9 px-3 rounded-xl border text-xs font-bold">
+                            </div>
+                            <div>
+                                <label class="text-2xs font-bold text-slate-500 uppercase">Tunj. Transport (Rp/Hadir)</label>
+                                <input type="number" name="transport_rate" value="15000" min="0" required class="w-full h-9 px-3 rounded-xl border text-xs font-bold">
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-3 gap-2">
+                            <div>
+                                <label class="text-2xs font-bold text-slate-500 uppercase">Bonus Hadir (%)</label>
+                                <input type="number" name="attendance_bonus_pct" value="5" min="0" step="0.5" class="w-full h-9 px-2 rounded-xl border text-xs">
+                            </div>
+                            <div>
+                                <label class="text-2xs font-bold text-slate-500 uppercase">Insentif Rp/Kg</label>
+                                <input type="number" name="bonus_kg_rate" value="200" min="0" class="w-full h-9 px-2 rounded-xl border text-xs font-mono">
+                            </div>
+                            <div>
+                                <label class="text-2xs font-bold text-slate-500 uppercase">Insentif Rp/Pcs</label>
+                                <input type="number" name="bonus_pcs_rate" value="500" min="0" class="w-full h-9 px-2 rounded-xl border text-xs font-mono">
+                            </div>
+                        </div>
                     </div>
-                    <div>
-                        <label class="text-2xs font-bold text-slate-400 uppercase">Pilihan Cabang Target</label>
-                        <select name="branch_id" x-model="selectedPayrollBranch" class="w-full h-9 px-2 rounded-xl border text-xs font-semibold">
-                            <option value="all" selected>🌟 Konsolidasi Seluruh Cabang (Semua Karyawan)</option>
-                            @foreach($branches as $b)
-                                <option value="{{ $b->id }}">Cabang {{ $b->name }}</option>
-                            @endforeach
-                        </select>
-                        <p class="text-2xs text-slate-400 mt-1">Pilih "Konsolidasi Seluruh Cabang" untuk generate gaji seluruh staf dari semua cabang sekaligus.</p>
+
+                    {{-- Komponen Potongan & BPJS --}}
+                    <div class="p-3 bg-rose-50/50 dark:bg-rose-950/20 rounded-xl space-y-3 border border-rose-100 dark:border-rose-900/40">
+                        <div class="flex items-center gap-1.5">
+                            <span class="material-symbols-outlined text-base text-rose-600">remove_circle_outline</span>
+                            <p class="text-2xs font-bold text-rose-700 dark:text-rose-400 uppercase tracking-wider">3. Komponen Potongan & BPJS (Deductions)</p>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="text-2xs font-bold text-slate-500 uppercase">Denda Terlambat (Rp/Hari)</label>
+                                <input type="number" name="tardiness_rate" value="25000" min="0" required class="w-full h-9 px-3 rounded-xl border text-xs font-bold">
+                            </div>
+                            <div>
+                                <label class="text-2xs font-bold text-slate-500 uppercase">Bonus Tambahan (Rp)</label>
+                                <input type="number" name="global_bonus" value="0" min="0" placeholder="0..." class="w-full h-9 px-3 rounded-xl border text-xs font-bold">
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3">
+                            <div class="space-y-1.5">
+                                <label class="flex items-center gap-2 text-2xs font-bold text-slate-700 dark:text-slate-300 cursor-pointer">
+                                    <input type="checkbox" name="include_bpjs_kesehatan" value="1" checked class="rounded text-primary focus:ring-primary">
+                                    <span>BPJS Kesehatan (1%)</span>
+                                </label>
+                                <label class="flex items-center gap-2 text-2xs font-bold text-slate-700 dark:text-slate-300 cursor-pointer">
+                                    <input type="checkbox" name="include_bpjs_ketenagakerjaan" value="1" checked class="rounded text-primary focus:ring-primary">
+                                    <span>BPJS Ketenagakerjaan (2%)</span>
+                                </label>
+                            </div>
+                            <div>
+                                <label class="text-2xs font-bold text-slate-500 uppercase">Potongan Lainnya (Rp)</label>
+                                <input type="number" name="global_deduction" value="0" min="0" placeholder="0..." class="w-full h-9 px-3 rounded-xl border text-xs font-bold">
+                            </div>
+                        </div>
                     </div>
 
                     <div x-show="scopedBranchId && selectedPayrollBranch != 'all' && selectedPayrollBranch != scopedBranchId" class="p-3 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/50 rounded-xl text-amber-800 dark:text-amber-300 text-2xs space-y-1" x-cloak>
@@ -513,7 +593,11 @@
                         </div>
                         <p>Cabang yang dipilih di form berbeda dengan <b>Scope Header</b> aktif. Payroll tetap diproses untuk cabang di form ini.</p>
                     </div>
-                    <button type="submit" class="btn-touch w-full bg-slate-900 text-white font-bold text-xs rounded-xl py-2.5 shadow-md">Proses Payroll</button>
+
+                    <button type="submit" class="btn-touch w-full bg-slate-900 text-white font-bold text-xs rounded-xl py-3 shadow-md flex items-center justify-center gap-1.5">
+                        <span class="material-symbols-outlined text-base">save</span>
+                        <span>Proses & Generate Payroll</span>
+                    </button>
                 </form>
             </div>
         </div>

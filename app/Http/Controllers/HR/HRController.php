@@ -272,6 +272,16 @@ class HRController extends Controller
             'month' => 'required|integer|between:1,12',
             'year' => 'required|integer|min:2024',
             'branch_id' => 'nullable|string',
+            'work_days' => 'nullable|integer|min:1',
+            'transport_rate' => 'nullable|numeric|min:0',
+            'tardiness_rate' => 'nullable|numeric|min:0',
+            'attendance_bonus_pct' => 'nullable|numeric|min:0',
+            'bonus_kg_rate' => 'nullable|numeric|min:0',
+            'bonus_pcs_rate' => 'nullable|numeric|min:0',
+            'include_bpjs_kesehatan' => 'nullable|boolean',
+            'include_bpjs_ketenagakerjaan' => 'nullable|boolean',
+            'global_bonus' => 'nullable|numeric|min:0',
+            'global_deduction' => 'nullable|numeric|min:0',
         ]);
 
         $targetBranchId = ($request->branch_id && $request->branch_id !== 'all') ? (int) $request->branch_id : null;
@@ -290,8 +300,20 @@ class HRController extends Controller
             return redirect()->back()->with('error', 'Payroll untuk periode tersebut sudah diproses!');
         }
 
+        // Custom component parameters from request
+        $workDays = (int) $request->input('work_days', 26);
+        $transportRate = (float) $request->input('transport_rate', 15000);
+        $tardinessRate = (float) $request->input('tardiness_rate', 25000);
+        $bonusPct = (float) $request->input('attendance_bonus_pct', 5);
+        $bonusKgRate = (float) $request->input('bonus_kg_rate', 200);
+        $bonusPcsRate = (float) $request->input('bonus_pcs_rate', 500);
+        $includeBpjsKesehatan = $request->has('include_bpjs_kesehatan') ? $request->boolean('include_bpjs_kesehatan') : true;
+        $includeBpjsKetenagakerjaan = $request->has('include_bpjs_ketenagakerjaan') ? $request->boolean('include_bpjs_ketenagakerjaan') : true;
+        $globalBonus = (float) $request->input('global_bonus', 0);
+        $globalDeduction = (float) $request->input('global_deduction', 0);
+
         try {
-            DB::transaction(function () use ($request, $targetBranchId) {
+            DB::transaction(function () use ($request, $targetBranchId, $workDays, $transportRate, $tardinessRate, $bonusPct, $bonusKgRate, $bonusPcsRate, $includeBpjsKesehatan, $includeBpjsKetenagakerjaan, $globalBonus, $globalDeduction) {
                 $payroll = Payroll::create([
                     'branch_id' => $targetBranchId,
                     'month' => $request->month,
@@ -317,17 +339,15 @@ class HRController extends Controller
                     $attendanceDays = Attendance::where('employee_id', $emp->id)
                         ->whereYear('date', $request->year)
                         ->whereMonth('date', $request->month)
-                        ->where('status', 'present')
+                        ->whereIn('status', ['present', 'hadir'])
                         ->count();
 
-                    $workDays = 26; // Default work days per month
                     $proRataRatio = $attendanceDays > 0 ? min(1, $attendanceDays / $workDays) : 1;
-                    $netSalary = round($emp->base_salary * $proRataRatio);
 
                     // Calculate attendance bonus (100% attendance = bonus)
                     $attendanceBonus = 0;
                     if ($attendanceDays >= $workDays) {
-                        $attendanceBonus = $emp->base_salary * 0.05; // 5% bonus for perfect attendance
+                        $attendanceBonus = round($emp->base_salary * ($bonusPct / 100));
                     }
 
                     // Calculate tardiness deduction (if any late records)
@@ -335,19 +355,19 @@ class HRController extends Controller
                     $lateDays = Attendance::where('employee_id', $emp->id)
                         ->whereYear('date', $request->year)
                         ->whereMonth('date', $request->month)
-                        ->where('status', 'late')
+                        ->whereIn('status', ['late', 'terlambat'])
                         ->count();
                     if ($lateDays > 0) {
-                        $tardinessDeduction = $lateDays * 25000; // Rp25.000 per late day
+                        $tardinessDeduction = round($lateDays * $tardinessRate);
                     }
 
-                    // Calculate transport allowance automatically from attendance (Rp 15.000 / present day)
-                    $presentCount = $attendanceDays ?: 26;
-                    $transportAllowance = $presentCount * 15000;
+                    // Calculate transport allowance automatically from attendance
+                    $presentCount = $attendanceDays ?: $workDays;
+                    $transportAllowance = round($presentCount * $transportRate);
 
-                    // BPJS split calculations (Indonesian Standard: BPJS Kesehatan 1%, BPJS Ketenagakerjaan JHT 2%)
-                    $bpjsKesehatan = round($emp->base_salary * 0.01);
-                    $bpjsKetenagakerjaan = round($emp->base_salary * 0.02);
+                    // BPJS split calculations (BPJS Kesehatan 1%, BPJS Ketenagakerjaan JHT 2%)
+                    $bpjsKesehatan = $includeBpjsKesehatan ? round($emp->base_salary * 0.01) : 0;
+                    $bpjsKetenagakerjaan = $includeBpjsKetenagakerjaan ? round($emp->base_salary * 0.02) : 0;
 
                     // Auto-calculate workload performance bonus from actual completed workshop order items for employee's branch
                     $totalWorkloadKg = \App\Models\OrderItem::whereHas('order', function ($q) use ($emp, $request) {
@@ -368,26 +388,26 @@ class HRController extends Controller
                         $s->where('unit', 'Pcs');
                     })->sum('quantity');
 
-                    // Incentive rates: Rp 200/Kg & Rp 500/Pcs for workshop staff
-                    $bonusKg = (str_contains(strtolower($emp->position), 'workshop') || str_contains(strtolower($emp->position), 'operator')) ? round($totalWorkloadKg * 200) : 0;
-                    $bonusPcs = (str_contains(strtolower($emp->position), 'workshop') || str_contains(strtolower($emp->position), 'operator')) ? round($totalWorkloadPcs * 500) : 0;
+                    // Incentive rates based on custom parameters for workshop staff
+                    $bonusKg = (str_contains(strtolower($emp->position), 'workshop') || str_contains(strtolower($emp->position), 'operator')) ? round($totalWorkloadKg * $bonusKgRate) : 0;
+                    $bonusPcs = (str_contains(strtolower($emp->position), 'workshop') || str_contains(strtolower($emp->position), 'operator')) ? round($totalWorkloadPcs * $bonusPcsRate) : 0;
 
-                    // Create payroll item with comprehensive components
+                    // Create payroll item with comprehensive custom components
                     $payrollItem = PayrollItem::create([
                         'payroll_id' => $payroll->id,
                         'employee_id' => $emp->id,
                         'base_salary' => $emp->base_salary,
                         'allowance' => 0,
-                        'deduction' => 0,
+                        'deduction' => $globalDeduction,
                         'attendance_days' => $presentCount,
                         'work_days' => $workDays,
                         // Earnings components
                         'bonus_kg' => $bonusKg,
                         'bonus_pcs' => $bonusPcs,
-                        'transport_allowance' => $transportAllowance, // Auto Rp15k/day
+                        'transport_allowance' => $transportAllowance,
                         'overtime_pay' => 0,
                         'attendance_bonus' => $attendanceBonus,
-                        'special_bonus' => 0,
+                        'special_bonus' => $globalBonus,
                         // Deductions components
                         'tardiness_deduction' => $tardinessDeduction,
                         'loan_deduction' => 0,
