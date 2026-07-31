@@ -3,6 +3,16 @@
         activeTab: 'catalog',
         showAddAsset: false,
         activeMaintenanceAsset: null,
+        switchTab(tab) {
+            this.activeTab = tab;
+            this.$nextTick(() => {
+                if (tab === 'depreciation' || tab === 'analytics') {
+                    if (window.renderAssetCharts) {
+                        window.renderAssetCharts();
+                    }
+                }
+            });
+        }
     }">
         <x-page-header title="Aset Tetap & Depresiasi (Fixed Assets)" :breadcrumbs="['Aset Tetap' => '/assets']" />
 
@@ -21,26 +31,26 @@
         <!-- Sleek Tabpane Navigation Header -->
         <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 dark:border-slate-800 pb-3">
             <div class="flex items-center gap-1.5 overflow-x-auto min-w-max p-1 bg-slate-100 dark:bg-slate-900 rounded-2xl">
-                <button type="button" @click="activeTab = 'catalog'" :class="activeTab === 'catalog' ? 'bg-primary text-white shadow-md shadow-primary/20' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'" class="px-4 py-2 rounded-xl font-bold text-xs flex items-center gap-2 transition-all cursor-pointer">
+                <button type="button" @click="switchTab('catalog')" :class="activeTab === 'catalog' ? 'bg-primary text-white shadow-md shadow-primary/20 scale-[1.02]' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'" class="px-4 py-2 rounded-xl font-bold text-xs flex items-center gap-2 transition-all cursor-pointer">
                     <span class="material-symbols-outlined text-base">inventory_2</span>
                     <span>Katalog & Daftar Aset</span>
                     <span class="px-2 py-0.5 rounded-full text-[10px] font-black" :class="activeTab === 'catalog' ? 'bg-white/20 text-white' : 'bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300'">{{ $assets->total() }}</span>
                 </button>
 
-                <button type="button" @click="activeTab = 'depreciation'" :class="activeTab === 'depreciation' ? 'bg-primary text-white shadow-md shadow-primary/20' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'" class="px-4 py-2 rounded-xl font-bold text-xs flex items-center gap-2 transition-all cursor-pointer">
+                <button type="button" @click="switchTab('depreciation')" :class="activeTab === 'depreciation' ? 'bg-primary text-white shadow-md shadow-primary/20 scale-[1.02]' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'" class="px-4 py-2 rounded-xl font-bold text-xs flex items-center gap-2 transition-all cursor-pointer">
                     <span class="material-symbols-outlined text-base">show_chart</span>
                     <span>Grafik Depresiasi</span>
                 </button>
 
-                <button type="button" @click="activeTab = 'maintenance'" :class="activeTab === 'maintenance' ? 'bg-primary text-white shadow-md shadow-primary/20' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'" class="px-4 py-2 rounded-xl font-bold text-xs flex items-center gap-2 transition-all cursor-pointer">
+                <button type="button" @click="switchTab('maintenance')" :class="activeTab === 'maintenance' ? 'bg-primary text-white shadow-md shadow-primary/20 scale-[1.02]' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'" class="px-4 py-2 rounded-xl font-bold text-xs flex items-center gap-2 transition-all cursor-pointer">
                     <span class="material-symbols-outlined text-base">build</span>
                     <span>Maintenance & Servis</span>
                     @if($urgentMaintenanceAssets->count() > 0)
-                        <span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-rose-500 text-white animate-pulse">{{ $urgentMaintenanceAssets->count() }} Perlu Perhatian</span>
+                        <span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-rose-500 text-white animate-pulse">{{ $urgentMaintenanceAssets->count() }} Urgent</span>
                     @endif
                 </button>
 
-                <button type="button" @click="activeTab = 'analytics'" :class="activeTab === 'analytics' ? 'bg-primary text-white shadow-md shadow-primary/20' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'" class="px-4 py-2 rounded-xl font-bold text-xs flex items-center gap-2 transition-all cursor-pointer">
+                <button type="button" @click="switchTab('analytics')" :class="activeTab === 'analytics' ? 'bg-primary text-white shadow-md shadow-primary/20 scale-[1.02]' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'" class="px-4 py-2 rounded-xl font-bold text-xs flex items-center gap-2 transition-all cursor-pointer">
                     <span class="material-symbols-outlined text-base">pie_chart</span>
                     <span>Portfolio & Analytics</span>
                 </button>
@@ -131,7 +141,7 @@
                                     </td>
                                     <td class="py-3 px-3 text-slate-500">
                                         <span class="block font-bold text-slate-700 dark:text-slate-300">{{ $ast->acquisition_date?->format('d/m/Y') }}</span>
-                                        <span class="text-2xs text-slate-400">{{ $ageMonths }} bulan ({{\App\Models\FixedAsset::find($ast->id)->useful_life_months}} bln max)</span>
+                                        <span class="text-2xs text-slate-400">{{ $ageMonths }} bulan ({{ $ast->useful_life_months }} bln max)</span>
                                     </td>
                                     <td class="py-3 px-3 text-center">
                                         <span class="px-2.5 py-1 rounded-full text-2xs font-extrabold border {{ $conditionColor }}">
@@ -183,8 +193,8 @@
         <!-- ==================== TAB 2: GRAFIK & SIMULASI DEPRESIASI ==================== -->
         <div x-show="activeTab === 'depreciation'" class="space-y-4" x-cloak>
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-                <!-- Bar Chart: Capex vs Book Value per Top Asset (8 cols) -->
-                <div class="lg:col-span-8">
+                <!-- Bar Chart: Capex vs Book Value per Top Asset (7 cols) -->
+                <div class="lg:col-span-7">
                     <x-card title="Visualisasi Nilai Perolehan vs Nilai Buku Aset Utama">
                         <div class="h-72 relative">
                             <canvas id="assetDepreciationChart"></canvas>
@@ -192,33 +202,82 @@
                     </x-card>
                 </div>
 
-                <!-- Doughnut Chart: Asset Breakdown by Condition (4 cols) -->
-                <div class="lg:col-span-4">
-                    <x-card title="Komposisi Kondisi Fisik Aset">
-                        <div class="h-64 relative flex items-center justify-center">
-                            <canvas id="assetConditionChart"></canvas>
-                        </div>
-                        <div class="grid grid-cols-2 gap-2 mt-4 text-2xs font-bold">
-                            <div class="p-2 bg-emerald-50 dark:bg-emerald-950/20 text-emerald-700 rounded-xl text-center">
-                                Baik: {{ $conditionCounts['good'] }} Unit
-                            </div>
-                            <div class="p-2 bg-amber-50 dark:bg-amber-950/20 text-amber-700 rounded-xl text-center">
-                                Cukup: {{ $conditionCounts['fair'] }} Unit
-                            </div>
-                            <div class="p-2 bg-rose-50 dark:bg-rose-950/20 text-rose-700 rounded-xl text-center">
-                                Rusak: {{ $conditionCounts['poor'] }} Unit
-                            </div>
-                            <div class="p-2 bg-slate-100 dark:bg-slate-800 text-slate-600 rounded-xl text-center">
-                                Afkir: {{ $conditionCounts['scrapped'] }} Unit
-                            </div>
+                <!-- Line Chart: Monthly Depreciation Forecast (5 cols) -->
+                <div class="lg:col-span-5">
+                    <x-card title="Proyeksi Beban Penyusutan Bulanan (Tahun {{ date('Y') }})">
+                        <div class="h-72 relative">
+                            <canvas id="assetMonthlyDepreciationChart"></canvas>
                         </div>
                     </x-card>
                 </div>
             </div>
+
+            <!-- Proyeksi Rincian Beban Depresiasi Bulanan Table -->
+            <x-card title="Tabel Proyeksi Beban Penyusutan Aset 12 Bulan ({{ date('Y') }})">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-xs border-collapse">
+                        <thead>
+                            <tr class="border-b border-slate-100 dark:border-slate-800 text-slate-400 font-bold uppercase tracking-wider">
+                                <th class="py-2.5 px-3">Bulan</th>
+                                <th class="py-2.5 px-3 text-right">Proyeksi Beban Depresiasi (Rp)</th>
+                                <th class="py-2.5 px-3 text-center">Status Periode</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-50 dark:divide-slate-850 font-mono">
+                            @foreach($monthlyDepreciationForecast as $idx => $mDep)
+                                <tr class="{{ ($idx + 1) == date('n') ? 'bg-orange-50/60 dark:bg-orange-950/20 font-bold' : 'hover:bg-slate-50/50 dark:hover:bg-slate-900/30' }}">
+                                    <td class="py-2.5 px-3 font-sans font-bold text-slate-800 dark:text-slate-200">
+                                        Bulan {{ $mDep['month_name'] }} {{ date('Y') }}
+                                        @if(($idx + 1) == date('n'))
+                                            <span class="ml-1.5 px-2 py-0.5 bg-primary text-white text-[10px] font-black rounded-full">Bulan Ini</span>
+                                        @endif
+                                    </td>
+                                    <td class="py-2.5 px-3 text-right text-rose-600 font-bold">
+                                        Rp {{ number_format($mDep['amount'], 0, ',', '.') }}
+                                    </td>
+                                    <td class="py-2.5 px-3 text-center font-sans">
+                                        @if(($idx + 1) < date('n'))
+                                            <span class="px-2 py-0.5 rounded-full text-2xs font-extrabold bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300">Terlewati</span>
+                                        @elseif(($idx + 1) == date('n'))
+                                            <span class="px-2 py-0.5 rounded-full text-2xs font-extrabold bg-emerald-100 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-400">Aktif Diproses</span>
+                                        @else
+                                            <span class="px-2 py-0.5 rounded-full text-2xs font-extrabold bg-blue-50 text-blue-700 dark:bg-blue-950/30 dark:text-blue-400">Terjadwal</span>
+                                        @endif
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            </x-card>
         </div>
 
         <!-- ==================== TAB 3: MAINTENANCE & SERVIS ==================== -->
         <div x-show="activeTab === 'maintenance'" class="space-y-4" x-cloak>
+            <!-- Maintenance Metrics Bar -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                <div class="p-3.5 bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm space-y-1">
+                    <span class="text-2xs font-bold text-slate-400 uppercase">Jatuh Tempo Urgent</span>
+                    <p class="text-2xl font-black text-rose-600 font-mono">{{ $urgentMaintenanceAssets->count() }} Aset</p>
+                    <p class="text-2xs text-slate-500">Perlu perbaikan / lewat tanggal</p>
+                </div>
+                <div class="p-3.5 bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm space-y-1">
+                    <span class="text-2xs font-bold text-slate-400 uppercase">Servis 30 Hari Kedepan</span>
+                    <p class="text-2xl font-black text-amber-600 font-mono">{{ $maintenanceUpcoming30Days->count() }} Aset</p>
+                    <p class="text-2xs text-slate-500">Jadwal pemeliharaan rutin</p>
+                </div>
+                <div class="p-3.5 bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm space-y-1">
+                    <span class="text-2xs font-bold text-slate-400 uppercase">Kondisi Baik</span>
+                    <p class="text-2xl font-black text-emerald-600 font-mono">{{ $conditionCounts['good'] }} Unit</p>
+                    <p class="text-2xs text-slate-500">Siap operasional 100%</p>
+                </div>
+                <div class="p-3.5 bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm space-y-1">
+                    <span class="text-2xs font-bold text-slate-400 uppercase">Sudah Afkir</span>
+                    <p class="text-2xl font-black text-slate-500 font-mono">{{ $conditionCounts['scrapped'] }} Unit</p>
+                    <p class="text-2xs text-slate-500">Tidak berfungsi</p>
+                </div>
+            </div>
+
             @if($urgentMaintenanceAssets->count() > 0)
                 <div class="p-4 bg-rose-50 dark:bg-rose-950/20 border border-rose-200 dark:border-rose-900/50 rounded-2xl space-y-3">
                     <div class="flex items-center gap-2 text-rose-700 dark:text-rose-400 font-extrabold text-xs uppercase tracking-wider">
@@ -230,13 +289,13 @@
                             <div class="bg-white dark:bg-slate-900 p-3 rounded-xl border border-rose-100 dark:border-rose-900/40 flex items-center justify-between">
                                 <div>
                                     <span class="font-bold text-xs text-slate-800 dark:text-slate-200 block">{{ $uAst->name }}</span>
-                                    <span class="text-2xs text-slate-400 font-mono">{{ $uAst->asset_code }} • {{ $uAst->branch?->name }}</span>
+                                    <span class="text-2xs text-slate-400 font-mono">{{ $uAst->asset_code }} • Cabang {{ $uAst->branch?->name }}</span>
                                     <div class="mt-1 flex items-center gap-1.5 text-2xs font-bold text-rose-600">
                                         <span class="material-symbols-outlined text-xs">event</span>
                                         <span>Berikutnya: {{ $uAst->next_maintenance_date ? $uAst->next_maintenance_date->format('d/m/Y') : 'Jatuh Tempo!' }}</span>
                                     </div>
                                 </div>
-                                <button type="button" @click="activeMaintenanceAsset = @js($uAst)" class="px-2.5 py-1.5 bg-rose-600 hover:bg-rose-700 text-white rounded-lg text-2xs font-bold shadow-sm">
+                                <button type="button" @click="activeMaintenanceAsset = @js($uAst)" class="px-2.5 py-1.5 bg-rose-600 hover:bg-rose-700 text-white rounded-lg text-2xs font-bold shadow-sm cursor-pointer">
                                     Servis
                                 </button>
                             </div>
@@ -252,7 +311,7 @@
                             <tr class="border-b border-slate-100 dark:border-slate-800 text-slate-400 font-bold uppercase tracking-wider">
                                 <th class="py-2.5 px-3">Aset</th>
                                 <th class="py-2.5 px-3">Cabang</th>
-                                <th class="py-2.5 px-3">Kondisi Fizik</th>
+                                <th class="py-2.5 px-3">Kondisi Fisik</th>
                                 <th class="py-2.5 px-3">Maintenance Terakhir</th>
                                 <th class="py-2.5 px-3">Maintenance Berikutnya</th>
                                 <th class="py-2.5 px-3">Catatan Servis</th>
@@ -290,7 +349,7 @@
                                         {{ $ast->maintenance_notes ?? '-' }}
                                     </td>
                                     <td class="py-3 px-3 text-center">
-                                        <button type="button" @click="activeMaintenanceAsset = @js($ast)" class="px-3 py-1.5 bg-amber-50 dark:bg-amber-950/30 text-amber-700 text-2xs font-bold rounded-lg hover:bg-amber-100 transition-colors">
+                                        <button type="button" @click="activeMaintenanceAsset = @js($ast)" class="px-3 py-1.5 bg-amber-50 dark:bg-amber-950/30 text-amber-700 text-2xs font-bold rounded-lg hover:bg-amber-100 transition-colors cursor-pointer">
                                             Update Servis
                                         </button>
                                     </td>
@@ -308,6 +367,27 @@
 
         <!-- ==================== TAB 4: PORTFOLIO & ANALYTICS ==================== -->
         <div x-show="activeTab === 'analytics'" class="space-y-4" x-cloak>
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                <!-- Doughnut Chart: Category Capex Distribution (5 cols) -->
+                <div class="lg:col-span-5">
+                    <x-card title="Komposisi Investasi Capex Per Kategori">
+                        <div class="h-64 relative flex items-center justify-center">
+                            <canvas id="assetCategoryChart"></canvas>
+                        </div>
+                    </x-card>
+                </div>
+
+                <!-- Doughnut Chart: Condition Distribution (7 cols) -->
+                <div class="lg:col-span-7">
+                    <x-card title="Ringkasan Kesehatan & Kondisi Fisik Portofolio Aset">
+                        <div class="h-64 relative flex items-center justify-center">
+                            <canvas id="assetConditionChart"></canvas>
+                        </div>
+                    </x-card>
+                </div>
+            </div>
+
+            <!-- Category Summary Cards Grid -->
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 @foreach($categoriesSummary as $cat)
                     <div class="p-4 bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm space-y-3">
@@ -481,22 +561,33 @@
     @push('scripts')
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
+        window.assetChartInstances = {};
+
+        window.renderAssetCharts = function() {
+            const isDark = document.documentElement.classList.contains('dark');
+            const textColor = isDark ? '#94a3b8' : '#64748b';
+            const gridColor = isDark ? '#1e293b' : '#f1f5f9';
+
             @php
                 $topAssets = $assets->take(7);
                 $assetNames = $topAssets->pluck('name');
                 $assetCosts = $topAssets->pluck('acquisition_cost');
                 $assetBookValues = $topAssets->pluck('book_value');
+
+                $forecastMonths = array_column($monthlyDepreciationForecast, 'month_name');
+                $forecastAmounts = array_column($monthlyDepreciationForecast, 'amount');
+
+                $catNames = array_keys($categoriesSummary->toArray());
+                $catCosts = array_column($categoriesSummary->toArray(), 'total_cost');
             @endphp
 
-            const isDark = document.documentElement.classList.contains('dark');
-            const textColor = isDark ? '#94a3b8' : '#64748b';
-            const gridColor = isDark ? '#1e293b' : '#f1f5f9';
-
-            // Bar Chart: Top Assets Valuation
+            // 1. Bar Chart: Top Assets Valuation (Depreciation Tab)
             const ctxDep = document.getElementById('assetDepreciationChart');
             if (ctxDep) {
-                new Chart(ctxDep, {
+                if (window.assetChartInstances.dep) {
+                    window.assetChartInstances.dep.destroy();
+                }
+                window.assetChartInstances.dep = new Chart(ctxDep, {
                     type: 'bar',
                     data: {
                         labels: @js($assetNames),
@@ -529,10 +620,75 @@
                 });
             }
 
-            // Doughnut Chart: Condition Distribution
+            // 2. Line Chart: 12-Month Depreciation Forecast (Depreciation Tab)
+            const ctxMonthly = document.getElementById('assetMonthlyDepreciationChart');
+            if (ctxMonthly) {
+                if (window.assetChartInstances.monthly) {
+                    window.assetChartInstances.monthly.destroy();
+                }
+                window.assetChartInstances.monthly = new Chart(ctxMonthly, {
+                    type: 'line',
+                    data: {
+                        labels: @js($forecastMonths),
+                        datasets: [{
+                            label: 'Proyeksi Beban Depresiasi (Rp)',
+                            data: @js($forecastAmounts),
+                            borderColor: '#f43f5e',
+                            backgroundColor: 'rgba(244, 63, 94, 0.1)',
+                            fill: true,
+                            tension: 0.3,
+                            pointBackgroundColor: '#f43f5e',
+                            pointRadius: 4,
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { labels: { color: textColor, font: { weight: 'bold' } } }
+                        },
+                        scales: {
+                            x: { ticks: { color: textColor }, grid: { display: false } },
+                            y: { ticks: { color: textColor }, grid: { color: gridColor } }
+                        }
+                    }
+                });
+            }
+
+            // 3. Doughnut Chart: Asset Category Capex Distribution (Analytics Tab)
+            const ctxCat = document.getElementById('assetCategoryChart');
+            if (ctxCat) {
+                if (window.assetChartInstances.cat) {
+                    window.assetChartInstances.cat.destroy();
+                }
+                window.assetChartInstances.cat = new Chart(ctxCat, {
+                    type: 'doughnut',
+                    data: {
+                        labels: @js($catNames),
+                        datasets: [{
+                            data: @js($catCosts),
+                            backgroundColor: ['#FF6600', '#10b981', '#3b82f6', '#8b5cf6', '#64748b'],
+                            borderWidth: 0
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { position: 'bottom', labels: { color: textColor, font: { weight: 'bold' } } }
+                        },
+                        cutout: '65%'
+                    }
+                });
+            }
+
+            // 4. Doughnut Chart: Condition Distribution (Analytics Tab)
             const ctxCond = document.getElementById('assetConditionChart');
             if (ctxCond) {
-                new Chart(ctxCond, {
+                if (window.assetChartInstances.cond) {
+                    window.assetChartInstances.cond.destroy();
+                }
+                window.assetChartInstances.cond = new Chart(ctxCond, {
                     type: 'doughnut',
                     data: {
                         labels: ['Baik', 'Cukup', 'Rusak', 'Afkir'],
@@ -548,10 +704,14 @@
                         plugins: {
                             legend: { position: 'bottom', labels: { color: textColor, font: { weight: 'bold' } } }
                         },
-                        cutout: '70%'
+                        cutout: '65%'
                     }
                 });
             }
+        };
+
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(window.renderAssetCharts, 200);
         });
     </script>
     @endpush

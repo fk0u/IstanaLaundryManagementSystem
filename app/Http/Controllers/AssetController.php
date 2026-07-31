@@ -54,12 +54,37 @@ class AssetController extends Controller
             ];
         });
 
-        // Maintenance Alert Assets
+        // Maintenance Alert Assets & Detailed Metrics
         $urgentMaintenanceAssets = $allAssets->filter(function ($ast) {
             $isOverdue = $ast->next_maintenance_date && $ast->next_maintenance_date->isPast();
             $isPoor = $ast->condition === 'poor';
             return $isOverdue || $isPoor;
         });
+
+        $maintenanceUpcoming30Days = $allAssets->filter(function ($ast) {
+            return $ast->next_maintenance_date &&
+                ! $ast->next_maintenance_date->isPast() &&
+                $ast->next_maintenance_date->diffInDays(now()) <= 30;
+        });
+
+        // 12-Month Depreciation Expense Forecast for Current Year
+        $year = now()->year;
+        $monthlyDepreciationForecast = [];
+        for ($m = 1; $m <= 12; $m++) {
+            $amount = DepreciationSchedule::whereHas('asset', function ($q) use ($branchId) {
+                if ($branchId) {
+                    $q->where('branch_id', $branchId);
+                }
+            })
+            ->whereYear('period_date', $year)
+            ->whereMonth('period_date', $m)
+            ->sum('depreciation_amount');
+
+            $monthlyDepreciationForecast[] = [
+                'month_name' => Carbon::create()->month($m)->translatedFormat('M'),
+                'amount' => (float) $amount,
+            ];
+        }
 
         return view('assets.index', compact(
             'assets',
@@ -71,7 +96,9 @@ class AssetController extends Controller
             'totalDepreciation',
             'conditionCounts',
             'categoriesSummary',
-            'urgentMaintenanceAssets'
+            'urgentMaintenanceAssets',
+            'maintenanceUpcoming30Days',
+            'monthlyDepreciationForecast'
         ));
     }
 
