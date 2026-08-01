@@ -31,6 +31,7 @@
 
         <!-- Scripts & Styling -->
         <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
         @vite(['resources/css/app.css', 'resources/js/app.js'])
         
         <style>

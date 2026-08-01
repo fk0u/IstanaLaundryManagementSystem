@@ -16,53 +16,7 @@
     </div>
 
     <!-- Active Queue Status Tracker Grid -->
-    <div class="bg-white dark:bg-slate-900 border border-outline-variant dark:border-slate-800 rounded-xl p-6 premium-shadow mb-8">
-        <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-6">Status Alur Antrean Cucian</h4>
-        
-        <div class="grid grid-cols-2 md:grid-cols-6 gap-4">
-            <!-- 1. TERIMA -->
-            <div class="bg-slate-50 dark:bg-slate-850 p-4 rounded-xl border border-slate-100 dark:border-slate-800 text-center relative overflow-hidden">
-                <span class="text-[9px] font-bold text-slate-400 uppercase">1. TERIMA</span>
-                <h5 class="text-2xl font-black text-slate-700 dark:text-slate-200 mt-2">{{ $stats['TERIMA'] }}</h5>
-                <div class="absolute bottom-0 inset-x-0 h-1 bg-slate-350"></div>
-            </div>
-
-            <!-- 2. CUCI -->
-            <div class="bg-slate-50 dark:bg-slate-850 p-4 rounded-xl border border-slate-100 dark:border-slate-800 text-center relative overflow-hidden">
-                <span class="text-[9px] font-bold text-slate-400 uppercase">2. CUCI</span>
-                <h5 class="text-2xl font-black text-primary mt-2">{{ $stats['CUCI'] }}</h5>
-                <div class="absolute bottom-0 inset-x-0 h-1 bg-primary"></div>
-            </div>
-
-            <!-- 3. KERING -->
-            <div class="bg-slate-50 dark:bg-slate-850 p-4 rounded-xl border border-slate-100 dark:border-slate-800 text-center relative overflow-hidden">
-                <span class="text-[9px] font-bold text-slate-400 uppercase">3. JEMUR / KERING</span>
-                <h5 class="text-2xl font-black text-amber-500 mt-2">{{ $stats['KERING'] }}</h5>
-                <div class="absolute bottom-0 inset-x-0 h-1 bg-amber-550"></div>
-            </div>
-
-            <!-- 4. SETRIKA -->
-            <div class="bg-slate-50 dark:bg-slate-850 p-4 rounded-xl border border-slate-100 dark:border-slate-800 text-center relative overflow-hidden">
-                <span class="text-[9px] font-bold text-slate-400 uppercase">4. SETRIKA</span>
-                <h5 class="text-2xl font-black text-blue-500 mt-2">{{ $stats['SETRIKA'] }}</h5>
-                <div class="absolute bottom-0 inset-x-0 h-1 bg-blue-500"></div>
-            </div>
-
-            <!-- 5. PACKING -->
-            <div class="bg-slate-50 dark:bg-slate-850 p-4 rounded-xl border border-slate-100 dark:border-slate-800 text-center relative overflow-hidden">
-                <span class="text-[9px] font-bold text-slate-400 uppercase">5. PACKING</span>
-                <h5 class="text-2xl font-black text-indigo-500 mt-2">{{ $stats['PACKING'] }}</h5>
-                <div class="absolute bottom-0 inset-x-0 h-1 bg-indigo-550"></div>
-            </div>
-
-            <!-- 6. SIAP -->
-            <div class="bg-slate-50 dark:bg-slate-850 p-4 rounded-xl border border-slate-100 dark:border-slate-800 text-center relative overflow-hidden">
-                <span class="text-[9px] font-bold text-slate-400 uppercase">6. SIAP AMBIL</span>
-                <h5 class="text-2xl font-black text-green-500 mt-2">{{ $stats['SIAP'] }}</h5>
-                <div class="absolute bottom-0 inset-x-0 h-1 bg-green-500"></div>
-            </div>
-        </div>
-    </div>
+    <x-production-pipeline :breakdown="$productionBreakdown" class="mb-8" />
 
     <!-- Active Production Queue List -->
     <div class="grid grid-cols-12 gap-6">

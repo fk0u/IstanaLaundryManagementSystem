@@ -6,13 +6,13 @@ use App\Models\Attendance;
 use App\Models\Branch;
 use App\Models\Employee;
 use App\Models\User;
-use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
 class StaffHRIntegrationTest extends TestCase
 {
-    use DatabaseTransactions;
+    use RefreshDatabase;
 
     protected $adminUser;
 
@@ -33,11 +33,23 @@ class StaffHRIntegrationTest extends TestCase
                 'branch_id' => $branch->id,
                 'is_active' => true,
             ]);
+            Employee::create([
+                'user_id' => $this->adminUser->id,
+                'nik' => 'NIK-TEST-001',
+                'name' => $this->adminUser->name,
+                'position' => 'Super Administrator',
+                'branch_id' => $branch->id,
+                'base_salary' => 8000000.00,
+                'phone' => '081234567890',
+                'is_active' => true,
+                'joined_at' => now()->toDateString(),
+            ]);
         }
     }
 
     public function test_user_seeder_creates_matching_employee_profiles()
     {
+        $this->seed();
         $users = User::all();
         $this->assertGreaterThan(0, $users->count());
 

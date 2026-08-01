@@ -92,6 +92,9 @@
         </div>
     </div>
 
+    <!-- Production Pipeline Widget -->
+    <x-production-pipeline :breakdown="$productionBreakdown" class="mb-6" />
+
     <!-- Quick Navigation & Chart -->
     <div class="grid grid-cols-12 gap-6">
         <!-- Sales Chart Card (8 cols) -->

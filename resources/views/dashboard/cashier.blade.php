@@ -62,6 +62,9 @@
         </div>
     </div>
 
+    <!-- Production Pipeline Widget -->
+    <x-production-pipeline :breakdown="$productionBreakdown" class="mb-6" />
+
     <!-- Quick Actions Panel & Recent Transactions -->
     <div class="grid grid-cols-12 gap-6">
         <!-- Quick Actions (4 cols) -->

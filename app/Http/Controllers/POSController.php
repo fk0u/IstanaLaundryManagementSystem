@@ -67,14 +67,15 @@ class POSController extends Controller
             ->orderBy('name')
             ->get();
 
-        // Fetch active Promotions
-        $promotions = Promotion::withoutBranchScope()
+        // Fetch active Promotions (Global & Branch Specific)
+        $promotions = Promotion::withoutGlobalScopes()
             ->where('is_active', true)
             ->where(function ($q) use ($branchId) {
                 $q->where('branch_id', $branchId)->orWhereNull('branch_id');
             })
-            ->where('start_date', '<=', now()->toDateString())
-            ->where('end_date', '>=', now()->toDateString())
+            ->whereDate('start_date', '<=', now()->toDateString())
+            ->whereDate('end_date', '>=', now()->toDateString())
+            ->orderBy('name', 'asc')
             ->get();
 
         $branches = Branch::orderBy('name')->get();
@@ -185,7 +186,7 @@ class POSController extends Controller
             $discountAmount = 0;
             $promo = null;
             if (! empty($data['promo_id'])) {
-                $promo = Promotion::findOrFail($data['promo_id']);
+                $promo = Promotion::withoutGlobalScopes()->find($data['promo_id']);
 
                 // Validate promo criteria
                 if ($subtotal >= $promo->min_transaction) {

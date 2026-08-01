@@ -9,8 +9,22 @@ use App\Models\Order;
 class LoyaltyService
 {
     /**
-     * Award points to customer based on order total.
-     * Ratio: 1 point per Rp 1,000.
+     * Get tier multiplier for point calculations.
+     * Bronze: 1.0x, Silver: 1.25x, Gold: 1.5x, Platinum: 2.0x
+     */
+    public function getTierMultiplier(string $tier): float
+    {
+        return match (strtoupper($tier)) {
+            'PLATINUM' => 2.0,
+            'GOLD' => 1.5,
+            'SILVER' => 1.25,
+            default => 1.0,
+        };
+    }
+
+    /**
+     * Award points to customer based on order total and tier multiplier.
+     * Base Ratio: 1 point per Rp 1,000.
      */
     public function awardPoints(Order $order): ?LoyaltyPointLog
     {
@@ -19,7 +33,9 @@ class LoyaltyService
         }
 
         $customer = $order->customer;
-        $pointsEarned = floor($order->total / 1000);
+        $multiplier = $this->getTierMultiplier($customer->loyalty_tier ?? 'Bronze');
+        $basePoints = floor($order->total / 1000);
+        $pointsEarned = (int) floor($basePoints * $multiplier);
 
         if ($pointsEarned <= 0) {
             return null;
@@ -41,7 +57,7 @@ class LoyaltyService
             'points' => $pointsEarned,
             'type' => 'earn',
             'balance_after' => $balanceAfter,
-            'description' => "Poin didapat dari order #{$order->order_number}",
+            'description' => "Poin didapat dari order #{$order->order_number} (Bonus Tier {$customer->loyalty_tier} {$multiplier}x)",
         ]);
 
         $this->checkTierUpgrade($customer);
@@ -144,6 +160,31 @@ class LoyaltyService
             'type' => 'adjust',
             'balance_after' => $balanceAfter,
             'description' => "Pengurangan poin karena pengembalian dana order #{$order->order_number}",
+        ]);
+
+        $this->checkTierUpgrade($customer);
+
+        return $log;
+    }
+
+    /**
+     * Manually adjust loyalty points for a customer (Bonus or Deduction by Admin).
+     */
+    public function adjustPoints(Customer $customer, int $pointsDelta, string $reason): LoyaltyPointLog
+    {
+        $balanceBefore = $customer->loyalty_points;
+        $balanceAfter = max(0, $balanceBefore + $pointsDelta);
+
+        $customer->update([
+            'loyalty_points' => $balanceAfter,
+        ]);
+
+        $log = LoyaltyPointLog::create([
+            'customer_id' => $customer->id,
+            'points' => $pointsDelta,
+            'type' => 'adjust',
+            'balance_after' => $balanceAfter,
+            'description' => "Penyesuaian Poin Manual oleh Admin: {$reason}",
         ]);
 
         $this->checkTierUpgrade($customer);

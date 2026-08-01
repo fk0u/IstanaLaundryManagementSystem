@@ -102,6 +102,8 @@ Route::middleware(['auth', 'branch.scope'])->group(function () {
     Route::get('/customers/export', [CustomerController::class, 'exportCsv'])->name('customers.export');
     Route::get('/customers/export/pdf', [CustomerController::class, 'exportPdf'])->name('customers.export.pdf');
     Route::get('/customers/export/xlsx', [CustomerController::class, 'exportExcel'])->name('customers.export.xlsx');
+    Route::get('/customers/{id}/point-logs', [CustomerController::class, 'pointLogs'])->name('customers.point-logs');
+    Route::post('/customers/{id}/adjust-points', [CustomerController::class, 'adjustPoints'])->name('customers.adjust-points');
     Route::post('/customers', [CustomerController::class, 'store'])->name('customers.store');
     Route::put('/customers/{id}', [CustomerController::class, 'update'])->name('customers.update');
     Route::delete('/customers/{id}', [CustomerController::class, 'destroy'])->name('customers.destroy');

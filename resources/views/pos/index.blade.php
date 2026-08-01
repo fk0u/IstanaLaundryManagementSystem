@@ -45,52 +45,99 @@
                 <!-- Customer & Promo Selectors -->
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <!-- Customer Selection (searchable combobox + quick add) -->
-                    <x-card title="Pilih Pelanggan" :compact="true">
+                    <x-card title="Pilih Pelanggan" :compact="true" class="!overflow-visible z-20">
                         <div class="flex flex-col gap-3">
-                            <label class="text-2xs font-bold text-slate-400 uppercase tracking-wider">Cari Pelanggan</label>
-                            <div class="flex gap-2">
-                                <div class="relative flex-1">
-                                    <input type="text" x-model="customerSearch" autocomplete="off"
-                                           @focus="customerOpen = true" @input="customerOpen = true"
-                                           placeholder="Cari nama atau no. HP..."
-                                           class="w-full h-11 px-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 text-xs font-semibold focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all">
-
-                                    <button type="button" x-show="customerId" x-cloak @click="clearCustomer()"
-                                            class="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-rose-500 cursor-pointer">
-                                        <span class="material-symbols-outlined text-base">close</span>
-                                    </button>
-
-                                    <div x-show="customerOpen" @click.outside="customerOpen = false" x-cloak
-                                         class="absolute z-30 mt-1.5 w-full max-h-56 overflow-y-auto bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-lg divide-y divide-slate-50 dark:divide-slate-800">
-                                        <template x-for="c in filteredCustomers()" :key="c.id">
-                                            <button type="button" @click="selectCustomer(c); customerOpen = false"
-                                                    class="w-full text-left px-3 py-2 hover:bg-orange-50 dark:hover:bg-slate-800/60 flex flex-col cursor-pointer">
-                                                <span class="text-xs font-bold text-slate-700 dark:text-slate-200" x-text="c.name"></span>
-                                                <span class="text-2xs text-slate-400" x-text="c.phone + ' • Poin: ' + c.loyalty_points + ' • ' + c.loyalty_tier"></span>
-                                            </button>
-                                        </template>
-                                        <template x-if="filteredCustomers().length === 0">
-                                            <p class="px-3 py-3 text-2xs text-slate-400 text-center">Pelanggan tidak ditemukan. Klik tombol + untuk mendaftarkan pelanggan baru.</p>
-                                        </template>
+                            
+                            <!-- State 1: When a Customer IS Selected -->
+                            <div x-show="customerId" x-cloak class="relative bg-gradient-to-r from-orange-500/10 via-amber-500/5 to-transparent dark:from-slate-800 dark:to-slate-800/50 p-3.5 rounded-2xl border border-orange-200/80 dark:border-slate-700/80 flex items-center gap-3.5 shadow-xs">
+                                <div class="w-11 h-11 rounded-xl bg-gradient-to-br from-primary to-orange-600 text-white flex items-center justify-center font-black text-sm shadow-md shadow-primary/20 shrink-0">
+                                    <span x-text="selectedCustomer ? selectedCustomer.name.substring(0, 2).toUpperCase() : (customerSearch ? customerSearch.substring(0, 2).toUpperCase() : 'CU')"></span>
+                                </div>
+                                
+                                <div class="flex-1 min-w-0">
+                                    <div class="flex items-center gap-2 flex-wrap">
+                                        <h4 class="text-sm font-extrabold text-slate-900 dark:text-white truncate" x-text="selectedCustomer ? selectedCustomer.name : customerSearch"></h4>
+                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-primary/10 text-primary border border-primary/20" x-text="customerTier">Bronze</span>
+                                    </div>
+                                    <div class="flex items-center gap-3 text-2xs text-slate-500 dark:text-slate-400 mt-0.5 font-medium">
+                                        <span class="flex items-center gap-1" x-show="selectedCustomer && selectedCustomer.phone"><span class="material-symbols-outlined text-xs">call</span> <span x-text="selectedCustomer ? selectedCustomer.phone : ''"></span></span>
+                                        <span class="flex items-center gap-1"><span class="material-symbols-outlined text-xs">stars</span> <span class="font-bold text-primary" x-text="customerPoints"></span> Poin</span>
                                     </div>
                                 </div>
 
-                                <button type="button" @click="openAddCustomerModal()" title="Tambah Pelanggan Baru"
-                                        class="btn-touch shrink-0 w-11 h-11 rounded-xl bg-primary/10 hover:bg-primary/20 text-primary flex items-center justify-center cursor-pointer">
-                                    <span class="material-symbols-outlined text-xl">person_add</span>
+                                <button type="button" @click="clearCustomer()" title="Ganti Pelanggan"
+                                        class="btn-touch shrink-0 px-3 py-1.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:text-rose-500 hover:border-rose-300 text-2xs font-bold flex items-center gap-1 transition-all cursor-pointer shadow-xs">
+                                    <span class="material-symbols-outlined text-sm">swap_horiz</span>
+                                    Ganti
                                 </button>
                             </div>
-                            <div x-show="customerId" class="flex gap-3 items-center bg-orange-50/60 dark:bg-slate-800/40 p-2.5 rounded-xl border border-orange-100 dark:border-slate-800" x-cloak>
-                                <span class="material-symbols-outlined text-primary text-xl">workspace_premium</span>
-                                <div>
-                                    <span class="block text-2xs text-slate-400 font-bold uppercase tracking-wider">Tier</span>
-                                    <span class="text-xs font-bold text-slate-700 dark:text-slate-200" x-text="customerTier">Bronze</span>
-                                </div>
-                                <div class="ml-auto text-right">
-                                    <span class="block text-2xs text-slate-400 font-bold uppercase tracking-wider">Poin</span>
-                                    <span class="text-xs font-bold text-primary" x-text="customerPoints">0</span>
+
+                            <!-- State 2: When Searching / Selecting Customer -->
+                            <div x-show="!customerId" class="flex flex-col gap-2">
+                                <label class="text-2xs font-bold text-slate-400 uppercase tracking-wider">Cari Nama / No. HP Pelanggan</label>
+                                <div class="flex gap-2">
+                                    <div class="relative flex-1" @click.outside="customerOpen = false">
+                                        <div class="relative flex items-center">
+                                            <span class="material-symbols-outlined absolute left-3 text-slate-400 text-lg pointer-events-none">search</span>
+                                            <input type="text" x-model="customerSearch" autocomplete="off"
+                                                   @focus="customerOpen = true" @click="customerOpen = true" @input="customerOpen = true"
+                                                   placeholder="Ketik nama atau no. HP..."
+                                                   class="w-full h-11 pl-9 pr-8 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 text-xs font-semibold focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all shadow-xs">
+
+                                            <button type="button" x-show="customerSearch" x-cloak @click="customerSearch = ''; customerOpen = true"
+                                                    class="absolute right-2.5 text-slate-400 hover:text-slate-600 cursor-pointer">
+                                                <span class="material-symbols-outlined text-base">close</span>
+                                            </button>
+                                        </div>
+
+                                        <!-- Dropdown Float Menu -->
+                                        <div x-show="customerOpen" x-transition.opacity.duration.150ms x-cloak
+                                             class="absolute z-50 mt-2 w-full max-h-64 overflow-y-auto bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl divide-y divide-slate-100 dark:divide-slate-800/60">
+                                            
+                                            <div class="px-3.5 py-2 bg-slate-50/80 dark:bg-slate-800/50 flex items-center justify-between sticky top-0 backdrop-blur-sm z-10">
+                                                <span class="text-[10px] font-black text-slate-400 uppercase tracking-wider">Pelanggan Terdaftar</span>
+                                                <span class="text-[10px] font-bold text-primary" x-text="filteredCustomers().length + ' Pelanggan'"></span>
+                                            </div>
+
+                                            <template x-for="c in filteredCustomers()" :key="c.id">
+                                                <button type="button" @click="selectCustomer(c); customerOpen = false"
+                                                        class="w-full text-left px-3.5 py-2.5 hover:bg-primary/5 dark:hover:bg-slate-800/80 flex items-center justify-between gap-3 group transition-colors cursor-pointer">
+                                                    <div class="flex items-center gap-3 min-w-0">
+                                                        <div class="w-8 h-8 rounded-lg bg-orange-100 dark:bg-slate-800 text-primary flex items-center justify-center font-bold text-xs shrink-0 group-hover:bg-primary group-hover:text-white transition-colors">
+                                                            <span x-text="c.name.substring(0, 2).toUpperCase()"></span>
+                                                        </div>
+                                                        <div class="min-w-0">
+                                                            <h5 class="text-xs font-bold text-slate-800 dark:text-slate-100 group-hover:text-primary transition-colors truncate" x-text="c.name"></h5>
+                                                            <p class="text-2xs text-slate-400 font-mono" x-text="c.phone"></p>
+                                                        </div>
+                                                    </div>
+                                                    <div class="text-right shrink-0">
+                                                        <span class="inline-block text-[10px] font-extrabold px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300" x-text="c.loyalty_tier || 'Bronze'"></span>
+                                                        <span class="block text-[10px] font-bold text-primary mt-0.5" x-text="c.loyalty_points + ' Poin'"></span>
+                                                    </div>
+                                                </button>
+                                            </template>
+
+                                            <template x-if="filteredCustomers().length === 0">
+                                                <div class="px-4 py-6 text-center flex flex-col items-center gap-2">
+                                                    <span class="material-symbols-outlined text-3xl text-slate-300 dark:text-slate-600">person_search</span>
+                                                    <p class="text-xs font-semibold text-slate-500 dark:text-slate-400">Pelanggan tidak ditemukan</p>
+                                                    <button type="button" @click="openAddCustomerModal()" class="mt-1 btn-touch px-3 py-1.5 bg-primary/10 hover:bg-primary/20 text-primary rounded-xl text-2xs font-bold flex items-center gap-1 transition-all">
+                                                        <span class="material-symbols-outlined text-sm">person_add</span>
+                                                        Daftarkan Pelanggan Baru
+                                                    </button>
+                                                </div>
+                                            </template>
+                                        </div>
+                                    </div>
+
+                                    <button type="button" @click="openAddCustomerModal()" title="Tambah Pelanggan Baru"
+                                            class="btn-touch shrink-0 w-11 h-11 rounded-xl bg-primary/10 hover:bg-primary/20 text-primary flex items-center justify-center cursor-pointer transition-all shadow-xs">
+                                        <span class="material-symbols-outlined text-xl">person_add</span>
+                                    </button>
                                 </div>
                             </div>
+
                         </div>
                     </x-card>
 
@@ -277,15 +324,34 @@
                                 <span class="font-bold" x-text="'- Rp ' + formatNumber(discount)">- Rp 0</span>
                             </div>
 
-                            <div class="flex flex-col gap-1.5 pt-2 border-t border-slate-50 dark:border-slate-800/30" x-show="customerId && customerPoints > 0" x-cloak>
+                            <div class="flex flex-col gap-2 pt-2 border-t border-slate-100 dark:border-slate-800" x-show="customerId && customerPoints > 0" x-cloak>
                                 <div class="flex justify-between items-center text-xs">
-                                    <span class="text-slate-400 font-semibold">Tukarkan Poin</span>
-                                    <div class="flex items-center gap-1">
-                                        <input type="number" name="points_used" x-model.number="pointsUsed" min="0" :max="customerPoints" @input="calculateTotals()"
-                                               class="w-16 h-6 text-center rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-2xs font-bold text-primary focus:border-primary outline-none">
-                                        <span class="text-2xs text-slate-400 font-bold">Poin</span>
-                                    </div>
+                                    <span class="text-slate-400 font-bold uppercase tracking-wider text-[10px]">Tukarkan Poin Member</span>
+                                    <span class="text-2xs font-extrabold text-primary" x-text="'Saldo: ' + customerPoints + ' Poin'"></span>
                                 </div>
+                                <div class="flex items-center gap-2">
+                                    <input type="number" name="points_used" x-model.number="pointsUsed" min="0" :max="customerPoints" @input="calculateTotals()"
+                                           class="w-full h-9 px-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-xs font-extrabold text-primary focus:border-primary outline-none">
+                                    
+                                    <button type="button" @click="maxRedeemPoints()" class="btn-touch shrink-0 px-2.5 h-9 bg-primary/10 hover:bg-primary/20 text-primary rounded-xl text-2xs font-extrabold transition-all cursor-pointer">
+                                        Maksimal
+                                    </button>
+                                </div>
+                                <div class="flex gap-1.5 flex-wrap">
+                                    <button type="button" @click="quickRedeemPoints(50)" x-show="customerPoints >= 50" class="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-2xs font-bold text-slate-600 dark:text-slate-300 hover:bg-primary hover:text-white transition-all">50 Pts</button>
+                                    <button type="button" @click="quickRedeemPoints(100)" x-show="customerPoints >= 100" class="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-2xs font-bold text-slate-600 dark:text-slate-300 hover:bg-primary hover:text-white transition-all">100 Pts</button>
+                                    <button type="button" @click="quickRedeemPoints(500)" x-show="customerPoints >= 500" class="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-2xs font-bold text-slate-600 dark:text-slate-300 hover:bg-primary hover:text-white transition-all">500 Pts</button>
+                                    <button type="button" @click="pointsUsed = 0; calculateTotals()" x-show="pointsUsed > 0" class="px-2 py-0.5 rounded-md bg-rose-50 dark:bg-rose-950/30 text-rose-500 text-2xs font-bold hover:bg-rose-100 transition-all">Reset</button>
+                                </div>
+                            </div>
+
+                            <!-- Bonus Estimated Earned Points Badge -->
+                            <div x-show="customerId && total > 0" class="flex justify-between items-center bg-orange-50/70 dark:bg-slate-800/40 p-2.5 rounded-xl border border-orange-100 dark:border-slate-800/60 text-2xs font-semibold" x-cloak>
+                                <div class="flex items-center gap-1.5 text-primary font-bold">
+                                    <span class="material-symbols-outlined text-sm">stars</span>
+                                    <span>Estimasi Poin Transaksi</span>
+                                </div>
+                                <span class="font-extrabold text-primary" x-text="'+' + estimatedPointsEarned() + ' Poin (' + getTierMultiplier() + 'x)'"></span>
                             </div>
 
                             <div class="flex justify-between text-base font-black pt-2 border-t border-slate-100 dark:border-slate-800">
@@ -609,6 +675,7 @@
                 showBranchScopeModal: {{ auth()->user()->hasAnyRole(['Developer', 'Owner', 'Super_Admin']) && !session()->has('scoped_branch_id') ? 'true' : 'false' }},
                 cart: [],
                 customers: initialCustomers || window.__posCustomers || [],
+                selectedCustomer: null,
                 customerId: '',
                 customerSearch: '',
                 customerOpen: false,
@@ -742,6 +809,7 @@
                 },
 
                 selectCustomer(c) {
+                    this.selectedCustomer = c;
                     this.customerId = String(c.id);
                     this.customerSearch = c.name;
                     this.customerPoints = c.loyalty_points || 0;
@@ -750,6 +818,7 @@
                 },
 
                 clearCustomer() {
+                    this.selectedCustomer = null;
                     this.customerId = '';
                     this.customerSearch = '';
                     this.customerPoints = 0;
@@ -813,6 +882,33 @@
                         this.promoMin = 0;
                         this.promoDescription = '';
                     }
+                    this.calculateTotals();
+                },
+
+                getTierMultiplier() {
+                    const tier = (this.customerTier || 'Bronze').toUpperCase();
+                    if (tier === 'PLATINUM') return 2.0;
+                    if (tier === 'GOLD') return 1.5;
+                    if (tier === 'SILVER') return 1.25;
+                    return 1.0;
+                },
+
+                estimatedPointsEarned() {
+                    if (!this.total || this.total <= 0) return 0;
+                    const basePoints = Math.floor(this.total / 1000);
+                    return Math.floor(basePoints * this.getTierMultiplier());
+                },
+
+                quickRedeemPoints(pts) {
+                    let available = Math.min(pts, this.customerPoints);
+                    let maxAllowed = Math.max(0, this.subtotal - this.discount);
+                    this.pointsUsed = Math.min(available, maxAllowed);
+                    this.calculateTotals();
+                },
+
+                maxRedeemPoints() {
+                    let maxAllowed = Math.max(0, this.subtotal - this.discount);
+                    this.pointsUsed = Math.min(this.customerPoints, maxAllowed);
                     this.calculateTotals();
                 },
 

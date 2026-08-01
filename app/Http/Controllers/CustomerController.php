@@ -83,6 +83,48 @@ class CustomerController extends Controller
         return redirect()->back()->with('success', 'Pelanggan berhasil dihapus.');
     }
 
+    public function pointLogs($id)
+    {
+        $customer = Customer::findOrFail($id);
+        $logs = $customer->loyaltyPointLogs()
+            ->with('order')
+            ->orderBy('created_at', 'desc')
+            ->take(30)
+            ->get();
+
+        return response()->json([
+            'customer' => [
+                'id' => $customer->id,
+                'name' => $customer->name,
+                'phone' => $customer->phone,
+                'loyalty_points' => $customer->loyalty_points,
+                'loyalty_tier' => $customer->loyalty_tier,
+            ],
+            'logs' => $logs->map(fn ($log) => [
+                'id' => $log->id,
+                'type' => $log->type,
+                'points' => $log->points,
+                'balance_after' => $log->balance_after,
+                'description' => $log->description,
+                'order_number' => $log->order?->order_number,
+                'created_at' => $log->created_at->format('d M Y H:i'),
+            ]),
+        ]);
+    }
+
+    public function adjustPoints(Request $request, $id, \App\Services\CRM\LoyaltyService $loyaltyService)
+    {
+        $request->validate([
+            'points' => 'required|integer',
+            'reason' => 'required|string|max:255',
+        ]);
+
+        $customer = Customer::findOrFail($id);
+        $loyaltyService->adjustPoints($customer, (int) $request->points, $request->reason);
+
+        return redirect()->back()->with('success', "Poin pelanggan #{$customer->name} berhasil diperbarui!");
+    }
+
     public function exportCsv(Request $request)
     {
         $q = trim($request->query('q', ''));

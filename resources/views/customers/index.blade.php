@@ -2,7 +2,11 @@
     <div x-data="{ 
         showEditModal: false, 
         showHistoryModal: false,
+        showPointLogModal: false,
         historyCustomer: null,
+        pointCustomer: null,
+        pointLogs: [],
+        loadingPointLogs: false,
         editId: null, 
         editName: '', 
         editPhone: '', 
@@ -23,6 +27,21 @@
         openHistory(customer) {
             this.historyCustomer = customer;
             this.showHistoryModal = true;
+        },
+        async openPointLogs(customer) {
+            this.pointCustomer = customer;
+            this.pointLogs = [];
+            this.loadingPointLogs = true;
+            this.showPointLogModal = true;
+            try {
+                const res = await fetch('/customers/' + customer.id + '/point-logs');
+                const data = await res.json();
+                this.pointLogs = data.logs || [];
+            } catch(e) {
+                console.error('Failed to load point logs', e);
+            } finally {
+                this.loadingPointLogs = false;
+            }
         }
     }" class="flex flex-col gap-4 md:gap-6">
         <x-page-header title="Customer Relationship Management (CRM)" :breadcrumbs="['CRM' => '/customers']" />
@@ -130,11 +149,16 @@
                                         </td>
                                         <td class="py-4 px-4">
                                             <div class="flex items-center justify-end gap-1.5">
-                                                <button @click="openHistory({{ $customer->toJson() }})" 
-                                                        class="px-2.5 py-1 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-2xs font-bold rounded-lg flex items-center gap-1 transition-colors cursor-pointer"
-                                                        title="Riwayat Transaksi">
-                                                    <span class="material-symbols-outlined text-xs">history</span> Riwayat
-                                                </button>
+                                                 <button @click="openPointLogs({{ $customer->toJson() }})" 
+                                                         class="px-2.5 py-1 bg-orange-50 dark:bg-slate-800 hover:bg-orange-100 text-primary text-2xs font-extrabold rounded-lg flex items-center gap-1 transition-colors cursor-pointer"
+                                                         title="Riwayat Poin & Tier">
+                                                     <span class="material-symbols-outlined text-xs">stars</span> Poin
+                                                 </button>
+                                                 <button @click="openHistory({{ $customer->toJson() }})" 
+                                                         class="px-2.5 py-1 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-2xs font-bold rounded-lg flex items-center gap-1 transition-colors cursor-pointer"
+                                                         title="Riwayat Transaksi">
+                                                     <span class="material-symbols-outlined text-xs">history</span> Riwayat
+                                                 </button>
                                                 <button @click="openEdit({{ $customer->toJson() }})" class="p-1.5 text-slate-500 hover:text-primary transition-colors cursor-pointer" title="Edit">
                                                     <span class="material-symbols-outlined text-base">edit</span>
                                                 </button>
@@ -400,6 +424,101 @@
                         </div>
                     </template>
                 </div>
+            </div>
+        </div>
+
+        <!-- Loyalty Point Logs & Manual Adjustment Modal -->
+        <div x-show="showPointLogModal" 
+             class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-900/60 backdrop-blur-sm"
+             x-cloak @keydown.escape.window="showPointLogModal = false">
+            <div @click.away="showPointLogModal = false"
+                 class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-t-2xl sm:rounded-2xl max-w-xl w-full p-5 shadow-2xl transition-all duration-300 max-h-[85vh] overflow-y-auto space-y-4">
+                
+                <div class="flex justify-between items-center pb-3 border-b border-slate-100 dark:border-slate-800">
+                    <div class="flex items-center gap-2.5">
+                        <div class="w-9 h-9 rounded-xl bg-orange-100 dark:bg-slate-800 text-primary flex items-center justify-center font-bold">
+                            <span class="material-symbols-outlined text-xl">stars</span>
+                        </div>
+                        <div>
+                            <h3 class="text-base font-extrabold text-slate-900 dark:text-white">Riwayat Poin & Tier Member</h3>
+                            <p class="text-xs text-slate-400 font-semibold" x-text="pointCustomer ? pointCustomer.name + ' • Tier ' + pointCustomer.loyalty_tier + ' (' + pointCustomer.loyalty_points + ' Poin)' : ''"></p>
+                        </div>
+                    </div>
+                    <button @click="showPointLogModal = false" class="text-slate-400 hover:text-slate-600">
+                        <span class="material-symbols-outlined">close</span>
+                    </button>
+                </div>
+
+                <!-- Admin Manual Point Adjustment Box -->
+                @if(auth()->user()->hasAnyRole(['Developer', 'Owner', 'Super_Admin', 'Branch_Admin']))
+                    <form :action="'/customers/' + (pointCustomer ? pointCustomer.id : '') + '/adjust-points'" method="POST" class="bg-orange-50/60 dark:bg-slate-800/50 p-3.5 rounded-2xl border border-orange-100 dark:border-slate-700/60 space-y-2.5">
+                        @csrf
+                        <span class="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1">
+                            <span class="material-symbols-outlined text-primary text-base">tune</span>
+                            Penyesuaian Poin Manual oleh Admin
+                        </span>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                            <input type="number" name="points" placeholder="Jumlah Poin (+/-)..." required
+                                   class="h-9 px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs font-bold text-primary focus:border-primary outline-none">
+                            <input type="text" name="reason" placeholder="Alasan (mis: Bonus Ulang Tahun)..." required
+                                   class="h-9 px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs font-semibold focus:border-primary outline-none">
+                        </div>
+                        <button type="submit" class="btn-touch w-full h-8 bg-primary hover:bg-primary-hover text-white font-bold rounded-xl text-xs flex items-center justify-center gap-1 shadow-xs cursor-pointer">
+                            <span class="material-symbols-outlined text-sm">check</span>
+                            Proses Penyesuaian Poin
+                        </button>
+                    </form>
+                @endif
+
+                <!-- Point Audit Trail Logs Table -->
+                <div class="space-y-2">
+                    <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Log Riwayat Poin</h4>
+                    
+                    <template x-if="loadingPointLogs">
+                        <div class="py-8 text-center text-xs text-slate-400">Memuat log riwayat poin...</div>
+                    </template>
+
+                    <template x-if="!loadingPointLogs && pointLogs.length > 0">
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-xs border-collapse">
+                                <thead>
+                                    <tr class="border-b border-slate-100 dark:border-slate-800 text-slate-400 font-bold uppercase tracking-wider">
+                                        <th class="py-2.5 px-3">Tanggal</th>
+                                        <th class="py-2.5 px-3">Tipe</th>
+                                        <th class="py-2.5 px-3">Perubahan</th>
+                                        <th class="py-2.5 px-3">Deskripsi</th>
+                                        <th class="py-2.5 px-3 text-right">Saldo Akhir</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-50 dark:divide-slate-850">
+                                    <template x-for="log in pointLogs" :key="log.id">
+                                        <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-900/30">
+                                            <td class="py-2.5 px-3 text-slate-500 text-2xs" x-text="log.created_at"></td>
+                                            <td class="py-2.5 px-3">
+                                                <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase"
+                                                      :class="log.type === 'earn' ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-950/30' : (log.type === 'redeem' ? 'bg-rose-50 text-rose-500 dark:bg-rose-950/30' : 'bg-amber-50 text-amber-600 dark:bg-amber-950/30')"
+                                                      x-text="log.type"></span>
+                                            </td>
+                                            <td class="py-2.5 px-3 font-mono font-bold"
+                                                :class="log.points > 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-500'"
+                                                x-text="(log.points > 0 ? '+' : '') + log.points"></td>
+                                            <td class="py-2.5 px-3 text-slate-600 dark:text-slate-400 text-2xs" x-text="log.description"></td>
+                                            <td class="py-2.5 px-3 text-right font-mono font-bold text-slate-800 dark:text-slate-200" x-text="log.balance_after + ' Pts'"></td>
+                                        </tr>
+                                    </template>
+                                </tbody>
+                            </table>
+                        </div>
+                    </template>
+
+                    <template x-if="!loadingPointLogs && pointLogs.length === 0">
+                        <div class="text-center py-8 text-slate-400 text-xs">
+                            <span class="material-symbols-outlined text-4xl block mb-2 opacity-50">stars</span>
+                            Belum ada riwayat poin recorded untuk pelanggan ini.
+                        </div>
+                    </template>
+                </div>
+
             </div>
         </div>
 

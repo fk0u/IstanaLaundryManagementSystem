@@ -137,14 +137,13 @@ class DashboardController extends Controller
             ->toArray();
 
         $productionBreakdown = [
-            'TERIMA'  => (int) ($productionCountsRaw['TERIMA'] ?? 0),
-            'PILAH'   => (int) ($productionCountsRaw['PILAH'] ?? 0),
-            'CUCI'    => (int) ($productionCountsRaw['CUCI'] ?? 0),
-            'KERING'  => (int) ($productionCountsRaw['KERING'] ?? 0),
-            'SETRIKA' => (int) ($productionCountsRaw['SETRIKA'] ?? 0),
-            'CEK'     => (int) ($productionCountsRaw['CEK'] ?? 0),
-            'PACKING' => (int) ($productionCountsRaw['PACKING'] ?? 0),
-            'SIAP'    => (int) ($productionCountsRaw['SIAP'] ?? 0),
+            'TERIMA' => (int) ($productionCountsRaw['TERIMA'] ?? 0),
+            'PILAH'  => (int) ($productionCountsRaw['PILAH'] ?? 0),
+            'CUCI'   => (int) ($productionCountsRaw['CUCI'] ?? 0),
+            'KERING' => (int) ($productionCountsRaw['KERING'] ?? 0),
+            'LIPAT'  => (int) ($productionCountsRaw['LIPAT'] ?? 0),
+            'CEK'    => (int) ($productionCountsRaw['CEK'] ?? 0),
+            'SIAP'   => (int) ($productionCountsRaw['SIAP'] ?? 0),
         ];
 
         $branchesList = $branches;
@@ -203,6 +202,23 @@ class DashboardController extends Controller
         // 7 days daily revenue trend for chart — single grouped query.
         [$chartLabels, $chartValues] = $this->weeklyRevenueTrend($branchId);
 
+        $productionCountsRaw = Order::where('branch_id', $branchId)
+            ->whereNotIn('production_status', ['DIAMBIL'])
+            ->selectRaw('production_status, count(*) as count')
+            ->groupBy('production_status')
+            ->pluck('count', 'production_status')
+            ->toArray();
+
+        $productionBreakdown = [
+            'TERIMA' => (int) ($productionCountsRaw['TERIMA'] ?? 0),
+            'PILAH'  => (int) ($productionCountsRaw['PILAH'] ?? 0),
+            'CUCI'   => (int) ($productionCountsRaw['CUCI'] ?? 0),
+            'KERING' => (int) ($productionCountsRaw['KERING'] ?? 0),
+            'LIPAT'  => (int) ($productionCountsRaw['LIPAT'] ?? 0),
+            'CEK'    => (int) ($productionCountsRaw['CEK'] ?? 0),
+            'SIAP'   => (int) ($productionCountsRaw['SIAP'] ?? 0),
+        ];
+
         return view('dashboard.branch_admin', compact(
             'branch',
             'totalRevenue',
@@ -211,7 +227,8 @@ class DashboardController extends Controller
             'todayTransactions',
             'recentOrders',
             'chartLabels',
-            'chartValues'
+            'chartValues',
+            'productionBreakdown'
         ));
     }
 
@@ -243,12 +260,30 @@ class DashboardController extends Controller
             ->take(5)
             ->get();
 
+        $productionCountsRaw = Order::where('branch_id', $branchId)
+            ->whereNotIn('production_status', ['DIAMBIL'])
+            ->selectRaw('production_status, count(*) as count')
+            ->groupBy('production_status')
+            ->pluck('count', 'production_status')
+            ->toArray();
+
+        $productionBreakdown = [
+            'TERIMA' => (int) ($productionCountsRaw['TERIMA'] ?? 0),
+            'PILAH'  => (int) ($productionCountsRaw['PILAH'] ?? 0),
+            'CUCI'   => (int) ($productionCountsRaw['CUCI'] ?? 0),
+            'KERING' => (int) ($productionCountsRaw['KERING'] ?? 0),
+            'LIPAT'  => (int) ($productionCountsRaw['LIPAT'] ?? 0),
+            'CEK'    => (int) ($productionCountsRaw['CEK'] ?? 0),
+            'SIAP'   => (int) ($productionCountsRaw['SIAP'] ?? 0),
+        ];
+
         return view('dashboard.cashier', compact(
             'branch',
             'todayTransactionsCount',
             'todayRevenue',
             'customerCount',
-            'recentOrders'
+            'recentOrders',
+            'productionBreakdown'
         ));
     }
 
@@ -267,16 +302,18 @@ class DashboardController extends Controller
             ->pluck('count', 'production_status')
             ->toArray();
 
-        // Standardize keys
-        $statuses = ['TERIMA', 'CUCI', 'KERING', 'SETRIKA', 'PACKING', 'SIAP'];
+        // Standardize keys with single source of truth
+        $statuses = ['TERIMA', 'PILAH', 'CUCI', 'KERING', 'LIPAT', 'CEK', 'SIAP'];
         $stats = [];
         $totalActive = 0;
         foreach ($statuses as $status) {
-            $stats[$status] = $statusCounts[$status] ?? 0;
+            $stats[$status] = (int) ($statusCounts[$status] ?? 0);
             if ($status !== 'SIAP') {
                 $totalActive += $stats[$status];
             }
         }
+
+        $productionBreakdown = $stats;
 
         $completedTodayCount = Order::where('branch_id', $branchId)
             ->where('production_status', 'SIAP')
@@ -284,7 +321,7 @@ class DashboardController extends Controller
             ->count();
 
         $activeProductionOrders = Order::where('branch_id', $branchId)
-            ->whereIn('production_status', ['TERIMA', 'CUCI', 'KERING', 'SETRIKA', 'PACKING'])
+            ->whereIn('production_status', ['TERIMA', 'PILAH', 'CUCI', 'KERING', 'LIPAT', 'CEK'])
             ->with(['customer', 'items.service'])
             ->orderBy('created_at', 'asc')
             ->take(10)
@@ -295,7 +332,8 @@ class DashboardController extends Controller
             'stats',
             'totalActive',
             'completedTodayCount',
-            'activeProductionOrders'
+            'activeProductionOrders',
+            'productionBreakdown'
         ));
     }
 

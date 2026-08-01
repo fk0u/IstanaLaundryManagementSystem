@@ -65,30 +65,30 @@ class ERPDataSeeder extends Seeder
             }
         }
 
-        // 3. Seed Customers — GLOBAL (satu akun bisa dipakai di cabang mana saja)
-        $customerTemplates = [
-            ['name' => 'Budi Santoso', 'phone' => '081234567890', 'email' => 'budi@gmail.com', 'address' => 'Jl. Juanda No. 12, Samarinda'],
-            ['name' => 'Ani Wijaya', 'phone' => '081398765432', 'email' => 'ani@hotmail.com', 'address' => 'Jl. Pasundan Gg. 3B, Samarinda'],
-            ['name' => 'Charles Hutagalung', 'phone' => '082155554444', 'email' => 'charles@yahoo.com', 'address' => 'Jl. Pangeran Hidayatullah, Samarinda'],
-            ['name' => 'Dewi Lestari', 'phone' => '081122223333', 'email' => 'dewi@gmail.com', 'address' => 'Jl. Lambung Mangkurat, Samarinda'],
-            ['name' => 'Eko Prasetyo', 'phone' => '085299998888', 'email' => 'eko@gmail.com', 'address' => 'Jl. Wijaya Kusuma, Samarinda'],
-        ];
-
-        $firstBranch = $branches->first();
+        // 3. Seed Customers for EACH branch to ensure multi-tenancy coverage
         $custIdx = 1;
-        foreach ($customerTemplates as $template) {
-            Customer::firstOrCreate(
-                ['phone' => $template['phone']],
-                [
-                    'branch_id' => $firstBranch->id,
-                    'name' => $template['name'],
-                    'email' => $template['email'],
-                    'address' => $template['address'],
-                    'member_code' => 'CUST-'.str_pad($custIdx++, 4, '0', STR_PAD_LEFT),
-                    'loyalty_tier' => 'Bronze',
-                    'loyalty_points' => rand(10, 150),
-                ]
-            );
+        foreach ($branches as $branch) {
+            $customerTemplates = [
+                ['name' => "Pelanggan Utama {$branch->code}", 'phone' => '0812'.str_pad($branch->id, 2, '0', STR_PAD_LEFT).'111222', 'email' => "cust1.{$branch->code}@gmail.com", 'address' => "Jl. Utama No. 12, Area {$branch->name}"],
+                ['name' => "Pelanggan Reguler {$branch->code}", 'phone' => '0813'.str_pad($branch->id, 2, '0', STR_PAD_LEFT).'333444', 'email' => "cust2.{$branch->code}@gmail.com", 'address' => "Jl. Pasundan Gg. 3B, Area {$branch->name}"],
+                ['name' => "Pelanggan VIP {$branch->code}", 'phone' => '0821'.str_pad($branch->id, 2, '0', STR_PAD_LEFT).'555666', 'email' => "cust3.{$branch->code}@gmail.com", 'address' => "Jl. Pemuda No. 45, Area {$branch->name}"],
+                ['name' => "Pelanggan Express {$branch->code}", 'phone' => '0852'.str_pad($branch->id, 2, '0', STR_PAD_LEFT).'777888', 'email' => "cust4.{$branch->code}@gmail.com", 'address' => "Jl. Ahmad Yani No. 88, Area {$branch->name}"],
+            ];
+
+            foreach ($customerTemplates as $template) {
+                Customer::firstOrCreate(
+                    ['phone' => $template['phone']],
+                    [
+                        'branch_id' => $branch->id,
+                        'name' => $template['name'],
+                        'email' => $template['email'],
+                        'address' => $template['address'],
+                        'member_code' => 'CUST-'.$branch->code.'-'.str_pad($custIdx++, 4, '0', STR_PAD_LEFT),
+                        'loyalty_tier' => 'Bronze',
+                        'loyalty_points' => rand(10, 150),
+                    ]
+                );
+            }
         }
 
         // 4. Seed Employees for HR Module
@@ -202,7 +202,64 @@ class ERPDataSeeder extends Seeder
             \App\Http\Controllers\AssetController::generateSchedulesForAsset($fa2);
         }
 
-        // 6. Seed Past & Today Orders for Dashboards
+        // 5. Seed Active Promotions & Coupons
+        \App\Models\Promotion::firstOrCreate(
+            ['code' => 'HEMAT10'],
+            [
+                'name' => 'Diskon Hemat 10%',
+                'code' => 'HEMAT10',
+                'type' => 'percent',
+                'value' => 10,
+                'min_transaction' => 20000,
+                'start_date' => now()->subMonth()->toDateString(),
+                'end_date' => now()->addYear()->toDateString(),
+                'is_active' => true,
+            ]
+        );
+
+        \App\Models\Promotion::firstOrCreate(
+            ['code' => 'DISKON50K'],
+            [
+                'name' => 'Potongan Rp 50.000 (Spesial)',
+                'code' => 'DISKON50K',
+                'type' => 'nominal',
+                'value' => 50000,
+                'min_transaction' => 100000,
+                'start_date' => now()->subMonth()->toDateString(),
+                'end_date' => now()->addYear()->toDateString(),
+                'is_active' => true,
+            ]
+        );
+
+        \App\Models\Promotion::firstOrCreate(
+            ['code' => 'WELCOME'],
+            [
+                'name' => 'Promo Sambutan Rp 10.000',
+                'code' => 'WELCOME',
+                'type' => 'nominal',
+                'value' => 10000,
+                'min_transaction' => 25000,
+                'start_date' => now()->subMonth()->toDateString(),
+                'end_date' => now()->addYear()->toDateString(),
+                'is_active' => true,
+            ]
+        );
+
+        \App\Models\Promotion::firstOrCreate(
+            ['code' => 'MERDEKA20'],
+            [
+                'name' => 'Diskon Promo Merdeka 20%',
+                'code' => 'MERDEKA20',
+                'type' => 'percent',
+                'value' => 20,
+                'min_transaction' => 30000,
+                'start_date' => now()->subMonth()->toDateString(),
+                'end_date' => now()->addYear()->toDateString(),
+                'is_active' => true,
+            ]
+        );
+
+        // 6. Seed Past & Today Orders for Dashboards across ALL branches
         foreach ($branches as $branch) {
             $branchCustomers = Customer::where('branch_id', $branch->id)->get();
             $cashierUser = User::where('branch_id', $branch->id)->where('email', 'like', 'cashier%')->first()
@@ -213,12 +270,12 @@ class ERPDataSeeder extends Seeder
                 continue;
             }
 
-            // Seed 7 days daily revenue trend
-            for ($i = 7; $i >= 0; $i--) {
+            // Seed 14 days daily revenue trend for each branch
+            for ($i = 14; $i >= 0; $i--) {
                 $date = now()->subDays($i);
 
-                // 1-3 orders per day
-                $numOrders = rand(1, 3);
+                // 2-4 orders per day per branch
+                $numOrders = rand(2, 4);
                 for ($o = 1; $o <= $numOrders; $o++) {
                     $customer = $branchCustomers->random();
                     $service = $services->random();
@@ -230,7 +287,7 @@ class ERPDataSeeder extends Seeder
                     $subtotal = $unitPrice * $qty;
                     $total = $subtotal; // Simple total without discount
 
-                    $seqStr = str_pad(rand(10, 999), 4, '0', STR_PAD_LEFT);
+                    $seqStr = str_pad(rand(10, 9999), 4, '0', STR_PAD_LEFT);
                     $orderNumber = "ORD-{$branch->code}-{$date->format('Ymd')}-{$seqStr}";
 
                     // Status and payment
