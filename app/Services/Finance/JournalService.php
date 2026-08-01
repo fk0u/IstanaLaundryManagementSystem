@@ -245,26 +245,51 @@ class JournalService
     }
 
     /**
-     * Post journal entry for Payroll.
+     * Post journal entry for Payroll with real-time double-entry accounting sync.
      */
     public function postPayrollJournal(Payroll $payroll): Journal
     {
-        $totalNetSalary = $payroll->payrollItems()->sum('net_salary');
+        // Prevent duplicate posting for the same payroll
+        $existingJournal = Journal::withoutGlobalScopes()
+            ->where('source_type', Payroll::class)
+            ->where('source_id', $payroll->id)
+            ->first();
+
+        if ($existingJournal) {
+            return $existingJournal;
+        }
+
+        $items = $payroll->items()->get();
+
+        $totalEarnings = (float) $items->sum(function ($item) {
+            return (float) ($item->total_earnings > 0 ? $item->total_earnings : $item->calculateTotalEarnings());
+        });
+
+        $totalDeductions = (float) $items->sum(function ($item) {
+            return (float) ($item->total_deductions > 0 ? $item->total_deductions : $item->calculateTotalDeductions());
+        });
+
+        $totalNetSalary = (float) $items->sum('net_salary');
+
+        if ($totalEarnings <= 0 && $totalNetSalary <= 0) {
+            $totalEarnings = 0;
+            $totalNetSalary = 0;
+        }
 
         $entries = [];
 
-        // Dr: Beban Gaji
+        // 1. Dr: Beban Gaji & Upah (5-3101) - Total Gaji Kotor
         $expenseAccount = ChartOfAccount::where('code', '5-3101')->first()
             ?? ChartOfAccount::firstOrCreate(['code' => '5-3101'], ['name' => 'Beban Gaji & Upah', 'type' => 'expense', 'normal_balance' => 'debit', 'level' => 3]);
 
         $entries[] = [
             'account_id' => $expenseAccount->id,
-            'debit' => $totalNetSalary,
+            'debit' => $totalEarnings > 0 ? $totalEarnings : $totalNetSalary,
             'credit' => 0,
-            'description' => "Beban gaji karyawan periode {$payroll->month}/{$payroll->year}",
+            'description' => "Beban Gaji & Upah Karyawan Periode {$payroll->month}/{$payroll->year}",
         ];
 
-        // Cr: Kas Kecil
+        // 2. Cr: Kas Kecil / Bank (1-1101) - Total Gaji Bersih (Take Home Pay)
         $cashAccount = ChartOfAccount::where('code', '1-1101')->first()
             ?? ChartOfAccount::firstOrCreate(['code' => '1-1101'], ['name' => 'Kas Kecil', 'type' => 'asset', 'normal_balance' => 'debit', 'level' => 3]);
 
@@ -272,10 +297,25 @@ class JournalService
             'account_id' => $cashAccount->id,
             'debit' => 0,
             'credit' => $totalNetSalary,
-            'description' => "Pembayaran gaji karyawan periode {$payroll->month}/{$payroll->year}",
+            'description' => "Pembayaran Gaji Bersih (THP) Karyawan Periode {$payroll->month}/{$payroll->year}",
         ];
 
-        return $this->autoPostJournal($payroll, $payroll->id, $entries, now()->toDateString());
+        // 3. Cr: Hutang Gaji & Potongan Karyawan (2-1201) - Total Potongan (BPJS/Kasbon) jika ada
+        if ($totalDeductions > 0) {
+            $deductionAccount = ChartOfAccount::where('code', '2-1201')->first()
+                ?? ChartOfAccount::firstOrCreate(['code' => '2-1201'], ['name' => 'Hutang Gaji & Potongan Karyawan', 'type' => 'liability', 'normal_balance' => 'credit', 'level' => 3]);
+
+            $entries[] = [
+                'account_id' => $deductionAccount->id,
+                'debit' => 0,
+                'credit' => $totalDeductions,
+                'description' => "Potongan BPJS / Kasbon / Denda Periode {$payroll->month}/{$payroll->year}",
+            ];
+        }
+
+        $date = $payroll->processed_at ? $payroll->processed_at->toDateString() : now()->toDateString();
+
+        return $this->autoPostJournal($payroll, $payroll->id, $entries, $date);
     }
 
     /**

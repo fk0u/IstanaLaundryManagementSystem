@@ -8,11 +8,25 @@
                 </p>
             </div>
             <div class="flex flex-wrap items-center gap-2">
-                @if($payroll->status === 'draft')
-                    <form action="{{ route('hr.payrolls.finalize', $payroll->id) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin MEMFINALKAN payroll ini? Setelah difinalkan, payroll akan DIKUNCI dan tidak dapat diubah.')">
+                @php $hasJournal = $payroll->journals()->exists(); @endphp
+                @if($hasJournal)
+                    <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 text-xs font-bold">
+                        <span class="material-symbols-outlined text-base">account_balance_wallet</span> Jurnal Terposting
+                    </span>
+                @else
+                    <form action="{{ route('hr.payrolls.sync-journal', $payroll->id) }}" method="POST">
                         @csrf
-                        <button type="submit" class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-colors shadow-sm">
-                            <span class="material-symbols-outlined text-base">check_circle</span> Finalkan Payroll & Kunci
+                        <button type="submit" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition-colors shadow-sm cursor-pointer">
+                            <span class="material-symbols-outlined text-base">sync</span> Sync ke Keuangan
+                        </button>
+                    </form>
+                @endif
+
+                @if($payroll->status === 'draft')
+                    <form action="{{ route('hr.payrolls.finalize', $payroll->id) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin MEMFINALKAN payroll ini? Setelah difinalkan, payroll akan DIKUNCI dan Jurnal Keuangan akan otomatis diposting.')">
+                        @csrf
+                        <button type="submit" class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-colors shadow-sm cursor-pointer">
+                            <span class="material-symbols-outlined text-base">check_circle</span> Finalkan & Posting Jurnal
                         </button>
                     </form>
                 @endif

@@ -10,6 +10,7 @@ use App\Models\Employee;
 use App\Models\Payroll;
 use App\Models\PayrollItem;
 use App\Models\User;
+use App\Services\Finance\JournalService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -464,19 +465,36 @@ class HRController extends Controller
         return redirect()->route('hr.index')->with('success', 'Payroll periode berhasil digenerate!');
     }
 
-    public function finalizePayroll(int $payroll)
+    public function finalizePayroll(int $payroll, JournalService $journalService)
     {
         $payroll = $this->resolvePayroll($payroll);
 
-        if ($payroll->status === 'final') {
-            return redirect()->back()->with('error', 'Payroll sudah berstatus FINAL!');
+        if ($payroll->status !== 'final') {
+            $payroll->update([
+                'status' => 'final',
+                'processed_at' => $payroll->processed_at ?? now(),
+            ]);
         }
 
-        $payroll->update([
-            'status' => 'final',
-        ]);
+        try {
+            $journal = $journalService->postPayrollJournal($payroll);
+            return redirect()->back()->with('success', "Payroll periode berhasil difinalkan dan Jurnal Keuangan tersinkronisasi! (Ref: {$journal->reference})");
+        } catch (\Exception $e) {
+            Log::error("Failed to sync payroll journal on finalization: ".$e->getMessage(), ['payroll_id' => $payroll->id]);
+            return redirect()->back()->with('success', 'Payroll periode berhasil difinalkan dan dikunci!');
+        }
+    }
 
-        return redirect()->back()->with('success', 'Payroll periode berhasil difinalkan dan dikunci!');
+    public function syncJournal(int $payroll, JournalService $journalService)
+    {
+        $payroll = $this->resolvePayroll($payroll);
+
+        try {
+            $journal = $journalService->postPayrollJournal($payroll);
+            return redirect()->back()->with('success', "Jurnal keuangan untuk Payroll #{$payroll->id} (Periode {$payroll->month}/{$payroll->year}) berhasil disinkronkan ke Buku Besar! (Ref: {$journal->reference})");
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Gagal memposting jurnal keuangan: '.$e->getMessage());
+        }
     }
 
     public function showPayslip(PayrollItem $item)

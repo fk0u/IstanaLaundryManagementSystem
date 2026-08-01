@@ -250,6 +250,7 @@ Route::middleware(['auth', 'branch.scope'])->group(function () {
         Route::put('/hr/employees/{employee}', [HRController::class, 'updateEmployee'])->name('hr.employees.update');
         Route::post('/hr/payrolls', [HRController::class, 'storePayroll'])->name('hr.payrolls.store');
         Route::post('/hr/payrolls/{payroll}/finalize', [HRController::class, 'finalizePayroll'])->name('hr.payrolls.finalize');
+        Route::post('/hr/payrolls/{payroll}/sync-journal', [HRController::class, 'syncJournal'])->name('hr.payrolls.sync-journal');
         Route::get('/hr/payrolls/{payroll}', [HRController::class, 'showPayroll'])->name('hr.payrolls.show');
         Route::get('/hr/payslip/{item}', [HRController::class, 'showPayslip'])->name('hr.payslip');
         Route::post('/hr/employees/{employee}/create-account', [HRController::class, 'createAccountForEmployee'])->name('hr.employees.create-account');
