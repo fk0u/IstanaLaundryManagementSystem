@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Jobs\PostDepreciationJournalJob;
 use App\Models\Branch;
 use App\Models\ChartOfAccount;
 use App\Models\DepreciationSchedule;
@@ -151,6 +152,16 @@ class AssetController extends Controller
             'accumulated_depreciation' => round($postedAccumulated, 2),
             'book_value' => round($currentBookValue, 2),
         ]);
+
+        // Auto-dispatch journal posting for past-due schedules that are now marked as posted
+        $postedSchedules = DepreciationSchedule::where('asset_id', $asset->id)
+            ->where('is_posted', true)
+            ->whereNull('journal_id')
+            ->get();
+
+        foreach ($postedSchedules as $schedule) {
+            PostDepreciationJournalJob::dispatch($schedule->id);
+        }
     }
 
     public function updateMaintenance(Request $request, FixedAsset $asset)

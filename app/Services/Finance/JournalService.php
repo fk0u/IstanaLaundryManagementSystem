@@ -11,8 +11,10 @@ use App\Models\DepreciationSchedule;
 use App\Models\GoodsReceivedNote;
 use App\Models\Journal;
 use App\Models\JournalLine;
+use App\Models\OperationalExpense;
 use App\Models\Order;
 use App\Models\Payroll;
+use App\Models\SupplierPayment;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -416,5 +418,82 @@ class JournalService
 
             return $reversalJournal;
         });
+    }
+
+    /**
+     * Post journal entry for an Operational Expense (Petty Cash / Daily Expenses).
+     *
+     * Dr. Beban Operasional (expense account selected by user)
+     * Cr. Kas Kecil (1-1101) or Bank (1-1102)
+     */
+    public function postOperationalExpenseJournal(OperationalExpense $expense): Journal
+    {
+        $entries = [];
+
+        // Dr: Beban Operasional (akun beban yang dipilih user, e.g. 5-2101 Listrik)
+        $entries[] = [
+            'account_id' => $expense->account_id,
+            'debit' => $expense->amount,
+            'credit' => 0,
+            'description' => $expense->description,
+        ];
+
+        // Cr: Kas Kecil (cash) or Bank (transfer)
+        if ($expense->payment_method === 'transfer') {
+            $creditAccount = ChartOfAccount::where('code', '1-1102')->first()
+                ?? ChartOfAccount::firstOrCreate(['code' => '1-1102'], ['name' => 'Bank', 'type' => 'asset', 'normal_balance' => 'debit', 'level' => 3]);
+        } else {
+            $creditAccount = ChartOfAccount::where('code', '1-1101')->first()
+                ?? ChartOfAccount::firstOrCreate(['code' => '1-1101'], ['name' => 'Kas Kecil', 'type' => 'asset', 'normal_balance' => 'debit', 'level' => 3]);
+        }
+
+        $entries[] = [
+            'account_id' => $creditAccount->id,
+            'debit' => 0,
+            'credit' => $expense->amount,
+            'description' => "Pengeluaran kas: {$expense->description}",
+        ];
+
+        return $this->autoPostJournal($expense, $expense->id, $entries, $expense->expense_date?->toDateString());
+    }
+
+    /**
+     * Post journal entry for Supplier Payment / AP Settlement.
+     *
+     * Dr. Hutang Usaha (2-1101)
+     * Cr. Kas Kecil (1-1101) or Bank (1-1102)
+     */
+    public function postSupplierPaymentJournal(SupplierPayment $payment): Journal
+    {
+        $entries = [];
+
+        // Dr: Hutang Usaha (2-1101)
+        $payableAccount = ChartOfAccount::where('code', '2-1101')->first()
+            ?? ChartOfAccount::firstOrCreate(['code' => '2-1101'], ['name' => 'Hutang Usaha', 'type' => 'liability', 'normal_balance' => 'credit', 'level' => 3]);
+
+        $entries[] = [
+            'account_id' => $payableAccount->id,
+            'debit' => $payment->amount,
+            'credit' => 0,
+            'description' => "Pelunasan hutang ke supplier {$payment->supplier?->name}" . ($payment->grn_id ? " (GRN #{$payment->goodsReceivedNote?->grn_number})" : ''),
+        ];
+
+        // Cr: Bank (transfer) or Kas Kecil (cash)
+        if ($payment->payment_method === 'transfer') {
+            $creditAccount = ChartOfAccount::where('code', '1-1102')->first()
+                ?? ChartOfAccount::firstOrCreate(['code' => '1-1102'], ['name' => 'Bank', 'type' => 'asset', 'normal_balance' => 'debit', 'level' => 3]);
+        } else {
+            $creditAccount = ChartOfAccount::where('code', '1-1101')->first()
+                ?? ChartOfAccount::firstOrCreate(['code' => '1-1101'], ['name' => 'Kas Kecil', 'type' => 'asset', 'normal_balance' => 'debit', 'level' => 3]);
+        }
+
+        $entries[] = [
+            'account_id' => $creditAccount->id,
+            'debit' => 0,
+            'credit' => $payment->amount,
+            'description' => "Pembayaran ke supplier {$payment->supplier?->name} via {$payment->payment_method}",
+        ];
+
+        return $this->autoPostJournal($payment, $payment->id, $entries, $payment->payment_date?->toDateString());
     }
 }

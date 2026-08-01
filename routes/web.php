@@ -6,6 +6,8 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Finance\AccountingPeriodController;
 use App\Http\Controllers\Finance\FinancialReportController;
 use App\Http\Controllers\Finance\JournalController;
+use App\Http\Controllers\Finance\OperationalExpenseController;
+use App\Http\Controllers\Finance\SupplierPaymentController;
 use App\Http\Controllers\HR\HRController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\OrderController;
@@ -525,6 +527,16 @@ Route::middleware(['auth', 'branch.scope'])->group(function () {
         Route::get('/finance/reports/excel', [FinancialReportController::class, 'exportExcel'])->name('finance.reports.excel');
         Route::get('/finance/reports/pdf', [FinancialReportController::class, 'exportPdf'])->name('finance.reports.pdf');
         Route::get('/finance/reports/powerbi-pdf', [FinancialReportController::class, 'exportPowerBiPdf'])->name('finance.reports.powerbi-pdf');
+
+        // Finance - Operational Expenses (Petty Cash / Daily Expenses)
+        Route::get('/finance/operational-expenses', [OperationalExpenseController::class, 'index'])->name('finance.operational-expenses.index');
+        Route::post('/finance/operational-expenses', [OperationalExpenseController::class, 'store'])->name('finance.operational-expenses.store');
+        Route::delete('/finance/operational-expenses/{id}', [OperationalExpenseController::class, 'destroy'])->name('finance.operational-expenses.destroy');
+
+        // Finance - Supplier Payments (AP Settlement)
+        Route::get('/finance/supplier-payments', [SupplierPaymentController::class, 'index'])->name('finance.supplier-payments.index');
+        Route::post('/finance/supplier-payments', [SupplierPaymentController::class, 'store'])->name('finance.supplier-payments.store');
+        Route::delete('/finance/supplier-payments/{id}', [SupplierPaymentController::class, 'destroy'])->name('finance.supplier-payments.destroy');
     });
 
     // Super User - Switch Scoped Branch
