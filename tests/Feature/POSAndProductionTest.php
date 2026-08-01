@@ -130,9 +130,9 @@ class POSAndProductionTest extends TestCase
         $this->assertEquals(26950, $order->total);
         $this->assertEquals('paid', $order->payment_status);
 
-        // Verify Customer loyalty points (100 - 50 used + 26 earned = 76 points)
+        // Verify Customer loyalty points (100 - 50 used + 0 earned = 50 points, because point redemption orders do not earn new points)
         $this->customer->refresh();
-        $this->assertEquals(76, $this->customer->loyalty_points);
+        $this->assertEquals(50, $this->customer->loyalty_points);
     }
 
     /**
