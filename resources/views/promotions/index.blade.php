@@ -1,12 +1,6 @@
 <x-app-layout>
     <div x-data="{ showCreateModal: false }" class="flex flex-col gap-6">
-        <div class="flex justify-between items-center">
-            <x-page-header title="Manajemen Promosi & Kupon" :breadcrumbs="['Promosi' => '/promotions']" />
-            <button @click="showCreateModal = true" class="h-11 px-5 bg-primary hover:bg-orange-600 text-white font-bold rounded-xl text-xs flex items-center gap-2 transition-all active:scale-[0.98] cursor-pointer shadow-md shadow-orange-500/10">
-                <span class="material-symbols-outlined">add</span>
-                Buat Kupon Promo
-            </button>
-        </div>
+        <x-page-header title="Manajemen Promosi & Kupon" :breadcrumbs="['Promosi' => '/promotions']" />
 
         @if (session('success'))
             <x-alert type="success" :message="session('success')" class="mb-4" />
@@ -72,7 +66,16 @@
             </form>
         </x-card>
 
-        <x-card title="Kupon Promo Aktif">
+        <x-card>
+            <x-slot:header>
+                <h3 class="text-base md:text-lg font-black font-display text-slate-800 dark:text-slate-100 tracking-tight">
+                    Kupon Promo Aktif
+                </h3>
+                <button @click="showCreateModal = true" class="btn-touch h-9 px-4 bg-primary hover:bg-primary-hover text-white font-bold rounded-xl text-xs flex items-center gap-1.5 transition-all active:scale-95 cursor-pointer shadow-md shadow-primary/20">
+                    <span class="material-symbols-outlined text-base">add</span>
+                    Buat Kupon Promo
+                </button>
+            </x-slot:header>
             <div class="overflow-x-auto">
                 <table class="w-full text-left text-xs border-collapse">
                     <thead>
