@@ -314,7 +314,19 @@
                     Estimasi selesai: {{ $order->estimated_done_at->format('d M Y') }}<br>
                 @endif
                 Simpan struk ini sebagai bukti transaksi.<br>
-                Lacak status: <a href="{{ route('track', ['order_number' => $order->order_number]) }}" target="_blank" style="color:#FF6600; font-weight:bold;">{{ url('/track') }}?order_number={{ $order->order_number }}</a>
+            </div>
+
+            <!-- QR Code Link Tracking -->
+            <div style="margin-top: 0.75rem; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+                <div style="background: white; padding: 0.35rem; border-radius: 0.5rem; border: 1px solid #e2e8f0; display: inline-block;">
+                    {!! SimpleSoftwareIO\QrCode\Facades\QrCode::size(90)->margin(1)->generate(route('track', ['order_number' => $order->order_number])) !!}
+                </div>
+                <div style="font-size: 0.5625rem; font-weight: 800; color: #334155; margin-top: 0.35rem; text-transform: uppercase; letter-spacing: 0.03em;">
+                    Scan QR Code untuk Lacak Cucian
+                </div>
+                <div style="font-size: 0.5rem; color: #94a3b8; font-family: monospace;">
+                    {{ route('track', ['order_number' => $order->order_number]) }}
+                </div>
             </div>
         </div>
     </div>

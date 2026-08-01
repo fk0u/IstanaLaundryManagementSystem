@@ -193,13 +193,27 @@
                 </div>
             </div>
 
-            <!-- Invoice Footer -->
-            <div class="p-5 md:p-8 bg-slate-50/50 dark:bg-slate-800/20 border-t border-slate-100 dark:border-slate-800 text-center">
-                <p class="text-xs font-bold text-slate-600 dark:text-slate-400">Terima kasih atas kepercayaan Anda!</p>
-                <p class="text-2xs text-slate-400 mt-1">
-                    Istana Premium Laundry Service — Samarinda<br>
-                    Dokumen ini sah sebagai bukti transaksi.
-                </p>
+            <!-- Invoice Footer with QR Code Tracking -->
+            <div class="p-5 md:p-8 bg-slate-50/50 dark:bg-slate-800/20 border-t border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left">
+                <div>
+                    <p class="text-xs font-bold text-slate-700 dark:text-slate-300">Terima kasih atas kepercayaan Anda!</p>
+                    <p class="text-2xs text-slate-400 mt-0.5">
+                        Istana Premium Laundry Service — {{ $order->branch?->name ?? 'Samarinda' }}<br>
+                        Dokumen ini sah sebagai bukti transaksi pembayaran resmi.
+                    </p>
+                </div>
+                <div class="flex items-center gap-3 bg-white dark:bg-slate-900 p-2.5 rounded-xl border border-slate-200 dark:border-slate-800">
+                    <div class="p-1 bg-white rounded-lg border border-slate-100">
+                        {!! SimpleSoftwareIO\QrCode\Facades\QrCode::size(65)->margin(1)->generate(route('track', ['order_number' => $order->order_number])) !!}
+                    </div>
+                    <div class="text-left">
+                        <span class="text-2xs font-extrabold text-slate-800 dark:text-slate-200 block uppercase tracking-wider">Lacak Cucian Live</span>
+                        <span class="text-[10px] text-slate-400 block font-mono">Scan QR Code ini</span>
+                        <a href="{{ route('track', ['order_number' => $order->order_number]) }}" target="_blank" class="text-2xs text-primary font-bold hover:underline">
+                            #{{ $order->order_number }}
+                        </a>
+                    </div>
+                </div>
             </div>
         </div>
 
