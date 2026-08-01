@@ -12,6 +12,66 @@
             <x-alert type="success" :message="session('success')" class="mb-4" />
         @endif
 
+        <!-- Config Section: Pengaturan Poin Member -->
+        <x-card title="Pengaturan Loyalty Poin Member">
+            <form action="{{ route('promotions.settings.update') }}" method="POST" class="space-y-4">
+                @csrf
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <!-- Config 1: 1 Point = Rp X -->
+                    <div class="bg-orange-50/60 dark:bg-slate-800/50 p-4 rounded-2xl border border-orange-100 dark:border-slate-700 flex flex-col gap-2">
+                        <div class="flex items-center gap-2 text-primary font-bold text-xs">
+                            <span class="material-symbols-outlined text-base">monetization_on</span>
+                            <span>Nilai Tukar 1 Poin (Rp)</span>
+                        </div>
+                        <p class="text-2xs text-slate-500">Berapa rupiah diskon yang didapat pelanggan per 1 poin?</p>
+                        <div class="relative mt-1">
+                            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">Rp</span>
+                            <input type="number" name="point_exchange_rate" value="{{ old('point_exchange_rate', $pointExchangeRate ?? 1) }}" min="0.01" step="0.01" required
+                                   class="w-full h-10 pl-9 pr-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs font-black text-primary focus:border-primary outline-none">
+                        </div>
+                        <span class="text-[10px] text-slate-400 font-semibold">Contoh: Rp 1 (1 Poin = Rp 1) atau Rp 10</span>
+                    </div>
+
+                    <!-- Config 2: Perolehan Poin (Belanja Rp Y = 1 Poin) -->
+                    <div class="bg-orange-50/60 dark:bg-slate-800/50 p-4 rounded-2xl border border-orange-100 dark:border-slate-700 flex flex-col gap-2">
+                        <div class="flex items-center gap-2 text-primary font-bold text-xs">
+                            <span class="material-symbols-outlined text-base">stars</span>
+                            <span>Syarat Belanja per 1 Poin (Rp)</span>
+                        </div>
+                        <p class="text-2xs text-slate-500">Nominal belanja minimum untuk mendapatkan 1 poin dasar.</p>
+                        <div class="relative mt-1">
+                            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">Rp</span>
+                            <input type="number" name="point_earn_spend_threshold" value="{{ old('point_earn_spend_threshold', $pointEarnSpendThreshold ?? 1000) }}" min="1" step="1" required
+                                   class="w-full h-10 pl-9 pr-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs font-black text-primary focus:border-primary outline-none">
+                        </div>
+                        <span class="text-[10px] text-slate-400 font-semibold">Default: Rp 1.000 (Tiap Rp 1rb = 1 Pts)</span>
+                    </div>
+
+                    <!-- Config 3: Minimal Penukaran Poin -->
+                    <div class="bg-orange-50/60 dark:bg-slate-800/50 p-4 rounded-2xl border border-orange-100 dark:border-slate-700 flex flex-col gap-2">
+                        <div class="flex items-center gap-2 text-primary font-bold text-xs">
+                            <span class="material-symbols-outlined text-base">lock_open</span>
+                            <span>Minimal Poin Penukaran</span>
+                        </div>
+                        <p class="text-2xs text-slate-500">Batas poin terkumpul sebelum bisa ditukar di POS.</p>
+                        <div class="relative mt-1">
+                            <input type="number" name="point_min_redeem" value="{{ old('point_min_redeem', $pointMinRedeem ?? 0) }}" min="0" step="1" required
+                                   class="w-full h-10 px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs font-black text-primary focus:border-primary outline-none">
+                            <span class="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">Poin</span>
+                        </div>
+                        <span class="text-[10px] text-slate-400 font-semibold">Default: 0 Poin (Bisa tukar berapa saja)</span>
+                    </div>
+                </div>
+
+                <div class="flex justify-end pt-2">
+                    <button type="submit" class="btn-touch h-10 px-5 bg-primary hover:bg-primary-hover text-white font-bold rounded-xl text-xs flex items-center gap-2 shadow-md shadow-primary/20 transition-all cursor-pointer">
+                        <span class="material-symbols-outlined text-base">save</span>
+                        Simpan Pengaturan Loyalty Poin
+                    </button>
+                </div>
+            </form>
+        </x-card>
+
         <x-card title="Kupon Promo Aktif">
             <div class="overflow-x-auto">
                 <table class="w-full text-left text-xs border-collapse">

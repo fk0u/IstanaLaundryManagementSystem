@@ -5,6 +5,7 @@ namespace App\Services\CRM;
 use App\Models\Customer;
 use App\Models\LoyaltyPointLog;
 use App\Models\Order;
+use App\Models\SystemSetting;
 
 class LoyaltyService
 {
@@ -24,7 +25,6 @@ class LoyaltyService
 
     /**
      * Award points to customer based on order total and tier multiplier.
-     * Base Ratio: 1 point per Rp 1,000.
      */
     public function awardPoints(Order $order): ?LoyaltyPointLog
     {
@@ -34,7 +34,12 @@ class LoyaltyService
 
         $customer = $order->customer;
         $multiplier = $this->getTierMultiplier($customer->loyalty_tier ?? 'Bronze');
-        $basePoints = floor($order->total / 1000);
+        $threshold = (float) SystemSetting::get('point_earn_spend_threshold', 1000);
+        if ($threshold <= 0) {
+            $threshold = 1000;
+        }
+
+        $basePoints = floor($order->total / $threshold);
         $pointsEarned = (int) floor($basePoints * $multiplier);
 
         if ($pointsEarned <= 0) {

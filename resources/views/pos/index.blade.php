@@ -324,6 +324,11 @@
                                 <span class="font-bold" x-text="'- Rp ' + formatNumber(discount)">- Rp 0</span>
                             </div>
 
+                            <div class="flex justify-between text-xs text-orange-600 dark:text-orange-400 font-bold" x-show="pointsDiscount > 0" x-cloak>
+                                <span>Diskon Poin (<span x-text="pointsUsed"></span> Pts)</span>
+                                <span x-text="'- Rp ' + formatNumber(pointsDiscount)">- Rp 0</span>
+                            </div>
+
                             <div class="flex flex-col gap-2 pt-2 border-t border-slate-100 dark:border-slate-800" x-show="customerId && customerPoints > 0" x-cloak>
                                 <div class="flex justify-between items-center text-xs">
                                     <span class="text-slate-400 font-bold uppercase tracking-wider text-[10px]">Tukarkan Poin Member</span>
@@ -694,6 +699,10 @@
                 couponMessage: '',
                 couponError: false,
                 pointsUsed: 0,
+                pointsDiscount: 0,
+                pointExchangeRate: {{ $pointExchangeRate ?? 1 }},
+                pointEarnSpendThreshold: {{ $pointEarnSpendThreshold ?? 1000 }},
+                pointMinRedeem: {{ $pointMinRedeem ?? 0 }},
                 subtotal: 0,
                 discount: 0,
                 total: 0,
@@ -895,20 +904,31 @@
 
                 estimatedPointsEarned() {
                     if (!this.total || this.total <= 0) return 0;
-                    const basePoints = Math.floor(this.total / 1000);
+                    const threshold = this.pointEarnSpendThreshold > 0 ? this.pointEarnSpendThreshold : 1000;
+                    const basePoints = Math.floor(this.total / threshold);
                     return Math.floor(basePoints * this.getTierMultiplier());
                 },
 
                 quickRedeemPoints(pts) {
                     let available = Math.min(pts, this.customerPoints);
-                    let maxAllowed = Math.max(0, this.subtotal - this.discount);
-                    this.pointsUsed = Math.min(available, maxAllowed);
+                    if (this.pointMinRedeem > 0 && available < this.pointMinRedeem) {
+                        window.dispatchEvent(new CustomEvent('toast', { detail: { message: `Minimal penukaran poin adalah ${this.pointMinRedeem} poin.`, type: 'warning' } }));
+                        return;
+                    }
+                    let remainingBill = Math.max(0, this.subtotal - this.discount);
+                    let maxPointsAllowed = this.pointExchangeRate > 0 ? Math.floor(remainingBill / this.pointExchangeRate) : remainingBill;
+                    this.pointsUsed = Math.min(available, maxPointsAllowed);
                     this.calculateTotals();
                 },
 
                 maxRedeemPoints() {
-                    let maxAllowed = Math.max(0, this.subtotal - this.discount);
-                    this.pointsUsed = Math.min(this.customerPoints, maxAllowed);
+                    if (this.pointMinRedeem > 0 && this.customerPoints < this.pointMinRedeem) {
+                        window.dispatchEvent(new CustomEvent('toast', { detail: { message: `Minimal penukaran poin adalah ${this.pointMinRedeem} poin. Saldo pelanggan saat ini: ${this.customerPoints} poin.`, type: 'warning' } }));
+                        return;
+                    }
+                    let remainingBill = Math.max(0, this.subtotal - this.discount);
+                    let maxPointsAllowed = this.pointExchangeRate > 0 ? Math.floor(remainingBill / this.pointExchangeRate) : remainingBill;
+                    this.pointsUsed = Math.min(this.customerPoints, maxPointsAllowed);
                     this.calculateTotals();
                 },
 
@@ -926,10 +946,15 @@
                     }
 
                     if (this.pointsUsed > this.customerPoints) this.pointsUsed = this.customerPoints;
-                    let maxPointsDisc = this.subtotal - this.discount;
-                    if (this.pointsUsed > maxPointsDisc) this.pointsUsed = Math.max(0, maxPointsDisc);
+                    
+                    let calcDiscount = this.pointsUsed * (this.pointExchangeRate > 0 ? this.pointExchangeRate : 1);
+                    let maxPointsDisc = Math.max(0, this.subtotal - this.discount);
+                    if (calcDiscount > maxPointsDisc) {
+                        calcDiscount = maxPointsDisc;
+                    }
+                    this.pointsDiscount = calcDiscount;
 
-                    this.total = Math.max(0, this.subtotal - this.discount - this.pointsUsed);
+                    this.total = Math.max(0, this.subtotal - this.discount - this.pointsDiscount);
 
                     if (this.paymentMethod === 'cash' || this.paymentMethod === 'transfer') {
                         this.changeAmount = Math.max(0, this.paidAmount - this.total);

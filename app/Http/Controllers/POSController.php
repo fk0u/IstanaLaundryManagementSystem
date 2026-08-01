@@ -80,7 +80,11 @@ class POSController extends Controller
 
         $branches = Branch::orderBy('name')->get();
 
-        return view('pos.index', compact('branch', 'services', 'customers', 'promotions', 'branches'));
+        $pointExchangeRate = (float) \App\Models\SystemSetting::get('point_exchange_rate', 1);
+        $pointEarnSpendThreshold = (float) \App\Models\SystemSetting::get('point_earn_spend_threshold', 1000);
+        $pointMinRedeem = (int) \App\Models\SystemSetting::get('point_min_redeem', 0);
+
+        return view('pos.index', compact('branch', 'services', 'customers', 'promotions', 'branches', 'pointExchangeRate', 'pointEarnSpendThreshold', 'pointMinRedeem'));
     }
 
     /**
@@ -203,21 +207,26 @@ class POSController extends Controller
                 }
             }
 
-            // Calculate Loyalty Points Discount (1 point = Rp 1)
+            // Calculate Loyalty Points Discount based on Configured Rate (1 point = Rp X)
             $pointsUsed = 0;
+            $pointsDiscount = 0;
+            $pointExchangeRate = (float) \App\Models\SystemSetting::get('point_exchange_rate', 1);
+
             if ($customer && ! empty($data['points_used']) && $data['points_used'] > 0) {
                 $pointsUsed = min($data['points_used'], $customer->loyalty_points);
+                $calculatedPointsDisc = $pointsUsed * $pointExchangeRate;
 
                 // Maximum discount cannot exceed subtotal - promo discount
-                $maxPointsDiscount = $subtotal - $discountAmount;
-                if ($pointsUsed > $maxPointsDiscount) {
-                    $pointsUsed = $maxPointsDiscount;
+                $maxPointsDiscount = max(0, $subtotal - $discountAmount);
+                if ($calculatedPointsDisc > $maxPointsDiscount) {
+                    $calculatedPointsDisc = $maxPointsDiscount;
                 }
+                $pointsDiscount = $calculatedPointsDisc;
             }
 
             // Calculate Total
             $taxAmount = 0; // Tax is 0 for simplicity
-            $total = max(0, $subtotal - $discountAmount - $pointsUsed + $taxAmount);
+            $total = max(0, $subtotal - $discountAmount - $pointsDiscount + $taxAmount);
 
             // Enforce paid_amount >= total for cash and transfer
             if (in_array($data['payment_method'], ['cash', 'transfer']) && $data['paid_amount'] < $total) {

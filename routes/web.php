@@ -112,9 +112,26 @@ Route::middleware(['auth', 'branch.scope'])->group(function () {
     Route::middleware('role:Branch_Admin|Owner|Super_Admin|Developer')->group(function () {
         Route::get('/promotions', function () {
             $promotions = Promotion::orderBy('created_at', 'desc')->paginate(10);
+            $pointExchangeRate = (float) \App\Models\SystemSetting::get('point_exchange_rate', 1);
+            $pointEarnSpendThreshold = (float) \App\Models\SystemSetting::get('point_earn_spend_threshold', 1000);
+            $pointMinRedeem = (int) \App\Models\SystemSetting::get('point_min_redeem', 0);
 
-            return view('promotions.index', compact('promotions'));
+            return view('promotions.index', compact('promotions', 'pointExchangeRate', 'pointEarnSpendThreshold', 'pointMinRedeem'));
         })->name('promotions.index');
+
+        Route::post('/promotions/settings', function (Request $request) {
+            $request->validate([
+                'point_exchange_rate' => 'required|numeric|min:0.01',
+                'point_earn_spend_threshold' => 'required|numeric|min:1',
+                'point_min_redeem' => 'required|integer|min:0',
+            ]);
+
+            \App\Models\SystemSetting::set('point_exchange_rate', $request->point_exchange_rate);
+            \App\Models\SystemSetting::set('point_earn_spend_threshold', $request->point_earn_spend_threshold);
+            \App\Models\SystemSetting::set('point_min_redeem', $request->point_min_redeem);
+
+            return redirect()->route('promotions.index')->with('success', 'Pengaturan Loyalty Poin berhasil diperbarui!');
+        })->name('promotions.settings.update');
 
         Route::post('/promotions', function (Request $request) {
             $request->validate([
