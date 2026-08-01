@@ -100,4 +100,48 @@ class PromotionIntegrationTest extends TestCase
         $this->assertEquals(5000, $order->discount_amount); // 10% of 50,000 = 5,000
         $this->assertEquals(45000, $order->total); // 50,000 - 5,000 = 45,000
     }
+
+    public function test_redeem_points_prevents_earning_new_points()
+    {
+        $loyaltyService = app(\App\Services\CRM\LoyaltyService::class);
+
+        // Order 1: With points redemption
+        $orderRedeem = Order::create([
+            'branch_id' => $this->branch->id,
+            'customer_id' => $this->customer->id,
+            'cashier_id' => $this->cashier->id,
+            'order_number' => 'ORD-TEST-001',
+            'subtotal' => 50000,
+            'discount_amount' => 0,
+            'points_used' => 50,
+            'total' => 49950,
+            'payment_status' => 'paid',
+            'payment_method' => 'cash',
+            'paid_amount' => 50000,
+            'production_status' => 'TERIMA',
+        ]);
+
+        $logRedeem = $loyaltyService->awardPoints($orderRedeem);
+        $this->assertNull($logRedeem, 'Order with points_used > 0 should not earn new loyalty points');
+
+        // Order 2: Without points redemption (promo code only)
+        $orderPromoOnly = Order::create([
+            'branch_id' => $this->branch->id,
+            'customer_id' => $this->customer->id,
+            'cashier_id' => $this->cashier->id,
+            'order_number' => 'ORD-TEST-002',
+            'subtotal' => 50000,
+            'discount_amount' => 5000,
+            'points_used' => 0,
+            'total' => 45000,
+            'payment_status' => 'paid',
+            'payment_method' => 'cash',
+            'paid_amount' => 45000,
+            'production_status' => 'TERIMA',
+        ]);
+
+        $logPromo = $loyaltyService->awardPoints($orderPromoOnly);
+        $this->assertNotNull($logPromo, 'Order with promo code only should earn new loyalty points');
+        $this->assertEquals(45, $logPromo->points);
+    }
 }

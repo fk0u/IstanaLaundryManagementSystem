@@ -32,6 +32,11 @@ class LoyaltyService
             return null;
         }
 
+        // If order used point redemption, transaction does not earn new loyalty points
+        if ($order->points_used > 0) {
+            return null;
+        }
+
         $customer = $order->customer;
         $multiplier = $this->getTierMultiplier($customer->loyalty_tier ?? 'Bronze');
         $threshold = (float) SystemSetting::get('point_earn_spend_threshold', 1000);

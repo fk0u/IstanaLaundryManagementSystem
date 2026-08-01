@@ -351,12 +351,13 @@
                             </div>
 
                             <!-- Bonus Estimated Earned Points Badge -->
-                            <div x-show="customerId && total > 0" class="flex justify-between items-center bg-orange-50/70 dark:bg-slate-800/40 p-2.5 rounded-xl border border-orange-100 dark:border-slate-800/60 text-2xs font-semibold" x-cloak>
-                                <div class="flex items-center gap-1.5 text-primary font-bold">
+                            <div x-show="customerId && total > 0" class="flex justify-between items-center p-2.5 rounded-xl border text-2xs font-semibold"
+                                 :class="pointsUsed > 0 ? 'bg-slate-100/80 dark:bg-slate-800/40 border-slate-200 dark:border-slate-800 text-slate-500' : 'bg-orange-50/70 dark:bg-slate-800/40 border-orange-100 dark:border-slate-800/60 text-primary'" x-cloak>
+                                <div class="flex items-center gap-1.5 font-bold" :class="pointsUsed > 0 ? 'text-slate-500' : 'text-primary'">
                                     <span class="material-symbols-outlined text-sm">stars</span>
                                     <span>Estimasi Poin Transaksi</span>
                                 </div>
-                                <span class="font-extrabold text-primary" x-text="'+' + estimatedPointsEarned() + ' Poin (' + getTierMultiplier() + 'x)'"></span>
+                                <span class="font-extrabold" :class="pointsUsed > 0 ? 'text-slate-400 font-semibold' : 'text-primary'" x-text="pointsUsed > 0 ? '0 Poin (Mekanisme Redeem)' : '+' + estimatedPointsEarned() + ' Poin (' + getTierMultiplier() + 'x)'"></span>
                             </div>
 
                             <div class="flex justify-between text-base font-black pt-2 border-t border-slate-100 dark:border-slate-800">
@@ -904,6 +905,7 @@
 
                 estimatedPointsEarned() {
                     if (!this.total || this.total <= 0) return 0;
+                    if (this.pointsUsed > 0) return 0; // Transaksi penukaran poin tidak mendapatkan poin baru
                     const threshold = this.pointEarnSpendThreshold > 0 ? this.pointEarnSpendThreshold : 1000;
                     const basePoints = Math.floor(this.total / threshold);
                     return Math.floor(basePoints * this.getTierMultiplier());
