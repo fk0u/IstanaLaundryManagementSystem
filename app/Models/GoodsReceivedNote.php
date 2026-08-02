@@ -24,6 +24,18 @@ class GoodsReceivedNote extends Model
         return $this->belongsTo(PurchaseOrder::class, 'po_id');
     }
 
+    public function supplier(): \Illuminate\Database\Eloquent\Relations\HasOneThrough
+    {
+        return $this->hasOneThrough(
+            Supplier::class,
+            PurchaseOrder::class,
+            'id',
+            'id',
+            'po_id',
+            'supplier_id'
+        );
+    }
+
     public function receivedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'received_by');

@@ -72,9 +72,9 @@
              x-cloak>
         </div>
 
-        <!-- Content Area Wrapper — Dynamic padding based on desktop sidebar state -->
+        <!-- Content Area Wrapper — Dynamic padding based on desktop & tablet sidebar state -->
         <div class="flex flex-col min-h-screen transition-all duration-300 ease-in-out"
-             :class="{ 'lg:pl-72': desktopSidebarOpen, 'lg:pl-20': !desktopSidebarOpen }">
+             :class="{ 'md:pl-72': desktopSidebarOpen, 'md:pl-20': !desktopSidebarOpen }">
             <!-- Top Navigation Bar -->
             <x-topbar />
 

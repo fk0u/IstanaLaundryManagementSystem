@@ -38,8 +38,8 @@
         $currentBranchName = $currentBranchId ? (\App\Models\Branch::find($currentBranchId)?->name ?? 'Cabang') : 'Global';
     @endphp
 
-    <!-- Mobile TopAppBar View (lg:hidden) -->
-    <div class="flex items-center justify-between w-full lg:hidden">
+    <!-- Mobile & Small Tablet TopAppBar View (md:hidden) -->
+    <div class="flex items-center justify-between w-full md:hidden">
         <!-- Logo & Brand Header -->
         <div class="flex items-center gap-2">
             <button @click="sidebarOpen = !sidebarOpen" class="p-1.5 text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200 cursor-pointer rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-all shrink-0">
@@ -71,8 +71,8 @@
         </div>
     </div>
 
-    <!-- Desktop Topbar View (hidden lg:flex) -->
-    <div class="hidden lg:flex items-center justify-between w-full">
+    <!-- Tablet & Desktop Topbar View (hidden md:flex) -->
+    <div class="hidden md:flex items-center justify-between w-full">
         <!-- Left: Page Title & Sidebar Toggle -->
         <div class="flex items-center gap-3 min-w-0 flex-1">
             <button @click="desktopSidebarOpen = !desktopSidebarOpen; localStorage.setItem('desktopSidebarOpen', desktopSidebarOpen)" 

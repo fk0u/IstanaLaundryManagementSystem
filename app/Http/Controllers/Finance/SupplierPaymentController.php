@@ -37,7 +37,7 @@ class SupplierPaymentController extends Controller
 
         // GRNs that have been confirmed (potential AP to settle)
         $confirmedGrns = GoodsReceivedNote::withoutGlobalScopes()
-            ->with(['supplier', 'items'])
+            ->with(['supplier', 'purchaseOrder.supplier', 'items'])
             ->where('status', 'confirmed')
             ->when($branchId, fn ($q) => $q->where('branch_id', $branchId))
             ->orderByDesc('received_date')

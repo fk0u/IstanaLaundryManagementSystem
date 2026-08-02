@@ -179,7 +179,7 @@
                             <option value="">-- Tidak terikat GRN --</option>
                             @foreach($confirmedGrns as $grn)
                                 <option value="{{ $grn->id }}">
-                                    {{ $grn->grn_number }} — {{ $grn->supplier?->name }} (Rp {{ number_format($grn->items->sum(fn($i) => $i->quantity * $i->unit_cost), 0, ',', '.') }})
+                                    {{ $grn->grn_number }} — {{ $grn->supplier?->name ?? $grn->purchaseOrder?->supplier?->name ?? 'Supplier' }} (Rp {{ number_format($grn->items->sum(fn($i) => $i->quantity * $i->unit_cost), 0, ',', '.') }})
                                 </option>
                             @endforeach
                         </select>
