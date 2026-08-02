@@ -2,78 +2,123 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <title>Laporan Transaksi Orders</title>
+    <title>PowerBI Executive Sales & Order Transactions — Istana Laundry ERP</title>
     <style>
+        @page {
+            margin: 15px 20px 20px 20px;
+        }
         body {
             font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-            font-size: 10px;
-            color: #1e293b;
+            font-size: 9.5px;
+            color: #0f172a;
             margin: 0;
-            padding: 15px;
+            padding: 0;
             background-color: #ffffff;
+        }
+        .header-ribbon {
+            width: 100%;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: #ffffff;
+            border-bottom: 4px solid #ff6600;
+            padding: 12px 15px;
+            border-radius: 8px 8px 0 0;
+            margin-bottom: 12px;
         }
         .header-table {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 15px;
-            border-bottom: 3px solid #ff6600;
-            padding-bottom: 8px;
         }
         .brand-logo {
-            background-color: #ff6600;
-            color: #ffffff;
+            font-size: 16px;
             font-weight: 900;
-            font-size: 18px;
-            padding: 6px 12px;
-            border-radius: 6px;
-            display: inline-block;
+            color: #ff6600;
             letter-spacing: 1px;
+            text-transform: uppercase;
         }
         .brand-sub {
-            font-size: 9px;
-            color: #64748b;
+            font-size: 8px;
+            color: #94a3b8;
             text-transform: uppercase;
             letter-spacing: 1px;
-            margin-top: 3px;
+            margin-top: 2px;
         }
         .doc-title {
-            font-size: 15px;
-            font-weight: 800;
-            color: #0f172a;
+            font-size: 14px;
+            font-weight: 900;
+            color: #ffffff;
             text-align: right;
+            letter-spacing: 0.5px;
         }
-        .meta-box {
+        .doc-sub {
+            font-size: 8px;
+            color: #cbd5e1;
+            text-align: right;
+            margin-top: 2px;
+        }
+        .meta-card {
             background-color: #f8fafc;
             border: 1px solid #e2e8f0;
+            border-left: 4px solid #ff6600;
             border-radius: 6px;
             padding: 8px 12px;
-            margin-bottom: 15px;
+            margin-bottom: 12px;
         }
         .meta-table {
             width: 100%;
             border-collapse: collapse;
         }
         .meta-label {
-            font-size: 8.5px;
+            font-size: 8px;
             color: #64748b;
             text-transform: uppercase;
             font-weight: 700;
         }
         .meta-val {
-            font-size: 10.5px;
+            font-size: 10px;
             color: #0f172a;
-            font-weight: 700;
+            font-weight: 800;
+            margin-top: 1px;
+        }
+        .kpi-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 6px;
+            margin-bottom: 12px;
+        }
+        .kpi-card {
+            background-color: #f8fafc;
+            border: 1px solid #cbd5e1;
+            border-top: 3px solid #ff6600;
+            border-radius: 6px;
+            padding: 8px;
+            text-align: center;
+        }
+        .kpi-card-emerald { border-top-color: #10b981; }
+        .kpi-card-blue { border-top-color: #3b82f6; }
+        .kpi-card-purple { border-top-color: #a855f7; }
+        .kpi-label {
+            font-size: 8px;
+            font-weight: 800;
+            color: #64748b;
+            text-transform: uppercase;
+        }
+        .kpi-val {
+            font-size: 13px;
+            font-weight: 900;
+            color: #0f172a;
+            margin-top: 3px;
+            font-family: 'Courier New', Courier, monospace;
         }
         .data-table {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 15px;
+            margin-bottom: 12px;
         }
         .data-table th {
             background-color: #1e293b;
             color: #ffffff;
-            font-size: 9px;
-            font-weight: 700;
+            font-size: 8.5px;
+            font-weight: 800;
             text-transform: uppercase;
             padding: 6px 8px;
             text-align: left;
@@ -84,152 +129,192 @@
             border: 1px solid #e2e8f0;
             font-size: 9px;
         }
-        .data-table tr:nth-child(even) {
+        .data-table tr:nth-child(even) td {
             background-color: #f8fafc;
         }
         .text-right { text-align: right; }
         .text-center { text-align: center; }
-        .font-bold { font-weight: 700; }
-        .row-total {
-            background-color: #fff7ed !important;
-            font-weight: 800;
-            color: #c2410c;
-        }
-        .badge {
+        .font-mono { font-family: 'Courier New', Courier, monospace; }
+        .font-bold { font-weight: 800; }
+        .badge-paid {
+            background-color: #dcfce7;
+            color: #166534;
+            font-size: 8px;
             font-weight: 800;
             padding: 2px 6px;
             border-radius: 4px;
-            font-size: 8.5px;
-            text-transform: uppercase;
-            display: inline-block;
         }
-        .badge-success { background-color: #dcfce7; color: #15803d; }
-        .badge-warning { background-color: #fef3c7; color: #b45309; }
-        .badge-danger { background-color: #fee2e2; color: #b91c1c; }
-        .badge-info { background-color: #e0f2fe; color: #0369a1; }
+        .badge-unpaid {
+            background-color: #fee2e2;
+            color: #991b1b;
+            font-size: 8px;
+            font-weight: 800;
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+        .row-total {
+            background-color: #fff7ed !important;
+            font-weight: 900;
+            color: #c2410c;
+        }
         .footer-table {
             width: 100%;
             margin-top: 25px;
             border-collapse: collapse;
         }
         .sig-space { height: 40px; }
+        .security-stamp {
+            font-size: 7.5px;
+            color: #94a3b8;
+            text-align: center;
+            margin-top: 15px;
+            border-top: 1px dashed #cbd5e1;
+            padding-top: 6px;
+        }
     </style>
 </head>
 <body>
 
-    <!-- Header Banner -->
-    <table class="header-table" width="100%">
-        <tr>
-            <td width="50%" style="vertical-align: middle;">
-                <div class="brand-logo">ISTANA LAUNDRY</div>
-                <div class="brand-sub">ERP &amp; Management System</div>
-            </td>
-            <td width="50%" style="text-align: right; vertical-align: middle;">
-                <div class="doc-title">REKAPITULASI TRANSAKSI ORDERS</div>
-                <div style="font-size: 9px; color: #64748b; margin-top: 3px;">
-                    Dicetak Pada: {{ now()->translatedFormat('d F Y H:i') }} WIB
-                </div>
-            </td>
-        </tr>
-    </table>
-
-    <!-- Metadata Card -->
-    <div class="meta-box">
-        <table class="meta-table" width="100%">
+    <!-- Header Ribbon -->
+    <div class="header-ribbon">
+        <table class="header-table">
             <tr>
-                <td width="33%">
-                    <div class="meta-label">Cabang Scope</div>
-                    <div class="meta-val">{{ $branchName ?? 'Semua Cabang' }}</div>
+                <td style="width: 55%;">
+                    <div class="brand-logo">🧺 ISTANA LAUNDRY ERP</div>
+                    <div class="brand-sub">PowerBI Sales &amp; POS Transaction Dashboard</div>
                 </td>
-                <td width="33%">
-                    <div class="meta-label">Total Transaksi</div>
-                    <div class="meta-val">{{ count($orders) }} Nota</div>
-                </td>
-                <td width="34%" style="text-align: right;">
-                    <div class="meta-label">Total Nilai Penjualan</div>
-                    <div class="meta-val" style="color: #16a34a;">
-                        Rp {{ number_format($orders->sum('total'), 0, ',', '.') }}
-                    </div>
+                <td style="width: 45%;" class="text-right">
+                    <div class="doc-title">EXECUTIVE SALES REPORT</div>
+                    <div class="doc-sub">Laporan Transaksi Penjualan &amp; Kasir POS</div>
                 </td>
             </tr>
         </table>
     </div>
 
-    <!-- Main Data Table -->
-    <table class="data-table" width="100%" border="1" cellpadding="6" cellspacing="0">
-        <thead>
-            <tr style="background-color: #1e293b; color: #ffffff;">
-                <th width="4%" style="text-align: center; background-color: #1e293b; color: #ffffff;">No</th>
-                <th width="14%" style="background-color: #1e293b; color: #ffffff;">Nomor Nota</th>
-                <th width="10%" style="background-color: #1e293b; color: #ffffff;">Tanggal</th>
-                <th width="16%" style="background-color: #1e293b; color: #ffffff;">Pelanggan</th>
-                <th width="24%" style="background-color: #1e293b; color: #ffffff;">Layanan Item</th>
-                <th width="12%" style="text-align: center; background-color: #1e293b; color: #ffffff;">Status Bayar</th>
-                <th width="10%" style="text-align: center; background-color: #1e293b; color: #ffffff;">Produksi</th>
-                <th width="10%" style="text-align: right; background-color: #1e293b; color: #ffffff;">Total (Rp)</th>
-            </tr>
-        </thead>
-        <tbody>
-            @forelse($orders as $index => $order)
-                <tr style="{{ $index % 2 == 1 ? 'background-color: #f8fafc;' : 'background-color: #ffffff;' }}">
-                    <td style="text-align: center;">{{ $index + 1 }}</td>
-                    <td style="font-weight: bold; font-family: monospace;">{{ $order->order_number }}</td>
-                    <td>{{ $order->created_at?->format('d/m/Y H:i') }}</td>
-                    <td style="font-weight: bold;">{{ $order->customer?->name ?? 'Guest' }}</td>
-                    <td>
-                        @foreach($order->items as $item)
-                            <div>• {{ $item->service?->name ?? 'Layanan' }} ({{ $item->quantity }} x Rp {{ number_format($item->unit_price, 0, ',', '.') }})</div>
-                        @endforeach
-                    </td>
-                    <td style="text-align: center;">
-                        @if ($order->payment_status === 'paid')
-                            <span class="badge badge-success">Lunas</span>
-                        @elseif ($order->payment_status === 'partial')
-                            <span class="badge badge-warning">DP / Partial</span>
-                        @else
-                            <span class="badge badge-danger">Belum Bayar</span>
-                        @endif
-                    </td>
-                    <td style="text-align: center;">
-                        <span class="badge badge-info">{{ $order->production_status ?? 'DITERIMA' }}</span>
-                    </td>
-                    <td style="text-align: right; font-weight: bold;">
-                        Rp {{ number_format($order->total, 0, ',', '.') }}
-                    </td>
-                </tr>
-            @empty
-                <tr>
-                    <td colspan="8" style="text-align: center; color: #94a3b8; padding: 15px;">Tidak ada data Transaksi Order.</td>
-                </tr>
-            @endforelse
-        </tbody>
-        <tfoot>
-            <tr class="row-total" style="background-color: #fff7ed; font-weight: bold; color: #c2410c;">
-                <td colspan="7" style="text-align: right; font-weight: bold;">GRAND TOTAL TRANSAKSI PENJUALAN:</td>
-                <td style="text-align: right; font-weight: bold;">
-                    Rp {{ number_format($orders->sum('total'), 0, ',', '.') }}
+    <!-- Metadata Card -->
+    <div class="meta-card">
+        <table class="meta-table">
+            <tr>
+                <td style="width: 25%;">
+                    <div class="meta-label">Scope Cabang</div>
+                    <div class="meta-val">{{ $branchName }}</div>
+                </td>
+                <td style="width: 25%;">
+                    <div class="meta-label">Total Transaksi</div>
+                    <div class="meta-val">{{ count($orders) }} Nota Transaksi</div>
+                </td>
+                <td style="width: 25%;">
+                    <div class="meta-label">Tanggal Ekspor</div>
+                    <div class="meta-val">{{ now()->format('d/m/Y H:i') }} WITA</div>
+                </td>
+                <td style="width: 25%;">
+                    <div class="meta-label">Dicetak Oleh</div>
+                    <div class="meta-val">{{ auth()->user()?->name ?? 'Kasir / Admin' }}</div>
                 </td>
             </tr>
-        </tfoot>
-    </table>
+        </table>
+    </div>
 
-    <!-- Footer Signatures -->
-    <table class="footer-table" width="100%">
+    @php
+        $totalGross = $orders->sum('total_amount');
+        $totalPaid = $orders->where('payment_status', 'paid')->sum('total_amount');
+        $totalUnpaid = $orders->where('payment_status', '!=', 'paid')->sum('total_amount');
+        $avgBasket = count($orders) > 0 ? $totalGross / count($orders) : 0;
+    @endphp
+
+    <!-- Top KPI Cards Row -->
+    <table class="kpi-table">
         <tr>
-            <td width="50%" style="text-align: center;">
-                <div style="font-size: 8.5px; color: #64748b; font-weight: bold;">KASIR PENANGGUNG JAWAB</div>
-                <div class="sig-space"></div>
-                <div style="font-weight: bold; text-decoration: underline;">Staf Kasir</div>
-                <div style="font-size: 8px; color: #64748b;">Frontdesk / POS</div>
+            <td style="width: 25%;">
+                <div class="kpi-card">
+                    <div class="kpi-label">Total Omset Penjualan</div>
+                    <div class="kpi-val" style="color: #ff6600;">Rp {{ number_format($totalGross, 0, ',', '.') }}</div>
+                </div>
             </td>
-            <td width="50%" style="text-align: center;">
-                <div style="font-size: 8.5px; color: #64748b; font-weight: bold;">DISETUJUI OLEH</div>
-                <div class="sig-space"></div>
-                <div style="font-weight: bold; text-decoration: underline;">Supervisor / Admin</div>
-                <div style="font-size: 8px; color: #64748b;">Istana Laundry ERP</div>
+            <td style="width: 25%;">
+                <div class="kpi-card kpi-card-emerald">
+                    <div class="kpi-label">Total Omset Terbayar (Paid)</div>
+                    <div class="kpi-val" style="color: #059669;">Rp {{ number_format($totalPaid, 0, ',', '.') }}</div>
+                </div>
+            </td>
+            <td style="width: 25%;">
+                <div class="kpi-card kpi-card-purple">
+                    <div class="kpi-label">Total Piutang Belum Bayar</div>
+                    <div class="kpi-val" style="color: #dc2626;">Rp {{ number_format($totalUnpaid, 0, ',', '.') }}</div>
+                </div>
+            </td>
+            <td style="width: 25%;">
+                <div class="kpi-card kpi-card-blue">
+                    <div class="kpi-label">Rata-rata Nota (Basket Size)</div>
+                    <div class="kpi-val" style="color: #2563eb;">Rp {{ number_format($avgBasket, 0, ',', '.') }}</div>
+                </div>
             </td>
         </tr>
     </table>
+
+    <!-- Data Table -->
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th style="width: 14%;">No. Nota</th>
+                <th style="width: 12%;">Tanggal</th>
+                <th style="width: 22%;">Pelanggan</th>
+                <th style="width: 14%;">Cabang Scope</th>
+                <th style="width: 12%;">Status Bayar</th>
+                <th style="width: 12%;">Status Cuci</th>
+                <th style="width: 14%;" class="text-right">Total Nominal</th>
+            </tr>
+        </thead>
+        <tbody>
+            @forelse($orders as $order)
+                <tr>
+                    <td class="font-mono font-bold text-center">{{ $order->order_number }}</td>
+                    <td class="text-center">{{ $order->created_at?->format('d/m/Y H:i') }}</td>
+                    <td class="font-bold">{{ $order->customer?->name ?? 'Pelanggan Umum' }}</td>
+                    <td>{{ $order->branch?->name ?? '-' }}</td>
+                    <td class="text-center">
+                        @if($order->payment_status === 'paid')
+                            <span class="badge-paid">● LUNAS</span>
+                        @else
+                            <span class="badge-unpaid">BELUM BAYAR</span>
+                        @endif
+                    </td>
+                    <td class="text-center font-bold" style="text-transform: uppercase; font-size: 8px;">{{ $order->status }}</td>
+                    <td class="text-right font-mono font-bold">Rp {{ number_format($order->total_amount, 0, ',', '.') }}</td>
+                </tr>
+            @empty
+                <tr>
+                    <td colspan="7" class="text-center py-4">Belum ada transaksi ditemukan untuk filter ini.</td>
+                </tr>
+            @endforelse
+            <tr class="row-total">
+                <td colspan="6" class="text-right">TOTAL OMSET TRANSAKSI:</td>
+                <td class="text-right font-mono">Rp {{ number_format($totalGross, 0, ',', '.') }}</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <!-- Signature Footer -->
+    <table class="footer-table">
+        <tr>
+            <td style="width: 50%; text-align: center;">
+                <div>Disiapkan Oleh,</div>
+                <div class="sig-space"></div>
+                <div class="font-bold">({{ auth()->user()?->name ?? 'Admin Kasir' }})</div>
+                <div style="font-size: 8px; color: #64748b;">Kasir / Head Counter</div>
+            </td>
+            <td style="width: 50%; text-align: center;">
+                <div>Disetujui Oleh,</div>
+                <div class="sig-space"></div>
+                <div class="font-bold">( Supervisor Operasional )</div>
+                <div style="font-size: 8px; color: #64748b;">Istana Laundry Samarinda</div>
+            </td>
+        </tr>
+    </table>
+
+    <div class="security-stamp">
+        🔒 Document Security Hash: {{ md5(now()->timestamp . 'SALES-POWERBI') }} | Generated by Istana Laundry POS & ERP System | Confidential Executive Report
+    </div>
 
 </body>
 </html>

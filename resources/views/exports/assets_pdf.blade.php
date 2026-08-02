@@ -2,78 +2,123 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <title>Rekapitulasi Aset Tetap ERP</title>
+    <title>PowerBI Executive Fixed Assets & Depreciation Dashboard — Istana Laundry ERP</title>
     <style>
+        @page {
+            margin: 15px 20px 20px 20px;
+        }
         body {
             font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-            font-size: 10px;
-            color: #1e293b;
+            font-size: 9.5px;
+            color: #0f172a;
             margin: 0;
-            padding: 15px;
+            padding: 0;
             background-color: #ffffff;
+        }
+        .header-ribbon {
+            width: 100%;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: #ffffff;
+            border-bottom: 4px solid #ff6600;
+            padding: 12px 15px;
+            border-radius: 8px 8px 0 0;
+            margin-bottom: 12px;
         }
         .header-table {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 15px;
-            border-bottom: 3px solid #ff6600;
-            padding-bottom: 8px;
         }
         .brand-logo {
-            background-color: #ff6600;
-            color: #ffffff;
+            font-size: 16px;
             font-weight: 900;
-            font-size: 18px;
-            padding: 6px 12px;
-            border-radius: 6px;
-            display: inline-block;
+            color: #ff6600;
             letter-spacing: 1px;
+            text-transform: uppercase;
         }
         .brand-sub {
-            font-size: 9px;
-            color: #64748b;
+            font-size: 8px;
+            color: #94a3b8;
             text-transform: uppercase;
             letter-spacing: 1px;
-            margin-top: 3px;
+            margin-top: 2px;
         }
         .doc-title {
-            font-size: 15px;
-            font-weight: 800;
-            color: #0f172a;
+            font-size: 14px;
+            font-weight: 900;
+            color: #ffffff;
             text-align: right;
+            letter-spacing: 0.5px;
         }
-        .meta-box {
+        .doc-sub {
+            font-size: 8px;
+            color: #cbd5e1;
+            text-align: right;
+            margin-top: 2px;
+        }
+        .meta-card {
             background-color: #f8fafc;
             border: 1px solid #e2e8f0;
+            border-left: 4px solid #6366f1;
             border-radius: 6px;
             padding: 8px 12px;
-            margin-bottom: 15px;
+            margin-bottom: 12px;
         }
         .meta-table {
             width: 100%;
             border-collapse: collapse;
         }
         .meta-label {
-            font-size: 8.5px;
+            font-size: 8px;
             color: #64748b;
             text-transform: uppercase;
             font-weight: 700;
         }
         .meta-val {
-            font-size: 10.5px;
+            font-size: 10px;
             color: #0f172a;
-            font-weight: 700;
+            font-weight: 800;
+            margin-top: 1px;
+        }
+        .kpi-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 6px;
+            margin-bottom: 12px;
+        }
+        .kpi-card {
+            background-color: #f8fafc;
+            border: 1px solid #cbd5e1;
+            border-top: 3px solid #ff6600;
+            border-radius: 6px;
+            padding: 8px;
+            text-align: center;
+        }
+        .kpi-card-emerald { border-top-color: #10b981; }
+        .kpi-card-blue { border-top-color: #3b82f6; }
+        .kpi-card-purple { border-top-color: #a855f7; }
+        .kpi-label {
+            font-size: 8px;
+            font-weight: 800;
+            color: #64748b;
+            text-transform: uppercase;
+        }
+        .kpi-val {
+            font-size: 13px;
+            font-weight: 900;
+            color: #0f172a;
+            margin-top: 3px;
+            font-family: 'Courier New', Courier, monospace;
         }
         .data-table {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 15px;
+            margin-bottom: 12px;
         }
         .data-table th {
             background-color: #1e293b;
             color: #ffffff;
-            font-size: 9px;
-            font-weight: 700;
+            font-size: 8.5px;
+            font-weight: 800;
             text-transform: uppercase;
             padding: 6px 8px;
             text-align: left;
@@ -84,15 +129,16 @@
             border: 1px solid #e2e8f0;
             font-size: 9px;
         }
-        .data-table tr:nth-child(even) {
+        .data-table tr:nth-child(even) td {
             background-color: #f8fafc;
         }
         .text-right { text-align: right; }
         .text-center { text-align: center; }
-        .font-bold { font-weight: 700; }
+        .font-mono { font-family: 'Courier New', Courier, monospace; }
+        .font-bold { font-weight: 800; }
         .row-total {
             background-color: #fff7ed !important;
-            font-weight: 800;
+            font-weight: 900;
             color: #c2410c;
         }
         .footer-table {
@@ -101,115 +147,154 @@
             border-collapse: collapse;
         }
         .sig-space { height: 40px; }
+        .security-stamp {
+            font-size: 7.5px;
+            color: #94a3b8;
+            text-align: center;
+            margin-top: 15px;
+            border-top: 1px dashed #cbd5e1;
+            padding-top: 6px;
+        }
     </style>
 </head>
 <body>
 
-    <!-- Header Banner -->
-    <table class="header-table" width="100%">
-        <tr>
-            <td width="50%" style="vertical-align: middle;">
-                <div class="brand-logo" style="background-color: #ff6600; color: #ffffff; font-weight: 900; font-size: 18px; padding: 6px 12px; border-radius: 6px; display: inline-block;">ISTANA LAUNDRY</div>
-                <div class="brand-sub" style="font-size: 9px; color: #64748b; text-transform: uppercase; margin-top: 3px;">Fixed Assets &amp; Depreciation Management</div>
-            </td>
-            <td width="50%" style="text-align: right; vertical-align: middle;">
-                <div class="doc-title" style="font-size: 15px; font-weight: 800; color: #0f172a;">REKAPITULASI ASET TETAP</div>
-                <div style="font-size: 9px; color: #64748b; margin-top: 3px;">
-                    Dicetak Pada: {{ now()->translatedFormat('d F Y H:i') }} WIB
-                </div>
-            </td>
-        </tr>
-    </table>
-
-    <!-- Metadata Grid -->
-    <div class="meta-box" style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 8px 12px; margin-bottom: 15px;">
-        <table class="meta-table" width="100%">
+    <!-- Header Ribbon -->
+    <div class="header-ribbon">
+        <table class="header-table">
             <tr>
-                <td width="25%">
-                    <div class="meta-label" style="font-size: 8.5px; color: #64748b; text-transform: uppercase; font-weight: 700;">Cabang Lokasi</div>
-                    <div class="meta-val" style="font-size: 10.5px; color: #0f172a; font-weight: 700;">{{ $branchName }}</div>
+                <td style="width: 55%;">
+                    <div class="brand-logo">🧺 ISTANA LAUNDRY ERP</div>
+                    <div class="brand-sub">PowerBI Fixed Assets &amp; Depreciation Valuation Analytics</div>
                 </td>
-                <td width="25%">
-                    <div class="meta-label" style="font-size: 8.5px; color: #64748b; text-transform: uppercase; font-weight: 700;">Total Unit Aset</div>
-                    <div class="meta-val" style="font-size: 10.5px; color: #0f172a; font-weight: 700;">{{ number_format($assets->count()) }} Unit</div>
-                </td>
-                <td width="25%">
-                    <div class="meta-label" style="font-size: 8.5px; color: #64748b; text-transform: uppercase; font-weight: 700;">Tanggal Dicetak</div>
-                    <div class="meta-val" style="font-size: 10.5px; color: #0f172a; font-weight: 700;">{{ now()->format('d/m/Y H:i') }} WIB</div>
-                </td>
-                <td width="25%" style="text-align: right;">
-                    <div class="meta-label" style="font-size: 8.5px; color: #64748b; text-transform: uppercase; font-weight: 700;">Dicetak Oleh</div>
-                    <div class="meta-val" style="font-size: 10.5px; color: #0f172a; font-weight: 700;">{{ auth()->user()?->name ?? 'System Admin' }}</div>
+                <td style="width: 45%;" class="text-right">
+                    <div class="doc-title">EXECUTIVE FIXED ASSETS REPORT</div>
+                    <div class="doc-sub">Laporan Aset Tetap Mesin &amp; Depresiasi Terkumulasi</div>
                 </td>
             </tr>
         </table>
     </div>
 
-    <!-- Data Table Assets -->
-    <table class="data-table" width="100%" border="1" cellpadding="6" cellspacing="0" style="border-collapse: collapse;">
+    <!-- Metadata Card -->
+    <div class="meta-card">
+        <table class="meta-table">
+            <tr>
+                <td style="width: 25%;">
+                    <div class="meta-label">Scope Cabang</div>
+                    <div class="meta-val">{{ $branchName }}</div>
+                </td>
+                <td style="width: 25%;">
+                    <div class="meta-label">Total Unit Aset</div>
+                    <div class="meta-val">{{ count($assets) }} Unit Mesin / Aset</div>
+                </td>
+                <td style="width: 25%;">
+                    <div class="meta-label">Tanggal Cetak</div>
+                    <div class="meta-val">{{ now()->format('d/m/Y H:i') }} WITA</div>
+                </td>
+                <td style="width: 25%;">
+                    <div class="meta-label">Dicetak Oleh</div>
+                    <div class="meta-val">{{ auth()->user()?->name ?? 'Asset Controller' }}</div>
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    @php
+        $totalAcquisition = $assets->sum('acquisition_cost');
+        $totalBookValue = $assets->sum(fn($a) => $a->acquisition_cost - $a->accumulated_depreciation);
+        $totalAccumDep = $assets->sum('accumulated_depreciation');
+    @endphp
+
+    <!-- Top KPI Cards Row -->
+    <table class="kpi-table">
+        <tr>
+            <td style="width: 25%;">
+                <div class="kpi-card">
+                    <div class="kpi-label">Nilai Perolehan Aset</div>
+                    <div class="kpi-val" style="color: #ff6600;">Rp {{ number_format($totalAcquisition, 0, ',', '.') }}</div>
+                </div>
+            </td>
+            <td style="width: 25%;">
+                <div class="kpi-card kpi-card-emerald">
+                    <div class="kpi-label">Nilai Buku Saat Ini (Book Value)</div>
+                    <div class="kpi-val" style="color: #059669;">Rp {{ number_format($totalBookValue, 0, ',', '.') }}</div>
+                </div>
+            </td>
+            <td style="width: 25%;">
+                <div class="kpi-card kpi-card-purple">
+                    <div class="kpi-label">Akumulasi Depresiasi</div>
+                    <div class="kpi-val" style="color: #dc2626;">Rp {{ number_format($totalAccumDep, 0, ',', '.') }}</div>
+                </div>
+            </td>
+            <td style="width: 25%;">
+                <div class="kpi-card kpi-card-blue">
+                    <div class="kpi-label">Metode Depresiasi</div>
+                    <div class="kpi-val" style="color: #2563eb; font-size: 11px;">STRAIGHT LINE / DECLINING</div>
+                </div>
+            </td>
+        </tr>
+    </table>
+
+    <!-- Data Table -->
+    <table class="data-table">
         <thead>
-            <tr style="background-color: #1e293b; color: #ffffff;">
-                <th width="10%" style="background-color: #1e293b; color: #ffffff; font-weight: bold; padding: 6px 8px; border: 1px solid #1e293b;">Kode Aset</th>
-                <th width="22%" style="background-color: #1e293b; color: #ffffff; font-weight: bold; padding: 6px 8px; border: 1px solid #1e293b;">Nama Aset</th>
-                <th width="14%" style="background-color: #1e293b; color: #ffffff; font-weight: bold; padding: 6px 8px; border: 1px solid #1e293b;">Kategori</th>
-                <th width="14%" style="background-color: #1e293b; color: #ffffff; font-weight: bold; padding: 6px 8px; border: 1px solid #1e293b;">Cabang</th>
-                <th width="10%" style="background-color: #1e293b; color: #ffffff; font-weight: bold; padding: 6px 8px; border: 1px solid #1e293b;">Tgl Beli</th>
-                <th width="10%" style="background-color: #1e293b; color: #ffffff; font-weight: bold; padding: 6px 8px; border: 1px solid #1e293b; text-align: right;">Perolehan (Rp)</th>
-                <th width="10%" style="background-color: #1e293b; color: #ffffff; font-weight: bold; padding: 6px 8px; border: 1px solid #1e293b; text-align: right;">Akum. Susut (Rp)</th>
-                <th width="10%" style="background-color: #1e293b; color: #ffffff; font-weight: bold; padding: 6px 8px; border: 1px solid #1e293b; text-align: right;">Nilai Buku (Rp)</th>
+            <tr>
+                <th style="width: 12%;">Kode Aset</th>
+                <th style="width: 24%;">Nama Mesin / Aset</th>
+                <th style="width: 12%;">Cabang</th>
+                <th style="width: 12%;">Tgl Perolehan</th>
+                <th style="width: 14%;" class="text-right">Harga Beli (Rp)</th>
+                <th style="width: 13%;" class="text-right">Akum. Depresiasi (Rp)</th>
+                <th style="width: 13%;" class="text-right">Nilai Buku (Rp)</th>
             </tr>
         </thead>
         <tbody>
-            @php
-                $totalCost = 0;
-                $totalDep = 0;
-                $totalBook = 0;
-            @endphp
-            @forelse($assets as $index => $asset)
-                @php
-                    $totalCost += $asset->acquisition_cost;
-                    $totalDep += $asset->accumulated_depreciation;
-                    $totalBook += $asset->book_value;
-                @endphp
-                <tr style="{{ $index % 2 == 1 ? 'background-color: #f8fafc;' : 'background-color: #ffffff;' }}">
-                    <td style="font-weight: bold; font-family: monospace;">{{ $asset->asset_code }}</td>
-                    <td style="font-weight: bold;">{{ $asset->name }}</td>
-                    <td>{{ $asset->category }}</td>
-                    <td>{{ $asset->branch?->name ?? '-' }}</td>
-                    <td>{{ $asset->acquisition_date?->format('d/m/Y') ?? '-' }}</td>
-                    <td style="text-align: right;">Rp {{ number_format($asset->acquisition_cost, 0, ',', '.') }}</td>
-                    <td style="text-align: right;">Rp {{ number_format($asset->accumulated_depreciation, 0, ',', '.') }}</td>
-                    <td style="text-align: right; font-weight: bold; color: #047857;">Rp {{ number_format($asset->book_value, 0, ',', '.') }}</td>
+            @forelse($assets as $asset)
+                @php $bookVal = $asset->acquisition_cost - $asset->accumulated_depreciation; @endphp
+                <tr>
+                    <td class="font-mono font-bold text-center">{{ $asset->asset_code }}</td>
+                    <td class="font-bold">{{ $asset->name }}</td>
+                    <td>{{ $asset->branch?->name ?? 'HQ' }}</td>
+                    <td class="text-center">{{ $asset->acquisition_date?->format('d/m/Y') }}</td>
+                    <td class="text-right font-mono font-bold">Rp {{ number_format($asset->acquisition_cost, 0, ',', '.') }}</td>
+                    <td class="text-right font-mono text-rose-600">Rp {{ number_format($asset->accumulated_depreciation, 0, ',', '.') }}</td>
+                    <td class="text-right font-mono font-bold text-emerald-600">Rp {{ number_format($bookVal, 0, ',', '.') }}</td>
                 </tr>
             @empty
-                <tr><td colspan="8" style="text-align: center; color: #94a3b8; padding: 15px;">Belum ada data aset tetap terdaftar.</td></tr>
+                <tr>
+                    <td colspan="7" class="text-center py-4">Belum ada aset tetap terdaftar.</td>
+                </tr>
             @endforelse
-            <tr class="row-total" style="background-color: #fff7ed; font-weight: bold; color: #c2410c;">
-                <td colspan="5" style="text-align: right; font-weight: bold; background-color: #fff7ed; color: #c2410c;">TOTAL KESELURUHAN ASET:</td>
-                <td style="text-align: right; font-weight: bold; background-color: #fff7ed; color: #c2410c;">Rp {{ number_format($totalCost, 0, ',', '.') }}</td>
-                <td style="text-align: right; font-weight: bold; background-color: #fff7ed; color: #c2410c;">Rp {{ number_format($totalDep, 0, ',', '.') }}</td>
-                <td style="text-align: right; font-weight: bold; background-color: #fff7ed; color: #c2410c;">Rp {{ number_format($totalBook, 0, ',', '.') }}</td>
+            <tr class="row-total">
+                <td colspan="4" class="text-right">TOTAL KONSOLIDASI ASET TETAP:</td>
+                <td class="text-right font-mono">Rp {{ number_format($totalAcquisition, 0, ',', '.') }}</td>
+                <td class="text-right font-mono">Rp {{ number_format($totalAccumDep, 0, ',', '.') }}</td>
+                <td class="text-right font-mono">Rp {{ number_format($totalBookValue, 0, ',', '.') }}</td>
             </tr>
         </tbody>
     </table>
 
     <!-- Signature Footer -->
-    <table class="footer-table" width="100%">
+    <table class="footer-table">
         <tr>
-            <td width="50%" style="text-align: center;">
-                <div style="font-size: 8.5px; color: #64748b; font-weight: bold;">DIBUAT OLEH (ASET)</div>
-                <div class="sig-space" style="height: 40px;"></div>
-                <div style="font-weight: bold; text-decoration: underline;">{{ auth()->user()?->name ?? 'Penanggung Jawab Aset' }}</div>
-                <div style="font-size: 8px; color: #64748b;">Staff / Manager Aset &amp; Inventori</div>
+            <td style="width: 50%; text-align: center;">
+                <div>Disiapkan Oleh,</div>
+                <div class="sig-space"></div>
+                <div class="font-bold">({{ auth()->user()?->name ?? 'Asset Controller' }})</div>
+                <div style="font-size: 8px; color: #64748b;">Staff Aset &amp; Pemeliharaan</div>
             </td>
-            <td width="50%" style="text-align: center;">
-                <div style="font-size: 8.5px; color: #64748b; font-weight: bold;">DISETUJUI OLEH (MANAGEMENT)</div>
-                <div class="sig-space" style="height: 40px;"></div>
-                <div style="font-weight: bold; text-decoration: underline;">Owner / Direksi</div>
-                <div style="font-size: 8px; color: #64748b;">Istana Laundry ERP</div>
+            <td style="width: 50%; text-align: center;">
+                <div>Disetujui Oleh,</div>
+                <div class="sig-space"></div>
+                <div class="font-bold">( Head of Finance &amp; Assets )</div>
+                <div style="font-size: 8px; color: #64748b;">Istana Laundry Samarinda</div>
             </td>
         </tr>
     </table>
+
+    <div class="security-stamp">
+        🔒 Document Security Hash: {{ md5(now()->timestamp . 'ASSETS-POWERBI') }} | Generated by Istana Laundry Fixed Asset &amp; Depreciation Engine | Executive Confidential
+    </div>
 
 </body>
 </html>

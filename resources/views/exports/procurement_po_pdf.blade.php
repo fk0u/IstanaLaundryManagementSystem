@@ -2,78 +2,123 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <title>Laporan Purchase Orders (PO)</title>
+    <title>PowerBI Executive Procurement Purchase Orders — Istana Laundry ERP</title>
     <style>
+        @page {
+            margin: 15px 20px 20px 20px;
+        }
         body {
             font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-            font-size: 10px;
-            color: #1e293b;
+            font-size: 9.5px;
+            color: #0f172a;
             margin: 0;
-            padding: 15px;
+            padding: 0;
             background-color: #ffffff;
+        }
+        .header-ribbon {
+            width: 100%;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: #ffffff;
+            border-bottom: 4px solid #ff6600;
+            padding: 12px 15px;
+            border-radius: 8px 8px 0 0;
+            margin-bottom: 12px;
         }
         .header-table {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 15px;
-            border-bottom: 3px solid #ff6600;
-            padding-bottom: 8px;
         }
         .brand-logo {
-            background-color: #ff6600;
-            color: #ffffff;
+            font-size: 16px;
             font-weight: 900;
-            font-size: 18px;
-            padding: 6px 12px;
-            border-radius: 6px;
-            display: inline-block;
+            color: #ff6600;
             letter-spacing: 1px;
+            text-transform: uppercase;
         }
         .brand-sub {
-            font-size: 9px;
-            color: #64748b;
+            font-size: 8px;
+            color: #94a3b8;
             text-transform: uppercase;
             letter-spacing: 1px;
-            margin-top: 3px;
+            margin-top: 2px;
         }
         .doc-title {
-            font-size: 15px;
-            font-weight: 800;
-            color: #0f172a;
+            font-size: 14px;
+            font-weight: 900;
+            color: #ffffff;
             text-align: right;
+            letter-spacing: 0.5px;
         }
-        .meta-box {
+        .doc-sub {
+            font-size: 8px;
+            color: #cbd5e1;
+            text-align: right;
+            margin-top: 2px;
+        }
+        .meta-card {
             background-color: #f8fafc;
             border: 1px solid #e2e8f0;
+            border-left: 4px solid #f59e0b;
             border-radius: 6px;
             padding: 8px 12px;
-            margin-bottom: 15px;
+            margin-bottom: 12px;
         }
         .meta-table {
             width: 100%;
             border-collapse: collapse;
         }
         .meta-label {
-            font-size: 8.5px;
+            font-size: 8px;
             color: #64748b;
             text-transform: uppercase;
             font-weight: 700;
         }
         .meta-val {
-            font-size: 10.5px;
+            font-size: 10px;
             color: #0f172a;
-            font-weight: 700;
+            font-weight: 800;
+            margin-top: 1px;
+        }
+        .kpi-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 6px;
+            margin-bottom: 12px;
+        }
+        .kpi-card {
+            background-color: #f8fafc;
+            border: 1px solid #cbd5e1;
+            border-top: 3px solid #ff6600;
+            border-radius: 6px;
+            padding: 8px;
+            text-align: center;
+        }
+        .kpi-card-emerald { border-top-color: #10b981; }
+        .kpi-card-blue { border-top-color: #3b82f6; }
+        .kpi-card-purple { border-top-color: #a855f7; }
+        .kpi-label {
+            font-size: 8px;
+            font-weight: 800;
+            color: #64748b;
+            text-transform: uppercase;
+        }
+        .kpi-val {
+            font-size: 13px;
+            font-weight: 900;
+            color: #0f172a;
+            margin-top: 3px;
+            font-family: 'Courier New', Courier, monospace;
         }
         .data-table {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 15px;
+            margin-bottom: 12px;
         }
         .data-table th {
             background-color: #1e293b;
             color: #ffffff;
-            font-size: 9px;
-            font-weight: 700;
+            font-size: 8.5px;
+            font-weight: 800;
             text-transform: uppercase;
             padding: 6px 8px;
             text-align: left;
@@ -84,151 +129,165 @@
             border: 1px solid #e2e8f0;
             font-size: 9px;
         }
-        .data-table tr:nth-child(even) {
+        .data-table tr:nth-child(even) td {
             background-color: #f8fafc;
         }
         .text-right { text-align: right; }
         .text-center { text-align: center; }
-        .font-bold { font-weight: 700; }
+        .font-mono { font-family: 'Courier New', Courier, monospace; }
+        .font-bold { font-weight: 800; }
         .row-total {
             background-color: #fff7ed !important;
-            font-weight: 800;
+            font-weight: 900;
             color: #c2410c;
         }
-        .badge {
-            font-weight: 800;
-            padding: 2px 6px;
-            border-radius: 4px;
-            font-size: 8.5px;
-            text-transform: uppercase;
-            display: inline-block;
-        }
-        .badge-success { background-color: #dcfce7; color: #15803d; }
-        .badge-warning { background-color: #fef3c7; color: #b45309; }
-        .badge-danger { background-color: #fee2e2; color: #b91c1c; }
-        .badge-info { background-color: #e0f2fe; color: #0369a1; }
         .footer-table {
             width: 100%;
             margin-top: 25px;
             border-collapse: collapse;
         }
         .sig-space { height: 40px; }
+        .security-stamp {
+            font-size: 7.5px;
+            color: #94a3b8;
+            text-align: center;
+            margin-top: 15px;
+            border-top: 1px dashed #cbd5e1;
+            padding-top: 6px;
+        }
     </style>
 </head>
 <body>
 
-    <!-- Header Banner -->
-    <table class="header-table" width="100%">
-        <tr>
-            <td width="50%" style="vertical-align: middle;">
-                <div class="brand-logo">ISTANA LAUNDRY</div>
-                <div class="brand-sub">ERP &amp; Management System</div>
-            </td>
-            <td width="50%" style="text-align: right; vertical-align: middle;">
-                <div class="doc-title">REKAPITULASI PURCHASE ORDERS</div>
-                <div style="font-size: 9px; color: #64748b; margin-top: 3px;">
-                    Dicetak Pada: {{ now()->translatedFormat('d F Y H:i') }} WIB
-                </div>
-            </td>
-        </tr>
-    </table>
-
-    <!-- Metadata Card -->
-    <div class="meta-box">
-        <table class="meta-table" width="100%">
+    <!-- Header Ribbon -->
+    <div class="header-ribbon">
+        <table class="header-table">
             <tr>
-                <td width="33%">
-                    <div class="meta-label">Cabang Scope</div>
-                    <div class="meta-val">{{ $branchName ?? 'Semua Cabang' }}</div>
+                <td style="width: 55%;">
+                    <div class="brand-logo">🧺 ISTANA LAUNDRY ERP</div>
+                    <div class="brand-sub">PowerBI Procurement &amp; Purchase Orders Analytics</div>
                 </td>
-                <td width="33%">
-                    <div class="meta-label">Total Pesanan PO</div>
-                    <div class="meta-val">{{ count($purchaseOrders) }} Document</div>
-                </td>
-                <td width="34%" style="text-align: right;">
-                    <div class="meta-label">Total Nilai Pembelian (PO)</div>
-                    <div class="meta-val" style="color: #ea580c;">
-                        Rp {{ number_format($purchaseOrders->sum('total_amount'), 0, ',', '.') }}
-                    </div>
+                <td style="width: 45%;" class="text-right">
+                    <div class="doc-title">EXECUTIVE PO REPORT</div>
+                    <div class="doc-sub">Laporan Pengadaan Purchase Orders Supplier</div>
                 </td>
             </tr>
         </table>
     </div>
 
-    <!-- Main Data Table -->
-    <table class="data-table" width="100%" border="1" cellpadding="6" cellspacing="0">
-        <thead>
-            <tr style="background-color: #1e293b; color: #ffffff;">
-                <th width="5%" style="text-align: center; background-color: #1e293b; color: #ffffff;">No</th>
-                <th width="14%" style="background-color: #1e293b; color: #ffffff;">Nomor PO</th>
-                <th width="10%" style="background-color: #1e293b; color: #ffffff;">Tanggal</th>
-                <th width="18%" style="background-color: #1e293b; color: #ffffff;">Supplier</th>
-                <th width="28%" style="background-color: #1e293b; color: #ffffff;">Rincian Item &amp; Qty</th>
-                <th width="13%" style="text-align: right; background-color: #1e293b; color: #ffffff;">Total Nilai (Rp)</th>
-                <th width="12%" style="text-align: center; background-color: #1e293b; color: #ffffff;">Status</th>
-            </tr>
-        </thead>
-        <tbody>
-            @forelse($purchaseOrders as $index => $po)
-                <tr style="{{ $index % 2 == 1 ? 'background-color: #f8fafc;' : 'background-color: #ffffff;' }}">
-                    <td style="text-align: center;">{{ $index + 1 }}</td>
-                    <td style="font-weight: bold; font-family: monospace;">{{ $po->po_number }}</td>
-                    <td>{{ $po->po_date?->format('d/m/Y') }}</td>
-                    <td style="font-weight: bold;">{{ $po->supplier?->name ?? '-' }}</td>
-                    <td>
-                        @foreach($po->items as $item)
-                            <div>• {{ $item->item?->name }} ({{ number_format($item->quantity_ordered, 0) }} {{ $item->item?->unit }}) @ Rp {{ number_format($item->unit_cost, 0, ',', '.') }}</div>
-                        @endforeach
-                    </td>
-                    <td style="text-align: right; font-weight: bold;">
-                        Rp {{ number_format($po->total_amount, 0, ',', '.') }}
-                    </td>
-                    <td style="text-align: center;">
-                        @if ($po->status === 'received')
-                            <span class="badge badge-success">Diterima</span>
-                        @elseif ($po->status === 'sent')
-                            <span class="badge badge-info">Dikirim</span>
-                        @elseif ($po->status === 'cancelled')
-                            <span class="badge badge-danger">Batal</span>
-                        @else
-                            <span class="badge badge-warning">Draft</span>
-                        @endif
-                    </td>
-                </tr>
-            @empty
-                <tr>
-                    <td colspan="7" style="text-align: center; color: #94a3b8; padding: 15px;">Tidak ada data Purchase Order.</td>
-                </tr>
-            @endforelse
-        </tbody>
-        <tfoot>
-            <tr class="row-total" style="background-color: #fff7ed; font-weight: bold; color: #c2410c;">
-                <td colspan="5" style="text-align: right; font-weight: bold;">GRAND TOTAL PEMBELIAN PO:</td>
-                <td style="text-align: right; font-weight: bold;">
-                    Rp {{ number_format($purchaseOrders->sum('total_amount'), 0, ',', '.') }}
+    <!-- Metadata Card -->
+    <div class="meta-card">
+        <table class="meta-table">
+            <tr>
+                <td style="width: 25%;">
+                    <div class="meta-label">Scope Cabang</div>
+                    <div class="meta-val">{{ $branchName }}</div>
                 </td>
-                <td></td>
+                <td style="width: 25%;">
+                    <div class="meta-label">Total Purchase Orders</div>
+                    <div class="meta-val">{{ count($purchaseOrders) }} Documents</div>
+                </td>
+                <td style="width: 25%;">
+                    <div class="meta-label">Tanggal Cetak</div>
+                    <div class="meta-val">{{ now()->format('d/m/Y H:i') }} WITA</div>
+                </td>
+                <td style="width: 25%;">
+                    <div class="meta-label">Dicetak Oleh</div>
+                    <div class="meta-val">{{ auth()->user()?->name ?? 'Procurement Manager' }}</div>
+                </td>
             </tr>
-        </tfoot>
-    </table>
+        </table>
+    </div>
 
-    <!-- Footer Signatures -->
-    <table class="footer-table" width="100%">
+    @php
+        $totalPoVal = $purchaseOrders->sum('total_amount');
+    @endphp
+
+    <!-- Top KPI Cards Row -->
+    <table class="kpi-table">
         <tr>
-            <td width="50%" style="text-align: center;">
-                <div style="font-size: 8.5px; color: #64748b; font-weight: bold;">DIBUAT OLEH (PURCHASING)</div>
-                <div class="sig-space"></div>
-                <div style="font-weight: bold; text-decoration: underline;">Staf Procurement</div>
-                <div style="font-size: 8px; color: #64748b;">Tim Pengadaan Barang</div>
+            <td style="width: 25%;">
+                <div class="kpi-card">
+                    <div class="kpi-label">Total Anggaran PO</div>
+                    <div class="kpi-val" style="color: #ff6600;">Rp {{ number_format($totalPoVal, 0, ',', '.') }}</div>
+                </div>
             </td>
-            <td width="50%" style="text-align: center;">
-                <div style="font-size: 8.5px; color: #64748b; font-weight: bold;">DISETUJUI OLEH (MANAGEMENT)</div>
-                <div class="sig-space"></div>
-                <div style="font-weight: bold; text-decoration: underline;">Finance / Owner</div>
-                <div style="font-size: 8px; color: #64748b;">Executive Management</div>
+            <td style="width: 25%;">
+                <div class="kpi-card kpi-card-emerald">
+                    <div class="kpi-label">Total PO Terbit</div>
+                    <div class="kpi-val" style="color: #059669;">{{ count($purchaseOrders) }} PO</div>
+                </div>
+            </td>
+            <td style="width: 25%;">
+                <div class="kpi-card kpi-card-purple">
+                    <div class="kpi-label">Rata-rata Nilai PO</div>
+                    <div class="kpi-val" style="color: #a855f7;">Rp {{ number_format(count($purchaseOrders) > 0 ? $totalPoVal / count($purchaseOrders) : 0, 0, ',', '.') }}</div>
+                </div>
+            </td>
+            <td style="width: 25%;">
+                <div class="kpi-card kpi-card-blue">
+                    <div class="kpi-label">Supplier Terlibat</div>
+                    <div class="kpi-val" style="color: #2563eb;">{{ number_format($purchaseOrders->pluck('supplier_id')->unique()->count()) }} Supplier</div>
+                </div>
             </td>
         </tr>
     </table>
+
+    <!-- Data Table -->
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th style="width: 14%;">Nomor PO</th>
+                <th style="width: 12%;">Tanggal Order</th>
+                <th style="width: 24%;">Supplier Vendor</th>
+                <th style="width: 16%;">Cabang Purpose</th>
+                <th style="width: 12%;" class="text-center">Status</th>
+                <th style="width: 22%;" class="text-right">Total Nilai Order (Rp)</th>
+            </tr>
+        </thead>
+        <tbody>
+            @forelse($purchaseOrders as $po)
+                <tr>
+                    <td class="font-mono font-bold text-center">{{ $po->po_number }}</td>
+                    <td class="text-center">{{ $po->po_date?->format('d/m/Y') }}</td>
+                    <td class="font-bold">{{ $po->supplier?->name ?? '-' }}</td>
+                    <td>{{ $po->branch?->name ?? 'HQ' }}</td>
+                    <td class="text-center font-bold" style="text-transform: uppercase; font-size: 8px;">{{ $po->status }}</td>
+                    <td class="text-right font-mono font-bold">Rp {{ number_format($po->total_amount, 0, ',', '.') }}</td>
+                </tr>
+            @empty
+                <tr>
+                    <td colspan="6" class="text-center py-4">Belum ada Purchase Order terdaftar.</td>
+                </tr>
+            @endforelse
+            <tr class="row-total">
+                <td colspan="5" class="text-right">TOTAL NILAI PENGADAAN PURCHASE ORDERS:</td>
+                <td class="text-right font-mono">Rp {{ number_format($totalPoVal, 0, ',', '.') }}</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <!-- Signature Footer -->
+    <table class="footer-table">
+        <tr>
+            <td style="width: 50%; text-align: center;">
+                <div>Disiapkan Oleh,</div>
+                <div class="sig-space"></div>
+                <div class="font-bold">({{ auth()->user()?->name ?? 'Procurement Officer' }})</div>
+                <div style="font-size: 8px; color: #64748b;">Staff Pengadaan &amp; Logistik</div>
+            </td>
+            <td style="width: 50%; text-align: center;">
+                <div>Disetujui Oleh,</div>
+                <div class="sig-space"></div>
+                <div class="font-bold">( Head of Procurement )</div>
+                <div style="font-size: 8px; color: #64748b;">Istana Laundry Samarinda</div>
+            </td>
+        </tr>
+    </table>
+
+    <div class="security-stamp">
+        🔒 Document Security Hash: {{ md5(now()->timestamp . 'PO-POWERBI') }} | Generated by Istana Laundry Procurement Module | Executive Confidential
+    </div>
 
 </body>
 </html>
