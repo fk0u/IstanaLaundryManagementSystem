@@ -27,6 +27,14 @@ class DepreciationSchedule extends Model
         return $this->belongsTo(FixedAsset::class, 'asset_id');
     }
 
+    /**
+     * Alias for asset() — used by JournalService and backfill commands.
+     */
+    public function fixedAsset(): BelongsTo
+    {
+        return $this->asset();
+    }
+
     public function journal(): BelongsTo
     {
         return $this->belongsTo(Journal::class);

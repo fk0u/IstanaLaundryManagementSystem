@@ -198,7 +198,7 @@
                                     <span class="text-2xs text-slate-400 block font-semibold mt-0.5">
                                         Cabang: {{ $pr->branch?->name ?? 'Seluruh Cabang (Konsolidasi Global)' }} • Diproses Oleh: {{ $pr->createdByUser?->name ?? 'System' }}
                                     </span>
-                                    <div class="mt-1 flex items-center gap-2">
+                                    <div class="mt-1 flex items-center gap-2 flex-wrap">
                                         @if($pr->status === 'final')
                                             <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-2xs font-extrabold bg-emerald-100 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-400">
                                                 <span class="material-symbols-outlined text-xs">lock</span> FINAL (DIKUNCI)
@@ -206,6 +206,15 @@
                                         @else
                                             <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-2xs font-extrabold bg-amber-100 text-amber-800 dark:bg-amber-950/40 dark:text-amber-400">
                                                 <span class="material-symbols-outlined text-xs">edit_document</span> DRAFT
+                                            </span>
+                                        @endif
+                                        @if($pr->journals()->exists())
+                                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-950/40 dark:text-blue-400 dark:border-blue-800">
+                                                <span class="material-symbols-outlined text-[12px]">account_balance_wallet</span> Jurnal Terposting
+                                            </span>
+                                        @else
+                                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-600 border border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700">
+                                                <span class="material-symbols-outlined text-[12px]">pending</span> Belum Terposting
                                             </span>
                                         @endif
                                         <span class="text-2xs font-mono font-bold text-slate-500">Total: {{ $pr->items->count() }} Staf</span>
@@ -216,8 +225,16 @@
                                     <a href="{{ route('hr.payrolls.show', $pr->id) }}" class="inline-flex items-center gap-1 text-xs font-bold px-3 py-1.5 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:border-primary hover:text-primary transition-colors shadow-sm">
                                         <span class="material-symbols-outlined text-base">info</span> Detail & Cetak
                                     </a>
+                                    @if(!$pr->journals()->exists())
+                                        <form action="{{ route('hr.payrolls.sync-journal', $pr->id) }}" method="POST">
+                                            @csrf
+                                            <button type="submit" class="inline-flex items-center gap-1 text-xs font-bold px-3 py-1.5 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-colors shadow-sm" title="Sync ke Jurnal Keuangan">
+                                                <span class="material-symbols-outlined text-base">sync</span> Sync Keuangan
+                                            </button>
+                                        </form>
+                                    @endif
                                     @if($pr->status === 'draft')
-                                        <form action="{{ route('hr.payrolls.finalize', $pr->id) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin MEMFINALKAN payroll ini? Setelah difinalkan, payroll akan DIKUNCI dan tidak dapat diubah.')">
+                                        <form action="{{ route('hr.payrolls.finalize', $pr->id) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin MEMFINALKAN payroll ini? Setelah difinalkan, payroll akan DIKUNCI dan Jurnal Keuangan akan otomatis diposting.')">
                                             @csrf
                                             <button type="submit" class="inline-flex items-center gap-1 text-xs font-bold px-3 py-1.5 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 transition-colors shadow-sm" title="Finalkan Payroll">
                                                 <span class="material-symbols-outlined text-base">check_circle</span> Finalkan

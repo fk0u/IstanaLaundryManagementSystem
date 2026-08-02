@@ -267,6 +267,14 @@
                         <span class="material-symbols-outlined text-lg">summarize</span>
                         <span class="truncate">Laporan Keuangan</span>
                     </a>
+                    <a href="/finance/operational-expenses" @click="sidebarOpen = false" class="flex items-center gap-3 px-3 py-2 transition-all rounded-full text-xs font-bold {{ request()->is('finance/operational-expenses*') ? 'text-primary font-black bg-orange-50' : 'text-slate-400 hover:text-slate-700' }}">
+                        <span class="material-symbols-outlined text-lg">receipt_long</span>
+                        <span class="truncate">Beban Operasional</span>
+                    </a>
+                    <a href="/finance/supplier-payments" @click="sidebarOpen = false" class="flex items-center gap-3 px-3 py-2 transition-all rounded-full text-xs font-bold {{ request()->is('finance/supplier-payments*') ? 'text-primary font-black bg-orange-50' : 'text-slate-400 hover:text-slate-700' }}">
+                        <span class="material-symbols-outlined text-lg">payments</span>
+                        <span class="truncate">Pelunasan Supplier</span>
+                    </a>
                 </div>
             @endif
 

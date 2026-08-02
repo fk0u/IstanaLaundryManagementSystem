@@ -29,6 +29,7 @@ class BackfillPayrollJournals extends Command
             ->pluck('source_id');
 
         $payrolls = Payroll::withoutBranchScope()
+            ->where('status', 'final')
             ->whereNotIn('id', $journaledPayrollIds)
             ->orderBy('id')
             ->get();

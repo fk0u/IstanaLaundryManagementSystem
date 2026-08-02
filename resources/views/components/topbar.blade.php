@@ -26,6 +26,8 @@
             request()->is('finance/journals*') => 'Jurnal Ledger',
             request()->is('finance/periods*') => 'Periode Akuntansi',
             request()->is('finance/reports*') => 'Laporan Keuangan',
+            request()->is('finance/operational-expenses*') => 'Beban Operasional (Kas Kecil)',
+            request()->is('finance/supplier-payments*') => 'Pelunasan Hutang Supplier',
             request()->is('finance*') => 'Keuangan & COA',
             request()->is('audit-logs*') => 'Audit Logs',
             request()->is('guide*') => 'Panduan Training Staf',
