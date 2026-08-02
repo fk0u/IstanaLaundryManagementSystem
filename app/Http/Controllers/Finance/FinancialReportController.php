@@ -225,18 +225,22 @@ class FinancialReportController extends Controller
         $trialBalance = $this->reportService->getTrialBalance($branchId, $year, $month);
         $incomeStatement = $this->reportService->getIncomeStatement($branchId, $year, $month);
         $balanceSheet = $this->reportService->getBalanceSheet($branchId, $year, $month);
+        $kpiAnalytics = $this->reportService->getExecutiveKpiAnalytics($branchId, $year, $month);
+        $historicalIncomeTrend = $this->reportService->getHistoricalIncomeTrend($branchId, $year);
 
         $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('exports.finance_pdf', compact(
             'trialBalance',
             'incomeStatement',
             'balanceSheet',
+            'kpiAnalytics',
+            'historicalIncomeTrend',
             'selectedBranch',
             'branchId',
             'year',
             'month'
         ))->setPaper('a4', 'portrait');
 
-        return $pdf->download('laporan-keuangan-' . now()->format('Ymd-His') . '.pdf');
+        return $pdf->download('laporan-keuangan-cfo-' . now()->format('Ymd-His') . '.pdf');
     }
 
     public function exportExcel(Request $request)
