@@ -102,7 +102,6 @@ Route::middleware(['auth', 'branch.scope'])->group(function () {
 
     // Performance Monitoring & Export
     Route::get('/performance', [PerformanceController::class, 'index'])->name('performance.index');
-    Route::get('/performance/export', [PerformanceController::class, 'exportCsv'])->name('performance.export');
     Route::get('/performance/export/pdf', [PerformanceController::class, 'exportPdf'])->name('performance.export.pdf');
     Route::get('/performance/export/xlsx', [PerformanceController::class, 'exportExcel'])->name('performance.export.xlsx');
 

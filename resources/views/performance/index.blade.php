@@ -77,10 +77,6 @@
                        class="h-10 px-3.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl flex items-center gap-1.5 transition-all shadow-sm active:scale-95 cursor-pointer">
                         <span class="material-symbols-outlined text-base">table_chart</span> Excel
                     </a>
-                    <a href="{{ route('performance.export', ['branch_id' => $branchId, 'date_from' => $dateFrom, 'date_to' => $dateTo]) }}"
-                       class="h-10 px-3.5 bg-slate-700 hover:bg-slate-800 text-white text-xs font-bold rounded-xl flex items-center gap-1.5 transition-all shadow-sm active:scale-95 cursor-pointer">
-                        <span class="material-symbols-outlined text-base">download</span> CSV
-                    </a>
                     <a href="{{ route('performance.index') }}" class="h-10 w-10 border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 text-xs font-bold rounded-xl flex items-center justify-center transition-colors shadow-2xs" title="Reset Filter">
                         <span class="material-symbols-outlined text-base">refresh</span>
                     </a>
