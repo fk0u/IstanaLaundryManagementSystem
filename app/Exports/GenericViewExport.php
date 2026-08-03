@@ -24,7 +24,7 @@ class GenericViewExport implements FromView, WithTitle, WithStyles, WithEvents
     public function __construct(string $viewName, array $viewData, string $title = 'Laporan Istana Laundry')
     {
         $this->viewName = $viewName;
-        $this->viewData = $viewData;
+        $this->viewData = array_merge($viewData, ['isExcel' => true]);
         $this->title = mb_substr($title, 0, 31);
     }
 
@@ -205,7 +205,7 @@ class GenericViewExport implements FromView, WithTitle, WithStyles, WithEvents
                 $currCol = 'A';
                 while (true) {
                     $maxLen = 0;
-                    for ($r = 1; $r <= $highestRow; $r++) {
+                    for ($r = $headerRow; $r <= $highestRow; $r++) {
                         $cellVal = (string) $sheet->getCell("{$currCol}{$r}")->getValue();
                         $maxLen = max($maxLen, mb_strlen(strip_tags($cellVal)));
                     }

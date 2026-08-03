@@ -175,82 +175,112 @@
 </head>
 <body>
 
-    <!-- Header Ribbon -->
-    <div class="header-ribbon">
-        <table class="header-table">
-            <tr>
-                <td style="width: 55%;">
-                    <div class="brand-logo">🧺 ISTANA LAUNDRY ERP</div>
-                    <div class="brand-sub">PowerBI Sales &amp; POS Transaction Dashboard</div>
-                </td>
-                <td style="width: 45%;" class="text-right">
-                    <div class="doc-title">EXECUTIVE SALES REPORT</div>
-                    <div class="doc-sub">Laporan Transaksi Penjualan &amp; Kasir POS</div>
-                </td>
-            </tr>
-        </table>
-    </div>
-
-    <!-- Metadata Card -->
-    <div class="meta-card">
-        <table class="meta-table">
-            <tr>
-                <td style="width: 25%;">
-                    <div class="meta-label">Scope Cabang</div>
-                    <div class="meta-val">{{ $branchName }}</div>
-                </td>
-                <td style="width: 25%;">
-                    <div class="meta-label">Total Transaksi</div>
-                    <div class="meta-val">{{ count($orders) }} Nota Transaksi</div>
-                </td>
-                <td style="width: 25%;">
-                    <div class="meta-label">Tanggal Ekspor</div>
-                    <div class="meta-val">{{ now()->format('d/m/Y H:i') }} WITA</div>
-                </td>
-                <td style="width: 25%;">
-                    <div class="meta-label">Dicetak Oleh</div>
-                    <div class="meta-val">{{ auth()->user()?->name ?? 'Kasir / Admin' }}</div>
-                </td>
-            </tr>
-        </table>
-    </div>
-
     @php
-        $totalGross = $orders->sum('total_amount');
-        $totalPaid = $orders->where('payment_status', 'paid')->sum('total_amount');
-        $totalUnpaid = $orders->where('payment_status', '!=', 'paid')->sum('total_amount');
+        $totalGross = $orders->sum('total');
+        $totalPaid = $orders->where('payment_status', 'paid')->sum('total');
+        $totalUnpaid = $orders->where('payment_status', '!=', 'paid')->sum('total');
         $avgBasket = count($orders) > 0 ? $totalGross / count($orders) : 0;
     @endphp
 
-    <!-- Top KPI Cards Row -->
-    <table class="kpi-table">
-        <tr>
-            <td style="width: 25%;">
-                <div class="kpi-card">
-                    <div class="kpi-label">Total Omset Penjualan</div>
-                    <div class="kpi-val" style="color: #ff6600;">Rp {{ number_format($totalGross, 0, ',', '.') }}</div>
-                </div>
-            </td>
-            <td style="width: 25%;">
-                <div class="kpi-card kpi-card-emerald">
-                    <div class="kpi-label">Total Omset Terbayar (Paid)</div>
-                    <div class="kpi-val" style="color: #059669;">Rp {{ number_format($totalPaid, 0, ',', '.') }}</div>
-                </div>
-            </td>
-            <td style="width: 25%;">
-                <div class="kpi-card kpi-card-purple">
-                    <div class="kpi-label">Total Piutang Belum Bayar</div>
-                    <div class="kpi-val" style="color: #dc2626;">Rp {{ number_format($totalUnpaid, 0, ',', '.') }}</div>
-                </div>
-            </td>
-            <td style="width: 25%;">
-                <div class="kpi-card kpi-card-blue">
-                    <div class="kpi-label">Rata-rata Nota (Basket Size)</div>
-                    <div class="kpi-val" style="color: #2563eb;">Rp {{ number_format($avgBasket, 0, ',', '.') }}</div>
-                </div>
-            </td>
-        </tr>
-    </table>
+    @if(isset($isExcel) && $isExcel)
+        <!-- Excel Specific Header & KPI Cards (Perfect Colspan Grid) -->
+        <table style="width: 100%; border-collapse: collapse; margin-bottom: 15px;">
+            <tr>
+                <td colspan="7" style="background-color: #0F172A; color: #FF6600; font-size: 16px; font-weight: bold; padding: 12px; text-align: left;">
+                    ISTANA LAUNDRY ERP — EXECUTIVE SALES REPORT
+                </td>
+            </tr>
+            <tr>
+                <td colspan="7" style="background-color: #1E293B; color: #CBD5E1; font-size: 9px; padding: 6px; text-align: left;">
+                    Scope Cabang: {{ $branchName }} | Total Transaksi: {{ count($orders) }} Nota | Tanggal Ekspor: {{ now()->format('d/m/Y H:i') }} WITA | Dicetak Oleh: {{ auth()->user()?->name ?? 'Kasir / Admin' }}
+                </td>
+            </tr>
+            <tr><td colspan="7"></td></tr>
+            <tr>
+                <td colspan="2" style="background-color: #FFF7ED; color: #EA580C; font-weight: bold; font-size: 9px; text-align: center; border: 1px solid #FED7AA; padding: 6px;">TOTAL OMSET PENJUALAN</td>
+                <td colspan="2" style="background-color: #ECFDF5; color: #047857; font-weight: bold; font-size: 9px; text-align: center; border: 1px solid #A7F3D0; padding: 6px;">TOTAL OMSET TERBAYAR (PAID)</td>
+                <td colspan="2" style="background-color: #FEF2F2; color: #B91C1C; font-weight: bold; font-size: 9px; text-align: center; border: 1px solid #FECACA; padding: 6px;">TOTAL PIUTANG BELUM BAYAR</td>
+                <td style="background-color: #EFF6FF; color: #1D4ED8; font-weight: bold; font-size: 9px; text-align: center; border: 1px solid #BFDBFE; padding: 6px;">RATA-RATA NOTA</td>
+            </tr>
+            <tr>
+                <td colspan="2" style="background-color: #FFF7ED; color: #FF6600; font-weight: bold; font-size: 13px; text-align: center; border: 1px solid #FED7AA; padding: 6px;">Rp {{ number_format($totalGross, 0, ',', '.') }}</td>
+                <td colspan="2" style="background-color: #ECFDF5; color: #059669; font-weight: bold; font-size: 13px; text-align: center; border: 1px solid #A7F3D0; padding: 6px;">Rp {{ number_format($totalPaid, 0, ',', '.') }}</td>
+                <td colspan="2" style="background-color: #FEF2F2; color: #DC2626; font-weight: bold; font-size: 13px; text-align: center; border: 1px solid #FECACA; padding: 6px;">Rp {{ number_format($totalUnpaid, 0, ',', '.') }}</td>
+                <td style="background-color: #EFF6FF; color: #2563EB; font-weight: bold; font-size: 13px; text-align: center; border: 1px solid #BFDBFE; padding: 6px;">Rp {{ number_format($avgBasket, 0, ',', '.') }}</td>
+            </tr>
+            <tr><td colspan="7"></td></tr>
+        </table>
+    @else
+        <!-- Header Ribbon -->
+        <div class="header-ribbon">
+            <table class="header-table">
+                <tr>
+                    <td style="width: 55%;">
+                        <div class="brand-logo">ISTANA LAUNDRY ERP</div>
+                        <div class="brand-sub">PowerBI Sales &amp; POS Transaction Dashboard</div>
+                    </td>
+                    <td style="width: 45%;" class="text-right">
+                        <div class="doc-title">EXECUTIVE SALES REPORT</div>
+                        <div class="doc-sub">Laporan Transaksi Penjualan &amp; Kasir POS</div>
+                    </td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- Metadata Card -->
+        <div class="meta-card">
+            <table class="meta-table">
+                <tr>
+                    <td style="width: 25%;">
+                        <div class="meta-label">Scope Cabang</div>
+                        <div class="meta-val">{{ $branchName }}</div>
+                    </td>
+                    <td style="width: 25%;">
+                        <div class="meta-label">Total Transaksi</div>
+                        <div class="meta-val">{{ count($orders) }} Nota Transaksi</div>
+                    </td>
+                    <td style="width: 25%;">
+                        <div class="meta-label">Tanggal Ekspor</div>
+                        <div class="meta-val">{{ now()->format('d/m/Y H:i') }} WITA</div>
+                    </td>
+                    <td style="width: 25%;">
+                        <div class="meta-label">Dicetak Oleh</div>
+                        <div class="meta-val">{{ auth()->user()?->name ?? 'Kasir / Admin' }}</div>
+                    </td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- Top KPI Cards Row -->
+        <table class="kpi-table">
+            <tr>
+                <td style="width: 25%;">
+                    <div class="kpi-card">
+                        <div class="kpi-label">Total Omset Penjualan</div>
+                        <div class="kpi-val" style="color: #ff6600;">Rp {{ number_format($totalGross, 0, ',', '.') }}</div>
+                    </div>
+                </td>
+                <td style="width: 25%;">
+                    <div class="kpi-card kpi-card-emerald">
+                        <div class="kpi-label">Total Omset Terbayar (Paid)</div>
+                        <div class="kpi-val" style="color: #059669;">Rp {{ number_format($totalPaid, 0, ',', '.') }}</div>
+                    </div>
+                </td>
+                <td style="width: 25%;">
+                    <div class="kpi-card kpi-card-purple">
+                        <div class="kpi-label">Total Piutang Belum Bayar</div>
+                        <div class="kpi-val" style="color: #dc2626;">Rp {{ number_format($totalUnpaid, 0, ',', '.') }}</div>
+                    </div>
+                </td>
+                <td style="width: 25%;">
+                    <div class="kpi-card kpi-card-blue">
+                        <div class="kpi-label">Rata-rata Nota (Basket Size)</div>
+                        <div class="kpi-val" style="color: #2563eb;">Rp {{ number_format($avgBasket, 0, ',', '.') }}</div>
+                    </div>
+                </td>
+            </tr>
+        </table>
+    @endif
 
     <!-- Data Table -->
     <table class="data-table">
@@ -274,13 +304,13 @@
                     <td>{{ $order->branch?->name ?? '-' }}</td>
                     <td class="text-center">
                         @if($order->payment_status === 'paid')
-                            <span class="badge-paid">● LUNAS</span>
+                            <span class="badge-paid">LUNAS</span>
                         @else
                             <span class="badge-unpaid">BELUM BAYAR</span>
                         @endif
                     </td>
-                    <td class="text-center font-bold" style="text-transform: uppercase; font-size: 8px;">{{ $order->status }}</td>
-                    <td class="text-right font-mono font-bold">Rp {{ number_format($order->total_amount, 0, ',', '.') }}</td>
+                    <td class="text-center font-bold" style="text-transform: uppercase; font-size: 8px;">{{ $order->production_status ?? '-' }}</td>
+                    <td class="text-right font-mono font-bold">Rp {{ number_format($order->total, 0, ',', '.') }}</td>
                 </tr>
             @empty
                 <tr>
@@ -313,7 +343,7 @@
     </table>
 
     <div class="security-stamp">
-        🔒 Document Security Hash: {{ md5(now()->timestamp . 'SALES-POWERBI') }} | Generated by Istana Laundry POS & ERP System | Confidential Executive Report
+        Document Security Hash: {{ md5(now()->timestamp . 'SALES-POWERBI') }} | Generated by Istana Laundry POS &amp; ERP System | Confidential Executive Report
     </div>
 
 </body>

@@ -154,80 +154,110 @@
 </head>
 <body>
 
-    <!-- Header Ribbon -->
-    <div class="header-ribbon">
-        <table class="header-table">
-            <tr>
-                <td style="width: 55%;">
-                    <div class="brand-logo">🧺 ISTANA LAUNDRY ERP</div>
-                    <div class="brand-sub">PowerBI Customer Lifetime Value &amp; Loyalty Analytics</div>
-                </td>
-                <td style="width: 45%;" class="text-right">
-                    <div class="doc-title">EXECUTIVE CRM REPORT</div>
-                    <div class="doc-sub">Laporan Pelanggan &amp; Member Loyalty Tier</div>
-                </td>
-            </tr>
-        </table>
-    </div>
-
-    <!-- Metadata Card -->
-    <div class="meta-card">
-        <table class="meta-table">
-            <tr>
-                <td style="width: 25%;">
-                    <div class="meta-label">Pencarian Query</div>
-                    <div class="meta-val">{{ $q ? '"'.$q.'"' : 'Semua Pelanggan' }}</div>
-                </td>
-                <td style="width: 25%;">
-                    <div class="meta-label">Total Pelanggan</div>
-                    <div class="meta-val">{{ count($customers) }} Member</div>
-                </td>
-                <td style="width: 25%;">
-                    <div class="meta-label">Tanggal Cetak</div>
-                    <div class="meta-val">{{ now()->format('d/m/Y H:i') }} WITA</div>
-                </td>
-                <td style="width: 25%;">
-                    <div class="meta-label">Dicetak Oleh</div>
-                    <div class="meta-val">{{ auth()->user()?->name ?? 'CS / Marketing' }}</div>
-                </td>
-            </tr>
-        </table>
-    </div>
-
     @php
         $totalPoints = $customers->sum('points');
         $totalOrdersCount = $customers->sum('orders_count');
     @endphp
 
-    <!-- Top KPI Cards Row -->
-    <table class="kpi-table">
-        <tr>
-            <td style="width: 25%;">
-                <div class="kpi-card">
-                    <div class="kpi-label">Total Database Member</div>
-                    <div class="kpi-val" style="color: #ff6600;">{{ count($customers) }} Member</div>
-                </div>
-            </td>
-            <td style="width: 25%;">
-                <div class="kpi-card kpi-card-emerald">
-                    <div class="kpi-label">Total Transaksi Member</div>
-                    <div class="kpi-val" style="color: #059669;">{{ number_format($totalOrdersCount) }} Order</div>
-                </div>
-            </td>
-            <td style="width: 25%;">
-                <div class="kpi-card kpi-card-purple">
-                    <div class="kpi-label">Total Poin Loyalty Active</div>
-                    <div class="kpi-val" style="color: #a855f7;">{{ number_format($totalPoints) }} Pts</div>
-                </div>
-            </td>
-            <td style="width: 25%;">
-                <div class="kpi-card kpi-card-blue">
-                    <div class="kpi-label">Status Loyalty Engine</div>
-                    <div class="kpi-val" style="color: #2563eb; font-size: 11px;">4-TIER ACTIVE</div>
-                </div>
-            </td>
-        </tr>
-    </table>
+    @if(isset($isExcel) && $isExcel)
+        <!-- Excel Specific Header & KPI Cards (7 Column Grid) -->
+        <table style="width: 100%; border-collapse: collapse; margin-bottom: 15px;">
+            <tr>
+                <td colspan="7" style="background-color: #0F172A; color: #FF6600; font-size: 16px; font-weight: bold; padding: 12px; text-align: left;">
+                    ISTANA LAUNDRY ERP — EXECUTIVE CRM REPORT
+                </td>
+            </tr>
+            <tr>
+                <td colspan="7" style="background-color: #1E293B; color: #CBD5E1; font-size: 9px; padding: 6px; text-align: left;">
+                    Query: {{ $q ? '"'.$q.'"' : 'Semua Pelanggan' }} | Total Pelanggan: {{ count($customers) }} Member | Tanggal Cetak: {{ now()->format('d/m/Y H:i') }} WITA | Dicetak Oleh: {{ auth()->user()?->name ?? 'CS / Marketing' }}
+                </td>
+            </tr>
+            <tr><td colspan="7"></td></tr>
+            <tr>
+                <td colspan="2" style="background-color: #FFF7ED; color: #EA580C; font-weight: bold; font-size: 9px; text-align: center; border: 1px solid #FED7AA; padding: 6px;">TOTAL DATABASE MEMBER</td>
+                <td colspan="2" style="background-color: #ECFDF5; color: #047857; font-weight: bold; font-size: 9px; text-align: center; border: 1px solid #A7F3D0; padding: 6px;">TOTAL TRANSAKSI MEMBER</td>
+                <td colspan="2" style="background-color: #FAF5FF; color: #7E22CE; font-weight: bold; font-size: 9px; text-align: center; border: 1px solid #E9D5FF; padding: 6px;">TOTAL POIN LOYALTY ACTIVE</td>
+                <td style="background-color: #EFF6FF; color: #1D4ED8; font-weight: bold; font-size: 9px; text-align: center; border: 1px solid #BFDBFE; padding: 6px;">RATA-RATA ORDER / MEMBER</td>
+            </tr>
+            <tr>
+                <td colspan="2" style="background-color: #FFF7ED; color: #FF6600; font-weight: bold; font-size: 13px; text-align: center; border: 1px solid #FED7AA; padding: 6px;">{{ count($customers) }} Member</td>
+                <td colspan="2" style="background-color: #ECFDF5; color: #059669; font-weight: bold; font-size: 13px; text-align: center; border: 1px solid #A7F3D0; padding: 6px;">{{ number_format($totalOrdersCount) }} Order</td>
+                <td colspan="2" style="background-color: #FAF5FF; color: #A855F7; font-weight: bold; font-size: 13px; text-align: center; border: 1px solid #E9D5FF; padding: 6px;">{{ number_format($totalPoints) }} Pts</td>
+                <td style="background-color: #EFF6FF; color: #2563EB; font-weight: bold; font-size: 13px; text-align: center; border: 1px solid #BFDBFE; padding: 6px;">{{ number_format(count($customers) > 0 ? $totalOrdersCount / count($customers) : 0, 1) }} Tx</td>
+            </tr>
+            <tr><td colspan="7"></td></tr>
+        </table>
+    @else
+        <!-- Header Ribbon -->
+        <div class="header-ribbon">
+            <table class="header-table">
+                <tr>
+                    <td style="width: 55%;">
+                        <div class="brand-logo">ISTANA LAUNDRY ERP</div>
+                        <div class="brand-sub">PowerBI Customer Lifetime Value &amp; Loyalty Analytics</div>
+                    </td>
+                    <td style="width: 45%;" class="text-right">
+                        <div class="doc-title">EXECUTIVE CRM REPORT</div>
+                        <div class="doc-sub">Laporan Pelanggan &amp; Member Loyalty Tier</div>
+                    </td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- Metadata Card -->
+        <div class="meta-card">
+            <table class="meta-table">
+                <tr>
+                    <td style="width: 25%;">
+                        <div class="meta-label">Pencarian Query</div>
+                        <div class="meta-val">{{ $q ? '"'.$q.'"' : 'Semua Pelanggan' }}</div>
+                    </td>
+                    <td style="width: 25%;">
+                        <div class="meta-label">Total Pelanggan</div>
+                        <div class="meta-val">{{ count($customers) }} Member</div>
+                    </td>
+                    <td style="width: 25%;">
+                        <div class="meta-label">Tanggal Cetak</div>
+                        <div class="meta-val">{{ now()->format('d/m/Y H:i') }} WITA</div>
+                    </td>
+                    <td style="width: 25%;">
+                        <div class="meta-label">Dicetak Oleh</div>
+                        <div class="meta-val">{{ auth()->user()?->name ?? 'CS / Marketing' }}</div>
+                    </td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- Top KPI Cards Row -->
+        <table class="kpi-table">
+            <tr>
+                <td style="width: 25%;">
+                    <div class="kpi-card">
+                        <div class="kpi-label">Total Database Member</div>
+                        <div class="kpi-val" style="color: #ff6600;">{{ count($customers) }} Member</div>
+                    </div>
+                </td>
+                <td style="width: 25%;">
+                    <div class="kpi-card kpi-card-emerald">
+                        <div class="kpi-label">Total Transaksi Member</div>
+                        <div class="kpi-val" style="color: #059669;">{{ number_format($totalOrdersCount) }} Order</div>
+                    </div>
+                </td>
+                <td style="width: 25%;">
+                    <div class="kpi-card kpi-card-purple">
+                        <div class="kpi-label">Total Poin Loyalty Active</div>
+                        <div class="kpi-val" style="color: #a855f7;">{{ number_format($totalPoints) }} Pts</div>
+                    </div>
+                </td>
+                <td style="width: 25%;">
+                    <div class="kpi-card kpi-card-blue">
+                        <div class="kpi-label">Rata-rata Order / Member</div>
+                        <div class="kpi-val" style="color: #2563eb;">{{ number_format(count($customers) > 0 ? $totalOrdersCount / count($customers) : 0, 1) }} Tx</div>
+                    </div>
+                </td>
+            </tr>
+        </table>
+    @endif
 
     <!-- Data Table -->
     <table class="data-table">
@@ -280,7 +310,7 @@
     </table>
 
     <div class="security-stamp">
-        🔒 Document Security Hash: {{ md5(now()->timestamp . 'CRM-POWERBI') }} | Generated by Istana Laundry CRM Engine | Executive Confidential
+        Document Security Hash: {{ md5(now()->timestamp . 'CRM-POWERBI') }} | Generated by Istana Laundry CRM Engine | Executive Confidential
     </div>
 
 </body>

@@ -159,80 +159,110 @@
 </head>
 <body>
 
-    <!-- Header Ribbon -->
-    <div class="header-ribbon">
-        <table class="header-table">
-            <tr>
-                <td style="width: 55%;">
-                    <div class="brand-logo">🧺 ISTANA LAUNDRY ERP</div>
-                    <div class="brand-sub">PowerBI Human Resources &amp; Payroll Analytics</div>
-                </td>
-                <td style="width: 45%;" class="text-right">
-                    <div class="doc-title">EXECUTIVE HR &amp; PAYROLL REPORT</div>
-                    <div class="doc-sub">Laporan Konsolidasi Data Staf &amp; Penggajian Karyawan</div>
-                </td>
-            </tr>
-        </table>
-    </div>
-
-    <!-- Metadata Card -->
-    <div class="meta-card">
-        <table class="meta-table">
-            <tr>
-                <td style="width: 25%;">
-                    <div class="meta-label">Scope Cabang</div>
-                    <div class="meta-val">{{ $branchName }}</div>
-                </td>
-                <td style="width: 25%;">
-                    <div class="meta-label">Total Staf Karyawan</div>
-                    <div class="meta-val">{{ count($employees) }} Orang Staf</div>
-                </td>
-                <td style="width: 25%;">
-                    <div class="meta-label">Tanggal Cetak</div>
-                    <div class="meta-val">{{ now()->format('d/m/Y H:i') }} WITA</div>
-                </td>
-                <td style="width: 25%;">
-                    <div class="meta-label">Dicetak Oleh</div>
-                    <div class="meta-val">{{ auth()->user()?->name ?? 'HR Manager' }}</div>
-                </td>
-            </tr>
-        </table>
-    </div>
-
     @php
         $totalBaseSalary = $employees->sum('base_salary');
         $activeEmployees = $employees->where('is_active', true)->count();
     @endphp
 
-    <!-- Top KPI Cards Row -->
-    <table class="kpi-table">
-        <tr>
-            <td style="width: 25%;">
-                <div class="kpi-card">
-                    <div class="kpi-label">Total Staf Aktif</div>
-                    <div class="kpi-val" style="color: #059669;">{{ number_format($activeEmployees) }} Karyawan</div>
-                </div>
-            </td>
-            <td style="width: 25%;">
-                <div class="kpi-card kpi-card-emerald">
-                    <div class="kpi-label">Total Alokasi Gaji Pokok</div>
-                    <div class="kpi-val" style="color: #ff6600;">Rp {{ number_format($totalBaseSalary, 0, ',', '.') }}</div>
-                </div>
-            </td>
-            <td style="width: 25%;">
-                <div class="kpi-card kpi-card-purple">
-                    <div class="kpi-label">Rata-rata Gaji / Staf</div>
-                    <div class="kpi-val" style="color: #a855f7;">Rp {{ number_format(count($employees) > 0 ? $totalBaseSalary / count($employees) : 0, 0, ',', '.') }}</div>
-                </div>
-            </td>
-            <td style="width: 25%;">
-                <div class="kpi-card kpi-card-blue">
-                    <div class="kpi-label">Akun Login Terhubung</div>
-                    <div class="kpi-val" style="color: #2563eb;">{{ number_format($employees->whereNotNull('user_id')->count()) }} Akun</div>
-                </div>
-            </td>
-        </tr>
-    </table>
+    @if(isset($isExcel) && $isExcel)
+        <!-- Excel Specific Header & KPI Cards (7 Column Grid) -->
+        <table style="width: 100%; border-collapse: collapse; margin-bottom: 15px;">
+            <tr>
+                <td colspan="7" style="background-color: #0F172A; color: #FF6600; font-size: 16px; font-weight: bold; padding: 12px; text-align: left;">
+                    ISTANA LAUNDRY ERP — EXECUTIVE HR &amp; PAYROLL REPORT
+                </td>
+            </tr>
+            <tr>
+                <td colspan="7" style="background-color: #1E293B; color: #CBD5E1; font-size: 9px; padding: 6px; text-align: left;">
+                    Scope Cabang: {{ $branchName }} | Total Staf Karyawan: {{ count($employees) }} Orang Staf | Tanggal Cetak: {{ now()->format('d/m/Y H:i') }} WITA | Dicetak Oleh: {{ auth()->user()?->name ?? 'HR Manager' }}
+                </td>
+            </tr>
+            <tr><td colspan="7"></td></tr>
+            <tr>
+                <td colspan="2" style="background-color: #ECFDF5; color: #047857; font-weight: bold; font-size: 9px; text-align: center; border: 1px solid #A7F3D0; padding: 6px;">TOTAL STAF AKTIF</td>
+                <td colspan="2" style="background-color: #FFF7ED; color: #EA580C; font-weight: bold; font-size: 9px; text-align: center; border: 1px solid #FED7AA; padding: 6px;">TOTAL ALOKASI GAJI POKOK</td>
+                <td colspan="2" style="background-color: #FAF5FF; color: #7E22CE; font-weight: bold; font-size: 9px; text-align: center; border: 1px solid #E9D5FF; padding: 6px;">RATA-RATA GAJI / STAF</td>
+                <td style="background-color: #EFF6FF; color: #1D4ED8; font-weight: bold; font-size: 9px; text-align: center; border: 1px solid #BFDBFE; padding: 6px;">AKUN LOGIN TERHUBUNG</td>
+            </tr>
+            <tr>
+                <td colspan="2" style="background-color: #ECFDF5; color: #059669; font-weight: bold; font-size: 13px; text-align: center; border: 1px solid #A7F3D0; padding: 6px;">{{ number_format($activeEmployees) }} Karyawan</td>
+                <td colspan="2" style="background-color: #FFF7ED; color: #FF6600; font-weight: bold; font-size: 13px; text-align: center; border: 1px solid #FED7AA; padding: 6px;">Rp {{ number_format($totalBaseSalary, 0, ',', '.') }}</td>
+                <td colspan="2" style="background-color: #FAF5FF; color: #A855F7; font-weight: bold; font-size: 13px; text-align: center; border: 1px solid #E9D5FF; padding: 6px;">Rp {{ number_format(count($employees) > 0 ? $totalBaseSalary / count($employees) : 0, 0, ',', '.') }}</td>
+                <td style="background-color: #EFF6FF; color: #2563EB; font-weight: bold; font-size: 13px; text-align: center; border: 1px solid #BFDBFE; padding: 6px;">{{ number_format($employees->whereNotNull('user_id')->count()) }} Akun</td>
+            </tr>
+            <tr><td colspan="7"></td></tr>
+        </table>
+    @else
+        <!-- Header Ribbon -->
+        <div class="header-ribbon">
+            <table class="header-table">
+                <tr>
+                    <td style="width: 55%;">
+                        <div class="brand-logo">ISTANA LAUNDRY ERP</div>
+                        <div class="brand-sub">PowerBI Human Resources &amp; Payroll Analytics</div>
+                    </td>
+                    <td style="width: 45%;" class="text-right">
+                        <div class="doc-title">EXECUTIVE HR &amp; PAYROLL REPORT</div>
+                        <div class="doc-sub">Laporan Konsolidasi Data Staf &amp; Penggajian Karyawan</div>
+                    </td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- Metadata Card -->
+        <div class="meta-card">
+            <table class="meta-table">
+                <tr>
+                    <td style="width: 25%;">
+                        <div class="meta-label">Scope Cabang</div>
+                        <div class="meta-val">{{ $branchName }}</div>
+                    </td>
+                    <td style="width: 25%;">
+                        <div class="meta-label">Total Staf Karyawan</div>
+                        <div class="meta-val">{{ count($employees) }} Orang Staf</div>
+                    </td>
+                    <td style="width: 25%;">
+                        <div class="meta-label">Tanggal Cetak</div>
+                        <div class="meta-val">{{ now()->format('d/m/Y H:i') }} WITA</div>
+                    </td>
+                    <td style="width: 25%;">
+                        <div class="meta-label">Dicetak Oleh</div>
+                        <div class="meta-val">{{ auth()->user()?->name ?? 'HR Manager' }}</div>
+                    </td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- Top KPI Cards Row -->
+        <table class="kpi-table">
+            <tr>
+                <td style="width: 25%;">
+                    <div class="kpi-card">
+                        <div class="kpi-label">Total Staf Aktif</div>
+                        <div class="kpi-val" style="color: #059669;">{{ number_format($activeEmployees) }} Karyawan</div>
+                    </div>
+                </td>
+                <td style="width: 25%;">
+                    <div class="kpi-card kpi-card-emerald">
+                        <div class="kpi-label">Total Alokasi Gaji Pokok</div>
+                        <div class="kpi-val" style="color: #ff6600;">Rp {{ number_format($totalBaseSalary, 0, ',', '.') }}</div>
+                    </div>
+                </td>
+                <td style="width: 25%;">
+                    <div class="kpi-card kpi-card-purple">
+                        <div class="kpi-label">Rata-rata Gaji / Staf</div>
+                        <div class="kpi-val" style="color: #a855f7;">Rp {{ number_format(count($employees) > 0 ? $totalBaseSalary / count($employees) : 0, 0, ',', '.') }}</div>
+                    </div>
+                </td>
+                <td style="width: 25%;">
+                    <div class="kpi-card kpi-card-blue">
+                        <div class="kpi-label">Akun Login Terhubung</div>
+                        <div class="kpi-val" style="color: #2563eb;">{{ number_format($employees->whereNotNull('user_id')->count()) }} Akun</div>
+                    </div>
+                </td>
+            </tr>
+        </table>
+    @endif
 
     <!-- Data Table -->
     <table class="data-table">
@@ -289,7 +319,7 @@
     </table>
 
     <div class="security-stamp">
-        🔒 Document Security Hash: {{ md5(now()->timestamp . 'HR-POWERBI') }} | Generated by Istana Laundry HR &amp; Payroll System | Confidential Executive Report
+        Document Security Hash: {{ md5(now()->timestamp . 'HR-POWERBI') }} | Generated by Istana Laundry HR &amp; Payroll System | Confidential Executive Report
     </div>
 
 </body>

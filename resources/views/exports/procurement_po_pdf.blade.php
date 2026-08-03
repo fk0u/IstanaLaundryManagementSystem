@@ -159,79 +159,109 @@
 </head>
 <body>
 
-    <!-- Header Ribbon -->
-    <div class="header-ribbon">
-        <table class="header-table">
-            <tr>
-                <td style="width: 55%;">
-                    <div class="brand-logo">🧺 ISTANA LAUNDRY ERP</div>
-                    <div class="brand-sub">PowerBI Procurement &amp; Purchase Orders Analytics</div>
-                </td>
-                <td style="width: 45%;" class="text-right">
-                    <div class="doc-title">EXECUTIVE PO REPORT</div>
-                    <div class="doc-sub">Laporan Pengadaan Purchase Orders Supplier</div>
-                </td>
-            </tr>
-        </table>
-    </div>
-
-    <!-- Metadata Card -->
-    <div class="meta-card">
-        <table class="meta-table">
-            <tr>
-                <td style="width: 25%;">
-                    <div class="meta-label">Scope Cabang</div>
-                    <div class="meta-val">{{ $branchName }}</div>
-                </td>
-                <td style="width: 25%;">
-                    <div class="meta-label">Total Purchase Orders</div>
-                    <div class="meta-val">{{ count($purchaseOrders) }} Documents</div>
-                </td>
-                <td style="width: 25%;">
-                    <div class="meta-label">Tanggal Cetak</div>
-                    <div class="meta-val">{{ now()->format('d/m/Y H:i') }} WITA</div>
-                </td>
-                <td style="width: 25%;">
-                    <div class="meta-label">Dicetak Oleh</div>
-                    <div class="meta-val">{{ auth()->user()?->name ?? 'Procurement Manager' }}</div>
-                </td>
-            </tr>
-        </table>
-    </div>
-
     @php
-        $totalPoVal = $purchaseOrders->sum('total_amount');
+        $totalPoVal = $purchaseOrders->sum('total');
     @endphp
 
-    <!-- Top KPI Cards Row -->
-    <table class="kpi-table">
-        <tr>
-            <td style="width: 25%;">
-                <div class="kpi-card">
-                    <div class="kpi-label">Total Anggaran PO</div>
-                    <div class="kpi-val" style="color: #ff6600;">Rp {{ number_format($totalPoVal, 0, ',', '.') }}</div>
-                </div>
-            </td>
-            <td style="width: 25%;">
-                <div class="kpi-card kpi-card-emerald">
-                    <div class="kpi-label">Total PO Terbit</div>
-                    <div class="kpi-val" style="color: #059669;">{{ count($purchaseOrders) }} PO</div>
-                </div>
-            </td>
-            <td style="width: 25%;">
-                <div class="kpi-card kpi-card-purple">
-                    <div class="kpi-label">Rata-rata Nilai PO</div>
-                    <div class="kpi-val" style="color: #a855f7;">Rp {{ number_format(count($purchaseOrders) > 0 ? $totalPoVal / count($purchaseOrders) : 0, 0, ',', '.') }}</div>
-                </div>
-            </td>
-            <td style="width: 25%;">
-                <div class="kpi-card kpi-card-blue">
-                    <div class="kpi-label">Supplier Terlibat</div>
-                    <div class="kpi-val" style="color: #2563eb;">{{ number_format($purchaseOrders->pluck('supplier_id')->unique()->count()) }} Supplier</div>
-                </div>
-            </td>
-        </tr>
-    </table>
+    @if(isset($isExcel) && $isExcel)
+        <!-- Excel Specific Header & KPI Cards (6 Column Grid) -->
+        <table style="width: 100%; border-collapse: collapse; margin-bottom: 15px;">
+            <tr>
+                <td colspan="6" style="background-color: #0F172A; color: #FF6600; font-size: 16px; font-weight: bold; padding: 12px; text-align: left;">
+                    ISTANA LAUNDRY ERP — EXECUTIVE PO REPORT
+                </td>
+            </tr>
+            <tr>
+                <td colspan="6" style="background-color: #1E293B; color: #CBD5E1; font-size: 9px; padding: 6px; text-align: left;">
+                    Scope Cabang: {{ $branchName }} | Total Purchase Orders: {{ count($purchaseOrders) }} Documents | Tanggal Cetak: {{ now()->format('d/m/Y H:i') }} WITA | Dicetak Oleh: {{ auth()->user()?->name ?? 'Procurement Manager' }}
+                </td>
+            </tr>
+            <tr><td colspan="6"></td></tr>
+            <tr>
+                <td colspan="2" style="background-color: #FFF7ED; color: #EA580C; font-weight: bold; font-size: 9px; text-align: center; border: 1px solid #FED7AA; padding: 6px;">TOTAL ANGGARAN PO</td>
+                <td style="background-color: #ECFDF5; color: #047857; font-weight: bold; font-size: 9px; text-align: center; border: 1px solid #A7F3D0; padding: 6px;">TOTAL PO TERBIT</td>
+                <td colspan="2" style="background-color: #FAF5FF; color: #7E22CE; font-weight: bold; font-size: 9px; text-align: center; border: 1px solid #E9D5FF; padding: 6px;">RATA-RATA NILAI PO</td>
+                <td style="background-color: #EFF6FF; color: #1D4ED8; font-weight: bold; font-size: 9px; text-align: center; border: 1px solid #BFDBFE; padding: 6px;">SUPPLIER TERLIBAT</td>
+            </tr>
+            <tr>
+                <td colspan="2" style="background-color: #FFF7ED; color: #FF6600; font-weight: bold; font-size: 13px; text-align: center; border: 1px solid #FED7AA; padding: 6px;">Rp {{ number_format($totalPoVal, 0, ',', '.') }}</td>
+                <td style="background-color: #ECFDF5; color: #059669; font-weight: bold; font-size: 13px; text-align: center; border: 1px solid #A7F3D0; padding: 6px;">{{ count($purchaseOrders) }} PO</td>
+                <td colspan="2" style="background-color: #FAF5FF; color: #A855F7; font-weight: bold; font-size: 13px; text-align: center; border: 1px solid #E9D5FF; padding: 6px;">Rp {{ number_format(count($purchaseOrders) > 0 ? $totalPoVal / count($purchaseOrders) : 0, 0, ',', '.') }}</td>
+                <td style="background-color: #EFF6FF; color: #2563EB; font-weight: bold; font-size: 13px; text-align: center; border: 1px solid #BFDBFE; padding: 6px;">{{ number_format($purchaseOrders->pluck('supplier_id')->unique()->count()) }} Supplier</td>
+            </tr>
+            <tr><td colspan="6"></td></tr>
+        </table>
+    @else
+        <!-- Header Ribbon -->
+        <div class="header-ribbon">
+            <table class="header-table">
+                <tr>
+                    <td style="width: 55%;">
+                        <div class="brand-logo">ISTANA LAUNDRY ERP</div>
+                        <div class="brand-sub">PowerBI Procurement &amp; Purchase Orders Analytics</div>
+                    </td>
+                    <td style="width: 45%;" class="text-right">
+                        <div class="doc-title">EXECUTIVE PO REPORT</div>
+                        <div class="doc-sub">Laporan Pengadaan Purchase Orders Supplier</div>
+                    </td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- Metadata Card -->
+        <div class="meta-card">
+            <table class="meta-table">
+                <tr>
+                    <td style="width: 25%;">
+                        <div class="meta-label">Scope Cabang</div>
+                        <div class="meta-val">{{ $branchName }}</div>
+                    </td>
+                    <td style="width: 25%;">
+                        <div class="meta-label">Total Purchase Orders</div>
+                        <div class="meta-val">{{ count($purchaseOrders) }} Documents</div>
+                    </td>
+                    <td style="width: 25%;">
+                        <div class="meta-label">Tanggal Cetak</div>
+                        <div class="meta-val">{{ now()->format('d/m/Y H:i') }} WITA</div>
+                    </td>
+                    <td style="width: 25%;">
+                        <div class="meta-label">Dicetak Oleh</div>
+                        <div class="meta-val">{{ auth()->user()?->name ?? 'Procurement Manager' }}</div>
+                    </td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- Top KPI Cards Row -->
+        <table class="kpi-table">
+            <tr>
+                <td style="width: 25%;">
+                    <div class="kpi-card">
+                        <div class="kpi-label">Total Anggaran PO</div>
+                        <div class="kpi-val" style="color: #ff6600;">Rp {{ number_format($totalPoVal, 0, ',', '.') }}</div>
+                    </div>
+                </td>
+                <td style="width: 25%;">
+                    <div class="kpi-card kpi-card-emerald">
+                        <div class="kpi-label">Total PO Terbit</div>
+                        <div class="kpi-val" style="color: #059669;">{{ count($purchaseOrders) }} PO</div>
+                    </div>
+                </td>
+                <td style="width: 25%;">
+                    <div class="kpi-card kpi-card-purple">
+                        <div class="kpi-label">Rata-rata Nilai PO</div>
+                        <div class="kpi-val" style="color: #a855f7;">Rp {{ number_format(count($purchaseOrders) > 0 ? $totalPoVal / count($purchaseOrders) : 0, 0, ',', '.') }}</div>
+                    </div>
+                </td>
+                <td style="width: 25%;">
+                    <div class="kpi-card kpi-card-blue">
+                        <div class="kpi-label">Supplier Terlibat</div>
+                        <div class="kpi-val" style="color: #2563eb;">{{ number_format($purchaseOrders->pluck('supplier_id')->unique()->count()) }} Supplier</div>
+                    </div>
+                </td>
+            </tr>
+        </table>
+    @endif
 
     <!-- Data Table -->
     <table class="data-table">
@@ -249,11 +279,11 @@
             @forelse($purchaseOrders as $po)
                 <tr>
                     <td class="font-mono font-bold text-center">{{ $po->po_number }}</td>
-                    <td class="text-center">{{ $po->po_date?->format('d/m/Y') }}</td>
+                    <td class="text-center">{{ $po->order_date?->format('d/m/Y') }}</td>
                     <td class="font-bold">{{ $po->supplier?->name ?? '-' }}</td>
                     <td>{{ $po->branch?->name ?? 'HQ' }}</td>
                     <td class="text-center font-bold" style="text-transform: uppercase; font-size: 8px;">{{ $po->status }}</td>
-                    <td class="text-right font-mono font-bold">Rp {{ number_format($po->total_amount, 0, ',', '.') }}</td>
+                    <td class="text-right font-mono font-bold">Rp {{ number_format($po->total, 0, ',', '.') }}</td>
                 </tr>
             @empty
                 <tr>
@@ -286,7 +316,7 @@
     </table>
 
     <div class="security-stamp">
-        🔒 Document Security Hash: {{ md5(now()->timestamp . 'PO-POWERBI') }} | Generated by Istana Laundry Procurement Module | Executive Confidential
+        Document Security Hash: {{ md5(now()->timestamp . 'PO-POWERBI') }} | Generated by Istana Laundry Procurement Module | Executive Confidential
     </div>
 
 </body>

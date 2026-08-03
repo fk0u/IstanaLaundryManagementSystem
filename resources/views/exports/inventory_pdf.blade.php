@@ -175,92 +175,123 @@
 </head>
 <body>
 
-    <!-- Header Ribbon -->
-    <div class="header-ribbon">
-        <table class="header-table">
-            <tr>
-                <td style="width: 55%;">
-                    <div class="brand-logo">🧺 ISTANA LAUNDRY ERP</div>
-                    <div class="brand-sub">PowerBI Inventory Stock &amp; Valuation Dashboard</div>
-                </td>
-                <td style="width: 45%;" class="text-right">
-                    <div class="doc-title">EXECUTIVE INVENTORY REPORT</div>
-                    <div class="doc-sub">Laporan Stok Persediaan Bahan Habis Pakai (BHP)</div>
-                </td>
-            </tr>
-        </table>
-    </div>
-
-    <!-- Metadata Card -->
-    <div class="meta-card">
-        <table class="meta-table">
-            <tr>
-                <td style="width: 25%;">
-                    <div class="meta-label">Scope Cabang</div>
-                    <div class="meta-val">{{ $branchName }}</div>
-                </td>
-                <td style="width: 25%;">
-                    <div class="meta-label">Total Jenis BHP</div>
-                    <div class="meta-val">{{ count($inventoryItems) }} Items</div>
-                </td>
-                <td style="width: 25%;">
-                    <div class="meta-label">Tanggal Cetak</div>
-                    <div class="meta-val">{{ now()->format('d/m/Y H:i') }} WITA</div>
-                </td>
-                <td style="width: 25%;">
-                    <div class="meta-label">Dicetak Oleh</div>
-                    <div class="meta-val">{{ auth()->user()?->name ?? 'Gudang / Admin' }}</div>
-                </td>
-            </tr>
-        </table>
-    </div>
-
     @php
-        $lowStockCount = $inventoryItems->filter(fn($i) => $i->current_stock <= $i->min_stock)->count();
-        $totalValuation = $inventoryItems->sum(fn($i) => $i->current_stock * $i->unit_cost);
+        $totalValuation = $inventoryItems->sum(fn($item) => $item->current_stock * $item->unit_cost);
+        $lowStockCount = $inventoryItems->filter(fn($item) => $item->current_stock <= $item->min_stock)->count();
+        $safeStockCount = count($inventoryItems) - $lowStockCount;
     @endphp
 
-    <!-- Top KPI Cards Row -->
-    <table class="kpi-table">
-        <tr>
-            <td style="width: 25%;">
-                <div class="kpi-card">
-                    <div class="kpi-label">Total Jenis Barang (BHP)</div>
-                    <div class="kpi-val" style="color: #ff6600;">{{ count($inventoryItems) }} Item</div>
-                </div>
-            </td>
-            <td style="width: 25%;">
-                <div class="kpi-card kpi-card-emerald">
-                    <div class="kpi-label">Estimasi Nilai Persediaan</div>
-                    <div class="kpi-val" style="color: #059669;">Rp {{ number_format($totalValuation, 0, ',', '.') }}</div>
-                </div>
-            </td>
-            <td style="width: 25%;">
-                <div class="kpi-card kpi-card-purple">
-                    <div class="kpi-label">Stok Minimum Warning</div>
-                    <div class="kpi-val" style="color: {{ $lowStockCount > 0 ? '#dc2626' : '#059669' }};">{{ $lowStockCount }} Item</div>
-                </div>
-            </td>
-            <td style="width: 25%;">
-                <div class="kpi-card kpi-card-blue">
-                    <div class="kpi-label">Metode Penilaian Stock</div>
-                    <div class="kpi-val" style="color: #2563eb; font-size: 11px;">FIFO BATCH COSTING</div>
-                </div>
-            </td>
-        </tr>
-    </table>
+    @if(isset($isExcel) && $isExcel)
+        <!-- Excel Specific Header & KPI Cards (7 Column Grid) -->
+        <table style="width: 100%; border-collapse: collapse; margin-bottom: 15px;">
+            <tr>
+                <td colspan="7" style="background-color: #0F172A; color: #FF6600; font-size: 16px; font-weight: bold; padding: 12px; text-align: left;">
+                    ISTANA LAUNDRY ERP — INVENTORY ASSET REPORT
+                </td>
+            </tr>
+            <tr>
+                <td colspan="7" style="background-color: #1E293B; color: #CBD5E1; font-size: 9px; padding: 6px; text-align: left;">
+                    Scope Cabang: {{ $branchName }} | Total SKUs Inventori: {{ count($inventoryItems) }} Item SKU | Tanggal Audit: {{ now()->format('d/m/Y H:i') }} WITA | Auditor: {{ auth()->user()?->name ?? 'Head Logistik' }}
+                </td>
+            </tr>
+            <tr><td colspan="7"></td></tr>
+            <tr>
+                <td colspan="2" style="background-color: #FFF7ED; color: #EA580C; font-weight: bold; font-size: 9px; text-align: center; border: 1px solid #FED7AA; padding: 6px;">TOTAL VALUASI STOK (BHP)</td>
+                <td colspan="2" style="background-color: #ECFDF5; color: #047857; font-weight: bold; font-size: 9px; text-align: center; border: 1px solid #A7F3D0; padding: 6px;">STOK STATUS AMAN</td>
+                <td colspan="2" style="background-color: #FEF2F2; color: #B91C1C; font-weight: bold; font-size: 9px; text-align: center; border: 1px solid #FECACA; padding: 6px;">STOK KRITIS / REORDER</td>
+                <td style="background-color: #EFF6FF; color: #1D4ED8; font-weight: bold; font-size: 9px; text-align: center; border: 1px solid #BFDBFE; padding: 6px;">RATA-RATA HPP / ITEM</td>
+            </tr>
+            <tr>
+                <td colspan="2" style="background-color: #FFF7ED; color: #FF6600; font-weight: bold; font-size: 13px; text-align: center; border: 1px solid #FED7AA; padding: 6px;">Rp {{ number_format($totalValuation, 0, ',', '.') }}</td>
+                <td colspan="2" style="background-color: #ECFDF5; color: #059669; font-weight: bold; font-size: 13px; text-align: center; border: 1px solid #A7F3D0; padding: 6px;">{{ $safeStockCount }} SKUs</td>
+                <td colspan="2" style="background-color: #FEF2F2; color: #DC2626; font-weight: bold; font-size: 13px; text-align: center; border: 1px solid #FECACA; padding: 6px;">{{ $lowStockCount }} SKUs</td>
+                <td style="background-color: #EFF6FF; color: #2563EB; font-weight: bold; font-size: 13px; text-align: center; border: 1px solid #BFDBFE; padding: 6px;">Rp {{ number_format(count($inventoryItems) > 0 ? $inventoryItems->avg('unit_cost') : 0, 0, ',', '.') }}</td>
+            </tr>
+            <tr><td colspan="7"></td></tr>
+        </table>
+    @else
+        <!-- Header Ribbon -->
+        <div class="header-ribbon">
+            <table class="header-table">
+                <tr>
+                    <td style="width: 55%;">
+                        <div class="brand-logo">ISTANA LAUNDRY ERP</div>
+                        <div class="brand-sub">PowerBI Inventory &amp; Stock Valuation Dashboard</div>
+                    </td>
+                    <td style="width: 45%;" class="text-right">
+                        <div class="doc-title">INVENTORY ASSET REPORT</div>
+                        <div class="doc-sub">Laporan Stok Bahan Baku &amp; Valuasi Persediaan</div>
+                    </td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- Metadata Card -->
+        <div class="meta-card">
+            <table class="meta-table">
+                <tr>
+                    <td style="width: 25%;">
+                        <div class="meta-label">Scope Cabang</div>
+                        <div class="meta-val">{{ $branchName }}</div>
+                    </td>
+                    <td style="width: 25%;">
+                        <div class="meta-label">Total SKUs Inventori</div>
+                        <div class="meta-val">{{ count($inventoryItems) }} Item SKU</div>
+                    </td>
+                    <td style="width: 25%;">
+                        <div class="meta-label">Tanggal Audit</div>
+                        <div class="meta-val">{{ now()->format('d/m/Y H:i') }} WITA</div>
+                    </td>
+                    <td style="width: 25%;">
+                        <div class="meta-label">Auditor Inventori</div>
+                        <div class="meta-val">{{ auth()->user()?->name ?? 'Head Logistik' }}</div>
+                    </td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- Top KPI Cards Row -->
+        <table class="kpi-table">
+            <tr>
+                <td style="width: 25%;">
+                    <div class="kpi-card">
+                        <div class="kpi-label">Total Valuasi Stok (BHP)</div>
+                        <div class="kpi-val" style="color: #ff6600;">Rp {{ number_format($totalValuation, 0, ',', '.') }}</div>
+                    </div>
+                </td>
+                <td style="width: 25%;">
+                    <div class="kpi-card kpi-card-emerald">
+                        <div class="kpi-label">Stok Status AMAN</div>
+                        <div class="kpi-val" style="color: #059669;">{{ $safeStockCount }} SKUs</div>
+                    </div>
+                </td>
+                <td style="width: 25%;">
+                    <div class="kpi-card kpi-card-purple">
+                        <div class="kpi-label">Stok Kritis / Reorder</div>
+                        <div class="kpi-val" style="color: #dc2626;">{{ $lowStockCount }} SKUs</div>
+                    </div>
+                </td>
+                <td style="width: 25%;">
+                    <div class="kpi-card kpi-card-blue">
+                        <div class="kpi-label">Rata-rata HPP / Item</div>
+                        <div class="kpi-val" style="color: #2563eb;">Rp {{ number_format(count($inventoryItems) > 0 ? $inventoryItems->avg('unit_cost') : 0, 0, ',', '.') }}</div>
+                    </div>
+                </td>
+            </tr>
+        </table>
+    @endif
 
     <!-- Data Table -->
     <table class="data-table">
         <thead>
             <tr>
-                <th style="width: 12%;">SKU / Kode</th>
-                <th style="width: 26%;">Nama Barang BHP</th>
+                <th style="width: 14%;">Kode SKU</th>
+                <th style="width: 26%;">Nama Barang Inventori</th>
                 <th style="width: 14%;">Kategori</th>
                 <th style="width: 12%;" class="text-center">Stok Saat Ini</th>
-                <th style="width: 12%;" class="text-center">Stok Minimum</th>
-                <th style="width: 12%;" class="text-center">Status</th>
-                <th style="width: 12%;" class="text-right">Harga Satuan (Rp)</th>
+                <th style="width: 12%;" class="text-center">Min. Threshold</th>
+                <th style="width: 10%;" class="text-center">Status</th>
+                <th style="width: 12%;" class="text-right">Harga Satuan</th>
             </tr>
         </thead>
         <tbody>
@@ -274,9 +305,9 @@
                     <td class="text-center font-mono">{{ number_format($item->min_stock, 1) }} {{ $item->unit }}</td>
                     <td class="text-center">
                         @if($isLow)
-                            <span class="badge-low">⚠️ REORDER</span>
+                            <span class="badge-low">REORDER</span>
                         @else
-                            <span class="badge-safe">● AMAN</span>
+                            <span class="badge-safe">AMAN</span>
                         @endif
                     </td>
                     <td class="text-right font-mono font-bold">Rp {{ number_format($item->unit_cost, 0, ',', '.') }}</td>
@@ -312,7 +343,7 @@
     </table>
 
     <div class="security-stamp">
-        🔒 Document Security Hash: {{ md5(now()->timestamp . 'INVENTORY-POWERBI') }} | Generated by Istana Laundry Inventory &amp; FIFO Valuation Engine | Executive Confidential
+        Document Security Hash: {{ md5(now()->timestamp . 'INVENTORY-POWERBI') }} | Generated by Istana Laundry Inventory &amp; FIFO Valuation Engine | Executive Confidential
     </div>
 
 </body>
