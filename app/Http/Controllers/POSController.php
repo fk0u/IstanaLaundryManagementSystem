@@ -391,8 +391,8 @@ class POSController extends Controller
         }
 
         $validator = Validator::make($request->all(), [
-            'customer_id' => 'required|exists:customers,id',
-            'order_type' => 'required|in:outlet,pickup_delivery',
+            'customer_id' => 'nullable|exists:customers,id',
+            'order_type' => 'nullable|in:outlet,pickup_delivery',
             'customer_name_walkin' => 'nullable|string|max:150',
             'delivery_address' => 'nullable|string|max:1000',
             'delivery_phone' => 'nullable|string|max:30',
@@ -424,6 +424,7 @@ class POSController extends Controller
         }
 
         $data = $validator->validated();
+        $data['order_type'] = $data['order_type'] ?? 'outlet';
 
         $activeShift = CashierShift::where('branch_id', $branchId)
             ->where('cashier_id', Auth::id())

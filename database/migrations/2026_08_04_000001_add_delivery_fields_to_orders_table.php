@@ -13,14 +13,22 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('orders', function (Blueprint $table) {
-            $table->string('customer_name_walkin', 150)->nullable()->after('order_type')
-                ->comment('Nama pelanggan walk-in tanpa akun member');
-            $table->text('delivery_address')->nullable()->after('customer_name_walkin')
-                ->comment('Alamat penjemputan/pengantaran untuk pickup & delivery');
-            $table->string('delivery_phone', 30)->nullable()->after('delivery_address')
-                ->comment('Nomor HP koordinasi pickup/delivery');
-            $table->dateTime('pickup_scheduled_at')->nullable()->after('delivery_phone')
-                ->comment('Jadwal penjemputan untuk order pickup/delivery');
+            if (!Schema::hasColumn('orders', 'customer_name_walkin')) {
+                $table->string('customer_name_walkin', 150)->nullable()->after('order_type')
+                    ->comment('Nama pelanggan walk-in tanpa akun member');
+            }
+            if (!Schema::hasColumn('orders', 'delivery_address')) {
+                $table->text('delivery_address')->nullable()->after('customer_name_walkin')
+                    ->comment('Alamat penjemputan/pengantaran untuk pickup & delivery');
+            }
+            if (!Schema::hasColumn('orders', 'delivery_phone')) {
+                $table->string('delivery_phone', 30)->nullable()->after('delivery_address')
+                    ->comment('Nomor HP koordinasi pickup/delivery');
+            }
+            if (!Schema::hasColumn('orders', 'pickup_scheduled_at')) {
+                $table->dateTime('pickup_scheduled_at')->nullable()->after('delivery_phone')
+                    ->comment('Jadwal penjemputan untuk order pickup/delivery');
+            }
         });
     }
 

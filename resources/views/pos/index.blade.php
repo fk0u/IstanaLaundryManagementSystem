@@ -96,221 +96,172 @@
             <!-- Left Side: Customer, Promo, Presets & Services (8 cols) -->
             <div class="lg:col-span-8 flex flex-col gap-6">
                 
-                {{-- ===== ORDER CHANNEL / JENIS ORDER CARD ===== --}}
-                <div class="rounded-2xl border-2 transition-all duration-200"
+                {{-- ===== UNIFIED ORDER & CUSTOMER HEADER CARD ===== --}}
+                <div class="rounded-3xl border-2 transition-all duration-200 bg-white dark:bg-slate-900/80 p-5 sm:p-6 shadow-sm"
                      :class="orderType === 'pickup_delivery'
-                         ? 'border-blue-400/60 dark:border-blue-600/50 bg-gradient-to-r from-blue-50/80 via-indigo-50/40 to-transparent dark:from-blue-950/30 dark:via-indigo-950/20'
-                         : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60'">
-                    <div class="p-4 flex flex-col gap-4">
-                        {{-- Header --}}
-                        <div class="flex items-center justify-between gap-4 flex-wrap">
-                            <div class="flex items-center gap-2.5">
-                                <div class="w-9 h-9 rounded-xl flex items-center justify-center font-bold shrink-0 transition-colors"
-                                     :class="orderType === 'pickup_delivery' ? 'bg-blue-500 text-white' : 'bg-primary text-white'">
-                                    <span class="material-symbols-outlined text-xl"
-                                          x-text="orderType === 'pickup_delivery' ? 'local_shipping' : 'storefront'"></span>
-                                </div>
-                                <div>
-                                    <span class="block text-2xs font-black text-slate-400 uppercase tracking-wider">Jenis / Channel Order</span>
-                                    <span class="block text-sm font-extrabold text-slate-900 dark:text-white"
-                                          x-text="orderType === 'pickup_delivery' ? 'Online — Pickup & Delivery' : 'Langsung ke Outlet / Gerai'"></span>
-                                </div>
+                         ? 'border-blue-400/60 dark:border-blue-600/50 bg-gradient-to-r from-blue-50/60 via-indigo-50/30 to-transparent dark:from-blue-950/20 dark:via-indigo-950/10'
+                         : 'border-slate-200 dark:border-slate-800'">
+                    
+                    {{-- Top Bar: Card Title & Channel Segmented Toggle --}}
+                    <div class="flex items-center justify-between gap-4 pb-4 mb-4 border-b border-slate-100 dark:border-slate-800 flex-wrap">
+                        <div class="flex items-center gap-3">
+                            <div class="w-9 h-9 rounded-xl flex items-center justify-center font-bold shrink-0 transition-colors"
+                                 :class="orderType === 'pickup_delivery' ? 'bg-blue-500 text-white' : 'bg-primary text-white'">
+                                <span class="material-symbols-outlined text-xl"
+                                      x-text="orderType === 'pickup_delivery' ? 'local_shipping' : 'assignment_ind'"></span>
                             </div>
-
-                            {{-- Toggle Buttons --}}
-                            <div class="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-xl gap-1 shrink-0">
-                                <button type="button" @click="orderType = 'outlet'"
-                                        :class="orderType === 'outlet'
-                                            ? 'bg-white dark:bg-slate-900 text-primary font-extrabold shadow-sm'
-                                            : 'text-slate-500 dark:text-slate-400 font-medium hover:text-slate-700'"
-                                        class="px-3 py-1.5 rounded-lg text-2xs flex items-center gap-1.5 transition-all cursor-pointer">
-                                    <span class="material-symbols-outlined text-sm">storefront</span>
-                                    Langsung Outlet
-                                </button>
-                                <button type="button" @click="orderType = 'pickup_delivery'"
-                                        :class="orderType === 'pickup_delivery'
-                                            ? 'bg-blue-500 text-white font-extrabold shadow-sm'
-                                            : 'text-slate-500 dark:text-slate-400 font-medium hover:text-slate-700'"
-                                        class="px-3 py-1.5 rounded-lg text-2xs flex items-center gap-1.5 transition-all cursor-pointer">
-                                    <span class="material-symbols-outlined text-sm">local_shipping</span>
-                                    Pickup & Delivery
-                                </button>
+                            <div>
+                                <h3 class="text-xs sm:text-sm font-black text-slate-900 dark:text-white uppercase tracking-wider">Detail Pelanggan & Promo Order</h3>
+                                <p class="text-[10px] sm:text-xs text-slate-400 font-medium">Pilih channel order, data pelanggan, dan voucher promo dalam satu tempat.</p>
                             </div>
                         </div>
 
-                        {{-- Walk-In Name (always shown for walk-in customers) --}}
-                        <div>
-                            <label class="text-2xs font-bold text-slate-400 uppercase tracking-wider mb-1 block">
-                                Nama Pelanggan Walk-In (opsional, jika tidak pilih member)
-                            </label>
-                            <div class="relative">
-                                <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-base pointer-events-none">person</span>
-                                <input type="text" x-model="walkInName" placeholder="Cth: Budi Santoso (isi jika tanpa akun member)..."
-                                       class="w-full h-10 pl-9 pr-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 text-xs font-semibold focus:border-primary outline-none transition-all">
-                            </div>
-                        </div>
-
-                        {{-- Pickup & Delivery Fields (conditionally shown) --}}
-                        <div x-show="orderType === 'pickup_delivery'" x-cloak
-                             x-transition:enter="transition ease-out duration-200"
-                             x-transition:enter-start="opacity-0 -translate-y-2"
-                             x-transition:enter-end="opacity-100 translate-y-0"
-                             class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-3 border-t border-blue-200/60 dark:border-blue-800/40">
-                            {{-- Delivery Address --}}
-                            <div class="sm:col-span-2">
-                                <label class="text-2xs font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider mb-1 block flex items-center gap-1">
-                                    <span class="material-symbols-outlined text-xs">location_on</span>
-                                    Alamat Penjemputan / Pengantaran *
-                                </label>
-                                <textarea x-model="deliveryAddress" rows="2"
-                                          placeholder="Masukkan alamat lengkap untuk penjemputan atau pengantaran laundry..."
-                                          class="w-full px-3 py-2.5 rounded-xl border border-blue-200 dark:border-blue-800/60 bg-blue-50/50 dark:bg-blue-950/20 text-slate-800 dark:text-slate-200 text-xs font-semibold focus:border-blue-400 outline-none transition-all resize-none"></textarea>
-                            </div>
-                            {{-- Delivery Phone --}}
-                            <div>
-                                <label class="text-2xs font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider mb-1 block flex items-center gap-1">
-                                    <span class="material-symbols-outlined text-xs">phone</span>
-                                    No. HP Koordinasi *
-                                </label>
-                                <div class="relative">
-                                    <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-blue-400 text-base pointer-events-none">call</span>
-                                    <input type="tel" x-model="deliveryPhone"
-                                           placeholder="08xxxxxxxxxx"
-                                           class="w-full h-10 pl-9 pr-3 rounded-xl border border-blue-200 dark:border-blue-800/60 bg-blue-50/50 dark:bg-blue-950/20 text-slate-800 dark:text-slate-200 text-xs font-bold focus:border-blue-400 outline-none transition-all">
-                                </div>
-                            </div>
-                            {{-- Pickup Schedule --}}
-                            <div>
-                                <label class="text-2xs font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider mb-1 block flex items-center gap-1">
-                                    <span class="material-symbols-outlined text-xs">schedule</span>
-                                    Jadwal Penjemputan
-                                </label>
-                                <input type="datetime-local" x-model="pickupScheduledAt"
-                                       class="w-full h-10 px-3 rounded-xl border border-blue-200 dark:border-blue-800/60 bg-blue-50/50 dark:bg-blue-950/20 text-slate-800 dark:text-slate-200 text-xs font-semibold focus:border-blue-400 outline-none transition-all">
-                            </div>
+                        {{-- Channel Switcher --}}
+                        <div class="flex bg-slate-100 dark:bg-slate-800 p-1.5 rounded-2xl gap-1 shrink-0">
+                            <button type="button" @click="orderType = 'outlet'"
+                                    :class="orderType === 'outlet'
+                                        ? 'bg-white dark:bg-slate-900 text-primary font-extrabold shadow-xs'
+                                        : 'text-slate-500 dark:text-slate-400 font-medium hover:text-slate-700'"
+                                    class="px-3.5 py-1.5 rounded-xl text-2xs flex items-center gap-1.5 transition-all cursor-pointer">
+                                <span class="material-symbols-outlined text-sm">storefront</span>
+                                Langsung Outlet
+                            </button>
+                            <button type="button" @click="orderType = 'pickup_delivery'"
+                                    :class="orderType === 'pickup_delivery'
+                                        ? 'bg-blue-500 text-white font-extrabold shadow-xs'
+                                        : 'text-slate-500 dark:text-slate-400 font-medium hover:text-slate-700'"
+                                    class="px-3.5 py-1.5 rounded-xl text-2xs flex items-center gap-1.5 transition-all cursor-pointer">
+                                <span class="material-symbols-outlined text-sm">local_shipping</span>
+                                Pickup & Delivery
+                            </button>
                         </div>
                     </div>
-                </div>
 
-                <!-- Customer & Promo Selectors -->
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <!-- Customer Selection -->
-                    <x-card title="Pilih Pelanggan" :compact="true" class="!overflow-visible z-20">
+                    {{-- Main 2-Column Grid: Customer (Col 1) & Promo (Col 2) --}}
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        
+                        {{-- Left Column: Pelanggan (Member or Walk-In) --}}
                         <div class="flex flex-col gap-3">
-                            <!-- State 1: Customer Selected Card & Loyalty Points Redeemer -->
+                            
+                            {{-- State 1: Customer Selected Card & Loyalty Points Redeemer --}}
                             <div x-show="customerId" class="flex flex-col gap-2.5" x-cloak>
                                 <div class="flex items-center justify-between gap-3 p-3.5 rounded-2xl bg-gradient-to-r from-orange-50 to-amber-50 dark:from-slate-800/80 dark:to-slate-850 border border-orange-200/80 dark:border-slate-700">
-                                    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-orange-600 text-white flex items-center justify-center font-black text-sm shrink-0 shadow-md shadow-primary/20">
+                                    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-orange-600 text-white flex items-center justify-center font-black text-xs shrink-0 shadow-xs">
                                         <span x-text="selectedCustomer ? selectedCustomer.name.substring(0, 2).toUpperCase() : 'CU'"></span>
                                     </div>
                                     
                                     <div class="flex-1 min-w-0">
                                         <div class="flex items-center gap-2 flex-wrap">
-                                            <h4 class="text-sm font-extrabold text-slate-900 dark:text-white truncate" x-text="selectedCustomer ? selectedCustomer.name : ''"></h4>
-                                            <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-orange-500 text-white shadow-xs" x-text="customerTier">Bronze</span>
+                                            <h4 class="text-xs sm:text-sm font-extrabold text-slate-900 dark:text-white truncate" x-text="selectedCustomer ? selectedCustomer.name : ''"></h4>
+                                            <span class="inline-flex items-center gap-0.5 px-2 py-0.2 rounded-full text-[9px] font-black uppercase tracking-wider bg-orange-500 text-white shadow-2xs" x-text="customerTier">Bronze</span>
                                         </div>
-                                        <div class="flex items-center gap-3 text-2xs text-slate-500 dark:text-slate-400 mt-0.5 font-medium">
-                                            <span class="flex items-center gap-1" x-show="selectedCustomer && selectedCustomer.phone"><span class="material-symbols-outlined text-xs">call</span> <span x-text="selectedCustomer ? selectedCustomer.phone : ''"></span></span>
-                                            <span class="flex items-center gap-1 text-orange-600 dark:text-orange-400 font-extrabold"><span class="material-symbols-outlined text-xs">stars</span> <span x-text="customerPoints"></span> Poin Loyalty</span>
+                                        <div class="flex items-center gap-2.5 text-[10px] sm:text-2xs text-slate-500 dark:text-slate-400 mt-0.5 font-medium">
+                                            <span class="flex items-center gap-0.5" x-show="selectedCustomer && selectedCustomer.phone"><span class="material-symbols-outlined text-xs">call</span> <span x-text="selectedCustomer ? selectedCustomer.phone : ''"></span></span>
+                                            <span class="flex items-center gap-0.5 text-orange-600 dark:text-orange-400 font-extrabold"><span class="material-symbols-outlined text-xs">stars</span> <span x-text="customerPoints"></span> Pts</span>
                                         </div>
                                     </div>
 
                                     <button type="button" @click="clearCustomer()" title="Ganti Pelanggan"
-                                            class="btn-touch shrink-0 px-3 py-1.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:text-rose-500 text-2xs font-bold flex items-center gap-1 transition-all cursor-pointer shadow-xs">
-                                        <span class="material-symbols-outlined text-sm">swap_horiz</span>
+                                            class="btn-touch shrink-0 px-3 py-1.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:text-rose-500 text-2xs font-bold flex items-center gap-1 transition-all cursor-pointer shadow-2xs">
+                                        <span class="material-symbols-outlined text-xs">swap_horiz</span>
                                         Ganti
                                     </button>
                                 </div>
 
-                                <!-- Loyalty Points Redemption Action Box -->
-                                <div class="p-3 rounded-2xl bg-gradient-to-r from-amber-500/10 via-orange-500/5 to-transparent border border-amber-200/80 dark:border-slate-800 flex items-center justify-between gap-3">
+                                {{-- Loyalty Points Redemption Action Box --}}
+                                <div class="p-3 rounded-2xl bg-amber-500/10 dark:bg-amber-950/20 border border-amber-200/80 dark:border-amber-900/40 flex items-center justify-between gap-3">
                                     <div class="flex items-center gap-2.5">
-                                        <div class="w-8 h-8 rounded-lg bg-amber-500 text-white flex items-center justify-center font-bold shrink-0">
-                                            <span class="material-symbols-outlined text-base">redeem</span>
-                                        </div>
+                                        <span class="material-symbols-outlined text-amber-500 text-base">redeem</span>
                                         <div>
-                                            <span class="block text-2xs font-black text-slate-900 dark:text-white">Tukarkan Poin Loyalty</span>
+                                            <span class="block text-xs font-black text-slate-900 dark:text-white">Tukarkan Poin Loyalty</span>
                                             <span class="block text-[10px] text-slate-500 dark:text-slate-400" x-text="'1 Poin = Rp ' + formatNumber(pointExchangeRate) + ' Diskon'"></span>
                                         </div>
                                     </div>
 
                                     <button type="button" @click="toggleRedeemPoints()"
                                             :class="pointsUsed > 0 ? 'bg-emerald-600 text-white' : 'bg-amber-500 hover:bg-amber-600 text-white'"
-                                            class="px-3 py-1.5 rounded-xl font-extrabold text-2xs shadow-xs flex items-center gap-1 transition-all cursor-pointer">
+                                            class="px-3 py-1.5 rounded-xl font-extrabold text-2xs shadow-2xs flex items-center gap-1 transition-all cursor-pointer">
                                         <span class="material-symbols-outlined text-xs" x-text="pointsUsed > 0 ? 'check_circle' : 'stars'"></span>
                                         <span x-text="pointsUsed > 0 ? 'Poin Terpasang (' + pointsUsed + ' Pts)' : 'Gunakan Poin'"></span>
                                     </button>
                                 </div>
                             </div>
 
-                            <!-- State 2: Customer Combobox Search (Phone-First Priority) -->
-                            <div x-show="!customerId" class="flex flex-col gap-2">
-                                <label class="text-2xs font-bold text-slate-400 uppercase tracking-wider">Cari No. HP Member (Utama) / Nama</label>
-                                <div class="flex gap-2">
+                            {{-- State 2: Member Search Combobox OR Walk-In Name --}}
+                            <div x-show="!customerId" class="flex flex-col gap-2.5">
+                                <label class="text-2xs font-bold text-slate-400 uppercase tracking-wider">Cari Member atau Isi Pelanggan Walk-In</label>
+                                
+                                <div class="flex gap-2.5 items-center">
+                                    {{-- Member Search Combobox --}}
                                     <div class="relative flex-1" @click.outside="customerOpen = false">
                                         <div class="relative flex items-center">
-                                            <span class="material-symbols-outlined absolute left-3 text-slate-400 text-lg pointer-events-none">phone_search</span>
+                                            <span class="material-symbols-outlined absolute left-3.5 text-slate-400 text-lg pointer-events-none">search</span>
                                             <input type="text" x-model="customerSearch" autocomplete="off"
                                                    @focus="customerOpen = true" @click="customerOpen = true" @input="customerOpen = true"
-                                                   placeholder="Ketik No. HP (Utama) atau nama member..."
-                                                   class="w-full h-11 pl-9 pr-8 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 text-xs font-semibold focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all shadow-xs">
+                                                   placeholder="Ketik No. HP / nama member..."
+                                                   class="w-full h-10 sm:h-11 pl-10 pr-9 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900 text-slate-800 dark:text-slate-200 text-xs font-semibold focus:border-primary focus:bg-white focus:ring-2 focus:ring-primary/20 outline-none transition-all">
 
                                             <button type="button" x-show="customerSearch" x-cloak @click="customerSearch = ''; customerOpen = true"
-                                                    class="absolute right-2.5 text-slate-400 hover:text-slate-600 cursor-pointer">
+                                                    class="absolute right-3 text-slate-400 hover:text-slate-600 cursor-pointer">
                                                 <span class="material-symbols-outlined text-base">close</span>
                                             </button>
                                         </div>
 
-                                        <!-- Dropdown List -->
+                                        {{-- Dropdown List --}}
                                         <div x-show="customerOpen" x-transition.opacity.duration.150ms x-cloak
-                                             class="absolute z-50 mt-2 w-full max-h-64 overflow-y-auto bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl divide-y divide-slate-100 dark:divide-slate-800/60">
+                                             class="absolute z-50 mt-1.5 w-full max-h-56 overflow-y-auto bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl divide-y divide-slate-100 dark:divide-slate-800/60">
                                             
                                             <div class="px-3.5 py-2 bg-slate-50/80 dark:bg-slate-800/50 flex items-center justify-between sticky top-0 backdrop-blur-sm z-10">
-                                                <span class="text-[10px] font-black text-slate-400 uppercase tracking-wider">Pelanggan Terdaftar (No. HP Utamakan)</span>
-                                                <span class="text-[10px] font-bold text-primary" x-text="filteredCustomers().length + ' Pelanggan'"></span>
+                                                <span class="text-[9px] font-black text-slate-400 uppercase tracking-wider">Member Terdaftar</span>
+                                                <span class="text-[9px] font-bold text-primary" x-text="filteredCustomers().length + ' Pelanggan'"></span>
                                             </div>
 
                                             <template x-for="c in filteredCustomers()" :key="c.id">
                                                 <button type="button" @click="selectCustomer(c); customerOpen = false"
                                                         class="w-full text-left px-3.5 py-2.5 hover:bg-primary/5 dark:hover:bg-slate-800/80 flex items-center justify-between gap-3 group transition-colors cursor-pointer">
                                                     <div class="flex items-center gap-3 min-w-0">
-                                                        <div class="w-8 h-8 rounded-lg bg-orange-100 dark:bg-slate-800 text-primary flex items-center justify-center font-bold text-xs shrink-0 group-hover:bg-primary group-hover:text-white transition-colors">
+                                                        <div class="w-7.5 h-7.5 rounded-xl bg-orange-100 dark:bg-slate-800 text-primary flex items-center justify-center font-bold text-xs shrink-0 group-hover:bg-primary group-hover:text-white transition-colors">
                                                             <span x-text="c.name.substring(0, 2).toUpperCase()"></span>
                                                         </div>
                                                         <div class="min-w-0">
                                                             <div class="flex items-center gap-1">
-                                                                <span class="material-symbols-outlined text-[13px] text-orange-500 font-bold">call</span>
+                                                                <span class="material-symbols-outlined text-[11px] text-orange-500 font-bold">call</span>
                                                                 <span class="text-xs font-black font-mono text-orange-600 dark:text-orange-400 group-hover:text-primary transition-colors" x-text="c.phone || 'Tanpa No. HP'"></span>
                                                             </div>
-                                                            <h5 class="text-2xs font-bold text-slate-700 dark:text-slate-200 truncate mt-0.5" x-text="c.name"></h5>
+                                                            <h5 class="text-2xs font-bold text-slate-700 dark:text-slate-200 truncate" x-text="c.name"></h5>
                                                         </div>
                                                     </div>
                                                     <div class="text-right shrink-0">
-                                                        <span class="inline-block text-[10px] font-extrabold px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300" x-text="c.loyalty_tier || 'Bronze'"></span>
-                                                        <span class="block text-[10px] font-bold text-primary mt-0.5" x-text="c.loyalty_points + ' Poin'"></span>
+                                                        <span class="inline-block text-[9px] font-extrabold px-1.5 py-0.2 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300" x-text="c.loyalty_tier || 'Bronze'"></span>
+                                                        <span class="block text-[9px] font-bold text-primary" x-text="c.loyalty_points + ' Pts'"></span>
                                                     </div>
                                                 </button>
                                             </template>
                                         </div>
                                     </div>
 
-                                    <button type="button" @click="openAddCustomerModal()" title="Tambah Pelanggan Baru"
-                                            class="btn-touch shrink-0 w-11 h-11 rounded-xl bg-primary/10 hover:bg-primary/20 text-primary flex items-center justify-center cursor-pointer transition-all shadow-xs">
+                                    {{-- Add Customer Modal Button --}}
+                                    <button type="button" @click="openAddCustomerModal()" title="Tambah Member Baru"
+                                            class="btn-touch shrink-0 w-10 sm:w-11 h-10 sm:h-11 rounded-2xl bg-primary/10 hover:bg-primary/20 text-primary flex items-center justify-center cursor-pointer transition-all">
                                         <span class="material-symbols-outlined text-xl">person_add</span>
                                     </button>
                                 </div>
+
+                                {{-- Walk-In Customer Name --}}
+                                <div class="relative">
+                                    <span class="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-lg pointer-events-none">person</span>
+                                    <input type="text" x-model="walkInName" placeholder="Nama Pelanggan Walk-In (opsional, jika tanpa member)..."
+                                           class="w-full h-10 sm:h-11 pl-10 pr-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900 text-slate-800 dark:text-slate-200 text-xs font-medium focus:border-primary focus:bg-white outline-none transition-all">
+                                </div>
                             </div>
-
                         </div>
-                    </x-card>
 
-                    <!-- Promotion Selection -->
-                    <x-card title="Gunakan Promo / Kupon" :compact="true">
-                        <div class="flex flex-col gap-3">
+                        {{-- Right Column: Promo & Kupon --}}
+                        <div class="flex flex-col gap-2.5">
                             <label class="text-2xs font-bold text-slate-400 uppercase tracking-wider">Kupon / Promo Aktif</label>
                             
                             <select id="promo_id" x-model="promoId" @change="updatePromoData"
-                                    class="w-full h-11 px-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 text-xs font-semibold focus:border-primary outline-none transition-all cursor-pointer">
+                                    class="w-full h-10 sm:h-11 px-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900 text-slate-800 dark:text-slate-200 text-xs font-semibold focus:border-primary focus:bg-white outline-none transition-all cursor-pointer">
                                 <option value="">-- Pilih Promo Terdaftar --</option>
                                 @foreach ($promotions as $promo)
                                     <option value="{{ $promo->id }}" 
@@ -323,17 +274,58 @@
                                 @endforeach
                             </select>
 
-                            <div class="flex gap-2">
+                            <div class="flex gap-2.5">
                                 <input type="text" x-model="manualCouponCode" @keydown.enter.prevent="applyManualCoupon()"
                                        placeholder="Masukkan Kode Kupon..."
-                                       class="w-full h-10 px-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 text-xs font-semibold uppercase focus:border-primary outline-none transition-all">
+                                       class="w-full h-10 sm:h-11 px-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900 text-slate-800 dark:text-slate-200 text-xs font-semibold uppercase focus:border-primary focus:bg-white outline-none transition-all">
                                 <button type="button" @click="applyManualCoupon()"
-                                        class="btn-touch shrink-0 px-4 h-10 rounded-xl bg-slate-800 hover:bg-slate-900 dark:bg-slate-700 dark:hover:bg-slate-600 text-white text-xs font-bold transition-all cursor-pointer">
+                                        class="btn-touch shrink-0 px-5 h-10 sm:h-11 rounded-2xl bg-slate-800 hover:bg-slate-900 dark:bg-slate-700 dark:hover:bg-slate-600 text-white text-xs font-bold transition-all cursor-pointer">
                                     Terapkan
                                 </button>
                             </div>
                         </div>
-                    </x-card>
+                    </div>
+
+                    {{-- Expandable Bottom Section: Pickup & Delivery Details --}}
+                    <div x-show="orderType === 'pickup_delivery'" x-cloak
+                         x-transition:enter="transition ease-out duration-200"
+                         x-transition:enter-start="opacity-0 -translate-y-2"
+                         x-transition:enter-end="opacity-100 translate-y-0"
+                         class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-3.5 mt-3.5 border-t border-blue-200/60 dark:border-blue-800/40">
+                        {{-- Delivery Address --}}
+                        <div class="sm:col-span-2">
+                            <label class="text-2xs font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider mb-1 block flex items-center gap-1">
+                                <span class="material-symbols-outlined text-xs">location_on</span>
+                                Alamat Penjemputan / Pengantaran *
+                            </label>
+                            <textarea x-model="deliveryAddress" rows="2"
+                                      placeholder="Masukkan alamat lengkap untuk penjemputan atau pengantaran laundry..."
+                                      class="w-full px-3 py-2 rounded-xl border border-blue-200 dark:border-blue-800/60 bg-blue-50/40 dark:bg-blue-950/20 text-slate-800 dark:text-slate-200 text-xs font-semibold focus:border-blue-400 outline-none transition-all resize-none"></textarea>
+                        </div>
+                        {{-- Delivery Phone --}}
+                        <div>
+                            <label class="text-2xs font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider mb-1 block flex items-center gap-1">
+                                <span class="material-symbols-outlined text-xs">phone</span>
+                                No. HP Koordinasi *
+                            </label>
+                            <div class="relative">
+                                <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-blue-400 text-base pointer-events-none">call</span>
+                                <input type="tel" x-model="deliveryPhone"
+                                       placeholder="08xxxxxxxxxx"
+                                       class="w-full h-9 pl-9 pr-3 rounded-xl border border-blue-200 dark:border-blue-800/60 bg-blue-50/40 dark:bg-blue-950/20 text-slate-800 dark:text-slate-200 text-xs font-bold focus:border-blue-400 outline-none transition-all">
+                            </div>
+                        </div>
+                        {{-- Pickup Schedule --}}
+                        <div>
+                            <label class="text-2xs font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider mb-1 block flex items-center gap-1">
+                                <span class="material-symbols-outlined text-xs">schedule</span>
+                                Jadwal Penjemputan
+                            </label>
+                            <input type="datetime-local" x-model="pickupScheduledAt"
+                                   class="w-full h-9 px-3 rounded-xl border border-blue-200 dark:border-blue-800/60 bg-blue-50/40 dark:bg-blue-950/20 text-slate-800 dark:text-slate-200 text-xs font-semibold focus:border-blue-400 outline-none transition-all">
+                        </div>
+                    </div>
+
                 </div>
 
                 <!-- Quick-Tap Layanan Favorit (Presets) -->
