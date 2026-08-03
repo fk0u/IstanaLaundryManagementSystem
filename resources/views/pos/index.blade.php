@@ -101,29 +101,50 @@
                     <!-- Customer Selection -->
                     <x-card title="Pilih Pelanggan" :compact="true" class="!overflow-visible z-20">
                         <div class="flex flex-col gap-3">
-                            
-                            <!-- State 1: When Customer Selected -->
-                            <div x-show="customerId" x-cloak class="relative bg-gradient-to-r from-orange-500/10 via-amber-500/5 to-transparent dark:from-slate-800 dark:to-slate-800/50 p-3.5 rounded-2xl border border-orange-200/80 dark:border-slate-700/80 flex items-center gap-3.5 shadow-xs">
-                                <div class="w-11 h-11 rounded-xl bg-gradient-to-br from-primary to-orange-600 text-white flex items-center justify-center font-black text-sm shadow-md shadow-primary/20 shrink-0">
-                                    <span x-text="selectedCustomer ? selectedCustomer.name.substring(0, 2).toUpperCase() : 'CU'"></span>
-                                </div>
-                                
-                                <div class="flex-1 min-w-0">
-                                    <div class="flex items-center gap-2 flex-wrap">
-                                        <h4 class="text-sm font-extrabold text-slate-900 dark:text-white truncate" x-text="selectedCustomer ? selectedCustomer.name : ''"></h4>
-                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-primary/10 text-primary border border-primary/20" x-text="customerTier">Bronze</span>
+                            <!-- State 1: Customer Selected Card & Loyalty Points Redeemer -->
+                            <div x-show="customerId" class="flex flex-col gap-2.5" x-cloak>
+                                <div class="flex items-center justify-between gap-3 p-3.5 rounded-2xl bg-gradient-to-r from-orange-50 to-amber-50 dark:from-slate-800/80 dark:to-slate-850 border border-orange-200/80 dark:border-slate-700">
+                                    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-orange-600 text-white flex items-center justify-center font-black text-sm shrink-0 shadow-md shadow-primary/20">
+                                        <span x-text="selectedCustomer ? selectedCustomer.name.substring(0, 2).toUpperCase() : 'CU'"></span>
                                     </div>
-                                    <div class="flex items-center gap-3 text-2xs text-slate-500 dark:text-slate-400 mt-0.5 font-medium">
-                                        <span class="flex items-center gap-1" x-show="selectedCustomer && selectedCustomer.phone"><span class="material-symbols-outlined text-xs">call</span> <span x-text="selectedCustomer ? selectedCustomer.phone : ''"></span></span>
-                                        <span class="flex items-center gap-1"><span class="material-symbols-outlined text-xs">stars</span> <span class="font-bold text-primary" x-text="customerPoints"></span> Poin</span>
+                                    
+                                    <div class="flex-1 min-w-0">
+                                        <div class="flex items-center gap-2 flex-wrap">
+                                            <h4 class="text-sm font-extrabold text-slate-900 dark:text-white truncate" x-text="selectedCustomer ? selectedCustomer.name : ''"></h4>
+                                            <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-orange-500 text-white shadow-xs" x-text="customerTier">Bronze</span>
+                                        </div>
+                                        <div class="flex items-center gap-3 text-2xs text-slate-500 dark:text-slate-400 mt-0.5 font-medium">
+                                            <span class="flex items-center gap-1" x-show="selectedCustomer && selectedCustomer.phone"><span class="material-symbols-outlined text-xs">call</span> <span x-text="selectedCustomer ? selectedCustomer.phone : ''"></span></span>
+                                            <span class="flex items-center gap-1 text-orange-600 dark:text-orange-400 font-extrabold"><span class="material-symbols-outlined text-xs">stars</span> <span x-text="customerPoints"></span> Poin Loyalty</span>
+                                        </div>
                                     </div>
+
+                                    <button type="button" @click="clearCustomer()" title="Ganti Pelanggan"
+                                            class="btn-touch shrink-0 px-3 py-1.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:text-rose-500 text-2xs font-bold flex items-center gap-1 transition-all cursor-pointer shadow-xs">
+                                        <span class="material-symbols-outlined text-sm">swap_horiz</span>
+                                        Ganti
+                                    </button>
                                 </div>
 
-                                <button type="button" @click="clearCustomer()" title="Ganti Pelanggan"
-                                        class="btn-touch shrink-0 px-3 py-1.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:text-rose-500 text-2xs font-bold flex items-center gap-1 transition-all cursor-pointer shadow-xs">
-                                    <span class="material-symbols-outlined text-sm">swap_horiz</span>
-                                    Ganti
-                                </button>
+                                <!-- Loyalty Points Redemption Action Box -->
+                                <div class="p-3 rounded-2xl bg-gradient-to-r from-amber-500/10 via-orange-500/5 to-transparent border border-amber-200/80 dark:border-slate-800 flex items-center justify-between gap-3">
+                                    <div class="flex items-center gap-2.5">
+                                        <div class="w-8 h-8 rounded-lg bg-amber-500 text-white flex items-center justify-center font-bold shrink-0">
+                                            <span class="material-symbols-outlined text-base">redeem</span>
+                                        </div>
+                                        <div>
+                                            <span class="block text-2xs font-black text-slate-900 dark:text-white">Tukarkan Poin Loyalty</span>
+                                            <span class="block text-[10px] text-slate-500 dark:text-slate-400" x-text="'1 Poin = Rp ' + formatNumber(pointExchangeRate) + ' Diskon'"></span>
+                                        </div>
+                                    </div>
+
+                                    <button type="button" @click="toggleRedeemPoints()"
+                                            :class="pointsUsed > 0 ? 'bg-emerald-600 text-white' : 'bg-amber-500 hover:bg-amber-600 text-white'"
+                                            class="px-3 py-1.5 rounded-xl font-extrabold text-2xs shadow-xs flex items-center gap-1 transition-all cursor-pointer">
+                                        <span class="material-symbols-outlined text-xs" x-text="pointsUsed > 0 ? 'check_circle' : 'stars'"></span>
+                                        <span x-text="pointsUsed > 0 ? 'Poin Terpasang (' + pointsUsed + ' Pts)' : 'Gunakan Poin'"></span>
+                                    </button>
+                                </div>
                             </div>
 
                             <!-- State 2: Customer Combobox Search -->
@@ -326,6 +347,8 @@
                         
                         <input type="hidden" name="customer_id" x-model="customerId">
                         <input type="hidden" name="promo_id" x-model="promoId">
+                        <input type="hidden" name="points_used" x-model="pointsUsed">
+                        <input type="hidden" name="discount_amount" x-model="discount">
                         <input type="hidden" name="draft_id" x-model="currentDraftId">
 
                         <!-- Hold Order Quick Action Button inside Cart -->
@@ -475,11 +498,51 @@
                                 </div>
                             </div>
 
-                            <!-- Submit Action Button -->
-                            <button type="submit" :disabled="!activeShift"
-                                    class="w-full h-12 mt-3 rounded-2xl bg-gradient-to-r from-primary to-orange-600 hover:from-primary-hover hover:to-orange-700 text-white font-black text-sm shadow-lg shadow-primary/25 flex items-center justify-center gap-2 cursor-pointer transition-all active:scale-98 disabled:opacity-50 disabled:cursor-not-allowed">
-                                <span class="material-symbols-outlined text-lg">check_circle</span>
-                                Process Order & Print Nota
+                            <!-- Real-time Live Validation Status Card -->
+                            <div class="mt-3 p-3 rounded-2xl border transition-all text-xs font-bold"
+                                 :class="getValidationState().isValid 
+                                    ? 'bg-emerald-50/60 dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-200' 
+                                    : 'bg-rose-50/60 dark:bg-rose-950/30 border-rose-200 dark:border-rose-800 text-rose-800 dark:text-rose-200'">
+                                <div class="flex items-center justify-between mb-2">
+                                    <span class="text-2xs font-black uppercase tracking-wider flex items-center gap-1">
+                                        <span class="material-symbols-outlined text-sm" x-text="getValidationState().isValid ? 'verified' : 'fact_check'"></span>
+                                        Validasi Realtime
+                                    </span>
+                                    <span class="text-2xs font-extrabold px-2 py-0.5 rounded-full"
+                                          :class="getValidationState().isValid ? 'bg-emerald-500 text-white' : 'bg-rose-500 text-white'"
+                                          x-text="getValidationState().isValid ? 'SIAP TRANSAKSI' : 'BELUM LENGKAP'">
+                                    </span>
+                                </div>
+                                
+                                <div class="grid grid-cols-2 gap-1.5 text-2xs">
+                                    <div class="flex items-center gap-1.5" :class="getValidationState().shiftValid ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'">
+                                        <span class="material-symbols-outlined text-xs" x-text="getValidationState().shiftValid ? 'check_circle' : 'cancel'"></span>
+                                        <span>Shift: <strong x-text="getValidationState().shiftValid ? 'Aktif' : 'Tutup'"></strong></span>
+                                    </div>
+                                    <div class="flex items-center gap-1.5" :class="getValidationState().customerValid ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'">
+                                        <span class="material-symbols-outlined text-xs" x-text="getValidationState().customerValid ? 'check_circle' : 'cancel'"></span>
+                                        <span>Pelanggan: <strong x-text="getValidationState().customerValid ? 'OK' : 'Kosong'"></strong></span>
+                                    </div>
+                                    <div class="flex items-center gap-1.5" :class="getValidationState().cartValid ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'">
+                                        <span class="material-symbols-outlined text-xs" x-text="getValidationState().cartValid ? 'check_circle' : 'cancel'"></span>
+                                        <span>Items: <strong x-text="cart.length + ' Item'"></strong></span>
+                                    </div>
+                                    <div class="flex items-center gap-1.5" :class="getValidationState().paymentValid ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'">
+                                        <span class="material-symbols-outlined text-xs" x-text="getValidationState().paymentValid ? 'check_circle' : 'cancel'"></span>
+                                        <span>Bayar: <strong x-text="getValidationState().paymentValid ? 'Valid' : 'Kurang'"></strong></span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Dynamic Real-time Submit Action Button -->
+                            <button type="submit"
+                                    :disabled="!getValidationState().isValid"
+                                    :class="getValidationState().isValid 
+                                        ? 'bg-gradient-to-r from-primary to-orange-600 hover:from-primary-hover hover:to-orange-700 text-white shadow-lg shadow-primary/25 active:scale-98 cursor-pointer' 
+                                        : 'bg-slate-200 dark:bg-slate-800 text-slate-400 dark:text-slate-600 cursor-not-allowed opacity-75'"
+                                    class="w-full h-12 mt-2 rounded-2xl font-black text-xs md:text-sm flex items-center justify-center gap-2 transition-all">
+                                <span class="material-symbols-outlined text-lg" x-text="getValidationState().isValid ? 'point_of_sale' : 'block'"></span>
+                                <span x-text="getValidationState().buttonLabel"></span>
                             </button>
                         </div>
                     </form>
@@ -792,7 +855,7 @@
                             this.draftOrders.unshift(data.draft);
                             this.cart = [];
                             this.calculateTotals();
-                            alert("Order berhasil di-hold!");
+                            Toast.success("Order berhasil di-hold!");
                         }
                     });
                 },
@@ -805,20 +868,109 @@
                     }
                     this.showDraftModal = false;
                     this.calculateTotals();
+                    Toast.info(`Draft "${draft.draft_name}" dimuat ke keranjang.`);
                 },
 
                 deleteDraft(id) {
-                    if (!confirm("Hapus draft transaksi ini?")) return;
-                    fetch(`/pos/drafts/${id}`, {
-                        method: 'DELETE',
-                        headers: {
-                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                        }
-                    }).then(r => r.json()).then(data => {
-                        if (data.success) {
-                            this.draftOrders = this.draftOrders.filter(d => d.id !== id);
-                        }
+                    AppDialog.danger("Hapus Draft", "Apakah Anda yakin ingin menghapus draft transaksi ini?").then(confirmed => {
+                        if (!confirmed) return;
+                        fetch(`/pos/drafts/${id}`, {
+                            method: 'DELETE',
+                            headers: {
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                            }
+                        }).then(r => r.json()).then(data => {
+                            if (data.success) {
+                                this.draftOrders = this.draftOrders.filter(d => d.id !== id);
+                                Toast.success("Draft transaksi berhasil dihapus.");
+                            }
+                        });
                     });
+                },
+
+                updatePromoData() {
+                    const el = document.getElementById('promo_id');
+                    if (!el || !el.value) {
+                        this.promoId = '';
+                        this.promoType = '';
+                        this.promoValue = 0;
+                        this.promoMin = 0;
+                        this.calculateTotals();
+                        return;
+                    }
+
+                    const opt = el.options[el.selectedIndex];
+                    this.promoId = el.value;
+                    this.promoType = opt.dataset.type || '';
+                    this.promoValue = parseFloat(opt.dataset.value) || 0;
+                    this.promoMin = parseFloat(opt.dataset.min) || 0;
+
+                    if (this.subtotal < this.promoMin) {
+                        Toast.warning(`Minimal transaksi promo ini adalah Rp ${this.formatNumber(this.promoMin)}.`);
+                    } else {
+                        Toast.success(`Promo "${opt.text.split('(')[0].trim()}" berhasil diterapkan!`);
+                    }
+
+                    this.calculateTotals();
+                },
+
+                applyManualCoupon() {
+                    const code = (this.manualCouponCode || '').trim().toUpperCase();
+                    if (!code) {
+                        Toast.warning("Masukkan kode kupon terlebih dahulu!");
+                        return;
+                    }
+
+                    const el = document.getElementById('promo_id');
+                    if (!el) return;
+
+                    let foundIndex = -1;
+                    for (let i = 0; i < el.options.length; i++) {
+                        const optCode = (el.options[i].dataset.code || '').toUpperCase();
+                        if (optCode === code) {
+                            foundIndex = i;
+                            break;
+                        }
+                    }
+
+                    if (foundIndex !== -1) {
+                        el.selectedIndex = foundIndex;
+                        this.updatePromoData();
+                        this.manualCouponCode = '';
+                    } else {
+                        Toast.error(`Kode kupon "${code}" tidak ditemukan atau sudah tidak aktif.`);
+                    }
+                },
+
+                toggleRedeemPoints() {
+                    if (!this.selectedCustomer) {
+                        Toast.warning("Pilih pelanggan terlebih dahulu untuk menukarkan poin!");
+                        return;
+                    }
+
+                    if (this.pointsUsed > 0) {
+                        this.pointsUsed = 0;
+                        this.pointsDiscount = 0;
+                        Toast.info("Penggunaan poin dibatalkan.");
+                    } else {
+                        if (this.customerPoints < (this.pointMinRedeem || 0)) {
+                            Toast.warning(`Minimal poin untuk penukaran adalah ${this.pointMinRedeem || 0} poin. Poin Anda: ${this.customerPoints}`);
+                            return;
+                        }
+
+                        const rate = this.pointExchangeRate > 0 ? this.pointExchangeRate : 1;
+                        const maxPointsPossible = Math.min(this.customerPoints, Math.floor((this.subtotal - this.discount) / rate));
+                        if (maxPointsPossible <= 0) {
+                            Toast.warning("Subtotal transaksi terlalu kecil untuk penukaran poin.");
+                            return;
+                        }
+
+                        this.pointsUsed = maxPointsPossible;
+                        this.pointsDiscount = this.pointsUsed * rate;
+                        Toast.success(`Berhasil menukarkan ${this.pointsUsed} Poin (Diskon Rp ${this.formatNumber(this.pointsDiscount)})`);
+                    }
+
+                    this.calculateTotals();
                 },
 
                 getSplitTotal() {
@@ -841,7 +993,7 @@
                     this.total = Math.max(0, this.subtotal - this.discount - this.pointsDiscount);
 
                     if (this.paymentType === 'full' && this.paymentMethod === 'cash') {
-                        if (this.paidAmount < this.total) {
+                        if (this.paidAmount === null || this.paidAmount === undefined || this.paidAmount === '') {
                             this.paidAmount = this.total;
                         }
                         this.changeAmount = Math.max(0, this.paidAmount - this.total);
@@ -853,21 +1005,150 @@
                     }
                 },
 
+                getValidationState() {
+                    const shiftValid = Boolean(this.activeShift);
+                    const customerValid = Boolean(this.customerId);
+                    const cartValid = this.cart.length > 0;
+                    
+                    let paymentValid = false;
+                    let paymentMessage = '';
+
+                    if (this.paymentType === 'full') {
+                        if (this.paymentMethod === 'cash') {
+                            const deficit = this.total - (this.paidAmount || 0);
+                            if (deficit > 0) {
+                                paymentValid = false;
+                                paymentMessage = `Uang tunai kurang Rp ${this.formatNumber(deficit)}`;
+                            } else {
+                                paymentValid = true;
+                            }
+                        } else {
+                            paymentValid = true;
+                        }
+                    } else if (this.paymentType === 'dp') {
+                        const dpVal = parseFloat(this.paidAmount) || 0;
+                        if (dpVal <= 0) {
+                            paymentValid = false;
+                            paymentMessage = 'Nominal DP harus lebih dari Rp 0';
+                        } else if (dpVal > this.total) {
+                            paymentValid = false;
+                            paymentMessage = `DP melebihi total (Rp ${this.formatNumber(this.total)})`;
+                        } else {
+                            paymentValid = true;
+                        }
+                    } else if (this.paymentType === 'split') {
+                        const splitTotal = this.getSplitTotal();
+                        const diff = Math.abs(this.total - splitTotal);
+                        if (diff > 0.99) {
+                            paymentValid = false;
+                            paymentMessage = `Split Pay (${this.formatNumber(splitTotal)}) ${splitTotal < this.total ? 'kurang' : 'lebih'} Rp ${this.formatNumber(diff)}`;
+                        } else {
+                            paymentValid = true;
+                        }
+                    }
+
+                    const isValid = shiftValid && customerValid && cartValid && paymentValid;
+
+                    let buttonLabel = 'Proses Order & Cetak Nota';
+                    if (!shiftValid) buttonLabel = 'Buka Shift Kasir Terlebih Dahulu';
+                    else if (!customerValid) buttonLabel = 'Silakan Pilih Data Pelanggan';
+                    else if (!cartValid) buttonLabel = 'Keranjang Belanja Masih Kosong';
+                    else if (!paymentValid) buttonLabel = paymentMessage;
+                    else buttonLabel = `Proses Order & Cetak Nota (Rp ${this.formatNumber(this.total)})`;
+
+                    return {
+                        shiftValid,
+                        customerValid,
+                        cartValid,
+                        paymentValid,
+                        paymentMessage,
+                        isValid,
+                        buttonLabel
+                    };
+                },
+
                 confirmCheckout() {
-                    if (!this.activeShift) {
-                        alert("Buka shift kasir terlebih dahulu!");
-                        this.showOpenShiftModal = true;
+                    const val = this.getValidationState();
+                    if (!val.isValid) {
+                        AppDialog.alert("Validasi Gagal", val.buttonLabel, { type: 'warning' });
                         return;
                     }
-                    if (!this.customerId) {
-                        alert("Pilih pelanggan terlebih dahulu!");
-                        return;
-                    }
-                    if (this.cart.length === 0) {
-                        alert("Keranjang belanja masih kosong!");
-                        return;
-                    }
-                    document.getElementById('pos-form').submit();
+
+                    const customerName = this.selectedCustomer ? this.selectedCustomer.name : 'Pelanggan Walk-In';
+                    const customerPhone = this.selectedCustomer ? (this.selectedCustomer.phone || '-') : '-';
+
+                    let itemsRows = this.cart.map(item => `
+                        <tr>
+                            <td style="font-weight: 700;">${item.name}</td>
+                            <td class="text-right" style="font-weight: 700;">${item.quantity} ${item.unit}</td>
+                            <td class="text-right">Rp ${this.formatNumber(item.price)}</td>
+                            <td class="text-right font-bold">Rp ${this.formatNumber(item.price * item.quantity)}</td>
+                        </tr>
+                    `).join('');
+
+                    let paymentMethodLabel = (this.paymentMethod || 'CASH').toUpperCase();
+                    if (this.paymentType === 'dp') paymentMethodLabel = 'DP (Uang Muka)';
+                    if (this.paymentType === 'split') paymentMethodLabel = 'Split Payment';
+
+                    const tableHtml = `
+                        <div style="margin-bottom: 8px; font-weight: 800; font-size: 11px; text-transform: uppercase; color: #ff6600; display: flex; align-items: center; gap: 4px;">
+                            <svg style="width: 15px; height: 15px; fill: currentColor; flex-shrink: 0;" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+                            <span>PELANGGAN: ${customerName} (${customerPhone})</span>
+                        </div>
+                        <table class="dialog-table">
+                            <thead>
+                                <tr>
+                                    <th>Layanan</th>
+                                    <th class="text-right">Qty</th>
+                                    <th class="text-right">Harga</th>
+                                    <th class="text-right">Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${itemsRows}
+                            </tbody>
+                        </table>
+                        <div style="margin-top: 10px; padding-top: 8px; border-top: 1px solid #cbd5e1; font-size: 11.5px; display: flex; flex-direction: column; gap: 4px;">
+                            <div style="display: flex; justify-content: space-between;">
+                                <span>Subtotal:</span>
+                                <span style="font-weight: 700;">Rp ${this.formatNumber(this.subtotal)}</span>
+                            </div>
+                            ${this.discount > 0 ? `
+                                <div style="display: flex; justify-content: space-between; color: #059669;">
+                                    <span>Diskon Promo:</span>
+                                    <span style="font-weight: 700;">- Rp ${this.formatNumber(this.discount)}</span>
+                                </div>
+                            ` : ''}
+                            <div style="display: flex; justify-content: space-between; font-weight: 900; font-size: 13px; color: #ff6600; padding-top: 4px; border-top: 1px dashed #cbd5e1;">
+                                <span>TOTAL TAGIHAN:</span>
+                                <span>Rp ${this.formatNumber(this.total)}</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; font-size: 11px; opacity: 0.8; margin-top: 2px;">
+                                <span>Metode Bayar: <strong>${paymentMethodLabel}</strong></span>
+                                <span>Bayar: <strong>Rp ${this.formatNumber(this.paidAmount)}</strong></span>
+                            </div>
+                            ${this.changeAmount > 0 ? `
+                                <div style="display: flex; justify-content: space-between; font-weight: 800; font-size: 11.5px; color: #059669;">
+                                    <span>Kembalian:</span>
+                                    <span>Rp ${this.formatNumber(this.changeAmount)}</span>
+                                </div>
+                            ` : ''}
+                        </div>
+                    `;
+
+                    AppDialog.confirm(
+                        "Konfirmasi Pembayaran POS",
+                        `Periksa rincian item order & total tagihan di bawah ini sebelum mencetak nota:`,
+                        { 
+                            type: 'info', 
+                            confirmText: 'Ya, Proses Transaksi',
+                            detailsHtml: tableHtml
+                        }
+                    ).then(confirmed => {
+                        if (confirmed) {
+                            document.getElementById('pos-form').submit();
+                        }
+                    });
                 },
 
                 formatNumber(num) {

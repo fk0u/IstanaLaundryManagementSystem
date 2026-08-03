@@ -32,8 +32,8 @@ class LoyaltyService
             return null;
         }
 
-        // If order used point redemption, transaction does not earn new loyalty points
-        if ($order->points_used > 0) {
+        // If order used point redemption or promo/coupon discount, transaction does not earn new loyalty points
+        if ($order->points_used > 0 || $order->promo_id || $order->discount_amount > 0) {
             return null;
         }
 

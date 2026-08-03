@@ -101,7 +101,7 @@ class PromotionIntegrationTest extends TestCase
         $this->assertEquals(45000, $order->total); // 50,000 - 5,000 = 45,000
     }
 
-    public function test_redeem_points_prevents_earning_new_points()
+    public function test_promo_and_redeem_points_prevents_earning_new_points()
     {
         $loyaltyService = app(\App\Services\CRM\LoyaltyService::class);
 
@@ -124,7 +124,7 @@ class PromotionIntegrationTest extends TestCase
         $logRedeem = $loyaltyService->awardPoints($orderRedeem);
         $this->assertNull($logRedeem, 'Order with points_used > 0 should not earn new loyalty points');
 
-        // Order 2: Without points redemption (promo code only)
+        // Order 2: With promo code / coupon discount
         $orderPromoOnly = Order::create([
             'branch_id' => $this->branch->id,
             'customer_id' => $this->customer->id,
@@ -141,7 +141,26 @@ class PromotionIntegrationTest extends TestCase
         ]);
 
         $logPromo = $loyaltyService->awardPoints($orderPromoOnly);
-        $this->assertNotNull($logPromo, 'Order with promo code only should earn new loyalty points');
-        $this->assertEquals(45, $logPromo->points);
+        $this->assertNull($logPromo, 'Order with promo code / coupon discount should not earn new loyalty points');
+
+        // Order 3: Normal order without promo/coupon or points redemption
+        $orderNormal = Order::create([
+            'branch_id' => $this->branch->id,
+            'customer_id' => $this->customer->id,
+            'cashier_id' => $this->cashier->id,
+            'order_number' => 'ORD-TEST-003',
+            'subtotal' => 50000,
+            'discount_amount' => 0,
+            'points_used' => 0,
+            'total' => 50000,
+            'payment_status' => 'paid',
+            'payment_method' => 'cash',
+            'paid_amount' => 50000,
+            'production_status' => 'TERIMA',
+        ]);
+
+        $logNormal = $loyaltyService->awardPoints($orderNormal);
+        $this->assertNotNull($logNormal, 'Normal order without promo or points redemption should earn loyalty points');
+        $this->assertEquals(50, $logNormal->points);
     }
 }
