@@ -627,6 +627,15 @@ class POSController extends Controller
                     }
                 }
 
+                // Award Loyalty Points synchronously for paid order if no promo or point redemption used
+                $pointsEarned = 0;
+                if ($customer && ! $promo && empty($data['points_used']) && $discountAmount == 0 && $paymentStatus === 'paid') {
+                    $loyaltyLog = app(\App\Services\CRM\LoyaltyService::class)->awardPoints($order);
+                    if ($loyaltyLog) {
+                        $pointsEarned = $loyaltyLog->points;
+                    }
+                }
+
                 // Update promo usage limit
                 if ($promo) {
                     $promo->increment('usage_count');
@@ -640,10 +649,23 @@ class POSController extends Controller
                 // Log activity to audit_logs
                 $this->auditLogService->log('create_order', $order);
 
+                $lastOrderData = [
+                    'id' => $order->id,
+                    'order_number' => $order->order_number,
+                    'total' => (float) $order->total,
+                    'paid_amount' => (float) $order->paid_amount,
+                    'change_amount' => (float) $order->change_amount,
+                    'payment_method' => strtoupper($order->payment_method),
+                    'customer_name' => $customer ? $customer->name : ($order->customer_name_walkin ?? 'Pelanggan Walk-In'),
+                    'customer_phone' => $customer ? ($customer->phone ?? '') : ($order->delivery_phone ?? ''),
+                    'points_earned' => $pointsEarned,
+                ];
+
                 return redirect()->route('pos.index')
                     ->with('success', "Order #{$orderNumber} berhasil dibuat!")
                     ->with('last_order_id', $order->id)
-                    ->with('last_order_number', $order->order_number);
+                    ->with('last_order_number', $order->order_number)
+                    ->with('last_order', $lastOrderData);
             });
         } catch (\Exception $e) {
             return redirect()->back()->withErrors(['promo_id' => $e->getMessage()])->withInput();

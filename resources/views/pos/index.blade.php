@@ -510,6 +510,16 @@
                                 <span class="text-primary" x-text="'Rp ' + formatNumber(total)">Rp 0</span>
                             </div>
 
+                            <!-- Earn Points Indicator -->
+                            <div class="flex items-center justify-between text-2xs p-2 rounded-xl border"
+                                 :class="(promoId || discount > 0 || pointsUsed > 0) ? 'bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 text-slate-400' : (selectedCustomer ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800/60 text-emerald-700 dark:text-emerald-300 font-bold' : 'bg-amber-50 dark:bg-amber-950/40 border-amber-200 dark:border-amber-800/60 text-amber-700 dark:text-amber-300 font-medium')">
+                                <div class="flex items-center gap-1.5">
+                                    <span class="material-symbols-outlined text-sm text-orange-500">stars</span>
+                                    <span>Poin Pembelian (Earn Points)</span>
+                                </div>
+                                <span class="font-extrabold" x-text="(promoId || discount > 0 || pointsUsed > 0) ? '0 Pts (Promo/Diskon)' : (selectedCustomer ? '+' + formatNumber(Math.floor(total / 1000) * getCustomerTierMultiplier()) + ' Pts' : 'Member Only')"></span>
+                            </div>
+
                             <!-- Multi-Payment Mode Selectors -->
                             <div class="flex flex-col gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
                                 <label class="text-2xs font-bold text-slate-400 uppercase tracking-wider">Tipe & Metode Pembayaran</label>
@@ -863,6 +873,96 @@
             </div>
         </div>
 
+        <!-- Modal Post-Checkout Success Workflow -->
+        <div x-show="showSuccessModal && lastOrder" class="fixed inset-0 z-50 bg-slate-900/70 backdrop-blur-xs flex items-center justify-center p-4" x-cloak>
+            <div class="bg-white dark:bg-slate-900 rounded-3xl p-6 max-w-lg w-full shadow-2xl border border-slate-200 dark:border-slate-800 animate-in fade-in zoom-in duration-200">
+                <!-- Header -->
+                <div class="text-center mb-5">
+                    <div class="w-16 h-16 rounded-3xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mx-auto mb-3">
+                        <span class="material-symbols-outlined text-3xl font-black">check_circle</span>
+                    </div>
+                    <h3 class="text-xl font-black text-slate-900 dark:text-white">Transaksi Berhasil!</h3>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                        Nota <span class="font-bold text-primary" x-text="lastOrder ? '#' + lastOrder.order_number : ''"></span> telah sukses diproses.
+                    </p>
+                </div>
+
+                <!-- Transaction Summary Card -->
+                <div class="bg-slate-50 dark:bg-slate-800/50 rounded-2xl p-4 mb-5 border border-slate-100 dark:border-slate-700/60 space-y-2">
+                    <div class="flex justify-between text-xs text-slate-600 dark:text-slate-300">
+                        <span>Pelanggan:</span>
+                        <span class="font-bold text-slate-900 dark:text-white" x-text="lastOrder ? lastOrder.customer_name : ''"></span>
+                    </div>
+                    <div class="flex justify-between text-xs text-slate-600 dark:text-slate-300">
+                        <span>Metode Pembayaran:</span>
+                        <span class="font-extrabold text-slate-900 dark:text-white" x-text="lastOrder ? lastOrder.payment_method : ''"></span>
+                    </div>
+                    <div class="flex justify-between text-xs text-slate-600 dark:text-slate-300">
+                        <span>Total Tagihan:</span>
+                        <span class="font-black text-primary" x-text="lastOrder ? 'Rp ' + formatNumber(lastOrder.total) : ''"></span>
+                    </div>
+                    <div class="flex justify-between text-xs text-slate-600 dark:text-slate-300" x-show="lastOrder && lastOrder.change_amount > 0">
+                        <span>Kembalian:</span>
+                        <span class="font-bold text-emerald-600 dark:text-emerald-400" x-text="lastOrder ? 'Rp ' + formatNumber(lastOrder.change_amount) : ''"></span>
+                    </div>
+                    <!-- Points Earned Badge -->
+                    <div class="pt-2 border-t border-slate-200/60 dark:border-slate-700/60 flex justify-between items-center text-xs">
+                        <span class="font-semibold text-slate-500 dark:text-slate-400 flex items-center gap-1">
+                            <span class="material-symbols-outlined text-sm text-orange-500">stars</span> Poin Pembelian (Earn Points)
+                        </span>
+                        <span class="font-extrabold px-2 py-0.5 rounded-lg text-2xs"
+                              :class="lastOrder && lastOrder.points_earned > 0 ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300' : 'bg-slate-200 text-slate-600 dark:bg-slate-700 dark:text-slate-300'"
+                              x-text="lastOrder && lastOrder.points_earned > 0 ? '+' + formatNumber(lastOrder.points_earned) + ' Pts' : '0 Pts (Promo/Diskon)'"></span>
+                    </div>
+                </div>
+
+                <!-- Print Workflow Recommendation Banner -->
+                <div x-show="printedReceipt" x-cloak class="mb-4 p-3 bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800 rounded-2xl flex items-start gap-2 text-xs text-blue-800 dark:text-blue-200">
+                    <span class="material-symbols-outlined text-base text-blue-600 flex-shrink-0 mt-0.5">info</span>
+                    <div>
+                        <div class="font-bold">Struk Thermal Dicetak!</div>
+                        <div>Rekomendasi langkah selanjutnya: Kirim pesan <strong>WhatsApp</strong> ke konsumen atau langsung ke POS Baru.</div>
+                    </div>
+                </div>
+
+                <!-- Workflow Action Buttons -->
+                <div class="grid grid-cols-2 gap-2.5 mb-5">
+                    <button type="button" @click="printReceipt()"
+                            class="h-11 px-3 bg-orange-500 hover:bg-orange-600 text-white font-extrabold text-xs rounded-xl flex items-center justify-center gap-2 shadow-sm transition-all cursor-pointer">
+                        <span class="material-symbols-outlined text-lg">print</span>
+                        <span>Cetak Struk Nota</span>
+                    </button>
+
+                    <button type="button" @click="sendWhatsApp()"
+                            class="h-11 px-3 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-xl flex items-center justify-center gap-2 shadow-sm transition-all cursor-pointer">
+                        <span class="material-symbols-outlined text-lg">chat</span>
+                        <span>Kirim WhatsApp</span>
+                    </button>
+
+                    <button type="button" @click="openPdfInvoice()"
+                            class="h-11 px-3 bg-slate-800 dark:bg-slate-700 hover:bg-slate-900 text-white font-extrabold text-xs rounded-xl flex items-center justify-center gap-2 shadow-sm transition-all cursor-pointer">
+                        <span class="material-symbols-outlined text-lg">picture_as_pdf</span>
+                        <span>PDF Invoice</span>
+                    </button>
+
+                    <button type="button" @click="viewOrderDetail()"
+                            class="h-11 px-3 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 font-extrabold text-xs rounded-xl flex items-center justify-center gap-2 transition-all cursor-pointer">
+                        <span class="material-symbols-outlined text-lg">visibility</span>
+                        <span>Lihat Detail</span>
+                    </button>
+                </div>
+
+                <!-- Footer Primary Action: POS Baru -->
+                <div class="pt-3 border-t border-slate-100 dark:border-slate-800">
+                    <button type="button" @click="closeSuccessModal()"
+                            class="w-full h-11 bg-primary hover:bg-orange-600 text-white font-black text-xs rounded-2xl flex items-center justify-center gap-2 shadow-md transition-all active:scale-98 cursor-pointer">
+                        <span class="material-symbols-outlined text-lg">point_of_sale</span>
+                        <span>Lanjut Transaksi POS Baru</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
     </div>
 
     <!-- Alpine App Controller -->
@@ -915,6 +1015,9 @@
                 showDraftModal: false,
                 showAddCustomerModal: false,
                 showBranchScopeModal: false,
+                showSuccessModal: {!! session('last_order') ? 'true' : 'false' !!},
+                lastOrder: {!! session('last_order') ? json_encode(session('last_order')) : 'null' !!},
+                printedReceipt: false,
 
                 pointExchangeRate: {{ $pointExchangeRate }},
                 pointEarnSpendThreshold: {{ $pointEarnSpendThreshold }},
@@ -1177,10 +1280,11 @@
 
                     if (this.paymentType === 'full') {
                         if (this.paymentMethod === 'cash') {
-                            if (this.paidAmount === null || this.paidAmount === undefined || this.paidAmount === '') {
-                                this.paidAmount = this.total;
+                            if (this.paidAmount !== null && this.paidAmount !== undefined && this.paidAmount !== '') {
+                                this.changeAmount = Math.max(0, (parseFloat(this.paidAmount) || 0) - this.total);
+                            } else {
+                                this.changeAmount = 0;
                             }
-                            this.changeAmount = Math.max(0, (parseFloat(this.paidAmount) || 0) - this.total);
                         } else if (['qris', 'transfer', 'debit'].includes(this.paymentMethod)) {
                             this.paidAmount = this.total;
                             this.changeAmount = 0;
@@ -1196,6 +1300,45 @@
                     } else {
                         this.changeAmount = 0;
                     }
+                },
+
+                getCustomerTierMultiplier() {
+                    if (!this.selectedCustomer) return 1.0;
+                    const tier = (this.selectedCustomer.loyalty_tier || 'Bronze').toUpperCase();
+                    if (tier === 'PLATINUM') return 2.0;
+                    if (tier === 'GOLD') return 1.5;
+                    if (tier === 'SILVER') return 1.25;
+                    return 1.0;
+                },
+
+                printReceipt() {
+                    if (!this.lastOrder) return;
+                    const url = "{{ url('/invoices') }}/" + this.lastOrder.id + "/receipt";
+                    window.open(url, '_blank', 'width=400,height=600');
+                    this.printedReceipt = true;
+                },
+
+                sendWhatsApp() {
+                    if (!this.lastOrder) return;
+                    const url = "{{ url('/invoices') }}/" + this.lastOrder.id + "/whatsapp";
+                    window.open(url, '_blank');
+                },
+
+                openPdfInvoice() {
+                    if (!this.lastOrder) return;
+                    const url = "{{ url('/invoices') }}/" + this.lastOrder.id;
+                    window.open(url, '_blank');
+                },
+
+                viewOrderDetail() {
+                    if (!this.lastOrder) return;
+                    window.location.href = "{{ route('orders.index') }}?search=" + encodeURIComponent(this.lastOrder.order_number);
+                },
+
+                closeSuccessModal() {
+                    this.showSuccessModal = false;
+                    this.lastOrder = null;
+                    this.printedReceipt = false;
                 },
 
                 getValidationState() {
