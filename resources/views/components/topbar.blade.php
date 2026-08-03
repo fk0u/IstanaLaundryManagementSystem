@@ -237,12 +237,15 @@
             <!-- Profile Avatar & Menu -->
             <div class="relative" @click.away="showProfileMenu = false">
                 <button @click="showProfileMenu = !showProfileMenu; showNotifications = false; showQuickAction = false; showSupportMenu = false"
-                        class="flex items-center gap-1.5 cursor-pointer p-0.5 rounded-full hover:ring-2 hover:ring-primary/30 transition-all">
-                    <div class="w-8 h-8 md:w-9 md:h-9 rounded-full overflow-hidden border-2 border-primary/40 shrink-0 shadow-2xs">
-                        <img class="w-full h-full object-cover" 
-                             alt="Profile Picture" 
-                             src="https://lh3.googleusercontent.com/aida-public/AB6AXuD9Yo8eZudS1XZIORWPZfki2FC4WzJDnIC-GyJ7h-hOvAeMwQCevFfCprrGYz9o_P748aVm3W0-hXbeTH4YCNNYsTQyIRs2lc-jvfmR6kACE9WFglgCX7-7qnDMnMIYcHGJuIi6JavXqVc4Oj1Sg8xDgHMWNeN7bSooQeYSdLCtTRGE7mXPtWfBk2CX1YpEwiwIMDRNKfRr017XvUUSWyrPN1NXN0_2mxQMmjQ__RgIgccXO3YoXp83qNrf1ZO2sebtlUu8NXWylI4"/>
+                        class="flex items-center gap-2 cursor-pointer p-1 rounded-2xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-all">
+                    <div class="w-8.5 h-8.5 md:w-9 md:h-9 rounded-2xl bg-gradient-to-tr from-primary to-amber-500 text-white flex items-center justify-center font-black font-display text-xs md:text-sm shrink-0 shadow-xs border border-orange-300/40 dark:border-slate-700">
+                        {{ strtoupper(substr(auth()->user()->name, 0, 2)) }}
                     </div>
+                    <div class="hidden xl:block text-left pr-1">
+                        <span class="block text-xs font-black font-display text-slate-800 dark:text-slate-200 leading-none truncate max-w-[130px]">{{ auth()->user()->name }}</span>
+                        <span class="block text-[9px] font-bold text-slate-400 mt-0.5 leading-none truncate">{{ auth()->user()->getRoleNames()->first() ?? 'User' }}</span>
+                    </div>
+                    <span class="material-symbols-outlined text-xs text-slate-400 hidden xl:block">expand_more</span>
                 </button>
 
                 <div x-show="showProfileMenu" 
@@ -252,19 +255,24 @@
                      x-transition:leave="transition ease-in duration-100"
                      x-transition:leave-start="transform opacity-100 scale-100"
                      x-transition:leave-end="transform opacity-0 scale-95"
-                     class="absolute right-0 mt-2.5 w-64 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-expressive shadow-md3-3 z-50 p-4 space-y-3"
+                     class="absolute right-0 mt-2.5 w-68 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-expressive shadow-md3-3 z-50 p-4 space-y-3"
                      x-cloak>
-                    <div class="pb-3 border-b border-slate-100 dark:border-slate-800">
-                        <p class="font-black font-display text-sm text-slate-800 dark:text-slate-100 truncate">{{ auth()->user()->name }}</p>
-                        <p class="text-2xs font-semibold text-slate-400 truncate mb-1.5">{{ auth()->user()->email }}</p>
-                        <span class="inline-block px-2.5 py-0.5 text-2xs font-extrabold bg-primary-container text-primary-on-container rounded-full uppercase tracking-wider">
-                            {{ auth()->user()->roles->first()?->name ?? 'User' }}
-                        </span>
+                    <div class="pb-3 border-b border-slate-100 dark:border-slate-800 flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-primary to-amber-500 text-white flex items-center justify-center font-black font-display shrink-0 text-sm shadow-md">
+                            {{ strtoupper(substr(auth()->user()->name, 0, 2)) }}
+                        </div>
+                        <div class="min-w-0 flex-1">
+                            <p class="font-black font-display text-sm text-slate-800 dark:text-slate-100 truncate">{{ auth()->user()->name }}</p>
+                            <p class="text-2xs font-semibold text-slate-400 truncate mb-1">{{ auth()->user()->email }}</p>
+                            <span class="inline-block px-2.5 py-0.5 text-[9px] font-black bg-primary/15 text-primary rounded-full uppercase tracking-wider">
+                                {{ auth()->user()->getRoleNames()->first() ?? 'User' }}
+                            </span>
+                        </div>
                     </div>
 
                     <div class="space-y-1 text-xs">
-                        <a href="/profile" class="flex items-center gap-3 p-2 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold">
-                            <span class="material-symbols-outlined text-base text-slate-400">person</span>
+                        <a href="/profile" class="flex items-center gap-3 p-2.5 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold transition-colors">
+                            <span class="material-symbols-outlined text-base text-primary">person</span>
                             Pengaturan Profil Staf
                         </a>
                     </div>
@@ -272,7 +280,7 @@
                     <div class="pt-2 border-t border-slate-100 dark:border-slate-800">
                         <form method="POST" action="{{ route('logout') }}">
                             @csrf
-                            <button type="submit" class="w-full flex items-center gap-3 p-2 rounded-xl hover:bg-rose-50 dark:hover:bg-rose-950/30 text-rose-600 dark:text-rose-400 font-bold text-xs cursor-pointer">
+                            <button type="submit" class="w-full flex items-center gap-3 p-2.5 rounded-xl hover:bg-rose-50 dark:hover:bg-rose-950/30 text-rose-600 dark:text-rose-400 font-bold text-xs cursor-pointer transition-colors">
                                 <span class="material-symbols-outlined text-base">logout</span>
                                 Keluar (Logout)
                             </button>

@@ -149,6 +149,9 @@ Route::middleware(['auth', 'branch.scope'])->group(function () {
                 'type' => 'required|in:percent,nominal',
                 'value' => 'required|numeric|min:0',
                 'min_transaction' => 'required|numeric|min:0',
+                'target_customer_type' => 'nullable|in:all,new_member_only,existing_member_only',
+                'max_member_age_days' => 'nullable|integer|min:1',
+                'per_customer_limit' => 'nullable|integer|min:1',
                 'start_date' => 'required|date',
                 'end_date' => 'required|date|after_or_equal:start_date',
             ]);
@@ -159,6 +162,9 @@ Route::middleware(['auth', 'branch.scope'])->group(function () {
                 'type' => $request->type,
                 'value' => $request->value,
                 'min_transaction' => $request->min_transaction,
+                'target_customer_type' => $request->target_customer_type ?? 'all',
+                'max_member_age_days' => $request->max_member_age_days ? (int) $request->max_member_age_days : 60,
+                'per_customer_limit' => $request->per_customer_limit ? (int) $request->per_customer_limit : null,
                 'start_date' => $request->start_date,
                 'end_date' => $request->end_date,
                 'is_active' => true,
@@ -556,7 +562,7 @@ Route::middleware(['auth', 'branch.scope'])->group(function () {
 
     // Super User - Switch Scoped Branch
     Route::post('/switch-branch', function (Request $request) {
-        if (! auth()->user()->hasAnyRole(['Developer', 'Owner', 'Super_Admin'])) {
+        if (! auth()->user()->hasAnyRole(['Developer', 'Owner', 'Super_Admin', 'Finance'])) {
             abort(403, 'Hanya Owner dan Administrator yang dapat beralih cabang.');
         }
 

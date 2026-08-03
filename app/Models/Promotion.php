@@ -19,6 +19,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
     'min_transaction',
     'service_id',
     'applicable_tier',
+    'target_customer_type',
+    'max_member_age_days',
     'usage_limit',
     'usage_count',
     'per_customer_limit',
@@ -38,10 +40,70 @@ class Promotion extends Model
             'usage_limit' => 'integer',
             'usage_count' => 'integer',
             'per_customer_limit' => 'integer',
+            'max_member_age_days' => 'integer',
             'start_date' => 'date',
             'end_date' => 'date',
             'is_active' => 'boolean',
         ];
+    }
+
+    /**
+     * Check promo eligibility for a given customer and transaction subtotal.
+     * Returns ['eligible' => bool, 'reason' => string|null].
+     */
+    public function isEligibleForCustomer(?Customer $customer, float $transactionAmount = 0): array
+    {
+        if (! $this->is_active) {
+            return ['eligible' => false, 'reason' => "Kupon promo '{$this->code}' sedang tidak aktif."];
+        }
+
+        $today = now()->startOfDay();
+        if ($this->start_date && $this->start_date->startOfDay() > $today) {
+            return ['eligible' => false, 'reason' => "Kupon promo '{$this->code}' belum berlaku (mulai {$this->start_date->format('d/m/Y')})."];
+        }
+
+        if ($this->end_date && $this->end_date->endOfDay() < now()) {
+            return ['eligible' => false, 'reason' => "Kupon promo '{$this->code}' sudah berakhir pada {$this->end_date->format('d/m/Y')}."];
+        }
+
+        if ($transactionAmount < (float) $this->min_transaction) {
+            return ['eligible' => false, 'reason' => "Minimal transaksi Rp ".number_format($this->min_transaction, 0, ',', '.')." belum terpenuhi."];
+        }
+
+        if ($this->usage_limit !== null && $this->usage_count >= $this->usage_limit) {
+            return ['eligible' => false, 'reason' => "Kuota penggunaan kupon '{$this->code}' sudah habis."];
+        }
+
+        // Target Customer Validation
+        if ($this->target_customer_type === 'new_member_only') {
+            if (! $customer) {
+                return ['eligible' => false, 'reason' => "Kupon '{$this->code}' khusus untuk Member terdaftar (bukan Pelanggan Walk-In)."];
+            }
+
+            $maxDays = $this->max_member_age_days ?? 60;
+            $memberAgeDays = (int) $customer->created_at->diffInDays(now());
+            if ($memberAgeDays > $maxDays) {
+                return ['eligible' => false, 'reason' => "Kupon '{$this->code}' khusus untuk Member Baru (maksimal pendaftaran {$maxDays} hari). Umur akun member ini sudah {$memberAgeDays} hari."];
+            }
+        } elseif ($this->target_customer_type === 'existing_member_only') {
+            if (! $customer) {
+                return ['eligible' => false, 'reason' => "Kupon '{$this->code}' khusus untuk Member terdaftar."];
+            }
+        }
+
+        // Per Customer Usage Limit Check
+        $limitPerCustomer = $this->per_customer_limit ?? ($this->target_customer_type === 'new_member_only' ? 1 : null);
+        if ($limitPerCustomer !== null && $customer) {
+            $usedCount = Order::where('customer_id', $customer->id)
+                ->where('promo_id', $this->id)
+                ->count();
+
+            if ($usedCount >= $limitPerCustomer) {
+                return ['eligible' => false, 'reason' => "Member '{$customer->name}' sudah pernah menggunakan kupon ini sebanyak {$usedCount}x (Batas pemakaian {$limitPerCustomer}x per member)."];
+            }
+        }
+
+        return ['eligible' => true, 'reason' => null];
     }
 
     /**

@@ -18,6 +18,9 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // Trust Ngrok / reverse proxy headers for HTTPS asset and URL generation
+        $middleware->trustProxies(at: '*');
+
         // Global Middleware Pipeline for HTTP Security & Performance
         $middleware->append([
             SecurityHeadersMiddleware::class,

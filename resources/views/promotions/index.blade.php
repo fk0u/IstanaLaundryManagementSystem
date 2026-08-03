@@ -82,6 +82,7 @@
                         <tr class="border-b border-slate-100 dark:border-slate-800 text-slate-400 font-bold uppercase tracking-wider">
                             <th class="py-3 px-4">Nama Promo</th>
                             <th class="py-3 px-4">Kode Kupon</th>
+                            <th class="py-3 px-4">Target Pelanggan</th>
                             <th class="py-3 px-4">Tipe Diskon</th>
                             <th class="py-3 px-4">Nilai</th>
                             <th class="py-3 px-4">Min. Transaksi</th>
@@ -99,6 +100,27 @@
                                     <span class="px-2.5 py-1 bg-orange-50 dark:bg-slate-800 text-primary dark:text-orange-400 rounded-lg font-mono font-bold text-xs">
                                         {{ $promo->code ?? 'AUTOMATIC' }}
                                     </span>
+                                </td>
+                                <td class="py-4 px-4">
+                                    @if(($promo->target_customer_type ?? 'all') === 'new_member_only')
+                                        <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-2xs font-extrabold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                                            <span class="material-symbols-outlined text-xs">person_add</span>
+                                            Member Baru (Maks {{ $promo->max_member_age_days ?? 60 }} Hari)
+                                        </span>
+                                    @elseif(($promo->target_customer_type ?? 'all') === 'existing_member_only')
+                                        <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-2xs font-extrabold bg-blue-500/15 text-blue-600 dark:text-blue-400 border border-blue-500/20">
+                                            <span class="material-symbols-outlined text-xs">group</span>
+                                            Khusus Member
+                                        </span>
+                                    @else
+                                        <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-2xs font-extrabold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
+                                            <span class="material-symbols-outlined text-xs">public</span>
+                                            Semua Pelanggan
+                                        </span>
+                                    @endif
+                                    @if($promo->per_customer_limit)
+                                        <span class="block text-[10px] font-bold text-slate-400 mt-0.5">Batas: {{ $promo->per_customer_limit }}x / member</span>
+                                    @endif
                                 </td>
                                 <td class="py-4 px-4 uppercase font-semibold text-slate-600 dark:text-slate-400">
                                     {{ $promo->type }}
@@ -126,7 +148,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="7" class="py-12 text-center text-slate-400">Belum ada promosi yang dibuat.</td>
+                                <td colspan="8" class="py-12 text-center text-slate-400">Belum ada promosi yang dibuat.</td>
                             </tr>
                         @endforelse
                     </tbody>
@@ -143,6 +165,7 @@
              class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm"
              x-cloak>
             <div @click.away="showCreateModal = false"
+                 x-data="{ targetType: 'all' }"
                  class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl max-w-lg w-full p-6 shadow-2xl transition-all duration-300">
                 <div class="flex justify-between items-center mb-4">
                     <h3 class="text-base font-bold text-slate-800 dark:text-slate-200">Buat Kupon Promo Baru</h3>
@@ -156,14 +179,53 @@
                     
                     <div class="flex flex-col gap-1.5">
                         <label for="name" class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Nama Promosi</label>
-                        <input type="text" id="name" name="name" required placeholder="Contoh: Diskon Kemerdekaan..."
+                        <input type="text" id="name" name="name" required placeholder="Contoh: Diskon Member Baru..."
                                class="w-full h-11 px-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all">
                     </div>
 
                     <div class="flex flex-col gap-1.5">
                         <label for="code" class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Kode Kupon (Harus Unik)</label>
-                        <input type="text" id="code" name="code" required placeholder="Contoh: MERDEKA80..."
+                        <input type="text" id="code" name="code" required placeholder="Contoh: NEWBARU2026..."
                                class="w-full h-11 px-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all">
+                    </div>
+
+                    {{-- Target Pelanggan Rule --}}
+                    <div class="p-3.5 rounded-xl bg-orange-50/70 dark:bg-slate-800/60 border border-orange-200/60 dark:border-slate-700 flex flex-col gap-3">
+                        <div class="flex flex-col gap-1.5">
+                            <label for="target_customer_type" class="text-[10px] font-extrabold text-primary dark:text-orange-400 uppercase tracking-wider flex items-center gap-1">
+                                <span class="material-symbols-outlined text-sm">groups</span>
+                                Target Pelanggan & Aturan Member
+                            </label>
+                            <select id="target_customer_type" name="target_customer_type" x-model="targetType" required
+                                    class="w-full h-10 px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs font-bold focus:border-primary outline-none cursor-pointer">
+                                <option value="all">Semua Pelanggan (Bisa Walk-In & Member)</option>
+                                <option value="new_member_only">Khusus Member Baru (Maksimal Usia Akun)</option>
+                                <option value="existing_member_only">Khusus Member Terdaftar</option>
+                            </select>
+                        </div>
+
+                        {{-- Conditional Field: Max Age in Days --}}
+                        <div class="grid grid-cols-2 gap-3" x-show="targetType === 'new_member_only'" x-cloak>
+                            <div class="flex flex-col gap-1">
+                                <label for="max_member_age_days" class="text-[10px] font-bold text-slate-600 dark:text-slate-300">Maks. Usia Akun (Hari)</label>
+                                <input type="number" id="max_member_age_days" name="max_member_age_days" value="60" min="1" step="1" placeholder="60 (2 bulan)..."
+                                       class="w-full h-9 px-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs font-bold text-primary focus:border-primary outline-none">
+                                <span class="text-[9px] text-slate-400">Contoh: 60 hari = 2 bulan</span>
+                            </div>
+
+                            <div class="flex flex-col gap-1">
+                                <label for="per_customer_limit" class="text-[10px] font-bold text-slate-600 dark:text-slate-300">Maks. Pemakaian / Member</label>
+                                <input type="number" id="per_customer_limit" name="per_customer_limit" value="1" min="1" step="1" placeholder="1 kali..."
+                                       class="w-full h-9 px-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs font-bold text-primary focus:border-primary outline-none">
+                                <span class="text-[9px] text-slate-400">Default: 1x pemakaian</span>
+                            </div>
+                        </div>
+
+                        <div x-show="targetType === 'existing_member_only'" class="flex flex-col gap-1" x-cloak>
+                            <label for="per_customer_limit_existing" class="text-[10px] font-bold text-slate-600 dark:text-slate-300">Maks. Pemakaian / Member (opsional)</label>
+                            <input type="number" id="per_customer_limit_existing" name="per_customer_limit" value="1" min="1" step="1" placeholder="Batas pemakaian..."
+                                   class="w-full h-9 px-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs font-bold text-primary focus:border-primary outline-none">
+                        </div>
                     </div>
 
                     <div class="grid grid-cols-2 gap-4">

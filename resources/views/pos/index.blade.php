@@ -46,7 +46,7 @@
                         </button>
                     @endif
 
-                    @if(auth()->user()->hasAnyRole(['Developer', 'Owner', 'Super_Admin']))
+                    @if(auth()->user()->hasAnyRole(['Developer', 'Owner', 'Super_Admin', 'Finance']))
                         <div class="flex items-center gap-2 bg-orange-50 dark:bg-slate-800 border border-orange-200 dark:border-slate-700 px-3 py-1.5 rounded-xl">
                             <span class="material-symbols-outlined text-primary text-base">storefront</span>
                             <div class="text-xs">
@@ -811,6 +811,51 @@
                             </div>
                         </div>
                     </template>
+                </div>
+        <!-- Modal Switch Scoped Branch (Khusus Owner / Admin / Finance) -->
+        <div x-show="showBranchScopeModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4" x-cloak>
+            <div class="bg-white dark:bg-slate-900 rounded-3xl p-6 max-w-md w-full shadow-2xl border border-slate-200 dark:border-slate-800">
+                <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-100 dark:border-slate-800">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-2xl bg-orange-500/10 dark:bg-orange-500/20 text-primary flex items-center justify-center font-bold">
+                            <span class="material-symbols-outlined text-xl">storefront</span>
+                        </div>
+                        <div>
+                            <h3 class="text-base font-black text-slate-900 dark:text-white">Pilih Cabang (Scope POS)</h3>
+                            <p class="text-xs text-slate-500 dark:text-slate-400">Pilih outlet cabang untuk transaksi POS kasir.</p>
+                        </div>
+                    </div>
+                    <button type="button" @click="showBranchScopeModal = false" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+                        <span class="material-symbols-outlined">close</span>
+                    </button>
+                </div>
+
+                <div class="space-y-2 mb-4 max-h-72 overflow-y-auto">
+                    @foreach(\App\Models\Branch::where('is_active', true)->orderBy('name')->get() as $br)
+                        <form action="{{ route('switch-branch') }}" method="POST">
+                            @csrf
+                            <input type="hidden" name="branch_id" value="{{ $br->id }}">
+                            <button type="submit" 
+                                    class="w-full p-3.5 rounded-2xl border transition-all text-left flex items-center justify-between cursor-pointer {{ session('scoped_branch_id') == $br->id ? 'bg-orange-50 dark:bg-orange-950/30 border-orange-300 dark:border-orange-800 text-primary' : 'bg-slate-50 dark:bg-slate-800/40 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800' }}">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-8 h-8 rounded-xl {{ session('scoped_branch_id') == $br->id ? 'bg-primary text-white' : 'bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300' }} flex items-center justify-center font-extrabold text-xs">
+                                        {{ strtoupper(substr($br->name, 0, 2)) }}
+                                    </div>
+                                    <div>
+                                        <div class="text-xs font-black">{{ $br->name }}</div>
+                                        <div class="text-[10px] text-slate-400 dark:text-slate-500">{{ $br->address ?? 'Alamat belum diatur' }}</div>
+                                    </div>
+                                </div>
+                                @if(session('scoped_branch_id') == $br->id)
+                                    <span class="material-symbols-outlined text-primary text-base font-bold">check_circle</span>
+                                @endif
+                            </button>
+                        </form>
+                    @endforeach
+                </div>
+
+                <div class="flex justify-end pt-2 border-t border-slate-100 dark:border-slate-800">
+                    <button type="button" @click="showBranchScopeModal = false" class="px-4 py-2 text-xs font-bold text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 cursor-pointer">Batal</button>
                 </div>
             </div>
         </div>

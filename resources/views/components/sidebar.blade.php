@@ -662,7 +662,7 @@
         <div class="mt-3 border-t border-surface-outline/30 dark:border-slate-800 pt-3 px-3">
             <div class="flex items-center gap-3 mb-2 group relative" :class="{ 'justify-center': !desktopSidebarOpen }">
                 <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-primary to-amber-500 text-white flex items-center justify-center font-black font-display shrink-0 text-sm shadow-md hover:scale-105 transition-transform cursor-pointer">
-                    {{ substr(auth()->user()->name, 0, 2) }}
+                    {{ strtoupper(substr(auth()->user()->name, 0, 2)) }}
                 </div>
                 <div class="overflow-hidden flex-1 min-w-0" x-show="desktopSidebarOpen">
                     <span class="block text-xs font-black font-display text-slate-800 dark:text-slate-200 truncate leading-tight">{{ auth()->user()->name }}</span>

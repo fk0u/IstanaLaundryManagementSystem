@@ -431,187 +431,191 @@ class POSController extends Controller
             ->where('status', 'OPEN')
             ->first();
 
-        return DB::transaction(function () use ($data, $branchId, $activeShift) {
-            $customer = $data['customer_id'] ? Customer::find($data['customer_id']) : null;
+        try {
+            return DB::transaction(function () use ($data, $branchId, $activeShift) {
+                $customer = $data['customer_id'] ? Customer::find($data['customer_id']) : null;
 
-            // Calculate Subtotal
-            $subtotal = 0;
-            $itemsToCreate = [];
+                // Calculate Subtotal
+                $subtotal = 0;
+                $itemsToCreate = [];
 
-            foreach ($data['items'] as $item) {
-                $service = Service::findOrFail($item['service_id']);
-                $price = $service->branchPrices()->where('branch_id', $branchId)->first()?->price ?? $service->base_price;
+                foreach ($data['items'] as $item) {
+                    $service = Service::findOrFail($item['service_id']);
+                    $price = $service->branchPrices()->where('branch_id', $branchId)->first()?->price ?? $service->base_price;
 
-                $itemSubtotal = $price * $item['quantity'];
-                $subtotal += $itemSubtotal;
+                    $itemSubtotal = $price * $item['quantity'];
+                    $subtotal += $itemSubtotal;
 
-                $itemsToCreate[] = [
-                    'service_id' => $service->id,
-                    'quantity' => $item['quantity'],
-                    'unit' => $service->unit,
-                    'unit_price' => $price,
-                    'discount' => 0,
-                    'subtotal' => $itemSubtotal,
-                    'notes' => $item['notes'] ?? null,
-                ];
-            }
+                    $itemsToCreate[] = [
+                        'service_id' => $service->id,
+                        'quantity' => $item['quantity'],
+                        'unit' => $service->unit,
+                        'unit_price' => $price,
+                        'discount' => 0,
+                        'subtotal' => $itemSubtotal,
+                        'notes' => $item['notes'] ?? null,
+                    ];
+                }
 
-            // Calculate Promo Discount
-            $discountAmount = 0;
-            $promo = null;
-            if (! empty($data['promo_id'])) {
-                $promo = Promotion::withoutGlobalScopes()->find($data['promo_id']);
+                // Calculate Promo Discount & Enforce Member Eligibility
+                $discountAmount = 0;
+                $promo = null;
+                if (! empty($data['promo_id'])) {
+                    $promo = Promotion::withoutGlobalScopes()->find($data['promo_id']);
 
-                if ($subtotal >= $promo->min_transaction) {
-                    if ($promo->type === 'percent') {
-                        $discountAmount = $subtotal * ($promo->value / 100);
-                    } elseif ($promo->type === 'nominal') {
-                        $discountAmount = $promo->value;
-                    }
+                    if ($promo) {
+                        $check = $promo->isEligibleForCustomer($customer, $subtotal);
+                        if (! $check['eligible']) {
+                            throw new \Exception($check['reason']);
+                        }
 
-                    if ($discountAmount > $subtotal) {
-                        $discountAmount = $subtotal;
+                        if ($promo->type === 'percent') {
+                            $discountAmount = $subtotal * ($promo->value / 100);
+                        } elseif ($promo->type === 'nominal') {
+                            $discountAmount = $promo->value;
+                        }
+
+                        if ($discountAmount > $subtotal) {
+                            $discountAmount = $subtotal;
+                        }
                     }
                 }
-            }
 
-            // Calculate Loyalty Points Discount
-            $pointsUsed = 0;
-            $pointsDiscount = 0;
-            $pointExchangeRate = (float) \App\Models\SystemSetting::get('point_exchange_rate', 1);
+                // Calculate Loyalty Points Discount
+                $pointsUsed = 0;
+                $pointsDiscount = 0;
+                if (! empty($data['points_used']) && $customer) {
+                    $exchangeRate = (float) \App\Models\SystemSetting::get('point_exchange_rate', 1);
+                    $requestedPoints = (int) $data['points_used'];
 
-            if ($customer && ! empty($data['points_used']) && $data['points_used'] > 0) {
-                $pointsUsed = min($data['points_used'], $customer->loyalty_points);
-                $calculatedPointsDisc = $pointsUsed * $pointExchangeRate;
+                    // Cannot redeem more than customer balance
+                    $pointsUsed = min($requestedPoints, (int) $customer->loyalty_points);
+                    $pointsDiscount = $pointsUsed * $exchangeRate;
 
-                $maxPointsDiscount = max(0, $subtotal - $discountAmount);
-                if ($calculatedPointsDisc > $maxPointsDiscount) {
-                    $calculatedPointsDisc = $maxPointsDiscount;
+                    if ($pointsDiscount > ($subtotal - $discountAmount)) {
+                        $pointsDiscount = max(0, $subtotal - $discountAmount);
+                        $pointsUsed = ceil($pointsDiscount / max(0.01, $exchangeRate));
+                    }
                 }
-                $pointsDiscount = $calculatedPointsDisc;
-            }
 
-            // Calculate Total
-            $taxAmount = 0;
-            $total = max(0, $subtotal - $discountAmount - $pointsDiscount + $taxAmount);
+                // Total Calculation
+                $total = max(0, $subtotal - $discountAmount - $pointsDiscount);
+                $taxAmount = 0;
 
-            // Enforce paid_amount >= total for full cash/transfer/qris/debit
-            if (in_array($data['payment_method'], ['cash', 'transfer', 'qris', 'debit']) && $data['paid_amount'] < $total) {
-                throw ValidationException::withMessages([
-                    'paid_amount' => ['Jumlah bayar tidak boleh kurang dari total tagihan untuk metode pembayaran ini.'],
-                ]);
-            }
+                // Payment Status Determination
+                $paidAmount = (float) $data['paid_amount'];
+                $paymentStatus = 'unpaid';
+                $paidAt = null;
 
-            // Determine Payment Status
-            $paidAmount = $data['paid_amount'];
-            $changeAmount = 0;
-            $paymentStatus = 'pending';
-            $paidAt = null;
-
-            if ($data['payment_method'] === 'invoice') {
-                $paymentStatus = 'pending';
-            } else {
-                if ($paidAmount >= $total) {
+                if ($data['payment_method'] === 'invoice') {
+                    $paymentStatus = 'unpaid';
+                    $paidAmount = 0;
+                } elseif ($data['payment_method'] === 'dp') {
+                    $paymentStatus = 'partial';
+                    $paidAt = now();
+                } elseif ($paidAmount >= $total) {
                     $paymentStatus = 'paid';
-                    $changeAmount = $paidAmount - $total;
                     $paidAt = now();
                 } elseif ($paidAmount > 0) {
                     $paymentStatus = 'partial';
+                    $paidAt = now();
                 }
-            }
 
-            // Generate Order Number
-            $orderNumber = $this->generateOrderNumber($branchId);
+                $changeAmount = max(0, $paidAmount - $total);
+                $orderNumber = $this->generateOrderNumber($branchId);
 
-            // Create Order
-            $order = Order::create([
-                'order_number' => $orderNumber,
-                'branch_id' => $branchId,
-                'customer_id' => $customer?->id,
-                'cashier_id' => Auth::id(),
-                'cashier_shift_id' => $activeShift?->id,
-                'promo_id' => $promo?->id,
-                'order_type' => $data['order_type'] ?? 'outlet',
-                'customer_name_walkin' => $data['customer_name_walkin'] ?? null,
-                'delivery_address' => ($data['order_type'] ?? 'outlet') === 'pickup_delivery' ? ($data['delivery_address'] ?? null) : null,
-                'delivery_phone' => ($data['order_type'] ?? 'outlet') === 'pickup_delivery' ? ($data['delivery_phone'] ?? null) : null,
-                'pickup_scheduled_at' => ($data['order_type'] ?? 'outlet') === 'pickup_delivery' ? ($data['pickup_scheduled_at'] ?? null) : null,
-                'production_status' => 'TERIMA',
-                'payment_method' => strtoupper($data['payment_method']),
-                'payment_status' => $paymentStatus,
-                'subtotal' => $subtotal,
-                'discount_amount' => $discountAmount,
-                'points_used' => $pointsUsed,
-                'tax_amount' => $taxAmount,
-                'total' => $total,
-                'paid_amount' => min($paidAmount, $total),
-                'change_amount' => $changeAmount,
-                'notes' => $data['notes'] ?? null,
-                'paid_at' => $paidAt,
-                'estimated_done_at' => now()->addDays(2),
-            ]);
+                // Create Order Record
+                $order = Order::create([
+                    'order_number' => $orderNumber,
+                    'branch_id' => $branchId,
+                    'customer_id' => $customer?->id,
+                    'customer_name_walkin' => $customer ? null : ($data['customer_name_walkin'] ?? 'Pelanggan Walk-In'),
+                    'order_type' => $data['order_type'] ?? 'outlet',
+                    'delivery_address' => $data['delivery_address'] ?? null,
+                    'delivery_phone' => $data['delivery_phone'] ?? null,
+                    'pickup_scheduled_at' => $data['pickup_scheduled_at'] ?? null,
+                    'cashier_id' => Auth::id(),
+                    'cashier_shift_id' => $activeShift?->id,
+                    'promo_id' => $promo?->id,
+                    'production_status' => 'TERIMA',
+                    'payment_status' => $paymentStatus,
+                    'payment_method' => strtoupper($data['payment_method']),
+                    'subtotal' => $subtotal,
+                    'discount_amount' => $discountAmount,
+                    'points_used' => $pointsUsed,
+                    'tax_amount' => $taxAmount,
+                    'total' => $total,
+                    'paid_amount' => min($paidAmount, $total),
+                    'change_amount' => $changeAmount,
+                    'notes' => $data['notes'] ?? null,
+                    'paid_at' => $paidAt,
+                    'estimated_done_at' => now()->addDays(2),
+                ]);
 
-            // Record payment details in order_payments
-            if ($data['payment_method'] === 'split' && ! empty($data['split_payments'])) {
-                foreach ($data['split_payments'] as $sp) {
+                // Record payment details in order_payments
+                if ($data['payment_method'] === 'split' && ! empty($data['split_payments'])) {
+                    foreach ($data['split_payments'] as $sp) {
+                        OrderPayment::create([
+                            'order_id' => $order->id,
+                            'payment_method' => strtoupper($sp['method']),
+                            'amount' => $sp['amount'],
+                            'reference_number' => $sp['reference'] ?? null,
+                            'cashier_id' => Auth::id(),
+                            'paid_at' => now(),
+                        ]);
+                    }
+                } elseif ($paidAmount > 0 && $data['payment_method'] !== 'invoice') {
                     OrderPayment::create([
                         'order_id' => $order->id,
-                        'payment_method' => strtoupper($sp['method']),
-                        'amount' => $sp['amount'],
-                        'reference_number' => $sp['reference'] ?? null,
+                        'payment_method' => strtoupper($data['payment_method']),
+                        'amount' => min($paidAmount, $total),
                         'cashier_id' => Auth::id(),
                         'paid_at' => now(),
                     ]);
                 }
-            } elseif ($paidAmount > 0 && $data['payment_method'] !== 'invoice') {
-                OrderPayment::create([
-                    'order_id' => $order->id,
-                    'payment_method' => strtoupper($data['payment_method']),
-                    'amount' => min($paidAmount, $total),
-                    'cashier_id' => Auth::id(),
-                    'paid_at' => now(),
-                ]);
-            }
 
-            // Create Order Items
-            foreach ($itemsToCreate as $itemData) {
-                $itemData['order_id'] = $order->id;
-                OrderItem::create($itemData);
-            }
-
-            // Deduct loyalty points if used
-            if ($pointsUsed > 0 && $customer) {
-                $this->loyaltyService->redeemPoints($customer, $pointsUsed, $order);
-            }
-
-            // Award loyalty points & post double-entry journal if paid
-            if ($paymentStatus === 'paid') {
-                $this->loyaltyService->awardPoints($order);
-                try {
-                    app(JournalService::class)->postOrderJournal($order);
-                } catch (\Exception $e) {
-                    \Illuminate\Support\Facades\Log::error("POS Journal Auto-Post failed for order #{$order->id}: {$e->getMessage()}");
+                // Create Order Items
+                foreach ($itemsToCreate as $itemData) {
+                    $itemData['order_id'] = $order->id;
+                    OrderItem::create($itemData);
                 }
-            }
 
-            // Update promo usage limit
-            if ($promo) {
-                $promo->increment('usage_count');
-            }
+                // Deduct loyalty points if used
+                if ($pointsUsed > 0 && $customer) {
+                    $this->loyaltyService->redeemPoints($customer, $pointsUsed, $order);
+                }
 
-            // Delete draft order if resuming from draft
-            if (! empty($data['draft_id'])) {
-                DraftOrder::where('id', $data['draft_id'])->delete();
-            }
+                // Award loyalty points & post double-entry journal if paid
+                if ($paymentStatus === 'paid') {
+                    $this->loyaltyService->awardPoints($order);
+                    try {
+                        app(JournalService::class)->postOrderJournal($order);
+                    } catch (\Exception $e) {
+                        \Illuminate\Support\Facades\Log::error("POS Journal Auto-Post failed for order #{$order->id}: {$e->getMessage()}");
+                    }
+                }
 
-            // Log activity to audit_logs
-            $this->auditLogService->log('create_order', $order);
+                // Update promo usage limit
+                if ($promo) {
+                    $promo->increment('usage_count');
+                }
 
-            return redirect()->route('pos.index')
-                ->with('success', "Order #{$orderNumber} berhasil dibuat!")
-                ->with('last_order_id', $order->id)
-                ->with('last_order_number', $order->order_number);
-        });
+                // Delete draft order if resuming from draft
+                if (! empty($data['draft_id'])) {
+                    DraftOrder::where('id', $data['draft_id'])->delete();
+                }
+
+                // Log activity to audit_logs
+                $this->auditLogService->log('create_order', $order);
+
+                return redirect()->route('pos.index')
+                    ->with('success', "Order #{$orderNumber} berhasil dibuat!")
+                    ->with('last_order_id', $order->id)
+                    ->with('last_order_number', $order->order_number);
+            });
+        } catch (\Exception $e) {
+            return redirect()->back()->withErrors(['promo_id' => $e->getMessage()])->withInput();
+        }
     }
 
     /**
