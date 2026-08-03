@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <title>PowerBI Executive Sales & Order Transactions — Istana Laundry ERP</title>
+    <title>PowerBI Executive Sales &amp; Order Transactions — Istana Laundry ERP</title>
     <style>
         @page {
             margin: 15px 20px 20px 20px;

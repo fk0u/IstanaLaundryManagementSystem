@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <title>PowerBI Executive HR & Payroll Dashboard — Istana Laundry ERP</title>
+    <title>PowerBI Executive HR &amp; Payroll Dashboard — Istana Laundry ERP</title>
     <style>
         @page {
             margin: 15px 20px 20px 20px;

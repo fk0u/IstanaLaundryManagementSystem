@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <title>CFO Executive Financial Analytics & Data Science Report — Istana Laundry ERP</title>
+    <title>CFO Executive Financial Analytics &amp; Data Science Report — Istana Laundry ERP</title>
     <style>
         @page {
             margin: 12px 18px 18px 18px;

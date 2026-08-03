@@ -142,4 +142,10 @@ class StaffHRIntegrationTest extends TestCase
             'status' => 'hadir',
         ]);
     }
+
+    public function test_hr_export_excel_downloads_successfully(): void
+    {
+        $response = $this->actingAs($this->adminUser)->get(route('hr.export.xlsx'));
+        $response->assertStatus(200);
+    }
 }

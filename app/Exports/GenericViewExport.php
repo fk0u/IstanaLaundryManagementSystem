@@ -30,7 +30,42 @@ class GenericViewExport implements FromView, WithTitle, WithStyles, WithEvents
 
     public function view(): View
     {
-        return view($this->viewName, $this->viewData);
+        $originalView = view($this->viewName, $this->viewData);
+
+        return new class($originalView) implements View {
+            protected View $view;
+
+            public function __construct(View $view)
+            {
+                $this->view = $view;
+            }
+
+            public function render(): string
+            {
+                $html = $this->view->render();
+
+                // 1. Sanitize <title> tag to prevent PhpSpreadsheet HTML reader from throwing >31 char sheet title exception
+                $html = preg_replace('/<title>.*?<\/title>/is', '<title>Sheet1</title>', $html);
+
+                // 2. Convert unescaped ampersands to &amp; so DOMDocument::loadHTML() in PhpSpreadsheet does not crash
+                return preg_replace('/&(?!#?[a-z0-9]+;)/i', '&amp;', $html);
+            }
+
+            public function name(): string
+            {
+                return $this->view->name();
+            }
+
+            public function with($key, $value = null)
+            {
+                return $this->view->with($key, $value);
+            }
+
+            public function getData(): array
+            {
+                return $this->view->getData();
+            }
+        };
     }
 
     public function title(): string
