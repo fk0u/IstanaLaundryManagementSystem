@@ -85,6 +85,10 @@ Route::middleware(['auth', 'branch.scope'])->group(function () {
     Route::delete('/pos/drafts/{id}', [POSController::class, 'destroyDraft'])->name('pos.drafts.destroy');
     Route::post('/orders/{order}/payments', [POSController::class, 'addPayment'])->name('orders.payments.store');
 
+    // Cashier Shift Audit & Settlement Module
+    Route::get('/shifts', [\App\Http\Controllers\ShiftController::class, 'index'])->name('shifts.index');
+    Route::get('/shifts/{shift}', [\App\Http\Controllers\ShiftController::class, 'show'])->name('shifts.show');
+
     // Invoices & Billing
     Route::get('/invoices/{order}', [InvoiceController::class, 'show'])->name('invoices.show');
     Route::get('/invoices/{order}/receipt', [InvoiceController::class, 'receipt'])->name('invoices.receipt');

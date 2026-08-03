@@ -496,4 +496,95 @@ class JournalService
 
         return $this->autoPostJournal($payment, $payment->id, $entries, $payment->payment_date?->toDateString());
     }
+
+    /**
+     * Post journal entries for Cashier Shift Closing & Discrepancy Reconciliation.
+     *
+     * Handles:
+     * 1. Petty cash expenses recorded during the shift (Dr. Beban Operasional / Cr. Kas Kecil)
+     * 2. Cash Discrepancy (Selisih Kas):
+     *    - Deficit (Fisik < Sistem): Dr. Beban Selisih Kas (5-9900) / Cr. Kas Kasir (1-1101)
+     *    - Surplus (Fisik > Sistem): Dr. Kas Kasir (1-1101) / Cr. Pendapatan Selisih Kas (4-9900)
+     */
+    public function postShiftClosingJournal(\App\Models\CashierShift $shift): ?Journal
+    {
+        $diff = (float) $shift->cash_difference;
+        $pettyCash = (float) $shift->petty_cash_total;
+
+        if (abs($diff) < 0.01 && $pettyCash <= 0) {
+            return null;
+        }
+
+        $entries = [];
+
+        // 1. Record Petty Cash Expenses if any
+        if ($pettyCash > 0) {
+            $expenseAccount = ChartOfAccount::where('code', '5-2900')->first()
+                ?? ChartOfAccount::where('type', 'expense')->first()
+                ?? ChartOfAccount::firstOrCreate(['code' => '5-2900'], ['name' => 'Beban Operasional Kasir', 'type' => 'expense', 'normal_balance' => 'debit', 'level' => 3]);
+
+            $cashAccount = ChartOfAccount::where('code', '1-1101')->first()
+                ?? ChartOfAccount::firstOrCreate(['code' => '1-1101'], ['name' => 'Kas Kecil', 'type' => 'asset', 'normal_balance' => 'debit', 'level' => 3]);
+
+            $entries[] = [
+                'account_id' => $expenseAccount->id,
+                'debit' => $pettyCash,
+                'credit' => 0,
+                'description' => "Pengeluaran Kas Kecil Shift #{$shift->id}",
+            ];
+
+            $entries[] = [
+                'account_id' => $cashAccount->id,
+                'debit' => 0,
+                'credit' => $pettyCash,
+                'description' => "Kredit Kas Kecil Pengeluaran Shift #{$shift->id}",
+            ];
+        }
+
+        // 2. Record Cash Discrepancy (Surplus / Deficit)
+        if (abs($diff) >= 0.01) {
+            $cashAccount = ChartOfAccount::where('code', '1-1101')->first()
+                ?? ChartOfAccount::firstOrCreate(['code' => '1-1101'], ['name' => 'Kas Kecil', 'type' => 'asset', 'normal_balance' => 'debit', 'level' => 3]);
+
+            if ($diff < 0) {
+                // Deficit (Kas Kurang) -> Dr. Beban Selisih Kas (5-9900) / Cr. Kas Kasir (1-1101)
+                $deficitAmount = abs($diff);
+                $deficitAccount = ChartOfAccount::where('code', '5-9900')->first()
+                    ?? ChartOfAccount::firstOrCreate(['code' => '5-9900'], ['name' => 'Beban Selisih Kas', 'type' => 'expense', 'normal_balance' => 'debit', 'level' => 3]);
+
+                $entries[] = [
+                    'account_id' => $deficitAccount->id,
+                    'debit' => $deficitAmount,
+                    'credit' => 0,
+                    'description' => "Defisit Selisih Kas Fisik Shift #{$shift->id}",
+                ];
+                $entries[] = [
+                    'account_id' => $cashAccount->id,
+                    'debit' => 0,
+                    'credit' => $deficitAmount,
+                    'description' => "Penyesuaian Defisit Kas Shift #{$shift->id}",
+                ];
+            } else {
+                // Surplus (Kas Lebih) -> Dr. Kas Kasir (1-1101) / Cr. Pendapatan Selisih Kas (4-9900)
+                $surplusAmount = $diff;
+                $surplusAccount = ChartOfAccount::where('code', '4-9900')->first()
+                    ?? ChartOfAccount::firstOrCreate(['code' => '4-9900'], ['name' => 'Pendapatan Selisih Kas', 'type' => 'revenue', 'normal_balance' => 'credit', 'level' => 3]);
+
+                $entries[] = [
+                    'account_id' => $cashAccount->id,
+                    'debit' => $surplusAmount,
+                    'credit' => 0,
+                    'description' => "Penyesuaian Surplus Kas Shift #{$shift->id}",
+                ];
+                $entries[] = [
+                    'account_id' => $surplusAccount->id,
+                    'debit' => 0,
+                    'credit' => $surplusAmount,
+                    'description' => "Surplus Selisih Kas Fisik Shift #{$shift->id}",
+                ];
+            }
+        }
+
+        return $this->autoPostJournal($shift, $shift->id, $entries, $shift->closed_at?->toDateString());
+    }
 }

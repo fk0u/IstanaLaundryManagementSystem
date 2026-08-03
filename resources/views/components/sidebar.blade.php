@@ -223,6 +223,30 @@
                 </a>
             @endif
 
+            <!-- Rekap Shift (Closing & Settlement Audit) -->
+            @if(auth()->user()->hasAnyRole(['Developer', 'Owner', 'Super_Admin', 'Branch_Admin', 'Cashier', 'Finance']))
+                <a href="/shifts" @click="sidebarOpen = false" 
+                   class="group relative flex items-center transition-all duration-200 rounded-2xl text-xs md:text-sm font-bold {{ request()->is('shifts*') ? 'bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 shadow-2xs font-extrabold' : 'text-slate-600 dark:text-slate-400 hover:bg-indigo-500/10 hover:text-indigo-500' }}"
+                   :class="{ 'gap-3.5 px-3.5 py-2.5': desktopSidebarOpen, 'w-11 h-11 justify-center mx-auto my-1': !desktopSidebarOpen }">
+                    <div class="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-110 {{ request()->is('shifts*') ? 'bg-indigo-500 text-white shadow-sm' : 'bg-indigo-500/10 text-indigo-500 dark:bg-indigo-500/20' }}">
+                        <span class="material-symbols-outlined text-xl" style="font-variation-settings: 'FILL' {{ request()->is('shifts*') ? '1' : '0' }};">receipt_long</span>
+                    </div>
+                    <span x-show="desktopSidebarOpen" class="truncate">Rekap Shift (Closing)</span>
+
+                    @if(request()->is('shifts*'))
+                        <span class="absolute left-0 top-1/2 -translate-y-1/2 w-1.5 h-6 bg-indigo-500 rounded-r-full" x-show="!desktopSidebarOpen"></span>
+                    @endif
+
+                    <div x-show="!desktopSidebarOpen" class="absolute left-full ml-3.5 px-3.5 py-2 bg-slate-950/95 dark:bg-slate-800/95 backdrop-blur-md text-white rounded-2xl shadow-2xl pointer-events-none opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all duration-200 z-[999] whitespace-nowrap border border-slate-800 flex items-center gap-2.5">
+                        <div class="w-2.5 h-2.5 rounded-full bg-indigo-500 shrink-0"></div>
+                        <div>
+                            <p class="text-xs font-black text-white leading-tight">Rekapitulasi Shift</p>
+                            <p class="text-[9px] font-bold text-slate-400">Audit Cashier Closing & Settlement</p>
+                        </div>
+                    </div>
+                </a>
+            @endif
+
             <!-- Refunds -->
             @if(auth()->user()->hasAnyRole(['Developer', 'Owner', 'Super_Admin', 'Branch_Admin', 'Cashier', 'Finance']))
                 <a href="/refunds" @click="sidebarOpen = false" 

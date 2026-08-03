@@ -251,8 +251,15 @@ class POSController extends Controller
             'notes' => $validated['notes'] ?? $shift->notes,
         ]);
 
+        // Automatically sync closing shift journal to Finance
+        try {
+            app(JournalService::class)->postShiftClosingJournal($shift);
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Shift closing journal error: '.$e->getMessage());
+        }
+
         return redirect()->route('pos.index')
-            ->with('success', "Shift Kasir #{$shift->id} telah ditutup. Rekapitulasi berhasil dibuat.")
+            ->with('success', "Shift Kasir #{$shift->id} telah ditutup. Rekapitulasi berhasil dibuat & jurnal keuangan tersinkronisasi.")
             ->with('closed_shift_id', $shift->id);
     }
 
