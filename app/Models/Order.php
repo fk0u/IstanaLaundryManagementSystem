@@ -18,6 +18,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
     'workshop_id',
     'customer_id',
     'cashier_id',
+    'cashier_shift_id',
     'promo_id',
     'production_status',
     'payment_method',
@@ -73,6 +74,11 @@ class Order extends Model
         return $this->belongsTo(User::class, 'cashier_id');
     }
 
+    public function cashierShift(): BelongsTo
+    {
+        return $this->belongsTo(CashierShift::class, 'cashier_shift_id');
+    }
+
     public function promo(): BelongsTo
     {
         return $this->belongsTo(Promotion::class, 'promo_id');
@@ -81,6 +87,11 @@ class Order extends Model
     public function items(): HasMany
     {
         return $this->hasMany(OrderItem::class);
+    }
+
+    public function payments(): HasMany
+    {
+        return $this->hasMany(OrderPayment::class);
     }
 
     public function productionStatusLogs(): HasMany
@@ -96,5 +107,15 @@ class Order extends Model
     public function loyaltyPointLogs(): HasMany
     {
         return $this->hasMany(LoyaltyPointLog::class);
+    }
+
+    public function getRemainingBalanceAttribute(): float
+    {
+        return max(0, (float) $this->total - (float) $this->paid_amount);
+    }
+
+    public function getIsFullyPaidAttribute(): bool
+    {
+        return $this->payment_status === 'paid' || $this->getRemainingBalanceAttribute() <= 0;
     }
 }

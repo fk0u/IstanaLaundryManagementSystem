@@ -73,10 +73,17 @@ Route::middleware('auth')->group(function () {
 
 // POS & Production Scoped Routes
 Route::middleware(['auth', 'branch.scope'])->group(function () {
-    // POS (Kasir)
+    // POS (Kasir) & Shift Management
     Route::get('/pos', [POSController::class, 'index'])->name('pos.index');
     Route::post('/pos', [POSController::class, 'store'])->name('pos.store');
     Route::post('/pos/customers', [POSController::class, 'storeCustomer'])->name('pos.customers.store');
+    Route::post('/pos/shift/open', [POSController::class, 'openShift'])->name('pos.shift.open');
+    Route::post('/pos/shift/close', [POSController::class, 'closeShift'])->name('pos.shift.close');
+    Route::get('/pos/shift/{shift}/summary-pdf', [POSController::class, 'exportShiftSummaryPdf'])->name('pos.shift.summary-pdf');
+    Route::post('/pos/petty-cash', [POSController::class, 'storePettyCash'])->name('pos.petty-cash.store');
+    Route::post('/pos/drafts', [POSController::class, 'storeDraft'])->name('pos.drafts.store');
+    Route::delete('/pos/drafts/{id}', [POSController::class, 'destroyDraft'])->name('pos.drafts.destroy');
+    Route::post('/orders/{order}/payments', [POSController::class, 'addPayment'])->name('orders.payments.store');
 
     // Invoices & Billing
     Route::get('/invoices/{order}', [InvoiceController::class, 'show'])->name('invoices.show');
