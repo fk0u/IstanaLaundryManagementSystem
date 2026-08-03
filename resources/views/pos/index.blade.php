@@ -96,6 +96,102 @@
             <!-- Left Side: Customer, Promo, Presets & Services (8 cols) -->
             <div class="lg:col-span-8 flex flex-col gap-6">
                 
+                {{-- ===== ORDER CHANNEL / JENIS ORDER CARD ===== --}}
+                <div class="rounded-2xl border-2 transition-all duration-200"
+                     :class="orderType === 'pickup_delivery'
+                         ? 'border-blue-400/60 dark:border-blue-600/50 bg-gradient-to-r from-blue-50/80 via-indigo-50/40 to-transparent dark:from-blue-950/30 dark:via-indigo-950/20'
+                         : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60'">
+                    <div class="p-4 flex flex-col gap-4">
+                        {{-- Header --}}
+                        <div class="flex items-center justify-between gap-4 flex-wrap">
+                            <div class="flex items-center gap-2.5">
+                                <div class="w-9 h-9 rounded-xl flex items-center justify-center font-bold shrink-0 transition-colors"
+                                     :class="orderType === 'pickup_delivery' ? 'bg-blue-500 text-white' : 'bg-primary text-white'">
+                                    <span class="material-symbols-outlined text-xl"
+                                          x-text="orderType === 'pickup_delivery' ? 'local_shipping' : 'storefront'"></span>
+                                </div>
+                                <div>
+                                    <span class="block text-2xs font-black text-slate-400 uppercase tracking-wider">Jenis / Channel Order</span>
+                                    <span class="block text-sm font-extrabold text-slate-900 dark:text-white"
+                                          x-text="orderType === 'pickup_delivery' ? 'Online — Pickup & Delivery' : 'Langsung ke Outlet / Gerai'"></span>
+                                </div>
+                            </div>
+
+                            {{-- Toggle Buttons --}}
+                            <div class="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-xl gap-1 shrink-0">
+                                <button type="button" @click="orderType = 'outlet'"
+                                        :class="orderType === 'outlet'
+                                            ? 'bg-white dark:bg-slate-900 text-primary font-extrabold shadow-sm'
+                                            : 'text-slate-500 dark:text-slate-400 font-medium hover:text-slate-700'"
+                                        class="px-3 py-1.5 rounded-lg text-2xs flex items-center gap-1.5 transition-all cursor-pointer">
+                                    <span class="material-symbols-outlined text-sm">storefront</span>
+                                    Langsung Outlet
+                                </button>
+                                <button type="button" @click="orderType = 'pickup_delivery'"
+                                        :class="orderType === 'pickup_delivery'
+                                            ? 'bg-blue-500 text-white font-extrabold shadow-sm'
+                                            : 'text-slate-500 dark:text-slate-400 font-medium hover:text-slate-700'"
+                                        class="px-3 py-1.5 rounded-lg text-2xs flex items-center gap-1.5 transition-all cursor-pointer">
+                                    <span class="material-symbols-outlined text-sm">local_shipping</span>
+                                    Pickup & Delivery
+                                </button>
+                            </div>
+                        </div>
+
+                        {{-- Walk-In Name (always shown for walk-in customers) --}}
+                        <div>
+                            <label class="text-2xs font-bold text-slate-400 uppercase tracking-wider mb-1 block">
+                                Nama Pelanggan Walk-In (opsional, jika tidak pilih member)
+                            </label>
+                            <div class="relative">
+                                <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-base pointer-events-none">person</span>
+                                <input type="text" x-model="walkInName" placeholder="Cth: Budi Santoso (isi jika tanpa akun member)..."
+                                       class="w-full h-10 pl-9 pr-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 text-xs font-semibold focus:border-primary outline-none transition-all">
+                            </div>
+                        </div>
+
+                        {{-- Pickup & Delivery Fields (conditionally shown) --}}
+                        <div x-show="orderType === 'pickup_delivery'" x-cloak
+                             x-transition:enter="transition ease-out duration-200"
+                             x-transition:enter-start="opacity-0 -translate-y-2"
+                             x-transition:enter-end="opacity-100 translate-y-0"
+                             class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-3 border-t border-blue-200/60 dark:border-blue-800/40">
+                            {{-- Delivery Address --}}
+                            <div class="sm:col-span-2">
+                                <label class="text-2xs font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider mb-1 block flex items-center gap-1">
+                                    <span class="material-symbols-outlined text-xs">location_on</span>
+                                    Alamat Penjemputan / Pengantaran *
+                                </label>
+                                <textarea x-model="deliveryAddress" rows="2"
+                                          placeholder="Masukkan alamat lengkap untuk penjemputan atau pengantaran laundry..."
+                                          class="w-full px-3 py-2.5 rounded-xl border border-blue-200 dark:border-blue-800/60 bg-blue-50/50 dark:bg-blue-950/20 text-slate-800 dark:text-slate-200 text-xs font-semibold focus:border-blue-400 outline-none transition-all resize-none"></textarea>
+                            </div>
+                            {{-- Delivery Phone --}}
+                            <div>
+                                <label class="text-2xs font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider mb-1 block flex items-center gap-1">
+                                    <span class="material-symbols-outlined text-xs">phone</span>
+                                    No. HP Koordinasi *
+                                </label>
+                                <div class="relative">
+                                    <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-blue-400 text-base pointer-events-none">call</span>
+                                    <input type="tel" x-model="deliveryPhone"
+                                           placeholder="08xxxxxxxxxx"
+                                           class="w-full h-10 pl-9 pr-3 rounded-xl border border-blue-200 dark:border-blue-800/60 bg-blue-50/50 dark:bg-blue-950/20 text-slate-800 dark:text-slate-200 text-xs font-bold focus:border-blue-400 outline-none transition-all">
+                                </div>
+                            </div>
+                            {{-- Pickup Schedule --}}
+                            <div>
+                                <label class="text-2xs font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider mb-1 block flex items-center gap-1">
+                                    <span class="material-symbols-outlined text-xs">schedule</span>
+                                    Jadwal Penjemputan
+                                </label>
+                                <input type="datetime-local" x-model="pickupScheduledAt"
+                                       class="w-full h-10 px-3 rounded-xl border border-blue-200 dark:border-blue-800/60 bg-blue-50/50 dark:bg-blue-950/20 text-slate-800 dark:text-slate-200 text-xs font-semibold focus:border-blue-400 outline-none transition-all">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Customer & Promo Selectors -->
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <!-- Customer Selection -->
@@ -353,6 +449,12 @@
                         <input type="hidden" name="points_used" x-model="pointsUsed">
                         <input type="hidden" name="discount_amount" x-model="discount">
                         <input type="hidden" name="draft_id" x-model="currentDraftId">
+                        {{-- Order Channel Hidden Inputs --}}
+                        <input type="hidden" name="order_type" x-model="orderType">
+                        <input type="hidden" name="customer_name_walkin" x-model="walkInName">
+                        <input type="hidden" name="delivery_address" x-model="deliveryAddress">
+                        <input type="hidden" name="delivery_phone" x-model="deliveryPhone">
+                        <input type="hidden" name="pickup_scheduled_at" x-model="pickupScheduledAt">
 
                         <!-- Hold Order Quick Action Button inside Cart -->
                         <div class="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800">
@@ -760,11 +862,19 @@
                 split2: { method: 'qris', amount: 0 },
                 currentDraftId: null,
 
+                // Order Channel / Jenis Order
+                orderType: 'outlet',
+                walkInName: '',
+                deliveryAddress: '',
+                deliveryPhone: '',
+                pickupScheduledAt: '',
+
                 showOpenShiftModal: false,
                 showCloseShiftModal: false,
                 showPettyCashModal: false,
                 showDraftModal: false,
                 showAddCustomerModal: false,
+                showBranchScopeModal: false,
 
                 pointExchangeRate: {{ $pointExchangeRate }},
                 pointEarnSpendThreshold: {{ $pointEarnSpendThreshold }},

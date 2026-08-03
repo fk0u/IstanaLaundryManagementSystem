@@ -61,6 +61,20 @@
             <div class="p-5 md:p-8 grid grid-cols-1 sm:grid-cols-2 gap-6 border-b border-slate-100 dark:border-slate-800">
                 <div>
                     <h4 class="text-2xs font-bold text-slate-400 uppercase tracking-wider mb-2">Informasi Pelanggan</h4>
+                    {{-- Channel Badge --}}
+                    <div class="mb-2">
+                        @if($order->order_type === 'pickup_delivery')
+                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-[9px] font-extrabold uppercase tracking-wide">
+                                <span class="material-symbols-outlined text-[11px]">local_shipping</span>
+                                Pickup &amp; Delivery
+                            </span>
+                        @else
+                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 text-[9px] font-extrabold uppercase tracking-wide">
+                                <span class="material-symbols-outlined text-[11px]">storefront</span>
+                                Langsung Outlet
+                            </span>
+                        @endif
+                    </div>
                     @if($order->customer)
                         <p class="text-sm font-bold text-slate-800 dark:text-slate-200">{{ $order->customer->name }}</p>
                         <p class="text-xs text-slate-500 mt-0.5">{{ $order->customer->phone }}</p>
@@ -71,7 +85,30 @@
                             <p class="text-xs text-slate-500 mt-1">{{ $order->customer->address }}</p>
                         @endif
                     @else
-                        <p class="text-sm font-bold text-slate-800 dark:text-slate-200">Pelanggan Umum (Walk-In)</p>
+                        <p class="text-sm font-bold text-slate-800 dark:text-slate-200">{{ $order->customer_name_walkin ?: 'Pelanggan Umum (Walk-In)' }}</p>
+                    @endif
+                    {{-- Delivery Info (for pickup/delivery orders) --}}
+                    @if($order->order_type === 'pickup_delivery')
+                        <div class="mt-3 space-y-1.5 p-2.5 rounded-xl bg-blue-50/70 dark:bg-blue-950/20 border border-blue-100 dark:border-blue-900/40">
+                            @if($order->delivery_address)
+                                <p class="text-xs text-blue-700 dark:text-blue-300 flex items-start gap-1">
+                                    <span class="material-symbols-outlined text-[13px] shrink-0 mt-0.5">location_on</span>
+                                    <span>{{ $order->delivery_address }}</span>
+                                </p>
+                            @endif
+                            @if($order->delivery_phone)
+                                <p class="text-xs text-blue-600 dark:text-blue-400 flex items-center gap-1">
+                                    <span class="material-symbols-outlined text-[13px]">phone</span>
+                                    {{ $order->delivery_phone }}
+                                </p>
+                            @endif
+                            @if($order->pickup_scheduled_at)
+                                <p class="text-xs text-indigo-600 dark:text-indigo-400 flex items-center gap-1">
+                                    <span class="material-symbols-outlined text-[13px]">schedule</span>
+                                    Jemput: {{ $order->pickup_scheduled_at->format('d M Y, H:i') }}
+                                </p>
+                            @endif
+                        </div>
                     @endif
                 </div>
                 <div>

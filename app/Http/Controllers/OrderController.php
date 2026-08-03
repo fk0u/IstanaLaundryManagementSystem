@@ -22,15 +22,18 @@ class OrderController extends Controller
         $branches = $isGlobalUser ? Branch::orderBy('name')->get() : collect();
         $status = $request->query('status');
         $payStatus = $request->query('pay_status');
+        $channel = $request->query('channel');
         $search = $request->query('search');
 
         $orders = Order::with(['customer', 'branch', 'cashier'])
             ->when($branchId, fn ($q) => $q->where('branch_id', $branchId))
             ->when($status, fn ($q) => $q->where('production_status', $status))
             ->when($payStatus, fn ($q) => $q->where('payment_status', $payStatus))
+            ->when($channel, fn ($q) => $q->where('order_type', $channel))
             ->when($search, function ($q) use ($search) {
                 $q->where('order_number', 'like', "%{$search}%")
-                    ->orWhereHas('customer', fn ($cq) => $cq->where('name', 'like', "%{$search}%"));
+                    ->orWhereHas('customer', fn ($cq) => $cq->where('name', 'like', "%{$search}%"))
+                    ->orWhere('customer_name_walkin', 'like', "%{$search}%");
             })
             ->latest()
             ->paginate(20)
@@ -44,6 +47,7 @@ class OrderController extends Controller
             'branchId',
             'status',
             'payStatus',
+            'channel',
             'search',
             'productionStatuses',
             'isGlobalUser'

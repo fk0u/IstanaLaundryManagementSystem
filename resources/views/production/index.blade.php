@@ -123,6 +123,18 @@
                                                 #{{ $order->order_number }}
                                             </h3>
                                             <x-badge type="primary">{{ $order->production_status }}</x-badge>
+                                            {{-- Order Channel Badge --}}
+                                            @if($order->order_type === 'pickup_delivery')
+                                                <span class="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-md bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-[9px] font-extrabold uppercase tracking-wide border border-blue-200 dark:border-blue-800">
+                                                    <span class="material-symbols-outlined text-[11px]">local_shipping</span>
+                                                    Pickup &amp; Delivery
+                                                </span>
+                                            @else
+                                                <span class="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-md bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 text-[9px] font-extrabold uppercase tracking-wide border border-orange-200 dark:border-orange-800">
+                                                    <span class="material-symbols-outlined text-[11px]">storefront</span>
+                                                    Langsung Outlet
+                                                </span>
+                                            @endif
                                             @if($isGlobalUser && $order->branch)
                                                 <span class="px-2 py-0.5 rounded-md bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800 text-indigo-700 dark:text-indigo-300 font-bold text-2xs">
                                                     {{ $order->branch->name }}
@@ -137,11 +149,33 @@
                                 <div class="flex flex-col gap-0.5">
                                     <span class="text-2xs text-slate-400 font-bold uppercase tracking-wider">Pelanggan</span>
                                     <span class="text-xs md:text-sm font-bold text-slate-700 dark:text-slate-200">
-                                        {{ $order->customer?->name ?? 'Pelanggan Umum (Walk-In)' }} 
+                                        {{ $order->customer?->name ?? ($order->customer_name_walkin ?: 'Pelanggan Umum (Walk-In)') }}
                                         @if($order->customer)
                                             <span class="text-2xs font-semibold text-slate-400">({{ $order->customer->phone }})</span>
                                         @endif
                                     </span>
+                                    @if($order->order_type === 'pickup_delivery')
+                                        <div class="mt-1 flex flex-col gap-0.5">
+                                            @if($order->delivery_address)
+                                                <span class="text-2xs text-blue-600 dark:text-blue-400 flex items-start gap-1">
+                                                    <span class="material-symbols-outlined text-[13px] shrink-0 mt-0.5">location_on</span>
+                                                    {{ $order->delivery_address }}
+                                                </span>
+                                            @endif
+                                            @if($order->delivery_phone)
+                                                <span class="text-2xs text-blue-500 flex items-center gap-1">
+                                                    <span class="material-symbols-outlined text-[13px]">phone</span>
+                                                    {{ $order->delivery_phone }}
+                                                </span>
+                                            @endif
+                                            @if($order->pickup_scheduled_at)
+                                                <span class="text-2xs text-indigo-500 flex items-center gap-1">
+                                                    <span class="material-symbols-outlined text-[13px]">schedule</span>
+                                                    Jemput: {{ $order->pickup_scheduled_at->format('d/m/Y H:i') }}
+                                                </span>
+                                            @endif
+                                        </div>
+                                    @endif
                                 </div>
 
                                 <!-- Items List -->

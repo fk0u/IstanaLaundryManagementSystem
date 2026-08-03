@@ -392,6 +392,11 @@ class POSController extends Controller
 
         $validator = Validator::make($request->all(), [
             'customer_id' => 'required|exists:customers,id',
+            'order_type' => 'required|in:outlet,pickup_delivery',
+            'customer_name_walkin' => 'nullable|string|max:150',
+            'delivery_address' => 'nullable|string|max:1000',
+            'delivery_phone' => 'nullable|string|max:30',
+            'pickup_scheduled_at' => 'nullable|date',
             'items' => 'required|array|min:1',
             'items.*.service_id' => 'required|exists:services,id',
             'items.*.quantity' => 'required|numeric|min:0.01',
@@ -407,6 +412,12 @@ class POSController extends Controller
             'split_payments.*.amount' => 'required_with:split_payments|numeric|min:0',
             'split_payments.*.reference' => 'nullable|string',
         ]);
+
+        // For pickup/delivery: delivery address is required
+        if ($request->input('order_type') === 'pickup_delivery') {
+            $validator->sometimes('delivery_address', 'required|string|max:1000', fn () => true);
+            $validator->sometimes('delivery_phone', 'required|string|max:30', fn () => true);
+        }
 
         if ($validator->fails()) {
             return redirect()->back()->withErrors($validator)->withInput();
@@ -519,6 +530,11 @@ class POSController extends Controller
                 'cashier_id' => Auth::id(),
                 'cashier_shift_id' => $activeShift?->id,
                 'promo_id' => $promo?->id,
+                'order_type' => $data['order_type'] ?? 'outlet',
+                'customer_name_walkin' => $data['customer_name_walkin'] ?? null,
+                'delivery_address' => ($data['order_type'] ?? 'outlet') === 'pickup_delivery' ? ($data['delivery_address'] ?? null) : null,
+                'delivery_phone' => ($data['order_type'] ?? 'outlet') === 'pickup_delivery' ? ($data['delivery_phone'] ?? null) : null,
+                'pickup_scheduled_at' => ($data['order_type'] ?? 'outlet') === 'pickup_delivery' ? ($data['pickup_scheduled_at'] ?? null) : null,
                 'production_status' => 'TERIMA',
                 'payment_method' => strtoupper($data['payment_method']),
                 'payment_status' => $paymentStatus,

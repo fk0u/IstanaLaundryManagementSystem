@@ -66,11 +66,21 @@
                 </select>
             </div>
 
+            {{-- Channel Filter --}}
+            <div class="min-w-[140px]">
+                <label class="text-2xs font-bold text-slate-400 uppercase tracking-wider block mb-1">Channel Order</label>
+                <select name="channel" onchange="this.form.querySelector('input[name=search]').dispatchEvent(new Event('input', { bubbles: true }))" class="h-9 w-full text-xs rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 font-semibold">
+                    <option value="">Semua Channel</option>
+                    <option value="outlet"          {{ ($channel ?? '') === 'outlet'           ? 'selected' : '' }}>Langsung Outlet</option>
+                    <option value="pickup_delivery" {{ ($channel ?? '') === 'pickup_delivery'  ? 'selected' : '' }}>Pickup &amp; Delivery</option>
+                </select>
+            </div>
+
             <button type="submit" class="h-9 px-4 bg-primary hover:bg-primary-hover text-white text-xs font-bold rounded-xl shrink-0">
                 <span class="material-symbols-outlined text-base align-middle">filter_alt</span>
                 Filter
             </button>
-            @if($search || $status || $payStatus || $branchId)
+            @if($search || $status || $payStatus || $branchId || ($channel ?? ''))
                 <a href="{{ route('orders.index') }}" class="h-9 px-4 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 text-xs font-bold rounded-xl flex items-center gap-1 hover:bg-slate-50 dark:hover:bg-slate-800">
                     <span class="material-symbols-outlined text-base">close</span>Reset
                 </a>
@@ -105,9 +115,29 @@
                                     <div class="text-2xs text-slate-400 font-sans font-normal">{{ $order->created_at->format('d/m/Y H:i') }}</div>
                                 </td>
                                 <td class="py-3 px-4 font-semibold text-slate-700 dark:text-slate-300">
-                                    {{ $order->customer?->name ?? 'Walk-In' }}
+                                    <div class="flex items-center gap-1.5">
+                                        @if($order->order_type === 'pickup_delivery')
+                                            <span title="Pickup &amp; Delivery" class="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-[9px] font-extrabold uppercase tracking-wide">
+                                                <span class="material-symbols-outlined text-[11px]">local_shipping</span>
+                                                Pickup
+                                            </span>
+                                        @else
+                                            <span title="Langsung Outlet" class="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 text-[9px] font-extrabold uppercase tracking-wide">
+                                                <span class="material-symbols-outlined text-[11px]">storefront</span>
+                                                Outlet
+                                            </span>
+                                        @endif
+                                    </div>
+                                    <div class="mt-0.5">
+                                        {{ $order->customer?->name ?? ($order->customer_name_walkin ?: 'Walk-In') }}
+                                    </div>
                                     @if($order->customer?->member_code)
                                         <div class="text-2xs text-slate-400 font-mono">{{ $order->customer->member_code }}</div>
+                                    @elseif($order->order_type === 'pickup_delivery' && $order->delivery_address)
+                                        <div class="text-2xs text-blue-500 dark:text-blue-400 truncate max-w-[160px]" title="{{ $order->delivery_address }}">
+                                            <span class="material-symbols-outlined text-[10px]">location_on</span>
+                                            {{ Str::limit($order->delivery_address, 35) }}
+                                        </div>
                                     @endif
                                 </td>
                                 @if($isGlobalUser)
@@ -182,9 +212,18 @@
                             </div>
                             <span class="font-mono font-black text-sm text-primary">Rp {{ number_format($order->total, 0, ',', '.') }}</span>
                         </div>
-                        <div class="flex items-center gap-2 text-xs">
+                        <div class="flex items-center gap-2 text-xs flex-wrap">
+                            @if($order->order_type === 'pickup_delivery')
+                                <span class="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-[9px] font-extrabold uppercase">
+                                    <span class="material-symbols-outlined text-[11px]">local_shipping</span> Pickup
+                                </span>
+                            @else
+                                <span class="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 text-[9px] font-extrabold uppercase">
+                                    <span class="material-symbols-outlined text-[11px]">storefront</span> Outlet
+                                </span>
+                            @endif
                             <span class="material-symbols-outlined text-sm text-slate-400">person</span>
-                            <span class="font-semibold text-slate-700 dark:text-slate-300">{{ $order->customer?->name ?? 'Walk-In' }}</span>
+                            <span class="font-semibold text-slate-700 dark:text-slate-300">{{ $order->customer?->name ?? ($order->customer_name_walkin ?: 'Walk-In') }}</span>
                         </div>
                         <div class="flex flex-wrap gap-2 items-center">
                             @if($order->payment_status === 'paid')

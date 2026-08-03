@@ -19,6 +19,11 @@ use Illuminate\Database\Eloquent\SoftDeletes;
     'customer_id',
     'cashier_id',
     'cashier_shift_id',
+    'order_type',
+    'customer_name_walkin',
+    'delivery_address',
+    'delivery_phone',
+    'pickup_scheduled_at',
     'promo_id',
     'production_status',
     'payment_method',
@@ -51,7 +56,27 @@ class Order extends Model
             'change_amount' => 'decimal:2',
             'estimated_done_at' => 'datetime',
             'paid_at' => 'datetime',
+            'pickup_scheduled_at' => 'datetime',
         ];
+    }
+
+    /**
+     * Helper: Is this a pickup/delivery order?
+     */
+    public function isPickupDelivery(): bool
+    {
+        return $this->order_type === 'pickup_delivery';
+    }
+
+    /**
+     * Get the display name for the customer (supports walk-in without member account).
+     */
+    public function getCustomerDisplayNameAttribute(): string
+    {
+        if ($this->customer) {
+            return $this->customer->name;
+        }
+        return $this->customer_name_walkin ?? 'Pelanggan Walk-In';
     }
 
     public function branch(): BelongsTo
