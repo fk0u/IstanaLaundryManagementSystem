@@ -16,15 +16,31 @@
                 @if(request('status'))
                     <input type="hidden" name="status" value="{{ request('status') }}">
                 @endif
+
+                @if($isGlobalUser)
+                    <div class="w-full sm:w-48">
+                        <select name="branch_id" onchange="this.form.submit()" class="w-full h-10 px-3 text-xs font-bold rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-200 focus:outline-none focus:border-primary">
+                            <option value="">Semua Cabang (Global Scope)</option>
+                            @foreach($branches as $b)
+                                <option value="{{ $b->id }}" {{ (string)$branchId === (string)$b->id ? 'selected' : '' }}>
+                                    {{ $b->name }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                @endif
+
                 <div class="relative flex-1 w-full">
-                    <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg">search</span>
+                    <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg pointer-events-none">search</span>
                     <input type="text" 
                            name="search" 
                            value="{{ $search }}" 
-                           placeholder="Cari Nomor Nota / Nama Pelanggan / No. Telp..." 
-                           class="w-full pl-9 pr-10 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-xs font-bold text-slate-800 dark:text-slate-200 outline-none focus:border-primary">
+                           data-realtime-search="production-orders-container"
+                           data-search-url="{{ route('production.index') }}"
+                           placeholder="Cari Nomor Nota / Nama Pelanggan / No. Telp (Real-time)..." 
+                           class="w-full pl-9 pr-10 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-xs font-bold text-slate-800 dark:text-slate-200 outline-none focus:border-primary transition-all">
                     @if($search)
-                        <a href="{{ route('production.index', request()->only('status')) }}" 
+                        <a href="{{ route('production.index', request()->only('status', 'branch_id')) }}" 
                            class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
                             <span class="material-symbols-outlined text-sm">close</span>
                         </a>
@@ -32,7 +48,7 @@
                 </div>
                 <div class="flex items-center gap-2 w-full sm:w-auto">
                     <button type="submit" class="btn-touch w-full sm:w-auto px-5 py-2.5 bg-primary hover:bg-primary-hover text-white text-xs font-bold rounded-xl flex items-center justify-center gap-1.5 shadow-sm shrink-0">
-                        <span class="material-symbols-outlined text-base">search</span> Cari Nota
+                        <span class="material-symbols-outlined text-base">search</span> Cari
                     </button>
                     @if($isWorkshopRole)
                         <button type="button" 
@@ -49,17 +65,17 @@
         <!-- Status Filter Bar — Horizontal Scroll Pills for Mobile -->
         <x-card :compact="true">
             <div class="scroll-pills">
-                <a href="{{ route('production.index', request()->only('search')) }}" 
+                <a href="{{ route('production.index', request()->only('search', 'branch_id')) }}" 
                    class="btn-touch px-4 py-2 rounded-xl text-xs font-bold border transition-all cursor-pointer whitespace-nowrap {{ !request()->has('status') ? 'bg-primary text-white border-primary shadow-sm' : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-50' }}">
                     Semua Antrean
                 </a>
                 @foreach (['TERIMA', 'PILAH', 'CUCI', 'KERING', 'LIPAT', 'CEK', 'SIAP'] as $status)
-                    <a href="{{ route('production.index', array_merge(request()->only('search'), ['status' => $status])) }}" 
+                    <a href="{{ route('production.index', array_merge(request()->only('search', 'branch_id'), ['status' => $status])) }}" 
                        class="btn-touch px-4 py-2 rounded-xl text-xs font-bold border transition-all cursor-pointer whitespace-nowrap {{ request('status') === $status ? 'bg-primary text-white border-primary shadow-sm' : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-50' }}">
                         {{ $status }}
                     </a>
                 @endforeach
-                <a href="{{ route('production.index', array_merge(request()->only('search'), ['status' => 'DIAMBIL'])) }}" 
+                <a href="{{ route('production.index', array_merge(request()->only('search', 'branch_id'), ['status' => 'DIAMBIL'])) }}" 
                    class="btn-touch px-4 py-2 rounded-xl text-xs font-bold border transition-all cursor-pointer whitespace-nowrap {{ request('status') === 'DIAMBIL' ? 'bg-emerald-600 text-white border-emerald-600 shadow-sm' : 'bg-white dark:bg-slate-900 border-emerald-200 dark:border-emerald-900/40 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/20' }}">
                     <span class="material-symbols-outlined text-xs align-middle mr-0.5">check_circle</span>DIAMBIL
                 </a>
@@ -83,34 +99,40 @@
         @endif
 
         <!-- Orders list -->
-        <div class="grid grid-cols-1 gap-4 md:gap-6" x-show="showList" x-cloak>
-            @if ($orders->isEmpty())
-                <x-card>
-                    <div class="text-center py-12 md:py-16">
-                        <span class="material-symbols-outlined text-slate-350 dark:text-slate-700 text-5xl md:text-6xl mb-3">dry_cleaning</span>
-                        <p class="text-xs md:text-sm font-semibold text-slate-400 dark:text-slate-500">
-                            {{ $search ? "Tidak ada order ditemukan untuk pencarian '{$search}'." : ($requestedStatus === 'DIAMBIL' ? 'Belum ada order yang sudah diambil pelanggan.' : 'Tidak ada antrean cucian aktif di stasiun ini.') }}
-                        </p>
-                    </div>
-                </x-card>
-            @else
-                @foreach ($orders as $order)
+        <div id="production-orders-container" class="space-y-4">
+            <div class="grid grid-cols-1 gap-4 md:gap-6" x-show="showList" x-cloak>
+                @if ($orders->isEmpty())
                     <x-card>
-                        <div class="flex flex-col lg:flex-row justify-between gap-4 md:gap-6" x-data="{ openNotesForm: false }">
-                            
-                            <!-- Order details & Items (Left side) -->
-                            <div class="flex-1 space-y-3 md:space-y-4">
-                                <div class="flex flex-wrap items-center justify-between gap-2">
-                                    <div class="flex items-center gap-2">
-                                        <h3 class="text-base md:text-lg font-black text-slate-800 dark:text-slate-200">
-                                            #{{ $order->order_number }}
-                                        </h3>
-                                        <x-badge type="primary">{{ $order->production_status }}</x-badge>
+                        <div class="text-center py-12 md:py-16">
+                            <span class="material-symbols-outlined text-slate-350 dark:text-slate-700 text-5xl md:text-6xl mb-3">dry_cleaning</span>
+                            <p class="text-xs md:text-sm font-semibold text-slate-400 dark:text-slate-500">
+                                {{ $search ? "Tidak ada order ditemukan untuk pencarian '{$search}'." : ($requestedStatus === 'DIAMBIL' ? 'Belum ada order yang sudah diambil pelanggan.' : 'Tidak ada antrean cucian aktif di stasiun ini.') }}
+                            </p>
+                        </div>
+                    </x-card>
+                @else
+                    @foreach ($orders as $order)
+                        <x-card>
+                            <div class="flex flex-col lg:flex-row justify-between gap-4 md:gap-6" x-data="{ openNotesForm: false }">
+                                
+                                <!-- Order details & Items (Left side) -->
+                                <div class="flex-1 space-y-3 md:space-y-4">
+                                    <div class="flex flex-wrap items-center justify-between gap-2">
+                                        <div class="flex flex-wrap items-center gap-2">
+                                            <h3 class="text-base md:text-lg font-black text-slate-800 dark:text-slate-200">
+                                                #{{ $order->order_number }}
+                                            </h3>
+                                            <x-badge type="primary">{{ $order->production_status }}</x-badge>
+                                            @if($isGlobalUser && $order->branch)
+                                                <span class="px-2 py-0.5 rounded-md bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800 text-indigo-700 dark:text-indigo-300 font-bold text-2xs">
+                                                    {{ $order->branch->name }}
+                                                </span>
+                                            @endif
+                                        </div>
+                                        <span class="text-2xs text-slate-400 font-medium">
+                                            {{ $order->created_at->diffForHumans() }}
+                                        </span>
                                     </div>
-                                    <span class="text-2xs text-slate-400 font-medium">
-                                        {{ $order->created_at->diffForHumans() }}
-                                    </span>
-                                </div>
 
                                 <div class="flex flex-col gap-0.5">
                                     <span class="text-2xs text-slate-400 font-bold uppercase tracking-wider">Pelanggan</span>
@@ -236,12 +258,11 @@
                     </x-card>
                 @endforeach
             @endif
+            @if ($orders->hasPages())
+                <div class="mt-4">
+                    {{ $orders->links() }}
+                </div>
+            @endif
         </div>
-
-        @if ($orders->hasPages())
-            <div class="mt-2">
-                {{ $orders->links() }}
-            </div>
-        @endif
     </div>
 </x-app-layout>

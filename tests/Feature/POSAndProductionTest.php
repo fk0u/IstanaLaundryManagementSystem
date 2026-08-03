@@ -305,4 +305,56 @@ class POSAndProductionTest extends TestCase
             return $orders->count() === 15 && $orders->total() === 20 && $orders->hasMorePages();
         });
     }
+
+    /**
+     * Test production index in global scope displays orders from all branches.
+     */
+    public function test_production_index_global_scope_shows_all_branches_orders(): void
+    {
+        $branch2 = Branch::create([
+            'name' => 'Samarinda Seberang',
+            'code' => 'SMD02',
+            'address' => 'Jl. Cipto Mangunkusumo, Samarinda',
+            'phone' => '081122334466',
+            'is_active' => true,
+        ]);
+
+        $orderBranch1 = Order::create([
+            'order_number' => 'SMD01-202607-9001',
+            'branch_id' => $this->branch->id,
+            'cashier_id' => $this->cashier->id,
+            'production_status' => 'CUCI',
+            'payment_method' => 'cash',
+            'payment_status' => 'pending',
+            'subtotal' => 10000,
+            'total' => 10000,
+        ]);
+
+        $orderBranch2 = Order::create([
+            'order_number' => 'SMD02-202607-9002',
+            'branch_id' => $branch2->id,
+            'cashier_id' => $this->cashier->id,
+            'production_status' => 'KERING',
+            'payment_method' => 'cash',
+            'payment_status' => 'pending',
+            'subtotal' => 15000,
+            'total' => 15000,
+        ]);
+
+        $owner = User::create([
+            'name' => 'Global Owner',
+            'email' => 'owner@istanalaundry.com',
+            'password' => bcrypt('password'),
+            'branch_id' => null,
+            'is_active' => true,
+        ]);
+        $owner->assignRole('Developer');
+
+        $response = $this->actingAs($owner)->get(route('production.index'));
+
+        $response->assertStatus(200);
+        $response->assertViewHas('orders', function ($orders) use ($orderBranch1, $orderBranch2) {
+            return $orders->contains('id', $orderBranch1->id) && $orders->contains('id', $orderBranch2->id);
+        });
+    }
 }

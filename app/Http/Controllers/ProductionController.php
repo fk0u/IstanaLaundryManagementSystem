@@ -21,18 +21,27 @@ class ProductionController extends Controller
      */
     public function index(Request $request)
     {
-        $branchId = session('scoped_branch_id') ?? Auth::user()->branch_id;
-        if (! $branchId) {
-            $firstBranch = Branch::first();
-            $branchId = $firstBranch?->id;
+        $user = Auth::user();
+        $isGlobalUser = $user->hasAnyRole(['Developer', 'Owner', 'Super_Admin', 'Finance']);
+
+        $branchId = $request->query('branch_id');
+        if (! $isGlobalUser) {
+            $branchId = session('scoped_branch_id') ?? $user->branch_id;
+        } else if ($branchId === null && session()->has('scoped_branch_id')) {
+            $branchId = session('scoped_branch_id');
         }
 
-        $branch = Branch::find($branchId);
+        $branch = $branchId ? Branch::find($branchId) : null;
+        $branches = $isGlobalUser ? Branch::orderBy('name')->get() : collect();
 
         $requestedStatus = $request->query('status');
         $search = trim((string) $request->query('search'));
 
-        $query = Order::where('branch_id', $branchId);
+        $query = Order::query();
+
+        if ($branchId) {
+            $query->where('branch_id', $branchId);
+        }
 
         if ($search !== '') {
             $query->where(function ($q) use ($search) {
@@ -53,15 +62,23 @@ class ProductionController extends Controller
             $query->where('production_status', '!=', 'DIAMBIL');
         }
 
-        $orders = $query->with(['customer', 'items.service'])
+        $orders = $query->with(['customer', 'items.service', 'branch'])
             ->orderBy('created_at', 'desc')
             ->paginate(15)
             ->withQueryString();
 
-        $user = Auth::user();
         $isWorkshopRole = $user->hasAnyRole(['Workshop_Staff', 'Workshop_Admin']);
 
-        return view('production.index', compact('branch', 'orders', 'requestedStatus', 'search', 'isWorkshopRole'));
+        return view('production.index', compact(
+            'branch',
+            'branches',
+            'branchId',
+            'isGlobalUser',
+            'orders',
+            'requestedStatus',
+            'search',
+            'isWorkshopRole'
+        ));
     }
 
     /**
