@@ -692,54 +692,164 @@
         <!-- Modal Tutup Shift Kasir -->
         @if($activeShift)
             <div x-show="showCloseShiftModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4" x-cloak>
-                <div class="bg-white dark:bg-slate-900 rounded-3xl p-6 max-w-lg w-full shadow-2xl border border-slate-200 dark:border-slate-800">
+                <div class="bg-white dark:bg-slate-900 rounded-3xl p-6 max-w-xl w-full shadow-2xl border border-slate-200 dark:border-slate-800 max-h-[90vh] overflow-y-auto">
+                    <!-- Header -->
                     <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-100 dark:border-slate-800">
                         <div class="flex items-center gap-3">
-                            <div class="w-10 h-10 rounded-2xl bg-rose-500 text-white flex items-center justify-center font-bold">
+                            <div class="w-10 h-10 rounded-2xl bg-rose-500/10 text-rose-600 dark:text-rose-400 flex items-center justify-center font-bold">
                                 <span class="material-symbols-outlined text-xl">lock_clock</span>
                             </div>
                             <div>
                                 <h3 class="text-base font-black text-slate-900 dark:text-white">Rekapitulasi Closing Shift #{{ $activeShift->id }}</h3>
-                                <p class="text-xs text-slate-500">Buka: {{ $activeShift->opened_at->format('d/m/Y H:i') }}</p>
+                                <p class="text-xs text-slate-500 dark:text-slate-400">Buka: {{ $activeShift->opened_at->format('d/m/Y H:i') }} • Kasir: {{ auth()->user()->name }}</p>
                             </div>
                         </div>
-                        <button type="button" @click="showCloseShiftModal = false" class="text-slate-400 hover:text-slate-600">
+                        <button type="button" @click="showCloseShiftModal = false" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
                             <span class="material-symbols-outlined">close</span>
                         </button>
                     </div>
 
                     <form action="{{ route('pos.shift.close') }}" method="POST" class="space-y-4">
                         @csrf
-                        <div class="grid grid-cols-2 gap-3 bg-slate-50 dark:bg-slate-800/50 p-3 rounded-2xl text-xs">
-                            <div>
-                                <span class="text-slate-400 block text-[10px] uppercase font-bold">Modal Awal</span>
-                                <span class="font-black text-slate-800 dark:text-slate-200">Rp {{ number_format($activeShift->opening_cash, 0, ',', '.') }}</span>
-                            </div>
-                            <div>
-                                <span class="text-slate-400 block text-[10px] uppercase font-bold">Petty Cash Out</span>
-                                <span class="font-black text-rose-500">Rp {{ number_format($activeShift->petty_cash_total, 0, ',', '.') }}</span>
-                            </div>
-                        </div>
 
+                        <!-- 1. System Expected Summary Section (Otomatisasi Sistem) -->
                         <div>
-                            <label class="block text-2xs font-extrabold text-slate-400 uppercase mb-1">Hitung Uang Kas Fisik di Laci (Actual Cash)</label>
-                            <input type="number" name="closing_cash_actual" required min="0" placeholder="Masukkan total uang tunai di laci..."
-                                   class="w-full h-11 px-3.5 rounded-xl border border-slate-200 dark:border-slate-800 text-sm font-black text-slate-900 dark:text-white outline-none focus:border-primary">
+                            <label class="block text-2xs font-extrabold text-slate-400 uppercase tracking-wider mb-2">1. Ringkasan Otomatis Sistem (System Expected)</label>
+
+                            <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-3">
+                                <div class="bg-slate-50 dark:bg-slate-800/50 p-2.5 rounded-2xl border border-slate-100 dark:border-slate-700/60">
+                                    <span class="text-slate-400 block text-[10px] uppercase font-extrabold">Modal Awal Kas</span>
+                                    <span class="font-black text-xs text-slate-800 dark:text-slate-200">Rp {{ number_format($shiftSummary['opening_cash'] ?? 0, 0, ',', '.') }}</span>
+                                </div>
+                                <div class="bg-emerald-50 dark:bg-emerald-950/30 p-2.5 rounded-2xl border border-emerald-100 dark:border-emerald-800/40">
+                                    <span class="text-emerald-600 dark:text-emerald-400 block text-[10px] uppercase font-extrabold">Cash Sales (Tunai Masuk)</span>
+                                    <span class="font-black text-xs text-emerald-700 dark:text-emerald-300">+ Rp {{ number_format($shiftSummary['cash_sales'] ?? 0, 0, ',', '.') }}</span>
+                                </div>
+                                <div class="bg-rose-50 dark:bg-rose-950/30 p-2.5 rounded-2xl border border-rose-100 dark:border-rose-800/40">
+                                    <span class="text-rose-600 dark:text-rose-400 block text-[10px] uppercase font-extrabold">Petty Cash (Kas Keluar)</span>
+                                    <span class="font-black text-xs text-rose-600 dark:text-rose-400">- Rp {{ number_format($shiftSummary['petty_cash_out'] ?? 0, 0, ',', '.') }}</span>
+                                </div>
+                            </div>
+
+                            <!-- System Expected Cash Highlight -->
+                            <div class="bg-orange-500/10 dark:bg-orange-950/30 border border-orange-200 dark:border-orange-800/60 p-3 rounded-2xl flex items-center justify-between mb-2.5">
+                                <div>
+                                    <div class="text-2xs font-extrabold text-orange-600 dark:text-orange-400 uppercase tracking-wider">Ekspektasi Uang Tunai di Laci (Sistem)</div>
+                                    <div class="text-2xs text-slate-500 dark:text-slate-400">Formula: Modal Awal + Tunai Masuk - Kas Keluar</div>
+                                </div>
+                                <div class="text-base font-black text-primary">
+                                    Rp {{ number_format($shiftSummary['expected_cash'] ?? 0, 0, ',', '.') }}
+                                </div>
+                            </div>
+
+                            <!-- Digital Payments & Total Omset Breakdown -->
+                            <div class="bg-slate-50 dark:bg-slate-800/40 p-3 rounded-2xl border border-slate-100 dark:border-slate-700/60 space-y-1.5 text-xs">
+                                <div class="flex justify-between font-bold text-slate-400 text-[10px] uppercase pb-1 border-b border-slate-200 dark:border-slate-700">
+                                    <span>Metode Pembayaran Shift Ini</span>
+                                    <span>Nominal Omset</span>
+                                </div>
+                                <div class="flex justify-between text-slate-700 dark:text-slate-300">
+                                    <span>QRIS / E-Wallet</span>
+                                    <span class="font-bold">Rp {{ number_format($shiftSummary['qris_sales'] ?? 0, 0, ',', '.') }}</span>
+                                </div>
+                                <div class="flex justify-between text-slate-700 dark:text-slate-300">
+                                    <span>Transfer Bank</span>
+                                    <span class="font-bold">Rp {{ number_format($shiftSummary['transfer_sales'] ?? 0, 0, ',', '.') }}</span>
+                                </div>
+                                <div class="flex justify-between text-slate-700 dark:text-slate-300">
+                                    <span>EDC / Debit Card</span>
+                                    <span class="font-bold">Rp {{ number_format($shiftSummary['debit_sales'] ?? 0, 0, ',', '.') }}</span>
+                                </div>
+                                <div class="flex justify-between font-black text-slate-900 dark:text-white pt-1 border-t border-slate-200 dark:border-slate-700">
+                                    <span>TOTAL OMSET SHIFT ({{ $shiftSummary['orders_count'] ?? 0 }} Transaksi)</span>
+                                    <span class="text-primary">Rp {{ number_format($shiftSummary['total_omset'] ?? 0, 0, ',', '.') }}</span>
+                                </div>
+                            </div>
                         </div>
 
-                        <div>
-                            <label class="block text-2xs font-extrabold text-slate-400 uppercase mb-1">Catatan Closing</label>
-                            <textarea name="notes" rows="2" placeholder="Catatan selisih kas / serah terima..." class="w-full p-3 rounded-xl border border-slate-200 dark:border-slate-800 text-xs outline-none focus:border-primary"></textarea>
+                        <!-- 2. Real Physical Count & Discrepancy Reconciliation (Validasi Real Case) -->
+                        <div class="pt-3 border-t border-slate-100 dark:border-slate-800 space-y-3">
+                            <div class="flex items-center justify-between">
+                                <label class="block text-2xs font-extrabold text-slate-400 uppercase tracking-wider">2. Input Uang Fisik Kasir (Actual Count)</label>
+                                <button type="button" @click="showDenominationCalc = !showDenominationCalc" class="text-2xs font-extrabold text-primary flex items-center gap-1 hover:underline cursor-pointer">
+                                    <span class="material-symbols-outlined text-sm">calculate</span>
+                                    <span x-text="showDenominationCalc ? 'Sembunyikan Hitung Pecahan' : 'Hitung Pecahan Uang'"></span>
+                                </button>
+                            </div>
+
+                            <!-- Denomination Calculator Helper -->
+                            <div x-show="showDenominationCalc" x-cloak class="p-3 bg-amber-50/60 dark:bg-slate-800/60 rounded-2xl border border-amber-200 dark:border-slate-700 grid grid-cols-2 sm:grid-cols-4 gap-2 text-2xs">
+                                <div>
+                                    <span class="font-bold text-slate-600 dark:text-slate-300">Rp 100.000</span>
+                                    <input type="number" min="0" x-model.number="denoms[100000]" @input="calculateDenoms()" placeholder="0 lbr" class="w-full h-8 px-2 mt-0.5 rounded-lg border border-slate-200 dark:border-slate-700 text-xs font-bold bg-white dark:bg-slate-900 outline-none">
+                                </div>
+                                <div>
+                                    <span class="font-bold text-slate-600 dark:text-slate-300">Rp 50.000</span>
+                                    <input type="number" min="0" x-model.number="denoms[50000]" @input="calculateDenoms()" placeholder="0 lbr" class="w-full h-8 px-2 mt-0.5 rounded-lg border border-slate-200 dark:border-slate-700 text-xs font-bold bg-white dark:bg-slate-900 outline-none">
+                                </div>
+                                <div>
+                                    <span class="font-bold text-slate-600 dark:text-slate-300">Rp 20.000</span>
+                                    <input type="number" min="0" x-model.number="denoms[20000]" @input="calculateDenoms()" placeholder="0 lbr" class="w-full h-8 px-2 mt-0.5 rounded-lg border border-slate-200 dark:border-slate-700 text-xs font-bold bg-white dark:bg-slate-900 outline-none">
+                                </div>
+                                <div>
+                                    <span class="font-bold text-slate-600 dark:text-slate-300">Rp 10.000</span>
+                                    <input type="number" min="0" x-model.number="denoms[10000]" @input="calculateDenoms()" placeholder="0 lbr" class="w-full h-8 px-2 mt-0.5 rounded-lg border border-slate-200 dark:border-slate-700 text-xs font-bold bg-white dark:bg-slate-900 outline-none">
+                                </div>
+                                <div>
+                                    <span class="font-bold text-slate-600 dark:text-slate-300">Rp 5.000</span>
+                                    <input type="number" min="0" x-model.number="denoms[5000]" @input="calculateDenoms()" placeholder="0 lbr" class="w-full h-8 px-2 mt-0.5 rounded-lg border border-slate-200 dark:border-slate-700 text-xs font-bold bg-white dark:bg-slate-900 outline-none">
+                                </div>
+                                <div>
+                                    <span class="font-bold text-slate-600 dark:text-slate-300">Rp 2.000</span>
+                                    <input type="number" min="0" x-model.number="denoms[2000]" @input="calculateDenoms()" placeholder="0 lbr" class="w-full h-8 px-2 mt-0.5 rounded-lg border border-slate-200 dark:border-slate-700 text-xs font-bold bg-white dark:bg-slate-900 outline-none">
+                                </div>
+                                <div>
+                                    <span class="font-bold text-slate-600 dark:text-slate-300">Rp 1.000</span>
+                                    <input type="number" min="0" x-model.number="denoms[1000]" @input="calculateDenoms()" placeholder="0 lbr" class="w-full h-8 px-2 mt-0.5 rounded-lg border border-slate-200 dark:border-slate-700 text-xs font-bold bg-white dark:bg-slate-900 outline-none">
+                                </div>
+                                <div>
+                                    <span class="font-bold text-slate-600 dark:text-slate-300">Koin / Lainnya</span>
+                                    <input type="number" min="0" x-model.number="denoms[0]" @input="calculateDenoms()" placeholder="Rp 0" class="w-full h-8 px-2 mt-0.5 rounded-lg border border-slate-200 dark:border-slate-700 text-xs font-bold bg-white dark:bg-slate-900 outline-none">
+                                </div>
+                            </div>
+
+                            <!-- Input Total Actual Cash -->
+                            <div>
+                                <input type="number" name="closing_cash_actual" x-model.number="closingCashActual" required min="0" placeholder="Masukkan total uang tunai fisik di laci..."
+                                       class="w-full h-11 px-3.5 rounded-xl border border-slate-200 dark:border-slate-800 text-sm font-black text-slate-900 dark:text-white outline-none focus:border-primary">
+                            </div>
+
+                            <!-- Real-Time Discrepancy Badge -->
+                            <div class="p-3 rounded-2xl border flex items-center justify-between transition-all"
+                                 :class="getClosingDifference() === 0 ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 text-emerald-700 dark:text-emerald-300' : (getClosingDifference() > 0 ? 'bg-blue-50 dark:bg-blue-950/40 border-blue-200 text-blue-800 dark:text-blue-200' : 'bg-amber-50 dark:bg-amber-950/40 border-amber-300 text-amber-800 dark:text-amber-200')">
+                                <div class="flex items-center gap-2">
+                                    <span class="material-symbols-outlined text-lg" x-text="getClosingDifference() === 0 ? 'check_circle' : (getClosingDifference() > 0 ? 'trending_up' : 'warning')"></span>
+                                    <div>
+                                        <div class="font-extrabold text-xs" x-text="getClosingDifference() === 0 ? 'Kas Fisik Sesuai 100% (Pass)' : (getClosingDifference() > 0 ? 'Surplus / Uang Fisik Lebih' : 'Defisit / Uang Fisik Kurang')"></div>
+                                        <div class="text-2xs opacity-80" x-text="getClosingDifference() === 0 ? 'Tidak ada selisih uang kas di laci.' : (getClosingDifference() > 0 ? 'Uang fisik di laci lebih dari ekspektasi sistem.' : 'Uang fisik di laci kurang dari ekspektasi sistem. Wajib isi catatan.')"></div>
+                                    </div>
+                                </div>
+                                <div class="text-sm font-black" x-text="(getClosingDifference() > 0 ? '+ Rp ' : 'Rp ') + formatNumber(getClosingDifference())"></div>
+                            </div>
+
+                            <!-- Closing Notes -->
+                            <div>
+                                <label class="block text-2xs font-extrabold text-slate-400 uppercase mb-1">Catatan Closing / Serah Terima Shift</label>
+                                <textarea name="notes" rows="2" placeholder="Catatan selisih kas / serah terima..."
+                                          class="w-full p-3 rounded-xl border text-xs outline-none focus:border-primary"
+                                          :class="getClosingDifference() !== 0 ? 'border-amber-400 dark:border-amber-600 bg-amber-50/20 dark:bg-amber-950/20' : 'border-slate-200 dark:border-slate-800'"></textarea>
+                            </div>
                         </div>
 
-                        <div class="flex justify-between items-center pt-2">
-                            <a href="{{ route('pos.shift.summary-pdf', $activeShift->id) }}" target="_blank" class="px-3 py-2 bg-slate-100 text-slate-700 font-extrabold text-2xs rounded-xl flex items-center gap-1">
-                                <span class="material-symbols-outlined text-sm">print</span>
+                        <!-- Footer Actions -->
+                        <div class="flex justify-between items-center pt-3 border-t border-slate-100 dark:border-slate-800">
+                            <a href="{{ route('pos.shift.summary-pdf', $activeShift->id) }}" target="_blank" class="px-3.5 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-extrabold text-xs rounded-xl flex items-center gap-1.5 transition-all hover:bg-slate-200">
+                                <span class="material-symbols-outlined text-base">print</span>
                                 Preview Struk Shift
                             </a>
                             <div class="flex gap-2">
-                                <button type="button" @click="showCloseShiftModal = false" class="px-4 py-2 text-xs font-bold text-slate-500">Batal</button>
-                                <button type="submit" class="px-5 py-2.5 bg-rose-600 text-white font-extrabold text-xs rounded-xl shadow-md shadow-rose-500/20">Proses Closing Shift</button>
+                                <button type="button" @click="showCloseShiftModal = false" class="px-4 py-2 text-xs font-bold text-slate-500 hover:text-slate-700 cursor-pointer">Batal</button>
+                                <button type="submit" class="px-5 py-2.5 bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-xs rounded-xl shadow-md shadow-rose-500/20 active:scale-95 cursor-pointer">Proses Closing Shift</button>
                             </div>
                         </div>
                     </form>
@@ -1018,6 +1128,11 @@
                 showSuccessModal: {!! session('last_order') ? 'true' : 'false' !!},
                 lastOrder: {!! session('last_order') ? json_encode(session('last_order')) : 'null' !!},
                 printedReceipt: false,
+
+                expectedCash: {{ isset($shiftSummary['expected_cash']) ? $shiftSummary['expected_cash'] : 0 }},
+                closingCashActual: null,
+                showDenominationCalc: false,
+                denoms: { 100000: 0, 50000: 0, 20000: 0, 10000: 0, 5000: 0, 2000: 0, 1000: 0, 0: 0 },
 
                 pointExchangeRate: {{ $pointExchangeRate }},
                 pointEarnSpendThreshold: {{ $pointEarnSpendThreshold }},
@@ -1339,6 +1454,23 @@
                     this.showSuccessModal = false;
                     this.lastOrder = null;
                     this.printedReceipt = false;
+                },
+
+                calculateDenoms() {
+                    let sum = 0;
+                    for (const [denom, count] of Object.entries(this.denoms)) {
+                        if (parseInt(denom) === 0) {
+                            sum += (parseFloat(count) || 0);
+                        } else {
+                            sum += (parseInt(denom) * (parseInt(count) || 0));
+                        }
+                    }
+                    this.closingCashActual = sum;
+                },
+
+                getClosingDifference() {
+                    const actual = parseFloat(this.closingCashActual) || 0;
+                    return actual - this.expectedCash;
                 },
 
                 getValidationState() {

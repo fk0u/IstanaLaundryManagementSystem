@@ -109,6 +109,46 @@ class POSController extends Controller
         $pointEarnSpendThreshold = (float) \App\Models\SystemSetting::get('point_earn_spend_threshold', 1000);
         $pointMinRedeem = (int) \App\Models\SystemSetting::get('point_min_redeem', 0);
 
+        // Compute shiftSummary if an active shift exists
+        $shiftSummary = null;
+        if ($activeShift) {
+            $shiftOrderPayments = OrderPayment::whereHas('order', function ($q) use ($activeShift) {
+                $q->where('cashier_shift_id', $activeShift->id);
+            })->get();
+
+            $cashSales = (float) $shiftOrderPayments->where('payment_method', 'CASH')->sum('amount');
+            $qrisSales = (float) $shiftOrderPayments->where('payment_method', 'QRIS')->sum('amount');
+            $transferSales = (float) $shiftOrderPayments->where('payment_method', 'TRANSFER')->sum('amount');
+            $debitSales = (float) $shiftOrderPayments->where('payment_method', 'DEBIT')->sum('amount');
+            $dpSales = (float) $shiftOrderPayments->where('payment_method', 'DP')->sum('amount');
+
+            $directCashOrders = Order::where('cashier_shift_id', $activeShift->id)
+                ->whereDoesntHave('payments')
+                ->whereIn('payment_method', ['cash', 'CASH'])
+                ->sum('paid_amount');
+            $cashSales += (float) $directCashOrders;
+
+            $pettyCashOut = (float) $activeShift->pettyCashRecords()->sum('amount');
+            $openingCash = (float) $activeShift->opening_cash;
+
+            $expectedCashInDrawer = max(0, $openingCash + $cashSales - $pettyCashOut);
+            $totalShiftOmset = $cashSales + $qrisSales + $transferSales + $debitSales + $dpSales;
+            $ordersCount = Order::where('cashier_shift_id', $activeShift->id)->count();
+
+            $shiftSummary = [
+                'opening_cash' => $openingCash,
+                'cash_sales' => $cashSales,
+                'qris_sales' => $qrisSales,
+                'transfer_sales' => $transferSales,
+                'debit_sales' => $debitSales,
+                'dp_sales' => $dpSales,
+                'petty_cash_out' => $pettyCashOut,
+                'expected_cash' => $expectedCashInDrawer,
+                'total_omset' => $totalShiftOmset,
+                'orders_count' => $ordersCount,
+            ];
+        }
+
         return view('pos.index', compact(
             'branch',
             'services',
@@ -118,6 +158,7 @@ class POSController extends Controller
             'promotions',
             'branches',
             'activeShift',
+            'shiftSummary',
             'draftOrders',
             'pointExchangeRate',
             'pointEarnSpendThreshold',
@@ -181,12 +222,19 @@ class POSController extends Controller
             'notes' => 'nullable|string',
         ]);
 
-        // Calculate cash transactions under this shift
-        $cashSales = Order::where('cashier_shift_id', $shift->id)
-            ->whereIn('payment_method', ['cash', 'CASH', 'split', 'dp'])
-            ->sum('paid_amount');
+        // Calculate exact cash transactions under this shift from order_payments
+        $shiftOrderPayments = OrderPayment::whereHas('order', function ($q) use ($shift) {
+            $q->where('cashier_shift_id', $shift->id);
+        })->get();
 
-        $pettyCashTotal = $shift->pettyCashRecords()->sum('amount');
+        $cashSales = (float) $shiftOrderPayments->where('payment_method', 'CASH')->sum('amount');
+        $directCashOrders = Order::where('cashier_shift_id', $shift->id)
+            ->whereDoesntHave('payments')
+            ->whereIn('payment_method', ['cash', 'CASH'])
+            ->sum('paid_amount');
+        $cashSales += (float) $directCashOrders;
+
+        $pettyCashTotal = (float) $shift->pettyCashRecords()->sum('amount');
 
         // Total cash expected in drawer = Opening Cash + Cash Sales - Petty Cash Expenses
         $closingCashSystem = (float) $shift->opening_cash + (float) $cashSales - (float) $pettyCashTotal;
