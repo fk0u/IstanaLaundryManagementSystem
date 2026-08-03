@@ -38,8 +38,17 @@ class HRController extends Controller
 
         $branches = Branch::orderBy('name')->get();
 
+        $search = $request->query('search');
         $employees = Employee::with(['branch', 'user.roles', 'attendances'])
             ->when($branchId, fn ($q) => $q->where('branch_id', $branchId))
+            ->when($search, function ($q) use ($search) {
+                $q->where(function ($sub) use ($search) {
+                    $sub->where('name', 'like', "%{$search}%")
+                        ->orWhere('nik', 'like', "%{$search}%")
+                        ->orWhere('role_name', 'like', "%{$search}%")
+                        ->orWhere('phone', 'like', "%{$search}%");
+                });
+            })
             ->orderBy('name')
             ->paginate(15);
 

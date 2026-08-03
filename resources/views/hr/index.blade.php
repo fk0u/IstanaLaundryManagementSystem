@@ -84,9 +84,19 @@
 
         <!-- ==================== TAB 1: DATA KARYAWAN & STAF ==================== -->
         <div x-show="activeTab === 'employees'" class="space-y-4" x-cloak>
-            <x-card title="Manajemen & Detail Staf Karyawan">
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left text-xs border-collapse">
+            <div class="relative max-w-md">
+                <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg pointer-events-none">search</span>
+                <input type="text" name="search" value="{{ request('search') }}"
+                       data-realtime-search="hr-employees-table-container"
+                       data-search-url="{{ route('hr.index') }}"
+                       placeholder="Cari NIK, nama staf, atau jabatan (Real-time)..."
+                       class="w-full pl-10 pr-8 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-xs font-semibold focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all">
+            </div>
+
+            <div id="hr-employees-table-container">
+                <x-card title="Manajemen & Detail Staf Karyawan">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-xs border-collapse">
                         <thead>
                             <tr class="border-b border-slate-100 dark:border-slate-800 text-slate-400 font-bold uppercase tracking-wider">
                                 <th class="py-2.5 px-3">NIK / Nama Staf</th>
@@ -182,6 +192,7 @@
                     </div>
                 @endif
             </x-card>
+            </div>
         </div>
 
         <!-- ==================== TAB 2: RIWAYAT & PAYROLL GAJI ==================== -->

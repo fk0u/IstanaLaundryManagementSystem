@@ -36,9 +36,19 @@
             <x-alert type="success" :message="session('success')" class="mb-4" />
         @endif
 
-        <x-card title="Stok Bahan Kimia & Sabun Cabang">
-            <div class="overflow-x-auto">
-                <table class="w-full text-left text-xs border-collapse">
+        <div class="relative max-w-md">
+            <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg pointer-events-none">search</span>
+            <input type="text" name="search" value="{{ request('search') }}"
+                   data-realtime-search="inventory-table-container"
+                   data-search-url="{{ route('inventory.index') }}"
+                   placeholder="Cari SKU, nama barang, atau kategori (Real-time)..."
+                   class="w-full pl-10 pr-8 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-xs font-semibold focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all">
+        </div>
+
+        <div id="inventory-table-container">
+            <x-card title="Stok Bahan Kimia & Sabun Cabang">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-xs border-collapse">
                     <thead>
                         <tr class="border-b border-slate-100 dark:border-slate-800 text-slate-400 font-bold uppercase tracking-wider">
                             <th class="py-3 px-4">Nama Item</th>
@@ -97,6 +107,7 @@
                 {{ $inventoryItems->links() }}
             </div>
         </x-card>
+        </div>
 
         <!-- Custom Create Item Modal -->
         <div x-show="showCreateModal" 

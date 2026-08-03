@@ -20,12 +20,14 @@
 
             {{-- Search --}}
             <div class="flex-1 min-w-[160px]">
-                <label class="text-2xs font-bold text-slate-400 uppercase tracking-wider block mb-1">Cari Nota / Pelanggan</label>
+                <label class="text-2xs font-bold text-slate-400 uppercase tracking-wider block mb-1">Cari Nota / Pelanggan (Real-time)</label>
                 <div class="relative">
                     <span class="material-symbols-outlined absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-base pointer-events-none">search</span>
                     <input type="text" name="search" value="{{ $search }}"
+                           data-realtime-search="orders-table-container"
+                           data-search-url="{{ route('orders.index') }}"
                            placeholder="Cari nomor nota, nama..."
-                           class="w-full pl-8 pr-3 h-9 text-xs rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 font-medium focus:outline-none focus:border-primary">
+                           class="w-full pl-8 pr-8 h-9 text-xs rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 font-medium focus:outline-none focus:border-primary transition-all">
                 </div>
             </div>
 
@@ -33,7 +35,7 @@
             @if($isGlobalUser)
                 <div class="min-w-[140px]">
                     <label class="text-2xs font-bold text-slate-400 uppercase tracking-wider block mb-1">Cabang</label>
-                    <select name="branch_id" class="h-9 w-full text-xs rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 font-semibold">
+                    <select name="branch_id" onchange="this.form.querySelector('input[name=search]').dispatchEvent(new Event('input', { bubbles: true }))" class="h-9 w-full text-xs rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 font-semibold">
                         <option value="">Semua Cabang</option>
                         @foreach($branches as $b)
                             <option value="{{ $b->id }}" {{ $branchId == $b->id ? 'selected' : '' }}>{{ $b->name }}</option>
@@ -45,7 +47,7 @@
             {{-- Status Produksi Filter --}}
             <div class="min-w-[130px]">
                 <label class="text-2xs font-bold text-slate-400 uppercase tracking-wider block mb-1">Status Produksi</label>
-                <select name="status" class="h-9 w-full text-xs rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 font-semibold">
+                <select name="status" onchange="this.form.querySelector('input[name=search]').dispatchEvent(new Event('input', { bubbles: true }))" class="h-9 w-full text-xs rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 font-semibold">
                     <option value="">Semua Status</option>
                     @foreach($productionStatuses as $ps)
                         <option value="{{ $ps }}" {{ $status === $ps ? 'selected' : '' }}>{{ $ps }}</option>
@@ -56,7 +58,7 @@
             {{-- Status Bayar Filter --}}
             <div class="min-w-[120px]">
                 <label class="text-2xs font-bold text-slate-400 uppercase tracking-wider block mb-1">Status Bayar</label>
-                <select name="pay_status" class="h-9 w-full text-xs rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 font-semibold">
+                <select name="pay_status" onchange="this.form.querySelector('input[name=search]').dispatchEvent(new Event('input', { bubbles: true }))" class="h-9 w-full text-xs rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 font-semibold">
                     <option value="">Semua</option>
                     <option value="paid"     {{ $payStatus === 'paid'     ? 'selected' : '' }}>Lunas</option>
                     <option value="pending"  {{ $payStatus === 'pending'  ? 'selected' : '' }}>Pending</option>
@@ -75,8 +77,8 @@
             @endif
         </form>
 
-        {{-- Orders Table --}}
-        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden">
+        {{-- Orders Table Container --}}
+        <div id="orders-table-container" class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden">
             {{-- Desktop Table --}}
             <div class="hidden md:block overflow-x-auto">
                 <table class="w-full text-left text-xs border-collapse">

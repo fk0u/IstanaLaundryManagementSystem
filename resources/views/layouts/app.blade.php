@@ -34,6 +34,7 @@
         <script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
         <script src="/js/secure-dialog.js"></script>
         <script src="/js/realtime-validation.js"></script>
+        <script src="/js/realtime-search.js"></script>
         @vite(['resources/css/app.css', 'resources/js/app.js'])
         
         <style>

@@ -813,31 +813,37 @@
                 },
 
                 filteredCustomers() {
-                    const q = this.customerSearch.trim().toLowerCase();
-                    if (!q) return this.customers;
-
+                    if (!this.customerSearch) return this.customers;
+                    const q = this.customerSearch.trim();
                     const phoneQ = q.replace(/[^0-9]/g, '');
+
+                    if (window.FuzzyEngine) {
+                        return [...this.customers].filter(c => {
+                            const cPhone = (c.phone || '').replace(/[^0-9]/g, '');
+                            const phoneMatch = phoneQ ? cPhone.includes(phoneQ) : false;
+                            const fuzzyName = window.FuzzyEngine.match(q, c.name, 0.45);
+                            const fuzzyPhone = window.FuzzyEngine.match(q, c.phone || '', 0.45);
+                            return phoneMatch || fuzzyName || fuzzyPhone;
+                        }).sort((a, b) => {
+                            const scoreA = Math.max(
+                                window.FuzzyEngine.score(q, a.name),
+                                window.FuzzyEngine.score(q, a.phone || '')
+                            );
+                            const scoreB = Math.max(
+                                window.FuzzyEngine.score(q, b.name),
+                                window.FuzzyEngine.score(q, b.phone || '')
+                            );
+                            return scoreB - scoreA;
+                        });
+                    }
 
                     return [...this.customers].filter(c => {
                         const cPhone = (c.phone || '').replace(/[^0-9]/g, '');
                         const phoneMatch = phoneQ ? cPhone.includes(phoneQ) : false;
-                        const nameMatch = c.name.toLowerCase().includes(q);
-                        const rawPhoneMatch = (c.phone || '').toLowerCase().includes(q);
+                        const nameMatch = c.name.toLowerCase().includes(q.toLowerCase());
+                        const rawPhoneMatch = (c.phone || '').toLowerCase().includes(q.toLowerCase());
                         return phoneMatch || nameMatch || rawPhoneMatch;
                     }).sort((a, b) => {
-                        const aPhone = (a.phone || '').replace(/[^0-9]/g, '');
-                        const bPhone = (b.phone || '').replace(/[^0-9]/g, '');
-
-                        const aPhoneExact = phoneQ && aPhone === phoneQ;
-                        const bPhoneExact = phoneQ && bPhone === phoneQ;
-                        if (aPhoneExact && !bPhoneExact) return -1;
-                        if (!aPhoneExact && bPhoneExact) return 1;
-
-                        const aPhoneStarts = phoneQ && aPhone.startsWith(phoneQ);
-                        const bPhoneStarts = phoneQ && bPhone.startsWith(phoneQ);
-                        if (aPhoneStarts && !bPhoneStarts) return -1;
-                        if (!aPhoneStarts && bPhoneStarts) return 1;
-
                         return a.name.localeCompare(b.name);
                     });
                 },

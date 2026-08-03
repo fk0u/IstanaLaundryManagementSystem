@@ -184,8 +184,16 @@ Route::middleware(['auth', 'branch.scope'])->group(function () {
     });
 
     // Inventory
-    Route::get('/inventory', function () {
-        $inventoryItems = InventoryItem::orderBy('name', 'asc')->paginate(10);
+    Route::get('/inventory', function (\Illuminate\Http\Request $request) {
+        $query = InventoryItem::query();
+        if ($search = $request->input('search')) {
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('sku', 'like', "%{$search}%")
+                  ->orWhere('category', 'like', "%{$search}%");
+            });
+        }
+        $inventoryItems = $query->orderBy('name', 'asc')->paginate(10);
 
         return view('inventory.index', compact('inventoryItems'));
     })->name('inventory.index');
