@@ -425,7 +425,7 @@ Route::middleware(['auth', 'branch.scope'])->group(function () {
         // Closing Checklist Periode Akuntansi
         Route::get('/finance/closing-checklist', function () {
             $currentMonth = now()->format('Y-m');
-            $openPeriods = \App\Models\AccountingPeriod::where('is_closed', false)->get();
+            $openPeriods = \App\Models\AccountingPeriod::where('status', 'open')->get();
             $unpaidOrdersCount = \App\Models\Order::where('payment_status', '!=', 'paid')->whereNotIn('production_status', ['BATAL'])->count();
             $unpaidOrdersAmount = \App\Models\Order::where('payment_status', '!=', 'paid')->whereNotIn('production_status', ['BATAL'])->sum(\Illuminate\Support\Facades\DB::raw('total - paid_amount'));
 
