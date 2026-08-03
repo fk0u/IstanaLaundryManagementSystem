@@ -1,5 +1,38 @@
 <x-app-layout>
-    <div x-data="{ showCreateModal: false, selectedOrderId: '', orders: @js($refundableOrders), amount: 0, reason: '' }" class="flex flex-col gap-6">
+    <div x-data="{ 
+        showCreateModal: false, 
+        selectedOrderId: '', 
+        selectedOrder: null,
+        orderSearch: '',
+        orderSearchOpen: false,
+        orders: @js($refundableOrders), 
+        amount: 0, 
+        reason: '',
+
+        filteredOrders() {
+            const q = this.orderSearch.trim().toLowerCase();
+            if (!q) return this.orders;
+            const phoneQ = q.replace(/[^0-9]/g, '');
+
+            return this.orders.filter(o => {
+                const numMatch = (o.order_number || '').toLowerCase().includes(q);
+                const nameMatch = o.customer && (o.customer.name || '').toLowerCase().includes(q);
+                const phoneMatch = o.customer && o.customer.phone && (
+                    o.customer.phone.toLowerCase().includes(q) ||
+                    (phoneQ && o.customer.phone.replace(/[^0-9]/g, '').includes(phoneQ))
+                );
+                return numMatch || nameMatch || phoneMatch;
+            });
+        },
+
+        selectOrder(o) {
+            this.selectedOrder = o;
+            this.selectedOrderId = o.id;
+            this.orderSearch = o.order_number;
+            this.amount = parseFloat(o.total) || 0;
+            this.orderSearchOpen = false;
+        }
+    }" class="flex flex-col gap-6">
         <div class="flex justify-between items-center">
             <x-page-header title="Refund & Pembatalan Transaksi" :breadcrumbs="['POS' => '#', 'Refund' => '/refunds']" />
             
@@ -33,7 +66,7 @@
                             <th class="py-3 px-4 text-right">Aksi</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-slate-50 dark:divide-slate-850">
+                    <tbody class="divide-y divide-slate-50 dark:divide-slate-855">
                         @forelse($refunds as $ref)
                             <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-900/30 transition-colors">
                                 <td class="py-4 px-4 font-mono font-bold text-slate-800 dark:text-slate-200">
@@ -96,7 +129,6 @@
                                 </td>
                                 <td class="py-4 px-4 text-right">
                                     <div class="flex justify-end gap-2">
-                                        <!-- Approval Buttons -->
                                         @php
                                             $user = auth()->user();
                                             $showApproveBtn = false;
@@ -121,22 +153,24 @@
                                                     {{ $approveBtnText }}
                                                 </button>
                                             </form>
+                                        @endif
 
-                                            <form action="{{ route('refunds.reject', $ref->id) }}" method="POST" class="inline" onsubmit="return confirm('Apakah Anda yakin ingin menolak permintaan refund ini?')">
+                                        @if (in_array($ref->status, ['pending', 'branch_approved', 'finance_approved']) && $user->hasAnyRole(['Developer', 'Owner', 'Super_Admin', 'Branch_Admin', 'Finance']))
+                                            <form action="{{ route('refunds.reject', $ref->id) }}" method="POST" class="inline" onsubmit="return confirm('Apakah Anda yakin ingin menolak pengajuan refund ini?')">
                                                 @csrf
-                                                <button type="submit" class="px-2.5 py-1.5 bg-red-500 hover:bg-red-650 text-white rounded-lg text-[10px] font-bold cursor-pointer transition-all">
+                                                <button type="submit" class="px-2.5 py-1.5 bg-rose-500 hover:bg-rose-600 text-white rounded-lg text-[10px] font-bold cursor-pointer transition-all">
                                                     Tolak
                                                 </button>
                                             </form>
-                                        @else
-                                            <span class="text-slate-350 dark:text-slate-700 material-symbols-outlined text-sm cursor-not-allowed">lock</span>
                                         @endif
                                     </div>
                                 </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="8" class="py-12 text-center text-slate-400">Belum ada pengajuan refund terdaftar.</td>
+                                <td colspan="8" class="py-12 text-center text-slate-400">
+                                    Belum ada data pengajuan refund.
+                                </td>
                             </tr>
                         @endforelse
                     </tbody>
@@ -164,23 +198,81 @@
                 <form action="{{ route('refunds.store') }}" method="POST" class="space-y-4">
                     @csrf
                     
-                    <div class="flex flex-col gap-1.5">
-                        <label for="order_id" class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Nomor Nota / Transaksi Lunas</label>
-                        <select id="order_id" name="order_id" x-model="selectedOrderId" required
-                                @change="
-                                    let ord = orders.find(o => o.id == selectedOrderId);
-                                    if(ord) {
-                                        amount = parseFloat(ord.total);
-                                    } else {
-                                        amount = 0;
-                                    }
-                                "
-                                class="w-full h-11 px-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all">
-                            <option value="">-- Pilih Nota Paid --</option>
-                            <template x-for="o in orders" :key="o.id">
-                                <option :value="o.id" x-text="o.order_number + ' - ' + (o.customer ? o.customer.name : 'Walk-In') + ' (Rp ' + parseFloat(o.total).toLocaleString('id-ID') + ')'"></option>
+                    <div class="flex flex-col gap-1.5 relative" @click.outside="orderSearchOpen = false">
+                        <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Cari Nomor Nota / No. HP Member</label>
+                        
+                        <div class="relative flex items-center">
+                            <span class="material-symbols-outlined absolute left-3 text-slate-400 text-lg pointer-events-none">search</span>
+                            <input type="text" x-model="orderSearch" autocomplete="off"
+                                   @focus="orderSearchOpen = true" @click="orderSearchOpen = true" @input="orderSearchOpen = true"
+                                   placeholder="Ketik Nomor Nota (mis: ORD-...) atau No. HP Member..."
+                                   class="w-full h-11 pl-9 pr-8 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 text-xs font-semibold focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all shadow-xs">
+
+                            <button type="button" x-show="orderSearch || selectedOrderId" x-cloak 
+                                    @click="orderSearch = ''; selectedOrderId = ''; selectedOrder = null; amount = 0; orderSearchOpen = true"
+                                    class="absolute right-2.5 text-slate-400 hover:text-slate-600 cursor-pointer">
+                                <span class="material-symbols-outlined text-base">close</span>
+                            </button>
+                        </div>
+
+                        <!-- Hidden Input for Form Submission -->
+                        <input type="hidden" name="order_id" :value="selectedOrderId" required>
+
+                        <!-- Selected Order Card Badge -->
+                        <template x-if="selectedOrder">
+                            <div class="p-3 rounded-xl bg-orange-50 dark:bg-slate-800/80 border border-orange-200 dark:border-slate-700 flex items-center justify-between gap-3 shadow-2xs">
+                                <div>
+                                    <span class="block text-xs font-black text-slate-900 dark:text-white" x-text="selectedOrder.order_number"></span>
+                                    <span class="block text-2xs text-slate-500 dark:text-slate-400" x-text="(selectedOrder.customer ? selectedOrder.customer.name : 'Pelanggan Walk-In') + ' (' + (selectedOrder.customer?.phone || '-') + ')'"></span>
+                                </div>
+                                <div class="text-right">
+                                    <span class="block text-[9px] font-extrabold text-slate-400 uppercase">Total Order</span>
+                                    <span class="block text-xs font-black text-orange-600 dark:text-orange-400" x-text="'Rp ' + parseFloat(selectedOrder.total).toLocaleString('id-ID')"></span>
+                                </div>
+                            </div>
+                        </template>
+
+                        <!-- Autocomplete Dropdown List -->
+                        <div x-show="orderSearchOpen" x-transition.opacity.duration.150ms x-cloak
+                             class="absolute z-50 top-16 w-full max-h-60 overflow-y-auto bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl divide-y divide-slate-100 dark:divide-slate-800/60">
+                            
+                            <div class="px-3.5 py-2 bg-slate-50/80 dark:bg-slate-800/50 flex items-center justify-between sticky top-0 backdrop-blur-sm z-10">
+                                <span class="text-[10px] font-black text-slate-400 uppercase tracking-wider">Nota Lunas Siap Refund</span>
+                                <span class="text-[10px] font-bold text-primary" x-text="filteredOrders().length + ' Nota'"></span>
+                            </div>
+
+                            <template x-for="o in filteredOrders()" :key="o.id">
+                                <button type="button" @click="selectOrder(o)"
+                                        class="w-full text-left px-3.5 py-2.5 hover:bg-primary/5 dark:hover:bg-slate-800/80 flex items-center justify-between gap-3 group transition-colors cursor-pointer">
+                                    <div class="min-w-0">
+                                        <div class="flex items-center gap-2 flex-wrap">
+                                            <span class="font-mono font-black text-xs text-slate-800 dark:text-slate-100 group-hover:text-primary transition-colors" x-text="o.order_number"></span>
+                                            <span class="text-[9px] font-extrabold px-1.5 py-0.5 rounded bg-emerald-100 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400 uppercase">Paid</span>
+                                            <span class="text-[9px] font-extrabold px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-500 uppercase flex items-center gap-0.5">
+                                                <span class="material-symbols-outlined text-[10px]">storefront</span>
+                                                <span>Langsung Outlet</span>
+                                            </span>
+                                        </div>
+                                        <div class="flex items-center gap-1.5 text-2xs text-slate-500 dark:text-slate-400 mt-1">
+                                            <span class="font-bold flex items-center gap-1" :class="o.customer ? 'text-slate-800 dark:text-slate-200' : 'text-slate-400 italic'">
+                                                <span class="material-symbols-outlined text-xs text-slate-400" x-text="o.customer ? 'person' : 'person_off'"></span>
+                                                <span x-text="o.customer ? o.customer.name : 'Pelanggan Walk-In (Umum)'"></span>
+                                            </span>
+                                            <span x-show="o.customer && o.customer.phone" class="font-mono text-orange-600 dark:text-orange-400 font-bold" x-text="'(' + o.customer.phone + ')'"></span>
+                                        </div>
+                                    </div>
+                                    <div class="text-right shrink-0">
+                                        <span class="block text-xs font-black text-orange-600 dark:text-orange-400" x-text="'Rp ' + parseFloat(o.total).toLocaleString('id-ID')"></span>
+                                    </div>
+                                </button>
                             </template>
-                        </select>
+
+                            <template x-if="filteredOrders().length === 0">
+                                <div class="py-6 text-center text-2xs text-slate-400">
+                                    Tidak ada nota order lunas yang cocok.
+                                </div>
+                            </template>
+                        </div>
                     </div>
 
                     <div class="flex flex-col gap-1.5">

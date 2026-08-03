@@ -147,16 +147,16 @@
                                 </div>
                             </div>
 
-                            <!-- State 2: Customer Combobox Search -->
+                            <!-- State 2: Customer Combobox Search (Phone-First Priority) -->
                             <div x-show="!customerId" class="flex flex-col gap-2">
-                                <label class="text-2xs font-bold text-slate-400 uppercase tracking-wider">Cari Nama / No. HP Pelanggan</label>
+                                <label class="text-2xs font-bold text-slate-400 uppercase tracking-wider">Cari No. HP Member (Utama) / Nama</label>
                                 <div class="flex gap-2">
                                     <div class="relative flex-1" @click.outside="customerOpen = false">
                                         <div class="relative flex items-center">
-                                            <span class="material-symbols-outlined absolute left-3 text-slate-400 text-lg pointer-events-none">search</span>
+                                            <span class="material-symbols-outlined absolute left-3 text-slate-400 text-lg pointer-events-none">phone_search</span>
                                             <input type="text" x-model="customerSearch" autocomplete="off"
                                                    @focus="customerOpen = true" @click="customerOpen = true" @input="customerOpen = true"
-                                                   placeholder="Ketik nama atau no. HP..."
+                                                   placeholder="Ketik No. HP (Utama) atau nama member..."
                                                    class="w-full h-11 pl-9 pr-8 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 text-xs font-semibold focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all shadow-xs">
 
                                             <button type="button" x-show="customerSearch" x-cloak @click="customerSearch = ''; customerOpen = true"
@@ -170,7 +170,7 @@
                                              class="absolute z-50 mt-2 w-full max-h-64 overflow-y-auto bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl divide-y divide-slate-100 dark:divide-slate-800/60">
                                             
                                             <div class="px-3.5 py-2 bg-slate-50/80 dark:bg-slate-800/50 flex items-center justify-between sticky top-0 backdrop-blur-sm z-10">
-                                                <span class="text-[10px] font-black text-slate-400 uppercase tracking-wider">Pelanggan Terdaftar</span>
+                                                <span class="text-[10px] font-black text-slate-400 uppercase tracking-wider">Pelanggan Terdaftar (No. HP Utamakan)</span>
                                                 <span class="text-[10px] font-bold text-primary" x-text="filteredCustomers().length + ' Pelanggan'"></span>
                                             </div>
 
@@ -182,8 +182,11 @@
                                                             <span x-text="c.name.substring(0, 2).toUpperCase()"></span>
                                                         </div>
                                                         <div class="min-w-0">
-                                                            <h5 class="text-xs font-bold text-slate-800 dark:text-slate-100 group-hover:text-primary transition-colors truncate" x-text="c.name"></h5>
-                                                            <p class="text-2xs text-slate-400 font-mono" x-text="c.phone"></p>
+                                                            <div class="flex items-center gap-1">
+                                                                <span class="material-symbols-outlined text-[13px] text-orange-500 font-bold">call</span>
+                                                                <span class="text-xs font-black font-mono text-orange-600 dark:text-orange-400 group-hover:text-primary transition-colors" x-text="c.phone || 'Tanpa No. HP'"></span>
+                                                            </div>
+                                                            <h5 class="text-2xs font-bold text-slate-700 dark:text-slate-200 truncate mt-0.5" x-text="c.name"></h5>
                                                         </div>
                                                     </div>
                                                     <div class="text-right shrink-0">
@@ -812,7 +815,31 @@
                 filteredCustomers() {
                     const q = this.customerSearch.trim().toLowerCase();
                     if (!q) return this.customers;
-                    return this.customers.filter(c => c.name.toLowerCase().includes(q) || (c.phone || '').includes(q));
+
+                    const phoneQ = q.replace(/[^0-9]/g, '');
+
+                    return [...this.customers].filter(c => {
+                        const cPhone = (c.phone || '').replace(/[^0-9]/g, '');
+                        const phoneMatch = phoneQ ? cPhone.includes(phoneQ) : false;
+                        const nameMatch = c.name.toLowerCase().includes(q);
+                        const rawPhoneMatch = (c.phone || '').toLowerCase().includes(q);
+                        return phoneMatch || nameMatch || rawPhoneMatch;
+                    }).sort((a, b) => {
+                        const aPhone = (a.phone || '').replace(/[^0-9]/g, '');
+                        const bPhone = (b.phone || '').replace(/[^0-9]/g, '');
+
+                        const aPhoneExact = phoneQ && aPhone === phoneQ;
+                        const bPhoneExact = phoneQ && bPhone === phoneQ;
+                        if (aPhoneExact && !bPhoneExact) return -1;
+                        if (!aPhoneExact && bPhoneExact) return 1;
+
+                        const aPhoneStarts = phoneQ && aPhone.startsWith(phoneQ);
+                        const bPhoneStarts = phoneQ && bPhone.startsWith(phoneQ);
+                        if (aPhoneStarts && !bPhoneStarts) return -1;
+                        if (!aPhoneStarts && bPhoneStarts) return 1;
+
+                        return a.name.localeCompare(b.name);
+                    });
                 },
 
                 selectCustomer(c) {

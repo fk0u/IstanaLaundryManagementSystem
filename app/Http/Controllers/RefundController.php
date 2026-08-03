@@ -47,7 +47,7 @@ class RefundController extends Controller
         $refunds = $refundsQuery->paginate(15);
 
         // Fetch paid orders available for refund (no active non-rejected refunds)
-        $ordersQuery = Order::where('payment_status', 'paid');
+        $ordersQuery = Order::with('customer')->where('payment_status', 'paid');
         if ($branchId) {
             $ordersQuery->where('branch_id', $branchId);
         }
@@ -65,6 +65,13 @@ class RefundController extends Controller
      */
     public function store(Request $request)
     {
+        if ($request->filled('order_number') && ! $request->filled('order_id')) {
+            $found = Order::where('order_number', trim($request->order_number))->first();
+            if ($found) {
+                $request->merge(['order_id' => $found->id]);
+            }
+        }
+
         $request->validate([
             'order_id' => 'required|exists:orders,id',
             'amount' => 'required|numeric|min:0.01',
