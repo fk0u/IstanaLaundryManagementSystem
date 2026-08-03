@@ -502,22 +502,54 @@ class POSController extends Controller
                 $total = max(0, $subtotal - $discountAmount - $pointsDiscount);
                 $taxAmount = 0;
 
-                // Payment Status Determination
-                $paidAmount = (float) $data['paid_amount'];
-                $paymentStatus = 'unpaid';
-                $paidAt = null;
-
+                // Enforce Strict Nominal Validation Rules across all payment methods & types
+                $paidAmount = (float) ($data['paid_amount'] ?? 0);
                 if ($data['payment_method'] === 'invoice') {
                     $paymentStatus = 'unpaid';
                     $paidAmount = 0;
+                    $paidAt = null;
                 } elseif ($data['payment_method'] === 'dp') {
+                    if ($paidAmount <= 0) {
+                        throw \Illuminate\Validation\ValidationException::withMessages([
+                            'paid_amount' => ['Nominal DP harus lebih dari Rp 0.'],
+                        ]);
+                    }
+                    if ($paidAmount >= $total) {
+                        throw \Illuminate\Validation\ValidationException::withMessages([
+                            'paid_amount' => ['Nominal DP harus lebih kecil dari total tagihan.'],
+                        ]);
+                    }
                     $paymentStatus = 'partial';
                     $paidAt = now();
-                } elseif ($paidAmount >= $total) {
+                } elseif ($data['payment_method'] === 'split') {
+                    $splitTotal = 0;
+                    if (! empty($data['split_payments'])) {
+                        foreach ($data['split_payments'] as $sp) {
+                            $splitTotal += (float) ($sp['amount'] ?? 0);
+                        }
+                    }
+                    if (abs($total - $splitTotal) > 0.99) {
+                        throw \Illuminate\Validation\ValidationException::withMessages([
+                            'paid_amount' => ['Total rincian split payment (Rp '.number_format($splitTotal, 0, ',', '.').') tidak sama dengan total tagihan (Rp '.number_format($total, 0, ',', '.').').'],
+                        ]);
+                    }
+                    $paidAmount = $splitTotal;
                     $paymentStatus = 'paid';
                     $paidAt = now();
-                } elseif ($paidAmount > 0) {
-                    $paymentStatus = 'partial';
+                } elseif ($data['payment_method'] === 'cash') {
+                    if ($paidAmount < $total) {
+                        throw \Illuminate\Validation\ValidationException::withMessages([
+                            'paid_amount' => ['Uang tunai (Rp '.number_format($paidAmount, 0, ',', '.').') kurang dari total tagihan (Rp '.number_format($total, 0, ',', '.').').'],
+                        ]);
+                    }
+                    $paymentStatus = 'paid';
+                    $paidAt = now();
+                } else {
+                    // Non-cash full payments (QRIS, Transfer, Debit)
+                    if ($paidAmount < $total) {
+                        $paidAmount = $total;
+                    }
+                    $paymentStatus = 'paid';
                     $paidAt = now();
                 }
 

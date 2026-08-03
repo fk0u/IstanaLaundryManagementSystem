@@ -812,6 +812,9 @@
                         </div>
                     </template>
                 </div>
+            </div>
+        </div>
+
         <!-- Modal Switch Scoped Branch (Khusus Owner / Admin / Finance) -->
         <div x-show="showBranchScopeModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4" x-cloak>
             <div class="bg-white dark:bg-slate-900 rounded-3xl p-6 max-w-md w-full shadow-2xl border border-slate-200 dark:border-slate-800">
@@ -1172,11 +1175,21 @@
 
                     this.total = Math.max(0, this.subtotal - this.discount - this.pointsDiscount);
 
-                    if (this.paymentType === 'full' && this.paymentMethod === 'cash') {
-                        if (this.paidAmount === null || this.paidAmount === undefined || this.paidAmount === '') {
+                    if (this.paymentType === 'full') {
+                        if (this.paymentMethod === 'cash') {
+                            if (this.paidAmount === null || this.paidAmount === undefined || this.paidAmount === '') {
+                                this.paidAmount = this.total;
+                            }
+                            this.changeAmount = Math.max(0, (parseFloat(this.paidAmount) || 0) - this.total);
+                        } else if (['qris', 'transfer', 'debit'].includes(this.paymentMethod)) {
                             this.paidAmount = this.total;
+                            this.changeAmount = 0;
+                        } else if (this.paymentMethod === 'invoice') {
+                            this.paidAmount = 0;
+                            this.changeAmount = 0;
                         }
-                        this.changeAmount = Math.max(0, this.paidAmount - this.total);
+                    } else if (this.paymentType === 'dp') {
+                        this.changeAmount = 0;
                     } else if (this.paymentType === 'split') {
                         this.paidAmount = this.getSplitTotal();
                         this.changeAmount = 0;
@@ -1195,13 +1208,24 @@
 
                     if (this.paymentType === 'full') {
                         if (this.paymentMethod === 'cash') {
-                            const deficit = this.total - (this.paidAmount || 0);
+                            const paid = parseFloat(this.paidAmount) || 0;
+                            const deficit = this.total - paid;
                             if (deficit > 0) {
                                 paymentValid = false;
                                 paymentMessage = `Uang tunai kurang Rp ${this.formatNumber(deficit)}`;
                             } else {
                                 paymentValid = true;
                             }
+                        } else if (['qris', 'transfer', 'debit'].includes(this.paymentMethod)) {
+                            const paid = parseFloat(this.paidAmount) || 0;
+                            if (paid < this.total) {
+                                paymentValid = false;
+                                paymentMessage = `Nominal ${this.paymentMethod.toUpperCase()} kurang Rp ${this.formatNumber(this.total - paid)}`;
+                            } else {
+                                paymentValid = true;
+                            }
+                        } else if (this.paymentMethod === 'invoice') {
+                            paymentValid = true;
                         } else {
                             paymentValid = true;
                         }
@@ -1210,16 +1234,22 @@
                         if (dpVal <= 0) {
                             paymentValid = false;
                             paymentMessage = 'Nominal DP harus lebih dari Rp 0';
-                        } else if (dpVal > this.total) {
+                        } else if (dpVal >= this.total) {
                             paymentValid = false;
-                            paymentMessage = `DP melebihi total (Rp ${this.formatNumber(this.total)})`;
+                            paymentMessage = `Nominal DP harus kurang dari total tagihan (Rp ${this.formatNumber(this.total)})`;
                         } else {
                             paymentValid = true;
                         }
                     } else if (this.paymentType === 'split') {
+                        const s1 = parseFloat(this.split1.amount) || 0;
+                        const s2 = parseFloat(this.split2.amount) || 0;
                         const splitTotal = this.getSplitTotal();
                         const diff = Math.abs(this.total - splitTotal);
-                        if (diff > 0.99) {
+
+                        if (s1 <= 0 || s2 <= 0) {
+                            paymentValid = false;
+                            paymentMessage = 'Nominal Split 1 & Split 2 harus lebih dari Rp 0';
+                        } else if (diff > 0.99) {
                             paymentValid = false;
                             paymentMessage = `Split Pay (${this.formatNumber(splitTotal)}) ${splitTotal < this.total ? 'kurang' : 'lebih'} Rp ${this.formatNumber(diff)}`;
                         } else {
