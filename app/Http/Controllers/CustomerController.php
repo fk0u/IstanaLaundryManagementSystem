@@ -44,7 +44,7 @@ class CustomerController extends Controller
 
         $branchId = session('scoped_branch_id') ?? auth()->user()->branch_id ?? Branch::first()->id;
 
-        Customer::create([
+        $customer = Customer::create([
             'branch_id' => $branchId,
             'name' => $request->name,
             'phone' => $request->phone,
@@ -54,6 +54,14 @@ class CustomerController extends Controller
             'loyalty_tier' => 'Bronze',
             'loyalty_points' => 0,
         ]);
+
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Pelanggan baru berhasil didaftarkan.',
+                'customer' => $customer,
+            ], 201);
+        }
 
         return redirect()->back()->with('success', 'Pelanggan baru berhasil didaftarkan.');
     }

@@ -127,4 +127,21 @@ class AccountingPeriodController extends Controller
 
         return redirect()->back()->with('success', "Periode akuntansi {$period->month}/{$period->year} berhasil ditutup.");
     }
+
+    public function reopen($id)
+    {
+        $period = AccountingPeriod::findOrFail($id);
+
+        if ($period->status === 'open') {
+            return redirect()->back()->with('error', 'Periode akuntansi sudah berstatus terbuka (Open).');
+        }
+
+        $period->update([
+            'status' => 'open',
+            'closed_at' => null,
+            'closed_by' => null,
+        ]);
+
+        return redirect()->back()->with('success', "Periode akuntansi {$period->month}/{$period->year} berhasil dibuka kembali (Re-opened).");
+    }
 }

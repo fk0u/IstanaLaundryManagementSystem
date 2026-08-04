@@ -62,7 +62,13 @@
                                                 </button>
                                             </form>
                                         @else
-                                            <span class="text-slate-300 dark:text-slate-700 material-symbols-outlined text-base cursor-not-allowed" title="Periode sudah ditutup">lock</span>
+                                            <form action="{{ route('finance.periods.reopen', $period->id) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin membuka kembali (re-open) periode akuntansi ini? Transaksi dan posting jurnal akan dapat dilakukan kembali.')">
+                                                @csrf
+                                                <button type="submit" class="btn-touch px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-2xs font-extrabold cursor-pointer transition-all flex items-center gap-1 shadow-xs haptic-press">
+                                                    <span class="material-symbols-outlined text-sm">lock_open</span>
+                                                    Buka Periode
+                                                </button>
+                                            </form>
                                         @endif
                                     </div>
                                 </td>
@@ -244,6 +250,16 @@
                                     class="btn-touch px-5 h-10 bg-rose-600 hover:bg-rose-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-extrabold text-xs rounded-xl shadow-md shadow-rose-500/20 flex items-center gap-1.5 transition-all cursor-pointer">
                                 <span class="material-symbols-outlined text-base">lock</span>
                                 Tutup Periode Akuntansi Ini
+                            </button>
+                        </form>
+                    </template>
+                    <template x-if="periodData && periodData.period.status === 'closed'">
+                        <form :action="'/finance/periods/' + periodData.period.id + '/reopen'" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin membuka kembali (re-open) periode akuntansi ini?')">
+                            @csrf
+                            <button type="submit"
+                                    class="btn-touch px-5 h-10 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-xl shadow-md shadow-emerald-500/20 flex items-center gap-1.5 transition-all cursor-pointer">
+                                <span class="material-symbols-outlined text-base">lock_open</span>
+                                Buka Kembali Periode (Re-Open)
                             </button>
                         </form>
                     </template>

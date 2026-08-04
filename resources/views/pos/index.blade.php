@@ -1073,6 +1073,103 @@
             </div>
         </div>
 
+        <!-- Modal Add New Member / Pelanggan Baru -->
+        <div x-show="showAddCustomerModal"
+             class="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-950/70 backdrop-blur-md p-4 sm:p-6"
+             x-transition:enter="transition ease-out duration-300"
+             x-transition:enter-start="opacity-0 scale-95"
+             x-transition:enter-end="opacity-100 scale-100"
+             x-transition:leave="transition ease-in duration-200"
+             x-transition:leave-start="opacity-100 scale-100"
+             x-transition:leave-end="opacity-0 scale-95"
+             x-cloak>
+            
+            <div class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-3xl w-full max-w-md p-6 shadow-2xl flex flex-col"
+                 @click.away="closeAddCustomerModal()">
+                
+                <!-- Modal Header -->
+                <div class="flex justify-between items-center pb-4 border-b border-slate-100 dark:border-slate-800 mb-5">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-2xl bg-primary/10 text-primary dark:bg-primary/20 flex items-center justify-center shrink-0">
+                            <span class="material-symbols-outlined text-xl">person_add</span>
+                        </div>
+                        <div>
+                            <h3 class="text-base font-black text-slate-900 dark:text-white">Tambah Member Baru</h3>
+                            <p class="text-2xs text-slate-400 font-semibold">Registrasi pelanggan baru langsung di POS</p>
+                        </div>
+                    </div>
+
+                    <button type="button" @click="closeAddCustomerModal()" class="btn-touch p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                        <span class="material-symbols-outlined text-xl">close</span>
+                    </button>
+                </div>
+
+                <!-- Error Alert -->
+                <div x-show="customerError" x-cloak class="mb-4 p-3 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 rounded-2xl flex items-center gap-2 text-xs text-rose-800 dark:text-rose-200">
+                    <span class="material-symbols-outlined text-base text-rose-600 shrink-0">error</span>
+                    <span x-text="customerError" class="font-bold"></span>
+                </div>
+
+                <!-- Form Fields -->
+                <form @submit.prevent="submitAddCustomer()" class="space-y-4">
+                    <div>
+                        <label class="block text-2xs font-extrabold text-slate-400 uppercase tracking-wider mb-1.5">Nama Lengkap Member <span class="text-rose-500">*</span></label>
+                        <div class="relative">
+                            <span class="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-lg pointer-events-none">person</span>
+                            <input type="text" x-model="newCustomerName" placeholder="Contoh: Bpk. Ahmad Dahlan" required
+                                   class="w-full h-11 pl-10 pr-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900 text-slate-800 dark:text-slate-200 text-xs font-semibold focus:border-primary focus:bg-white outline-none transition-all">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-2xs font-extrabold text-slate-400 uppercase tracking-wider mb-1.5">Nomor HP / WhatsApp <span class="text-rose-500">*</span></label>
+                        <div class="relative">
+                            <span class="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-lg pointer-events-none">call</span>
+                            <input type="text" x-model="newCustomerPhone" placeholder="Contoh: 081234567890" required
+                                   class="w-full h-11 pl-10 pr-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900 text-slate-800 dark:text-slate-200 text-xs font-semibold focus:border-primary focus:bg-white outline-none transition-all">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-2xs font-extrabold text-slate-400 uppercase tracking-wider mb-1.5">Email (Opsional)</label>
+                        <div class="relative">
+                            <span class="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-lg pointer-events-none">mail</span>
+                            <input type="email" x-model="newCustomerEmail" placeholder="Contoh: member@gmail.com"
+                                   class="w-full h-11 pl-10 pr-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900 text-slate-800 dark:text-slate-200 text-xs font-semibold focus:border-primary focus:bg-white outline-none transition-all">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-2xs font-extrabold text-slate-400 uppercase tracking-wider mb-1.5">Alamat Lengkap (Opsional)</label>
+                        <div class="relative">
+                            <span class="material-symbols-outlined absolute left-3.5 top-3 text-slate-400 text-lg pointer-events-none">home</span>
+                            <textarea x-model="newCustomerAddress" rows="2" placeholder="Alamat rumah / pengiriman..."
+                                      class="w-full pl-10 pr-4 py-2.5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900 text-slate-800 dark:text-slate-200 text-xs font-semibold focus:border-primary focus:bg-white outline-none transition-all resize-none"></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Modal Actions -->
+                    <div class="pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-end gap-3">
+                        <button type="button" @click="closeAddCustomerModal()"
+                                class="btn-touch px-4 h-11 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-extrabold text-xs rounded-2xl transition-all cursor-pointer">
+                            Batal
+                        </button>
+
+                        <button type="submit" :disabled="isSubmittingCustomer"
+                                class="btn-touch px-5 h-11 bg-primary hover:bg-orange-600 disabled:opacity-50 text-white font-extrabold text-xs rounded-2xl shadow-md shadow-primary/20 flex items-center gap-2 transition-all cursor-pointer">
+                            <template x-if="isSubmittingCustomer">
+                                <span class="material-symbols-outlined text-base animate-spin">progress_activity</span>
+                            </template>
+                            <template x-if="!isSubmittingCustomer">
+                                <span class="material-symbols-outlined text-base">check</span>
+                            </template>
+                            <span x-text="isSubmittingCustomer ? 'Menyimpan...' : 'Simpan Member'"></span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
     </div>
 
     <!-- Alpine App Controller -->
@@ -1124,6 +1221,12 @@
                 showPettyCashModal: false,
                 showDraftModal: false,
                 showAddCustomerModal: false,
+                newCustomerName: '',
+                newCustomerPhone: '',
+                newCustomerEmail: '',
+                newCustomerAddress: '',
+                isSubmittingCustomer: false,
+                customerError: '',
                 showBranchScopeModal: false,
                 showSuccessModal: {!! session('last_order') ? 'true' : 'false' !!},
                 lastOrder: {!! session('last_order') ? json_encode(session('last_order')) : 'null' !!},
@@ -1233,6 +1336,75 @@
                     this.customerTier = 'Bronze';
                     this.pointsUsed = 0;
                     this.calculateTotals();
+                },
+
+                openAddCustomerModal() {
+                    this.newCustomerName = '';
+                    this.newCustomerPhone = '';
+                    this.newCustomerEmail = '';
+                    this.newCustomerAddress = '';
+                    this.customerError = '';
+                    this.showAddCustomerModal = true;
+                },
+
+                closeAddCustomerModal() {
+                    this.showAddCustomerModal = false;
+                    this.customerError = '';
+                },
+
+                async submitAddCustomer() {
+                    if (!this.newCustomerName || !this.newCustomerPhone) {
+                        this.customerError = 'Nama dan Nomor HP wajib diisi.';
+                        return;
+                    }
+
+                    this.isSubmittingCustomer = true;
+                    this.customerError = '';
+
+                    try {
+                        const response = await fetch('/customers', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                                'Accept': 'application/json',
+                                'X-Requested-With': 'XMLHttpRequest'
+                            },
+                            body: JSON.stringify({
+                                name: this.newCustomerName,
+                                phone: this.newCustomerPhone,
+                                email: this.newCustomerEmail,
+                                address: this.newCustomerAddress
+                            })
+                        });
+
+                        const data = await response.json();
+
+                        if (!response.ok) {
+                            if (data.errors) {
+                                const firstErrKey = Object.keys(data.errors)[0];
+                                this.customerError = data.errors[firstErrKey][0];
+                            } else {
+                                this.customerError = data.message || 'Gagal mendaftarkan member baru.';
+                            }
+                            this.isSubmittingCustomer = false;
+                            return;
+                        }
+
+                        // Add to customer list & auto select
+                        this.customers.unshift(data.customer);
+                        this.selectCustomer(data.customer);
+                        this.closeAddCustomerModal();
+                        this.isSubmittingCustomer = false;
+
+                        window.dispatchEvent(new CustomEvent('toast', {
+                            detail: { message: 'Member baru ' + data.customer.name + ' berhasil ditambahkan!', type: 'success' }
+                        }));
+                    } catch (err) {
+                        console.error(err);
+                        this.customerError = 'Terjadi kesalahan koneksi server.';
+                        this.isSubmittingCustomer = false;
+                    }
                 },
 
                 openHoldOrderModal() {

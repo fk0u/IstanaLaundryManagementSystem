@@ -544,6 +544,7 @@ Route::middleware(['auth', 'branch.scope'])->group(function () {
         Route::get('/finance/periods', [AccountingPeriodController::class, 'index'])->name('finance.periods.index');
         Route::get('/finance/periods/{id}', [AccountingPeriodController::class, 'show'])->name('finance.periods.show');
         Route::post('/finance/periods/{id}/close', [AccountingPeriodController::class, 'close'])->name('finance.periods.close');
+        Route::post('/finance/periods/{id}/reopen', [AccountingPeriodController::class, 'reopen'])->name('finance.periods.reopen');
 
         // Finance - Reports & Exports
         Route::get('/finance/reports', [FinancialReportController::class, 'index'])->name('finance.reports.index');
