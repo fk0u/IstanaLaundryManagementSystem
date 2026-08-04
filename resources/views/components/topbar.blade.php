@@ -1,4 +1,4 @@
-<header class="flex items-center justify-between min-h-[60px] md:min-h-[64px] px-3 sm:px-6 w-full z-40 sticky top-0 transition-all duration-300" style="background: var(--nm-surface); box-shadow: 0 6px 14px var(--nm-shadow-dark), 0 -3px 10px var(--nm-shadow-light);"
+<header class="flex items-center justify-between min-h-[60px] md:min-h-[64px] px-3 sm:px-6 w-full bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl border-b border-slate-200/80 dark:border-slate-800/80 z-40 sticky top-0 transition-all duration-300 shadow-2xs"
         x-data="{ 
             showNotifications: false, 
             showQuickAction: false, 
@@ -42,10 +42,10 @@
     <div class="flex items-center justify-between w-full md:hidden">
         <!-- Logo & Brand Header -->
         <div class="flex items-center gap-2">
-            <button @click="mobileMenuOpen = true" class="p-1.5 text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200 cursor-pointer rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-all shrink-0">
+            <button @click="sidebarOpen = !sidebarOpen" class="p-1.5 text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200 cursor-pointer rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-all shrink-0">
                 <span class="material-symbols-outlined text-[24px]">menu</span>
             </button>
-            <div class="w-8 h-8 flex items-center justify-center shrink-0" style="border-radius: var(--radius-sm); background: var(--nm-bg); box-shadow: var(--nm-inset-sm);">
+            <div class="w-8 h-8 rounded-xl bg-orange-500/10 dark:bg-orange-500/20 flex items-center justify-center shrink-0">
                 <span class="material-symbols-outlined text-primary text-xl">local_laundry_service</span>
             </div>
             <h1 class="text-base font-bold text-slate-900 dark:text-white tracking-tight truncate">
@@ -85,7 +85,7 @@
             </button>
 
             <div class="min-w-0 flex-1">
-                <h1 class="text-xl font-black font-display tracking-tight truncate" style="color: var(--text-primary);">
+                <h1 class="text-xl font-black font-display text-slate-900 dark:text-white tracking-tight truncate">
                     {{ $pageTitle }}
                 </h1>
             </div>
@@ -109,7 +109,7 @@
                      x-transition:leave="transition ease-in duration-100"
                      x-transition:leave-start="transform opacity-100 scale-100"
                      x-transition:leave-end="transform opacity-0 scale-95"
-                     class="absolute right-0 mt-2.5 w-64 z-50 p-2 space-y-1" style="background: var(--nm-surface-high); box-shadow: var(--nm-raised-lg); border-radius: var(--radius-lg); border: none;"
+                     class="absolute right-0 mt-2.5 w-64 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-expressive shadow-md3-3 z-50 p-2 space-y-1"
                      x-cloak>
                     
                     @if(auth()->user()->hasAnyRole(['Developer', 'Owner', 'Super_Admin', 'Branch_Admin', 'Cashier']))

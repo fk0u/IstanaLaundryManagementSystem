@@ -4,104 +4,21 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ═══════════════════════════════════════════════════════════════
-   SOFT NEUMORPHISM DESIGN SYSTEM — Istana Laundry ERP
-   Bilateral shadows · Convex/Concave surfaces · Warm palette
-   ═══════════════════════════════════════════════════════════════ */
 
 @layer base {
-    :root {
-        /* ── Neumorphism Surface Palette ── */
-        --nm-bg: #E8E0DB;
-        --nm-bg-secondary: #F0E9E4;
-        --nm-surface: #EDE6E1;
-        --nm-surface-high: #F5EFEB;
-
-        /* ── Bilateral Shadow Colors ── */
-        --nm-shadow-light: rgba(255, 255, 255, 0.72);
-        --nm-shadow-dark: rgba(174, 160, 150, 0.45);
-
-        /* ── Neumorphism Elevation Presets ── */
-        --nm-raised: 6px 6px 14px var(--nm-shadow-dark), -6px -6px 14px var(--nm-shadow-light);
-        --nm-raised-sm: 3px 3px 8px var(--nm-shadow-dark), -3px -3px 8px var(--nm-shadow-light);
-        --nm-raised-lg: 10px 10px 20px var(--nm-shadow-dark), -10px -10px 20px var(--nm-shadow-light);
-        --nm-inset: inset 3px 3px 7px var(--nm-shadow-dark), inset -3px -3px 7px var(--nm-shadow-light);
-        --nm-inset-sm: inset 2px 2px 4px var(--nm-shadow-dark), inset -2px -2px 4px var(--nm-shadow-light);
-        --nm-convex: 4px 4px 10px var(--nm-shadow-dark), -4px -4px 10px var(--nm-shadow-light);
-        --nm-pressed: inset 2px 2px 5px var(--nm-shadow-dark), inset -2px -2px 5px var(--nm-shadow-light);
-
-        /* ── Brand Colors ── */
-        --color-primary: #FF6600;
-        --color-primary-hover: #E55C00;
-        --color-primary-soft: rgba(255, 102, 0, 0.12);
-        --color-primary-glow: rgba(255, 102, 0, 0.25);
-
-        /* ── Semantic Colors ── */
-        --color-success: #22C55E;
-        --color-warning: #F59E0B;
-        --color-danger: #EF4444;
-        --color-info: #3B82F6;
-
-        /* ── Radii ── */
-        --radius-sm: 12px;
-        --radius-md: 16px;
-        --radius-lg: 20px;
-        --radius-xl: 24px;
-        --radius-2xl: 28px;
-        --radius-full: 9999px;
-
-        /* ── Text Colors ── */
-        --text-primary: #2D2117;
-        --text-secondary: #6B5D52;
-        --text-tertiary: #9A8D83;
-        --text-inverse: #FFF8F5;
-
-        /* ── Spacing Scale (4pt) ── */
-        --space-xs: 4px;
-        --space-sm: 8px;
-        --space-md: 16px;
-        --space-lg: 24px;
-        --space-xl: 32px;
-        --space-2xl: 48px;
-
-        /* ── Transitions ── */
-        --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
-        --dur-fast: 150ms;
-        --dur-normal: 250ms;
-        --dur-slow: 400ms;
-    }
-
-    /* ── Dark Mode Token Overrides ── */
-    .dark {
-        --nm-bg: #1E1A17;
-        --nm-bg-secondary: #252019;
-        --nm-surface: #2A2420;
-        --nm-surface-high: #332D28;
-        --nm-shadow-light: rgba(60, 52, 46, 0.55);
-        --nm-shadow-dark: rgba(10, 8, 6, 0.65);
-        --text-primary: #F0E9E4;
-        --text-secondary: #B0A59B;
-        --text-tertiary: #7A6F65;
-        --text-inverse: #1E1A17;
-    }
-
-    /* ── Global Resets ── */
+    /* Smooth scrolling & overscroll behavior */
     html {
         scroll-behavior: smooth;
         -webkit-tap-highlight-color: transparent;
-        overflow-x: clip;
     }
 
     body {
-        background: var(--nm-bg);
-        color: var(--text-primary);
         overscroll-behavior: contain;
         -webkit-font-smoothing: antialiased;
         -moz-osx-font-smoothing: grayscale;
-        overflow-x: clip;
     }
 
-    /* ── Custom Scrollbar (Neumorphism styled) ── */
+    /* Custom scrollbar */
     ::-webkit-scrollbar {
         width: 6px;
         height: 6px;
@@ -110,14 +27,20 @@
         background: transparent;
     }
     ::-webkit-scrollbar-thumb {
-        background: var(--text-tertiary);
-        border-radius: var(--radius-full);
+        background: #cbd5e1;
+        border-radius: 999px;
+    }
+    .dark ::-webkit-scrollbar-thumb {
+        background: #334155;
     }
     ::-webkit-scrollbar-thumb:hover {
-        background: var(--text-secondary);
+        background: #94a3b8;
+    }
+    .dark ::-webkit-scrollbar-thumb:hover {
+        background: #475569;
     }
 
-    /* ── Print Styles ── */
+    /* Print styles for invoice/receipt */
     @media print {
         body {
             background: white !important;
@@ -133,9 +56,6 @@
 }
 
 @layer components {
-    /* ═══════════════════════════════════════════
-       Material Symbols Icon Font
-       ═══════════════════════════════════════════ */
     .material-symbols-outlined {
         font-family: 'Material Symbols Outlined' !important;
         font-weight: normal;
@@ -152,369 +72,86 @@
         -moz-osx-font-smoothing: grayscale;
         font-feature-settings: 'liga';
     }
-
-    /* ═══════════════════════════════════════════
-       NEUMORPHISM CARD SYSTEM
-       ═══════════════════════════════════════════ */
-    .nm-card {
-        background: var(--nm-surface);
-        box-shadow: var(--nm-raised);
-        border-radius: var(--radius-lg);
-        border: 1px solid rgba(255,255,255,0.08);
-        transition: box-shadow var(--dur-normal) var(--ease-out),
-                    transform var(--dur-normal) var(--ease-out);
-    }
-    .nm-card:hover {
-        box-shadow: var(--nm-raised-lg);
-    }
-
-    .nm-card-sm {
-        background: var(--nm-surface);
-        box-shadow: var(--nm-raised-sm);
-        border-radius: var(--radius-md);
-        border: 1px solid rgba(255,255,255,0.06);
-        transition: box-shadow var(--dur-normal) var(--ease-out);
-    }
-
-    .nm-card-flat {
-        background: var(--nm-surface);
-        box-shadow: none;
-        border-radius: var(--radius-lg);
-        border: 1px solid rgba(0,0,0,0.04);
-    }
-
-    .nm-card-inset {
-        background: var(--nm-bg);
-        box-shadow: var(--nm-inset);
-        border-radius: var(--radius-md);
-        border: none;
-    }
-
-    /* ═══════════════════════════════════════════
-       NEUMORPHISM BUTTON SYSTEM
-       ═══════════════════════════════════════════ */
-    .nm-btn {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: 8px;
-        font-weight: 700;
-        font-size: 0.8125rem;
-        border-radius: var(--radius-md);
-        background: var(--nm-surface);
-        box-shadow: var(--nm-convex);
-        border: none;
-        padding: 10px 20px;
-        min-height: 44px;
-        cursor: pointer;
-        transition: box-shadow var(--dur-fast) var(--ease-out),
-                    transform var(--dur-fast) var(--ease-out);
-        user-select: none;
-    }
-    .nm-btn:hover {
-        box-shadow: var(--nm-raised);
-    }
-    .nm-btn:active {
-        box-shadow: var(--nm-pressed);
-        transform: scale(0.97);
-    }
-    .nm-btn:focus-visible {
-        outline: 2px solid var(--color-primary);
-        outline-offset: 2px;
-    }
-
-    .nm-btn-primary {
-        background: var(--color-primary);
-        color: white;
-        box-shadow: 4px 4px 10px rgba(174,78,0,0.35), -2px -2px 8px rgba(255,140,50,0.20);
-    }
-    .nm-btn-primary:hover {
-        background: var(--color-primary-hover);
-        box-shadow: 6px 6px 14px rgba(174,78,0,0.40), -3px -3px 10px rgba(255,140,50,0.25);
-    }
-    .nm-btn-primary:active {
-        box-shadow: inset 2px 2px 6px rgba(174,78,0,0.40), inset -2px -2px 6px rgba(255,140,50,0.15);
-        transform: scale(0.97);
-    }
-
-    .nm-btn-danger {
-        background: var(--color-danger);
-        color: white;
-        box-shadow: 4px 4px 10px rgba(180,30,30,0.30), -2px -2px 8px rgba(255,100,100,0.15);
-    }
-    .nm-btn-danger:hover {
-        box-shadow: 6px 6px 14px rgba(180,30,30,0.35), -3px -3px 10px rgba(255,100,100,0.20);
-    }
-    .nm-btn-danger:active {
-        box-shadow: inset 2px 2px 6px rgba(180,30,30,0.40), inset -2px -2px 6px rgba(255,100,100,0.10);
-        transform: scale(0.97);
-    }
-
-    .nm-btn-sm {
-        min-height: 36px;
-        padding: 6px 14px;
-        font-size: 0.75rem;
-        border-radius: var(--radius-sm);
-    }
-
-    .nm-btn-icon {
-        min-height: 44px;
-        min-width: 44px;
-        padding: 0;
-        border-radius: var(--radius-md);
-    }
-
-    /* ═══════════════════════════════════════════
-       NEUMORPHISM INPUT SYSTEM (Concave/Inset)
-       ═══════════════════════════════════════════ */
-    .nm-input {
-        width: 100%;
-        background: var(--nm-bg);
-        box-shadow: var(--nm-inset-sm);
-        border: 1px solid transparent;
-        border-radius: var(--radius-md);
-        padding: 10px 14px;
-        font-size: 0.8125rem;
-        font-weight: 500;
-        color: var(--text-primary);
-        transition: box-shadow var(--dur-fast) var(--ease-out),
-                    border-color var(--dur-fast) var(--ease-out);
-        outline: none;
-    }
-    .nm-input::placeholder {
-        color: var(--text-tertiary);
-    }
-    .nm-input:focus {
-        box-shadow: var(--nm-inset);
-        border-color: var(--color-primary);
-    }
-
-    .nm-select {
-        appearance: none;
-        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236B5D52' d='M2 4l4 4 4-4'/%3E%3C/svg%3E");
-        background-repeat: no-repeat;
-        background-position: right 12px center;
-        padding-right: 32px;
-    }
-
-    /* ═══════════════════════════════════════════
-       NEUMORPHISM TOGGLE / PILL TABS
-       ═══════════════════════════════════════════ */
-    .nm-tab-group {
-        display: flex;
-        gap: 4px;
-        padding: 5px;
-        background: var(--nm-bg);
-        box-shadow: var(--nm-inset-sm);
-        border-radius: var(--radius-lg);
-        overflow-x: auto;
-        -ms-overflow-style: none;
-        scrollbar-width: none;
-    }
-    .nm-tab-group::-webkit-scrollbar { display: none; }
-
-    .nm-tab {
-        flex-shrink: 0;
-        padding: 8px 16px;
-        border-radius: var(--radius-sm);
-        font-size: 0.75rem;
-        font-weight: 700;
-        color: var(--text-secondary);
-        background: transparent;
-        cursor: pointer;
-        transition: all var(--dur-fast) var(--ease-out);
-        white-space: nowrap;
-        display: flex;
-        align-items: center;
-        gap: 6px;
-        user-select: none;
-        border: none;
-    }
-    .nm-tab:hover {
-        color: var(--text-primary);
-        background: var(--nm-surface);
-    }
-    .nm-tab.active, .nm-tab[data-active="true"] {
-        background: var(--nm-surface);
-        box-shadow: var(--nm-raised-sm);
-        color: var(--color-primary);
-        font-weight: 800;
-    }
-
-    /* ═══════════════════════════════════════════
-       NEUMORPHISM BADGE / PILL SYSTEM
-       ═══════════════════════════════════════════ */
-    .nm-badge {
-        display: inline-flex;
-        align-items: center;
-        gap: 4px;
-        padding: 3px 10px;
-        border-radius: var(--radius-full);
-        font-size: 0.625rem;
-        font-weight: 800;
-        background: var(--nm-bg);
-        box-shadow: var(--nm-raised-sm);
-    }
-
-    .nm-badge-inset {
-        background: var(--nm-bg);
-        box-shadow: var(--nm-inset-sm);
-    }
-
-    /* ═══════════════════════════════════════════
-       NEUMORPHISM TABLE CONTAINER
-       ═══════════════════════════════════════════ */
-    .nm-table-wrap {
-        background: var(--nm-surface);
-        box-shadow: var(--nm-raised);
-        border-radius: var(--radius-lg);
-        overflow: hidden;
-    }
-    .nm-table-wrap table {
-        width: 100%;
-        border-collapse: collapse;
-    }
-    .nm-table-wrap thead {
-        background: var(--nm-bg);
-    }
-    .nm-table-wrap thead th {
-        padding: 12px 16px;
-        font-size: 0.625rem;
-        font-weight: 800;
-        text-transform: uppercase;
-        letter-spacing: 0.08em;
-        color: var(--text-tertiary);
-        text-align: left;
-        border-bottom: 1px solid rgba(0,0,0,0.04);
-    }
-    .nm-table-wrap tbody td {
-        padding: 12px 16px;
-        font-size: 0.8125rem;
-        border-bottom: 1px solid rgba(0,0,0,0.03);
-    }
-    .nm-table-wrap tbody tr:hover {
-        background: var(--nm-bg-secondary);
-    }
-    .nm-table-wrap tbody tr:last-child td {
-        border-bottom: none;
-    }
-
-    /* ═══════════════════════════════════════════
-       NEUMORPHISM SIDEBAR MENU ITEM
-       ═══════════════════════════════════════════ */
-    .nm-menu-item {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        padding: 10px 14px;
-        border-radius: var(--radius-md);
-        font-size: 0.8125rem;
-        font-weight: 600;
-        color: var(--text-secondary);
-        transition: all var(--dur-fast) var(--ease-out);
-        cursor: pointer;
-        user-select: none;
-    }
-    .nm-menu-item:hover {
-        background: var(--nm-surface-high);
-        color: var(--text-primary);
-    }
-    .nm-menu-item.active {
-        background: var(--nm-bg);
-        box-shadow: var(--nm-inset-sm);
-        color: var(--color-primary);
-        font-weight: 700;
-    }
-
-    /* ═══════════════════════════════════════════
-       BACKWARD COMPAT: MD3 → Neumorphism Aliases
-       ═══════════════════════════════════════════ */
+    /* Material Design 3 Expressive Shapes & Buttons */
     .md3-card {
-        @apply nm-card;
-    }
-    .md3-card-filled {
-        @apply nm-card-flat;
-    }
-    .md3-card-outlined {
-        @apply nm-card-flat;
-    }
-    .md3-btn-primary {
-        @apply nm-btn nm-btn-primary;
-        border-radius: var(--radius-full);
-    }
-    .md3-btn-tonal {
-        @apply nm-btn;
-        color: var(--color-primary);
-    }
-    .md3-btn-outlined {
-        @apply nm-btn;
-        background: transparent;
-        box-shadow: none;
-        border: 1px solid var(--text-tertiary);
+        @apply bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-expressive shadow-md3-1 hover:shadow-md3-2 transition-all duration-300;
     }
 
-    /* ═══════════════════════════════════════════
-       TOUCH / HAPTIC / GLASS (preserved)
-       ═══════════════════════════════════════════ */
+    .md3-card-filled {
+        @apply bg-surface-container dark:bg-slate-900/90 border border-transparent rounded-expressive shadow-none hover:shadow-md3-1 transition-all duration-300;
+    }
+
+    .md3-card-outlined {
+        @apply bg-transparent border border-surface-outline dark:border-slate-800 rounded-expressive hover:bg-surface-container/50 transition-all duration-300;
+    }
+
+    .md3-btn-primary {
+        @apply min-h-[48px] px-6 rounded-full bg-primary hover:bg-primary-hover active:scale-[0.98] text-white font-bold text-xs flex items-center justify-center gap-2 shadow-md3-1 hover:shadow-md3-2 transition-all duration-200;
+    }
+
+    .md3-btn-tonal {
+        @apply min-h-[48px] px-6 rounded-full bg-primary-container text-primary-on-container dark:bg-slate-800 dark:text-slate-200 hover:bg-orange-200 active:scale-[0.98] font-bold text-xs flex items-center justify-center gap-2 transition-all duration-200;
+    }
+
+    .md3-btn-outlined {
+        @apply min-h-[48px] px-6 rounded-full border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 active:scale-[0.98] font-bold text-xs flex items-center justify-center gap-2 transition-all duration-200;
+    }
+
+    /* Touch-friendly button base — 44px minimum */
     .btn-touch {
         @apply min-h-[44px] min-w-[44px] flex items-center justify-center rounded-2xl active:scale-[0.97] transition-all cursor-pointer;
     }
+
     .touch-target {
         @apply min-h-[44px] min-w-[44px] flex items-center justify-center;
     }
+
     .haptic-press {
         @apply active:scale-[0.95] transition-transform duration-150 ease-out;
     }
+
+    /* Glassmorphism Panel */
     .glass-panel {
-        background: rgba(237, 230, 225, 0.85);
-        backdrop-filter: blur(20px);
-        -webkit-backdrop-filter: blur(20px);
-        border: 1px solid rgba(255,255,255,0.18);
-        box-shadow: var(--nm-raised-sm);
-    }
-    .dark .glass-panel {
-        background: rgba(30, 26, 23, 0.85);
+        @apply bg-white/85 dark:bg-slate-900/85 backdrop-blur-xl border border-slate-200/60 dark:border-slate-800/80 shadow-md;
     }
 
-    /* ═══════════════════════════════════════════
-       BOTTOM SHEET (Mobile)
-       ═══════════════════════════════════════════ */
+    /* Bottom Sheet Container for Mobile & Tablet */
     .bottom-sheet {
-        @apply fixed inset-x-0 bottom-0 z-50 max-h-[90vh] flex flex-col transition-all duration-300;
-        background: var(--nm-surface);
-        box-shadow: -10px -10px 20px var(--nm-shadow-light), 0 -4px 16px rgba(0,0,0,0.10);
-        border-top-left-radius: var(--radius-2xl);
-        border-top-right-radius: var(--radius-2xl);
-    }
-    .sheet-handle {
-        width: 36px;
-        height: 4px;
-        border-radius: var(--radius-full);
-        background: var(--text-tertiary);
-        opacity: 0.4;
-        margin: 0 auto;
+        @apply fixed inset-x-0 bottom-0 z-50 bg-white dark:bg-slate-900 rounded-t-[28px] border-t border-slate-200/80 dark:border-slate-800 shadow-2xl max-h-[90vh] flex flex-col transition-all duration-300;
     }
 
+    /* Safe bottom area for bottom nav clearance */
     .safe-bottom {
         padding-bottom: 5.5rem;
     }
+
     @media (min-width: 1024px) {
         .safe-bottom {
             padding-bottom: 0;
         }
     }
 
-    /* ═══════════════════════════════════════════
-       SCROLL PILLS (Neumorphism Horizontal Scroll)
-       ═══════════════════════════════════════════ */
+    /* Mobile card variant — compact */
+    .card-mobile {
+        @apply bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 rounded-expressive shadow-sm p-4 hover:shadow-md transition-all;
+    }
+
+    @media (min-width: 768px) {
+        .card-mobile {
+            @apply p-6 rounded-expressive;
+        }
+    }
+
+    /* Horizontal scroll pills container for Categories & Filters */
     .scroll-pills {
-        @apply flex gap-2 overflow-x-auto pb-2 -mx-4 px-4 snap-x snap-mandatory;
+        @apply flex gap-2 overflow-x-auto pb-2 -mx-4 px-4 scrollbar-none snap-x snap-mandatory;
         -ms-overflow-style: none;
         scrollbar-width: none;
     }
     .scroll-pills::-webkit-scrollbar {
         display: none;
     }
+
     @media (min-width: 768px) {
         .scroll-pills {
             @apply mx-0 px-0 flex-wrap overflow-visible pb-0;
@@ -522,76 +159,14 @@
     }
 
     .pill-item {
-        @apply snap-start shrink-0 px-4 py-2.5 text-xs font-bold transition-all duration-200 flex items-center gap-2 cursor-pointer haptic-press select-none;
-        border-radius: var(--radius-sm);
-        background: var(--nm-surface);
-        box-shadow: var(--nm-raised-sm);
-    }
-    .pill-item.active {
-        background: var(--color-primary);
-        color: white;
-        box-shadow: 3px 3px 8px rgba(174,78,0,0.30), -2px -2px 6px rgba(255,140,50,0.15);
+        @apply snap-start shrink-0 px-4 py-2.5 rounded-2xl text-xs font-bold transition-all duration-200 flex items-center gap-2 cursor-pointer haptic-press select-none;
     }
 
-    /* ═══════════════════════════════════════════
-       STATUS BADGES (Neumorphism)
-       ═══════════════════════════════════════════ */
-    .status-pending {
-        background: rgba(245, 158, 11, 0.10);
-        color: #B45309;
-        box-shadow: var(--nm-raised-sm);
-        border: none;
-        border-radius: var(--radius-full);
-        padding: 3px 10px;
-        font-size: 0.625rem;
-        font-weight: 800;
-    }
-    .dark .status-pending { color: #FBBF24; background: rgba(245, 158, 11, 0.15); }
-
-    .status-active {
-        background: rgba(34, 197, 94, 0.10);
-        color: #15803D;
-        box-shadow: var(--nm-raised-sm);
-        border: none;
-        border-radius: var(--radius-full);
-    }
-    .dark .status-active { color: #4ADE80; background: rgba(34, 197, 94, 0.15); }
-
-    .status-completed {
-        background: rgba(59, 130, 246, 0.10);
-        color: #1D4ED8;
-        box-shadow: var(--nm-raised-sm);
-        border: none;
-        border-radius: var(--radius-full);
-    }
-    .dark .status-completed { color: #60A5FA; background: rgba(59, 130, 246, 0.15); }
-
-    .status-cancelled {
-        background: rgba(239, 68, 68, 0.10);
-        color: #B91C1C;
-        box-shadow: var(--nm-raised-sm);
-        border: none;
-        border-radius: var(--radius-full);
-    }
-    .dark .status-cancelled { color: #F87171; background: rgba(239, 68, 68, 0.15); }
-
-    /* ═══════════════════════════════════════════
-       MOBILE CARD VARIANT
-       ═══════════════════════════════════════════ */
-    .card-mobile {
-        background: var(--nm-surface);
-        box-shadow: var(--nm-raised-sm);
-        border-radius: var(--radius-lg);
-        border: none;
-        padding: 16px;
-        transition: box-shadow var(--dur-normal) var(--ease-out);
-    }
-    @media (min-width: 768px) {
-        .card-mobile {
-            padding: 24px;
-            border-radius: var(--radius-xl);
-        }
-    }
+    /* Status badge colors */
+    .status-pending { @apply bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-950/30 dark:text-amber-400 dark:border-amber-800/50; }
+    .status-active { @apply bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/30 dark:text-emerald-400 dark:border-emerald-800/50; }
+    .status-completed { @apply bg-sky-50 text-sky-700 border border-sky-200 dark:bg-sky-950/30 dark:text-sky-400 dark:border-sky-800/50; }
+    .status-cancelled { @apply bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-950/30 dark:text-rose-400 dark:border-rose-800/50; }
 }
 
 @layer utilities {
@@ -602,19 +177,4 @@
     .scrollbar-none::-webkit-scrollbar {
         display: none;
     }
-
-    /* ── Neumorphism utility classes ── */
-    .nm-raised { box-shadow: var(--nm-raised); }
-    .nm-raised-sm { box-shadow: var(--nm-raised-sm); }
-    .nm-raised-lg { box-shadow: var(--nm-raised-lg); }
-    .nm-inset { box-shadow: var(--nm-inset); }
-    .nm-inset-sm { box-shadow: var(--nm-inset-sm); }
-    .nm-convex { box-shadow: var(--nm-convex); }
-    .nm-pressed { box-shadow: var(--nm-pressed); }
-    .nm-flat { box-shadow: none; }
-
-    .nm-bg { background: var(--nm-bg); }
-    .nm-bg-secondary { background: var(--nm-bg-secondary); }
-    .nm-surface { background: var(--nm-surface); }
-    .nm-surface-high { background: var(--nm-surface-high); }
 }

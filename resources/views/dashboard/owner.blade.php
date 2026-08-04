@@ -28,7 +28,7 @@
         <!-- 2. Real Backend KPI Summary Grid -->
         <div class="grid grid-cols-2 lg:grid-cols-4 gap-3.5 sm:gap-4">
             <!-- Card 1: Total Omset (Real DB sum) -->
-            <div class="nm-card p-4 sm:p-5 flex flex-col justify-between h-36">
+            <div class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm p-4 sm:p-5 rounded-2xl flex flex-col justify-between h-36 hover:shadow-md transition-all">
                 <div>
                     <div class="flex items-center gap-1.5 mb-1 text-slate-500 dark:text-slate-400">
                         <span class="material-symbols-outlined text-[18px]">account_balance_wallet</span>
@@ -50,7 +50,7 @@
             </div>
 
             <!-- Card 2: Kas Masuk Bulan Ini (Real DB sum) -->
-            <div class="nm-card p-4 sm:p-5 flex flex-col justify-between h-36">
+            <div class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm p-4 sm:p-5 rounded-2xl flex flex-col justify-between h-36 hover:shadow-md transition-all">
                 <div>
                     <div class="flex items-center gap-1.5 mb-1 text-emerald-600">
                         <span class="material-symbols-outlined text-[18px]">payments</span>
@@ -72,7 +72,7 @@
             </div>
 
             <!-- Card 3: Total Piutang / Unpaid (Real DB query) -->
-            <div class="nm-card p-4 sm:p-5 flex flex-col justify-between h-36">
+            <div class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm p-4 sm:p-5 rounded-2xl flex flex-col justify-between h-36 hover:shadow-md transition-all">
                 <div>
                     <div class="flex items-center gap-1.5 mb-1 text-rose-500">
                         <span class="material-symbols-outlined text-[18px]">receipt_long</span>
@@ -82,14 +82,14 @@
                         Rp {{ number_format($totalPiutang, 0, ',', '.') }}
                     </p>
                 </div>
-                <a href="{{ route('orders.index') }}" class="flex items-center justify-between nm-badge-inset px-2.5 py-1.5 rounded-xl mt-auto text-rose-600 dark:text-rose-400 hover:underline">
+                <a href="{{ route('orders.index') }}" class="flex items-center justify-between bg-rose-50 dark:bg-rose-950/40 px-2.5 py-1.5 rounded-xl mt-auto text-rose-600 dark:text-rose-400 hover:underline">
                     <span class="text-[10px] font-bold">Belum Lunas / Invoice</span>
                     <span class="material-symbols-outlined text-[14px]">arrow_forward</span>
                 </a>
             </div>
 
             <!-- Card 4: MoM Growth % (Real DB calculated) -->
-            <div class="nm-card p-4 sm:p-5 flex flex-col justify-between h-36">
+            <div class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm p-4 sm:p-5 rounded-2xl flex flex-col justify-between h-36 hover:shadow-md transition-all">
                 <div>
                     <div class="flex items-center gap-1.5 mb-1 text-slate-500 dark:text-slate-400">
                         <span class="material-symbols-outlined text-[18px]">monitoring</span>
@@ -99,7 +99,7 @@
                         {{ $growthPercent >= 0 ? '+' : '' }}{{ number_format($growthPercent, 1, ',', '.') }}%
                     </p>
                 </div>
-                <div class="flex items-center gap-1.5 nm-badge-inset px-2.5 py-1.5 rounded-xl mt-auto">
+                <div class="flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800 px-2.5 py-1.5 rounded-xl mt-auto">
                     <div class="w-2 h-2 rounded-full {{ $growthPercent >= 0 ? 'bg-emerald-500' : 'bg-rose-500' }}"></div>
                     <span class="text-[10px] text-slate-600 dark:text-slate-400 font-bold">vs bulan lalu</span>
                 </div>
