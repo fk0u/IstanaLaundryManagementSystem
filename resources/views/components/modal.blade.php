@@ -59,18 +59,16 @@ $maxWidth = [
         x-transition:leave-start="opacity-100"
         x-transition:leave-end="opacity-0"
     >
-        <div class="absolute inset-0 bg-slate-950/60 backdrop-blur-sm"></div>
+        <div class="absolute inset-0 backdrop-blur-md" style="background: rgba(30,26,23,0.50);"></div>
     </div>
 
-    {{-- Modal Panel --}}
-    {{-- Mobile: full screen slide-up with padding for bottom nav. Desktop: centered dialog --}}
+    {{-- Modal Panel: Neumorphism raised surface --}}
     <div class="flex items-end sm:items-center justify-center min-h-screen px-0 sm:px-4 pb-20 sm:pb-0">
         <div
             x-show="show"
-            class="w-full bg-white dark:bg-slate-900 overflow-hidden shadow-xl transform transition-all
-                   rounded-t-3xl sm:rounded-xl
-                   max-h-[85vh] sm:max-h-[85vh] overflow-y-auto
-                   {{ $maxWidth }} sm:mx-auto"
+            class="w-full overflow-hidden transform transition-all max-h-[85vh] sm:max-h-[85vh] overflow-y-auto {{ $maxWidth }} sm:mx-auto"
+            style="background: var(--nm-surface); box-shadow: var(--nm-raised-lg); border-radius: 0; border-top-left-radius: var(--radius-2xl); border-top-right-radius: var(--radius-2xl);"
+            x-bind:style="window.innerWidth >= 640 ? 'background: var(--nm-surface); box-shadow: var(--nm-raised-lg); border-radius: var(--radius-xl);' : 'background: var(--nm-surface); box-shadow: var(--nm-raised-lg); border-radius: 0; border-top-left-radius: var(--radius-2xl); border-top-right-radius: var(--radius-2xl);'"
             x-transition:enter="ease-out duration-300"
             x-transition:enter-start="opacity-0 translate-y-full sm:translate-y-0 sm:scale-95"
             x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"

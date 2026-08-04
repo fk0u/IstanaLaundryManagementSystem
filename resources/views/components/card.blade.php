@@ -2,19 +2,20 @@
 
 @php
     $cardClasses = match($variant) {
-        'filled' => 'bg-surface-container dark:bg-slate-900/90 border border-transparent rounded-expressive shadow-none',
-        'outlined' => 'bg-white dark:bg-slate-900 border border-surface-outline/50 dark:border-slate-800 rounded-expressive shadow-none',
-        default => 'bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 rounded-expressive shadow-md3-1 hover:shadow-md3-2 transition-all duration-300',
+        'filled' => 'nm-card-flat',
+        'outlined' => 'nm-card-flat',
+        'inset' => 'nm-card-inset',
+        default => 'nm-card',
     };
 @endphp
 
 <div {{ $attributes->merge(['class' => $cardClasses . ' overflow-hidden']) }}>
     @if ($title || isset($header))
-        <div class="px-5 md:px-7 py-4 border-b border-slate-100 dark:border-slate-800/80 flex items-center justify-between bg-surface-container-low/60 dark:bg-slate-800/30">
+        <div class="px-5 md:px-7 py-4 flex items-center justify-between" style="border-bottom: 1px solid rgba(0,0,0,0.04);">
             @if (isset($header))
                 {{ $header }}
             @else
-                <h3 class="text-base md:text-lg font-black font-display text-slate-800 dark:text-slate-100 tracking-tight">
+                <h3 class="text-base md:text-lg font-black font-display tracking-tight" style="color: var(--text-primary);">
                     {{ $title }}
                 </h3>
             @endif
@@ -26,7 +27,7 @@
     </div>
 
     @if ($footer)
-        <div class="px-5 md:px-7 py-4 border-t border-slate-100 dark:border-slate-800/80 bg-surface-container-low/40 dark:bg-slate-800/20">
+        <div class="px-5 md:px-7 py-4" style="border-top: 1px solid rgba(0,0,0,0.04);">
             {{ $footer }}
         </div>
     @endif

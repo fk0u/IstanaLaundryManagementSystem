@@ -1,9 +1,8 @@
-<aside class="h-screen flex flex-col fixed left-0 top-0 bg-white dark:bg-slate-900 border-r border-surface-outline/30 dark:border-slate-800 z-50 transition-all duration-300 ease-in-out"
+<aside class="hidden lg:flex h-screen flex-col fixed left-0 top-0 z-50 transition-all duration-300 ease-in-out"
+       style="background: var(--nm-surface); box-shadow: 6px 0 14px var(--nm-shadow-dark), -2px 0 8px var(--nm-shadow-light);"
        :class="{ 
            'w-72': desktopSidebarOpen, 
-           'w-20': !desktopSidebarOpen,
-           'translate-x-0': sidebarOpen, 
-           '-translate-x-full md:translate-x-0': !sidebarOpen 
+           'w-20': !desktopSidebarOpen
        }"
        id="sidebar-nav">
     <div class="flex flex-col h-full py-4 overflow-hidden">
@@ -11,7 +10,7 @@
         <div class="px-3 mb-3">
             <div class="flex items-center justify-between min-h-[44px]">
                 <div class="flex items-center gap-3 overflow-hidden" x-show="desktopSidebarOpen" x-transition.opacity>
-                    <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-primary via-orange-500 to-amber-500 flex items-center justify-center text-white font-black font-display text-xl shrink-0 shadow-md3-2 hover:scale-105 transition-transform">
+                    <div class="w-10 h-10 flex items-center justify-center text-white font-black font-display text-xl shrink-0 hover:scale-105 transition-transform" style="border-radius: var(--radius-md); background: linear-gradient(135deg, #FF6600, #FF8533); box-shadow: var(--nm-convex);">
                         <img alt="Istana Laundry Logo" class="w-6 h-6 object-contain drop-shadow-xs" src="{{ asset('images/logo.webp') }}"/>
                     </div>
                     <div class="truncate">
@@ -22,11 +21,11 @@
 
                 <!-- Mini Logo when collapsed -->
                 <div class="mx-auto group relative" x-show="!desktopSidebarOpen" x-transition.opacity>
-                    <div class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-primary via-orange-500 to-amber-500 flex items-center justify-center text-white font-black font-display text-xl shadow-md3-2 hover:scale-110 transition-transform cursor-pointer">
+                    <div class="w-11 h-11 flex items-center justify-center text-white font-black font-display text-xl hover:scale-110 transition-transform cursor-pointer" style="border-radius: var(--radius-md); background: linear-gradient(135deg, #FF6600, #FF8533); box-shadow: var(--nm-convex);">
                         <img alt="Istana Laundry Logo" class="w-6 h-6 object-contain drop-shadow-xs" src="{{ asset('images/logo.webp') }}"/>
                     </div>
                     <!-- Tooltip for mini logo -->
-                    <div class="absolute left-full ml-3.5 top-1/2 -translate-y-1/2 px-3.5 py-2 bg-slate-950/95 dark:bg-slate-800/95 backdrop-blur-md text-white rounded-2xl shadow-2xl pointer-events-none opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all duration-200 z-[999] whitespace-nowrap border border-slate-800 flex items-center gap-2.5">
+                    <div class="absolute left-full ml-3.5 top-1/2 -translate-y-1/2 px-3.5 py-2 backdrop-blur-md text-white pointer-events-none opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all duration-200 z-[999] whitespace-nowrap flex items-center gap-2.5" style="background: rgba(30,26,23,0.92); border-radius: var(--radius-md); box-shadow: var(--nm-raised);">
                         <div class="w-2.5 h-2.5 rounded-full bg-primary shrink-0 animate-pulse"></div>
                         <div>
                             <p class="text-xs font-black text-white leading-tight">Istana Laundry ERP</p>
@@ -42,11 +41,11 @@
             </div>
 
             <!-- Branch Scope Switcher (Expanded Mode) -->
-            <div class="mt-3" x-show="desktopSidebarOpen || sidebarOpen" x-transition.opacity>
+            <div class="mt-3 relative z-50" x-show="desktopSidebarOpen || sidebarOpen" x-transition.opacity>
                 @if(auth()->user()->hasAnyRole(['Developer', 'Owner', 'Super_Admin', 'Finance']))
-                    <div class="relative" x-data="{ open: false }" @click.away="open = false">
+                    <div class="relative z-50" x-data="{ open: false }" @click.away="open = false">
                         <button @click="open = !open" type="button"
-                                class="w-full bg-slate-100 dark:bg-slate-800/90 hover:bg-slate-200/70 dark:hover:bg-slate-800 border border-slate-200/90 dark:border-slate-700/80 rounded-xl text-xs font-extrabold px-3 py-2.5 text-slate-800 dark:text-slate-200 flex items-center justify-between shadow-2xs transition-all cursor-pointer">
+                                class="w-full text-xs font-extrabold px-3 py-2.5 flex items-center justify-between transition-all cursor-pointer" style="background: var(--nm-bg); box-shadow: var(--nm-inset-sm); border-radius: var(--radius-md); border: none; color: var(--text-primary);">
                             <div class="flex items-center gap-2 min-w-0 flex-1">
                                 <span class="material-symbols-outlined text-primary text-base shrink-0">storefront</span>
                                 <span class="truncate text-left">
@@ -67,12 +66,13 @@
                              x-transition:leave="transition ease-in duration-100"
                              x-transition:leave-start="transform opacity-100 scale-100"
                              x-transition:leave-end="transform opacity-0 scale-95"
-                             class="absolute left-0 right-0 mt-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-lg z-50 p-1 space-y-0.5 max-h-56 overflow-y-auto"
+                             class="absolute left-0 right-0 mt-1.5 z-[999] p-1.5 space-y-1 max-h-60 overflow-y-auto bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl shadow-2xl"
+                             style="box-shadow: 0 10px 30px rgba(0,0,0,0.18);"
                              x-cloak>
                             <form action="{{ route('switch-branch') }}" method="POST">
                                 @csrf
                                 <input type="hidden" name="branch_id" value="">
-                                <button type="submit" class="w-full text-left px-3 py-2 text-xs font-bold rounded-lg flex items-center justify-between transition-colors {{ !session('scoped_branch_id') ? 'bg-primary/10 text-primary' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800' }}">
+                                <button type="submit" class="w-full text-left px-3 py-2 text-xs font-bold rounded-xl flex items-center justify-between transition-colors {{ !session('scoped_branch_id') ? 'bg-primary/10 text-primary' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 bg-white dark:bg-slate-900' }}">
                                     <span>Global (Semua Cabang)</span>
                                     @if(!session('scoped_branch_id'))
                                         <span class="material-symbols-outlined text-sm">check</span>
@@ -84,7 +84,7 @@
                                 <form action="{{ route('switch-branch') }}" method="POST">
                                     @csrf
                                     <input type="hidden" name="branch_id" value="{{ $br->id }}">
-                                    <button type="submit" class="w-full text-left px-3 py-2 text-xs font-bold rounded-lg flex items-center justify-between transition-colors {{ session('scoped_branch_id') == $br->id ? 'bg-primary/10 text-primary' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800' }}">
+                                    <button type="submit" class="w-full text-left px-3 py-2 text-xs font-bold rounded-xl flex items-center justify-between transition-colors {{ session('scoped_branch_id') == $br->id ? 'bg-primary/10 text-primary' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 bg-white dark:bg-slate-900' }}">
                                         <span class="truncate">{{ $br->name }}</span>
                                         @if(session('scoped_branch_id') == $br->id)
                                             <span class="material-symbols-outlined text-sm">check</span>
@@ -95,7 +95,7 @@
                         </div>
                     </div>
                 @else
-                    <div class="w-full bg-primary/10 border border-primary/20 rounded-xl text-xs font-bold px-3 py-2 text-primary flex items-center gap-2 truncate">
+                    <div class="w-full text-xs font-bold px-3 py-2 text-primary flex items-center gap-2 truncate" style="background: var(--nm-bg); box-shadow: var(--nm-inset-sm); border-radius: var(--radius-md); border: none;">
                         <span class="material-symbols-outlined text-sm">storefront</span>
                         <span class="truncate">{{ auth()->user()->branch?->name ?? 'Cabang Utama' }}</span>
                     </div>
@@ -107,7 +107,7 @@
                 @if(auth()->user()->hasAnyRole(['Developer', 'Owner', 'Super_Admin', 'Finance']))
                     <div class="relative group" x-data="{ open: false }" @click.away="open = false">
                         <button @click="open = !open" type="button"
-                                class="w-11 h-11 rounded-2xl bg-slate-100 dark:bg-slate-800 hover:bg-primary/15 border border-slate-200/80 dark:border-slate-700 flex items-center justify-center text-primary shadow-2xs hover:scale-110 transition-all cursor-pointer">
+                                class="w-11 h-11 flex items-center justify-center text-primary hover:scale-110 transition-all cursor-pointer" style="border-radius: var(--radius-md); background: var(--nm-surface-high); box-shadow: var(--nm-convex); border: none;">
                             <span class="material-symbols-outlined text-xl">storefront</span>
                         </button>
 
@@ -156,7 +156,7 @@
         <!-- Desktop/Tablet Toggle Button (Expand/Collapse Sidebar) -->
         <div class="px-3 mb-2 hidden md:block">
             <button @click="desktopSidebarOpen = !desktopSidebarOpen; localStorage.setItem('desktopSidebarOpen', desktopSidebarOpen)"
-                    class="w-full flex items-center gap-3 py-2 text-slate-500 dark:text-slate-400 hover:text-primary dark:hover:text-orange-400 hover:bg-slate-100 dark:hover:bg-slate-800/60 rounded-2xl transition-all text-xs font-bold group cursor-pointer relative"
+                    class="w-full flex items-center gap-3 py-2 hover:text-primary rounded-2xl transition-all text-xs font-bold group cursor-pointer relative" style="color: var(--text-tertiary);"
                     :class="{ 'px-3.5': desktopSidebarOpen, 'w-11 h-11 justify-center mx-auto': !desktopSidebarOpen }"
                     :title="desktopSidebarOpen ? 'Ciutkan Sidebar' : 'Buka Sidebar'">
                 <span class="material-symbols-outlined text-xl transition-transform duration-300 group-hover:scale-110"

@@ -1,8 +1,9 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}"
+    <html lang="{{ str_replace('_', '-', app()->getLocale()) }}"
       x-data="{ 
           darkMode: localStorage.getItem('darkMode') === 'true', 
           sidebarOpen: false,
+          mobileMenuOpen: false,
           desktopSidebarOpen: localStorage.getItem('desktopSidebarOpen') !== 'false'
       }"
       :class="{ 'dark': darkMode }"
@@ -58,8 +59,8 @@
             }
         </style>
     </head>
-    <body class="font-sans antialiased bg-surface dark:bg-slate-950 text-on-surface dark:text-slate-200 h-full overflow-x-hidden transition-colors duration-200">
-        <!-- Sidebar Navigation -->
+    <body class="font-sans antialiased h-full overflow-x-hidden transition-colors duration-200" style="background: var(--nm-bg); color: var(--text-primary);">
+        <!-- Sidebar Navigation (Desktop only: >= 1024px) -->
         <x-sidebar />
 
         <!-- Mobile & iPad Sidebar Backdrop Overlay -->
@@ -71,24 +72,28 @@
              x-transition:leave-start="opacity-100"
              x-transition:leave-end="opacity-0"
              @click="sidebarOpen = false"
-             class="fixed inset-0 bg-slate-950/50 z-40 lg:hidden backdrop-blur-[2px]"
+             class="fixed inset-0 z-40 lg:hidden backdrop-blur-sm"
+             style="background: rgba(30, 26, 23, 0.40);"
              x-cloak>
         </div>
 
-        <!-- Content Area Wrapper — Dynamic padding based on desktop & tablet sidebar state -->
+        <!-- Content Area Wrapper — Dynamic padding based on desktop sidebar state -->
         <div class="flex flex-col min-h-screen max-w-full overflow-x-hidden transition-all duration-300 ease-in-out"
-             :class="{ 'md:pl-72': desktopSidebarOpen, 'md:pl-20': !desktopSidebarOpen }">
+             :class="{ 'lg:pl-72': desktopSidebarOpen, 'lg:pl-20': !desktopSidebarOpen }">
             <!-- Top Navigation Bar -->
             <x-topbar />
 
             <!-- Page Main Content -->
-            <main class="flex-1 p-3 sm:p-4 md:p-6 lg:p-8 max-w-[1600px] mx-auto w-full pb-24 lg:pb-6">
+            <main class="flex-1 p-3 sm:p-4 md:p-6 lg:p-8 max-w-[1600px] mx-auto w-full pb-28 lg:pb-6">
                 {{ $slot }}
             </main>
         </div>
 
         <!-- Bottom Navigation (Mobile) -->
         <x-bottom-nav />
+
+        <!-- Dedicated Mobile Menu Sheet (Halaman Menu Mobile) -->
+        <x-mobile-menu />
 
         <script>
             // Micro-interactions for premium elements
@@ -116,7 +121,7 @@
             window.__scopedBranchId = @js(session('scoped_branch_id'));
         </script>
         
-        <!-- Global Toast Container -->
+        <!-- Global Toast Container (Neumorphism Raised Toast) -->
         <div x-data="{ 
             toasts: [],
             addToast(message, type = 'success') {
@@ -137,7 +142,8 @@
                      x-transition:leave="transition ease-in duration-200 transform"
                      x-transition:leave-start="translate-y-0 opacity-100 scale-100"
                      x-transition:leave-end="translate-y-5 opacity-0 scale-95"
-                     class="flex items-center gap-3 p-4 rounded-xl border shadow-lg pointer-events-auto bg-white dark:bg-slate-900 border-slate-100 dark:border-slate-800/80 transition-all">
+                     class="flex items-center gap-3 p-4 rounded-xl nm-card-sm pointer-events-auto transition-all"
+                     style="background: var(--nm-surface-high);">
                      
                      <!-- Icon -->
                      <span class="material-symbols-outlined shrink-0 text-xl" 
@@ -151,10 +157,10 @@
                      </span>
                      
                      <!-- Text -->
-                     <span class="text-xs font-bold text-slate-800 dark:text-slate-200" x-text="toast.message"></span>
+                     <span class="text-xs font-bold" style="color: var(--text-primary);" x-text="toast.message"></span>
                      
                      <!-- Close button -->
-                     <button @click="toasts = toasts.filter(t => t.id !== toast.id)" class="ml-auto text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 focus:outline-none">
+                     <button @click="toasts = toasts.filter(t => t.id !== toast.id)" class="ml-auto focus:outline-none" style="color: var(--text-tertiary);">
                          <span class="material-symbols-outlined text-base">close</span>
                      </button>
                 </div>
