@@ -58,7 +58,7 @@
             }
         </style>
     </head>
-    <body class="font-sans antialiased bg-surface dark:bg-slate-950 text-on-surface dark:text-slate-200 h-full transition-colors duration-200">
+    <body class="font-sans antialiased bg-surface dark:bg-slate-950 text-on-surface dark:text-slate-200 h-full overflow-x-hidden transition-colors duration-200">
         <!-- Sidebar Navigation -->
         <x-sidebar />
 
@@ -76,7 +76,7 @@
         </div>
 
         <!-- Content Area Wrapper — Dynamic padding based on desktop & tablet sidebar state -->
-        <div class="flex flex-col min-h-screen transition-all duration-300 ease-in-out"
+        <div class="flex flex-col min-h-screen max-w-full overflow-x-hidden transition-all duration-300 ease-in-out"
              :class="{ 'md:pl-72': desktopSidebarOpen, 'md:pl-20': !desktopSidebarOpen }">
             <!-- Top Navigation Bar -->
             <x-topbar />

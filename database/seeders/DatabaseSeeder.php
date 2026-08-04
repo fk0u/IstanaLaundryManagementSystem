@@ -22,6 +22,7 @@ class DatabaseSeeder extends Seeder
             UserSeeder::class,
             SupplierSeeder::class,
             ERPDataSeeder::class,
+            AnalyticsAndScheduleSeeder::class,
         ]);
     }
 }

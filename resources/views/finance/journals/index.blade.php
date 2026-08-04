@@ -8,8 +8,11 @@
         get totalCredit() {
             return this.lines.reduce((sum, line) => sum + (parseFloat(line.credit) || 0), 0);
         },
+        get hasInvalidLine() {
+            return this.lines.some(line => (parseFloat(line.debit) || 0) > 0 && (parseFloat(line.credit) || 0) > 0);
+        },
         get isBalanced() {
-            return Math.abs(this.totalDebit - this.totalCredit) < 0.01 && this.totalDebit > 0;
+            return !this.hasInvalidLine && Math.abs(this.totalDebit - this.totalCredit) < 0.01 && this.totalDebit > 0;
         }
     }" class="flex flex-col gap-6">
         <div class="flex justify-between items-center">

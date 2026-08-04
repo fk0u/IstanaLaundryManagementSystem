@@ -430,7 +430,7 @@
             </div>
 
             <!-- Right Side: Cart Panel (4 cols) -->
-            <div class="lg:col-span-4 block sticky top-20">
+            <div class="lg:col-span-4 block sticky top-20 max-h-[calc(100vh-6rem)] overflow-y-auto no-scrollbar pr-0.5">
                 <x-card title="Keranjang Belanja">
                     
                     <form id="pos-form" action="{{ route('pos.store') }}" method="POST" class="flex flex-col gap-4" @submit.prevent="confirmCheckout()">
@@ -458,7 +458,7 @@
                         </div>
 
                         <!-- Cart Item List -->
-                        <div class="overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800 max-h-[280px] pr-1">
+                        <div class="overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800 max-h-[180px] sm:max-h-[220px] pr-1">
                             <template x-if="cart.length === 0">
                                 <div class="py-10 text-center">
                                     <span class="material-symbols-outlined text-slate-300 dark:text-slate-700 text-4xl mb-2">shopping_basket</span>

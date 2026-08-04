@@ -53,13 +53,24 @@ class JournalController extends Controller
                 $totalDebit = 0;
                 $totalCredit = 0;
 
-                foreach ($request->lines as $line) {
-                    $totalDebit += (float) $line['debit'];
-                    $totalCredit += (float) $line['credit'];
+                foreach ($request->lines as $idx => $line) {
+                    $d = (float) ($line['debit'] ?? 0);
+                    $c = (float) ($line['credit'] ?? 0);
+
+                    if ($d > 0 && $c > 0) {
+                        throw new \InvalidArgumentException("Baris posting ke-".($idx + 1)." tidak boleh mengisi Debit dan Kredit sekaligus. Setiap baris posting hanya boleh diisi salah satu (Debit saja atau Kredit saja).");
+                    }
+
+                    if ($d <= 0 && $c <= 0) {
+                        throw new \InvalidArgumentException("Baris posting ke-".($idx + 1)." harus diisi nominal Debit atau Kredit (tidak boleh 0 semua).");
+                    }
+
+                    $totalDebit += $d;
+                    $totalCredit += $c;
                 }
 
                 if (abs($totalDebit - $totalCredit) > 0.01) {
-                    throw new JournalNotBalancedException("Debit ({$totalDebit}) harus sama dengan Kredit ({$totalCredit}). Selisih: ".abs($totalDebit - $totalCredit));
+                    throw new JournalNotBalancedException("Debit (Rp ".number_format($totalDebit, 0, ',', '.').") harus sama dengan Kredit (Rp ".number_format($totalCredit, 0, ',', '.')."). Selisih: Rp ".number_format(abs($totalDebit - $totalCredit), 0, ',', '.'));
                 }
 
                 $branchId = session('scoped_branch_id') ?? auth()->user()?->branch_id;
@@ -129,6 +140,8 @@ class JournalController extends Controller
         } catch (JournalNotBalancedException $e) {
             return redirect()->back()->withInput()->with('error', $e->getMessage());
         } catch (AccountingPeriodClosedException $e) {
+            return redirect()->back()->withInput()->with('error', $e->getMessage());
+        } catch (\InvalidArgumentException $e) {
             return redirect()->back()->withInput()->with('error', $e->getMessage());
         } catch (\Exception $e) {
             return redirect()->back()->withInput()->with('error', 'Terjadi kesalahan: '.$e->getMessage());

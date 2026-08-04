@@ -89,12 +89,12 @@
         </div>
 
         <!-- Sleek Control Toolbar Card (Tabs + Filters + Action Buttons) -->
-        <div class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 p-3 sm:p-4 rounded-2xl shadow-sm flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
+        <div class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 p-3 sm:p-4 rounded-2xl shadow-sm flex flex-col xl:flex-row items-stretch xl:items-center justify-between gap-3 max-w-full overflow-hidden">
             <!-- Left: Tabs -->
-            <div class="flex items-center gap-1.5 overflow-x-auto min-w-max p-1 bg-slate-100 dark:bg-slate-950 rounded-xl">
+            <div class="flex items-center gap-1.5 overflow-x-auto max-w-full p-1 bg-slate-100 dark:bg-slate-950 rounded-xl shrink scrollbar-none">
                 <button type="button" @click="switchTab('catalog')"
                         :class="activeTab === 'catalog' ? 'bg-primary text-white shadow-md shadow-orange-500/20 scale-[1.01]' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'"
-                        class="px-3.5 py-2 rounded-lg font-bold text-xs flex items-center gap-2 transition-all cursor-pointer">
+                        class="px-3.5 py-2 rounded-lg font-bold text-xs flex items-center gap-2 transition-all cursor-pointer whitespace-nowrap">
                     <span class="material-symbols-outlined text-base">inventory_2</span>
                     <span>Katalog & Daftar Aset</span>
                     <span class="px-2 py-0.5 rounded-full text-[10px] font-black" :class="activeTab === 'catalog' ? 'bg-white/20 text-white' : 'bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300'">{{ $assets->total() }}</span>
@@ -102,14 +102,14 @@
 
                 <button type="button" @click="switchTab('depreciation')"
                         :class="activeTab === 'depreciation' ? 'bg-primary text-white shadow-md shadow-orange-500/20 scale-[1.01]' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'"
-                        class="px-3.5 py-2 rounded-lg font-bold text-xs flex items-center gap-2 transition-all cursor-pointer">
+                        class="px-3.5 py-2 rounded-lg font-bold text-xs flex items-center gap-2 transition-all cursor-pointer whitespace-nowrap">
                     <span class="material-symbols-outlined text-base">show_chart</span>
                     <span>Grafik Depresiasi</span>
                 </button>
 
                 <button type="button" @click="switchTab('maintenance')"
                         :class="activeTab === 'maintenance' ? 'bg-primary text-white shadow-md shadow-orange-500/20 scale-[1.01]' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'"
-                        class="px-3.5 py-2 rounded-lg font-bold text-xs flex items-center gap-2 transition-all cursor-pointer">
+                        class="px-3.5 py-2 rounded-lg font-bold text-xs flex items-center gap-2 transition-all cursor-pointer whitespace-nowrap">
                     <span class="material-symbols-outlined text-base">build</span>
                     <span>Maintenance & Servis</span>
                     @if($urgentMaintenanceAssets->count() > 0)
@@ -119,14 +119,14 @@
 
                 <button type="button" @click="switchTab('analytics')"
                         :class="activeTab === 'analytics' ? 'bg-primary text-white shadow-md shadow-orange-500/20 scale-[1.01]' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'"
-                        class="px-3.5 py-2 rounded-lg font-bold text-xs flex items-center gap-2 transition-all cursor-pointer">
+                        class="px-3.5 py-2 rounded-lg font-bold text-xs flex items-center gap-2 transition-all cursor-pointer whitespace-nowrap">
                     <span class="material-symbols-outlined text-base">pie_chart</span>
                     <span>Portfolio & Analytics</span>
                 </button>
             </div>
 
             <!-- Right: Branch Filter & Action Buttons -->
-            <div class="flex flex-wrap items-center gap-2 shrink-0">
+            <div class="flex flex-wrap items-center gap-2 shrink-0 max-w-full">
                 @if(auth()->user()->hasAnyRole(['Developer', 'Owner', 'Super_Admin', 'Finance']))
                     <form method="GET" action="{{ route('assets.index') }}" class="flex items-center gap-2">
                         <select name="branch_id" onchange="this.form.submit()" class="h-9 text-xs rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 font-bold px-3 text-slate-700 dark:text-slate-200 outline-none focus:border-primary">
