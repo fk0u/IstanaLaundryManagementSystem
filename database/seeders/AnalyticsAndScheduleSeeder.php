@@ -109,7 +109,7 @@ class AnalyticsAndScheduleSeeder extends Seeder
                         }
 
                         $total = max(0, $subtotal - $discountAmount);
-                        $seqStr = str_pad(rand(1, 9999), 4, '0', STR_PAD_LEFT);
+                        $seqStr = sprintf('%04d', ($i * 10) + rand(1, 9));
                         $orderNumber = "ORD-{$branch->code}-{$createdAt->format('Ymd')}-{$seqStr}";
                         $orderType = rand(1, 10) <= 8 ? 'outlet' : 'pickup_delivery';
 
