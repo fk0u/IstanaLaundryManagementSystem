@@ -11,6 +11,16 @@ use Illuminate\Support\Facades\DB;
 
 class MasterApiController extends Controller
 {
+    public function showService(Service $service)
+    {
+        $service->load('branchPrices.branch');
+
+        return response()->json([
+            'status' => 'success',
+            'data' => $service,
+        ]);
+    }
+
     public function storeService(Request $request)
     {
         $validated = $request->validate([
@@ -87,6 +97,24 @@ class MasterApiController extends Controller
         });
     }
 
+    public function destroyService(Service $service)
+    {
+        $service->delete();
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Layanan laundry berhasil dihapus.',
+        ]);
+    }
+
+    public function showBranch(Branch $branch)
+    {
+        return response()->json([
+            'status' => 'success',
+            'data' => $branch,
+        ]);
+    }
+
     public function storeBranch(Request $request)
     {
         $validated = $request->validate([
@@ -109,5 +137,33 @@ class MasterApiController extends Controller
             'message' => 'Cabang outlet baru berhasil didaftarkan!',
             'data' => $branch,
         ], 201);
+    }
+
+    public function updateBranch(Request $request, Branch $branch)
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'address' => 'required|string|max:500',
+            'phone' => 'required|string|max:25',
+            'is_active' => 'required|boolean',
+        ]);
+
+        $branch->update($validated);
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Data cabang outlet berhasil diperbarui!',
+            'data' => $branch,
+        ]);
+    }
+
+    public function destroyBranch(Branch $branch)
+    {
+        $branch->delete();
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Cabang outlet berhasil dihapus.',
+        ]);
     }
 }

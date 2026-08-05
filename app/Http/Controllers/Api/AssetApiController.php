@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\ChartOfAccount;
 use App\Models\FixedAsset;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class AssetApiController extends Controller
 {
@@ -58,5 +59,70 @@ class AssetApiController extends Controller
             'message' => 'Aset tetap berhasil didaftarkan!',
             'data' => $asset,
         ], 201);
+    }
+
+    public function show(FixedAsset $fixedAsset)
+    {
+        $fixedAsset->load(['branch', 'account']);
+
+        return response()->json([
+            'status' => 'success',
+            'data' => $fixedAsset,
+        ]);
+    }
+
+    public function update(Request $request, FixedAsset $fixedAsset)
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'category' => 'required|string|max:255',
+            'is_active' => 'required|boolean',
+        ]);
+
+        $fixedAsset->update($validated);
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Data aset tetap berhasil diperbarui!',
+            'data' => $fixedAsset,
+        ]);
+    }
+
+    public function depreciate(Request $request)
+    {
+        $activeAssets = FixedAsset::where('is_active', true)->where('book_value', '>', DB::raw('salvage_value'))->get();
+
+        if ($activeAssets->isEmpty()) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Tidak ada aset aktif yang memerlukan kalkulasi depresiasi.',
+            ], 422);
+        }
+
+        return DB::transaction(function () use ($activeAssets) {
+            $totalDepreciated = 0;
+
+            foreach ($activeAssets as $asset) {
+                $monthlyDep = ($asset->acquisition_cost - $asset->salvage_value) / max(1, $asset->useful_life_months);
+                $newAccum = min($asset->acquisition_cost - $asset->salvage_value, $asset->accumulated_depreciation + $monthlyDep);
+                $newBookValue = max($asset->salvage_value, $asset->acquisition_cost - $newAccum);
+
+                $asset->update([
+                    'accumulated_depreciation' => $newAccum,
+                    'book_value' => $newBookValue,
+                ]);
+
+                $totalDepreciated += $monthlyDep;
+            }
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Jurnal depresiasi bulanan berhasil dijalankan untuk ' . $activeAssets->count() . ' aset!',
+                'data' => [
+                    'assets_count' => $activeAssets->count(),
+                    'total_depreciation_amount' => $totalDepreciated,
+                ],
+            ]);
+        });
     }
 }

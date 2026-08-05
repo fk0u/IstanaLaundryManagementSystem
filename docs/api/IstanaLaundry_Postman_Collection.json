@@ -1,8 +1,8 @@
 {
 	"info": {
 		"_postman_id": "a91b2c3d-4e5f-6a7b-8c9d-0e1f2a3b4c5d",
-		"name": "Istana Laundry Management System Full REST API Engine",
-		"description": "Koleksi API resmi lengkap untuk Istana Laundry Management System Samarinda. Meliputi 10 modul backend ERP: Public, Auth, Dashboard, Orders, CRM Customers, Inventory, HR, Assets, Finance, Procurement, Shifts, dan Master Data.",
+		"name": "Istana Laundry Management System 100% Complete RESTful API Engine",
+		"description": "Koleksi API 100% lengkap untuk Istana Laundry Management System Samarinda. Meliputi seluruh modul ERP: Public, Auth, Dashboard, Orders & Refunds, Struk Thermal, CRM, Inventory, HR, Assets & Depresiasi, Finance, Expenses, Supplier Debt, Procurement & Approvals, Cashier Shifts, Master Data, User/RBAC, dan Performance KPIs.",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
 	"variable": [
@@ -125,7 +125,7 @@
 			]
 		},
 		{
-			"name": "4. Orders & Transactions API",
+			"name": "4. Orders, Payments, Refunds & Thermal Receipt",
 			"item": [
 				{
 					"name": "Get Paginated Orders List",
@@ -148,69 +148,36 @@
 						},
 						"url": { "raw": "{{base_url}}/v1/orders/1/payments", "host": ["{{base_url}}"], "path": ["v1", "orders", "1", "payments"] }
 					}
-				}
-			]
-		},
-		{
-			"name": "5. CRM Customers API",
-			"item": [
-				{
-					"name": "Get & Search Customers",
-					"request": {
-						"auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{bearer_token}}", "type": "string" }] },
-						"method": "GET",
-						"header": [{ "key": "Accept", "value": "application/json" }],
-						"url": { "raw": "{{base_url}}/v1/customers?search=Ghani", "host": ["{{base_url}}"], "path": ["v1", "customers"], "query": [{ "key": "search", "value": "Ghani" }] }
-					}
 				},
 				{
-					"name": "Create New Member",
+					"name": "Request Order Refund",
 					"request": {
 						"auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{bearer_token}}", "type": "string" }] },
 						"method": "POST",
 						"header": [{ "key": "Accept", "value": "application/json" }, { "key": "Content-Type", "value": "application/json" }],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"name\": \"Bpk. Ahmad\",\n  \"phone\": \"081299988877\",\n  \"address\": \"Samarinda Seberang\"\n}"
+							"raw": "{\n  \"amount\": 50000,\n  \"reason\": \"Baju luntur saat cuci\"\n}"
 						},
-						"url": { "raw": "{{base_url}}/v1/customers", "host": ["{{base_url}}"], "path": ["v1", "customers"] }
+						"url": { "raw": "{{base_url}}/v1/orders/1/refund", "host": ["{{base_url}}"], "path": ["v1", "orders", "1", "refund"] }
 					}
-				}
-			]
-		},
-		{
-			"name": "6. Inventory API",
-			"item": [
+				},
 				{
-					"name": "Get Stock & Low Stock Items",
+					"name": "Get ESC/POS Thermal Receipt JSON",
 					"request": {
 						"auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{bearer_token}}", "type": "string" }] },
 						"method": "GET",
 						"header": [{ "key": "Accept", "value": "application/json" }],
-						"url": { "raw": "{{base_url}}/v1/inventory?low_stock=true", "host": ["{{base_url}}"], "path": ["v1", "inventory"], "query": [{ "key": "low_stock", "value": "true" }] }
+						"url": { "raw": "{{base_url}}/v1/orders/1/receipt-data", "host": ["{{base_url}}"], "path": ["v1", "orders", "1", "receipt-data"] }
 					}
 				}
 			]
 		},
 		{
-			"name": "7. HR & Payroll API",
+			"name": "5. Finance, Expenses & Accounting Reports",
 			"item": [
 				{
-					"name": "Get Active Employees List",
-					"request": {
-						"auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{bearer_token}}", "type": "string" }] },
-						"method": "GET",
-						"header": [{ "key": "Accept", "value": "application/json" }],
-						"url": { "raw": "{{base_url}}/v1/hr/employees", "host": ["{{base_url}}"], "path": ["v1", "hr", "employees"] }
-					}
-				}
-			]
-		},
-		{
-			"name": "8. Finance & COA API",
-			"item": [
-				{
-					"name": "Get Chart of Accounts",
+					"name": "Chart of Accounts (COA)",
 					"request": {
 						"auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{bearer_token}}", "type": "string" }] },
 						"method": "GET",
@@ -219,43 +186,48 @@
 					}
 				},
 				{
-					"name": "Get Income Statement Report",
+					"name": "Create Operational Expense",
+					"request": {
+						"auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{bearer_token}}", "type": "string" }] },
+						"method": "POST",
+						"header": [{ "key": "Accept", "value": "application/json" }, { "key": "Content-Type", "value": "application/json" }],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"account_id\": 1,\n  \"amount\": 1500000,\n  \"expense_date\": \"2026-08-05\",\n  \"payment_method\": \"cash\",\n  \"description\": \"Bayar listrik outlet Samarinda\"\n}"
+						},
+						"url": { "raw": "{{base_url}}/v1/finance/expenses", "host": ["{{base_url}}"], "path": ["v1", "finance", "expenses"] }
+					}
+				},
+				{
+					"name": "Get Balance Sheet (Laporan Neraca)",
 					"request": {
 						"auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{bearer_token}}", "type": "string" }] },
 						"method": "GET",
 						"header": [{ "key": "Accept", "value": "application/json" }],
-						"url": { "raw": "{{base_url}}/v1/finance/reports/income-statement", "host": ["{{base_url}}"], "path": ["v1", "finance", "reports", "income-statement"] }
+						"url": { "raw": "{{base_url}}/v1/finance/reports/balance-sheet", "host": ["{{base_url}}"], "path": ["v1", "finance", "reports", "balance-sheet"] }
 					}
 				}
 			]
 		},
 		{
-			"name": "9. Cashier Shifts API",
+			"name": "6. User Management & Performance KPIs",
 			"item": [
 				{
-					"name": "Open Cashier Shift",
+					"name": "Get Staff Users List",
 					"request": {
 						"auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{bearer_token}}", "type": "string" }] },
-						"method": "POST",
-						"header": [{ "key": "Accept", "value": "application/json" }, { "key": "Content-Type", "value": "application/json" }],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"start_cash\": 200000\n}"
-						},
-						"url": { "raw": "{{base_url}}/v1/shifts/open", "host": ["{{base_url}}"], "path": ["v1", "shifts", "open"] }
+						"method": "GET",
+						"header": [{ "key": "Accept", "value": "application/json" }],
+						"url": { "raw": "{{base_url}}/v1/users", "host": ["{{base_url}}"], "path": ["v1", "users"] }
 					}
 				},
 				{
-					"name": "Close Cashier Shift & Audit",
+					"name": "Cashier Performance KPIs",
 					"request": {
 						"auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{bearer_token}}", "type": "string" }] },
-						"method": "POST",
-						"header": [{ "key": "Accept", "value": "application/json" }, { "key": "Content-Type", "value": "application/json" }],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"actual_end_cash\": 750000,\n  \"notes\": \"Tutup shift malam\"\n}"
-						},
-						"url": { "raw": "{{base_url}}/v1/shifts/close", "host": ["{{base_url}}"], "path": ["v1", "shifts", "close"] }
+						"method": "GET",
+						"header": [{ "key": "Accept", "value": "application/json" }],
+						"url": { "raw": "{{base_url}}/v1/performance/cashiers", "host": ["{{base_url}}"], "path": ["v1", "performance", "cashiers"] }
 					}
 				}
 			]

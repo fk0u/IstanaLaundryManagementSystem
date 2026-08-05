@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Order;
 use App\Models\OrderPayment;
+use App\Models\Refund;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -116,5 +117,98 @@ class OrderApiController extends Controller
                 ],
             ]);
         });
+    }
+
+    /**
+     * POST /api/v1/orders/{order}/refund
+     * Submit order refund request.
+     */
+    public function refund(Request $request, Order $order)
+    {
+        $validated = $request->validate([
+            'amount' => 'required|numeric|min:1',
+            'reason' => 'required|string|max:1000',
+        ]);
+
+        if ($validated['amount'] > $order->total) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Jumlah refund tidak boleh melebihi total transaksi order.',
+            ], 422);
+        }
+
+        $exists = Refund::where('order_id', $order->id)->where('status', '!=', 'rejected')->exists();
+        if ($exists) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Permohonan refund untuk order ini sudah diajukan.',
+            ], 422);
+        }
+
+        $refund = Refund::create([
+            'order_id' => $order->id,
+            'branch_id' => $order->branch_id,
+            'requested_by' => auth()->id() ?? 1,
+            'amount' => $validated['amount'],
+            'reason' => $validated['reason'],
+            'status' => 'pending',
+            'cashier_approved_at' => now(),
+        ]);
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Permintaan refund order berhasil diajukan!',
+            'data' => $refund,
+        ], 201);
+    }
+
+    /**
+     * GET /api/v1/orders/{order}/receipt-data
+     * Return structured JSON for Bluetooth Thermal Printer printing (ESC/POS).
+     */
+    public function receiptData(Order $order)
+    {
+        $order->load(['customer', 'branch', 'cashier', 'items.service', 'payments']);
+
+        $customerName = $order->customer ? $order->customer->name : ($order->customer_name_walkin ?? 'Pelanggan Walk-in');
+        $customerPhone = $order->customer ? $order->customer->phone : ($order->customer_phone_walkin ?? '-');
+
+        $receiptItems = $order->items->map(function ($item) {
+            return [
+                'name' => $item->service ? $item->service->name : 'Layanan Laundry',
+                'quantity' => (float) $item->quantity,
+                'unit' => $item->unit ?? 'kg',
+                'price' => (float) $item->unit_price,
+                'subtotal' => (float) $item->subtotal,
+            ];
+        });
+
+        return response()->json([
+            'status' => 'success',
+            'data' => [
+                'store' => [
+                    'name' => 'ISTANA LAUNDRY',
+                    'branch' => $order->branch ? $order->branch->name : 'Samarinda Utama',
+                    'address' => $order->branch ? $order->branch->address : 'Samarinda',
+                    'phone' => $order->branch ? $order->branch->phone : '-',
+                ],
+                'order_number' => $order->order_number,
+                'created_at' => $order->created_at->format('d/m/Y H:i').' WITA',
+                'cashier' => $order->cashier ? $order->cashier->name : 'Kasir',
+                'customer' => [
+                    'name' => $customerName,
+                    'phone' => $customerPhone,
+                ],
+                'items' => $receiptItems,
+                'totals' => [
+                    'subtotal' => (float) $order->subtotal,
+                    'discount' => (float) $order->discount,
+                    'grand_total' => (float) $order->total,
+                    'paid_amount' => (float) $order->paid_amount,
+                    'remaining' => (float) $order->remaining_balance,
+                    'payment_status' => strtoupper($order->payment_status),
+                ],
+            ],
+        ]);
     }
 }

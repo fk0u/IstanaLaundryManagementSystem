@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\GoodsReceivedNote;
 use App\Models\PurchaseOrder;
+use App\Models\PurchaseOrderItem;
 use App\Models\PurchaseRequest;
 use App\Models\PurchaseRequestItem;
 use App\Models\Supplier;
@@ -60,6 +61,16 @@ class ProcurementApiController extends Controller
         ]);
     }
 
+    public function showPr(PurchaseRequest $purchaseRequest)
+    {
+        $purchaseRequest->load(['branch', 'requester', 'items.inventoryItem']);
+
+        return response()->json([
+            'status' => 'success',
+            'data' => $purchaseRequest,
+        ]);
+    }
+
     public function storePurchaseRequest(Request $request)
     {
         $validated = $request->validate([
@@ -98,6 +109,27 @@ class ProcurementApiController extends Controller
         });
     }
 
+    public function approvePr(Request $request, PurchaseRequest $purchaseRequest)
+    {
+        $validated = $request->validate([
+            'action' => 'required|in:approve,reject',
+        ]);
+
+        $status = $validated['action'] === 'approve' ? 'approved' : 'rejected';
+
+        $purchaseRequest->update([
+            'status' => $status,
+            'approved_by' => auth()->id() ?? 1,
+            'approved_at' => now(),
+        ]);
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Status Purchase Request berhasil diperbarui menjadi ' . strtoupper($status) . '!',
+            'data' => $purchaseRequest,
+        ]);
+    }
+
     public function purchaseOrders(Request $request)
     {
         $pos = PurchaseOrder::with(['branch', 'supplier', 'items.inventoryItem'])
@@ -107,6 +139,75 @@ class ProcurementApiController extends Controller
         return response()->json([
             'status' => 'success',
             'data' => $pos,
+        ]);
+    }
+
+    public function showPo(PurchaseOrder $purchaseOrder)
+    {
+        $purchaseOrder->load(['branch', 'supplier', 'items.inventoryItem', 'grns']);
+
+        return response()->json([
+            'status' => 'success',
+            'data' => $purchaseOrder,
+        ]);
+    }
+
+    public function storePurchaseOrder(Request $request)
+    {
+        $validated = $request->validate([
+            'supplier_id' => 'required|exists:suppliers,id',
+            'pr_id' => 'nullable|exists:purchase_requests,id',
+            'notes' => 'nullable|string|max:255',
+            'items' => 'required|array|min:1',
+            'items.*.inventory_item_id' => 'required|exists:inventory_items,id',
+            'items.*.quantity' => 'required|numeric|min:0.1',
+            'items.*.unit_price' => 'required|numeric|min:0',
+        ]);
+
+        $branchId = session('scoped_branch_id') ?? auth()->user()?->branch_id ?? 1;
+
+        return DB::transaction(function () use ($validated, $branchId) {
+            $poNumber = 'PO-' . date('Ymd') . '-' . strtoupper(Str::random(4));
+            $totalAmount = collect($validated['items'])->sum(fn ($i) => $i['quantity'] * $i['unit_price']);
+
+            $po = PurchaseOrder::create([
+                'branch_id' => $branchId,
+                'supplier_id' => $validated['supplier_id'],
+                'pr_id' => $validated['pr_id'] ?? null,
+                'po_number' => $poNumber,
+                'total_amount' => $totalAmount,
+                'status' => 'ordered',
+                'notes' => $validated['notes'] ?? null,
+                'created_by' => auth()->id() ?? 1,
+            ]);
+
+            foreach ($validated['items'] as $item) {
+                PurchaseOrderItem::create([
+                    'po_id' => $po->id,
+                    'inventory_item_id' => $item['inventory_item_id'],
+                    'quantity' => $item['quantity'],
+                    'unit_price' => $item['unit_price'],
+                    'subtotal' => $item['quantity'] * $item['unit_price'],
+                ]);
+            }
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Purchase Order berhasil dibuat!',
+                'data' => $po->load('items.inventoryItem'),
+            ], 201);
+        });
+    }
+
+    public function grns(Request $request)
+    {
+        $grns = GoodsReceivedNote::with(['purchaseOrder.supplier', 'receiver'])
+            ->orderBy('received_at', 'desc')
+            ->paginate($request->query('per_page', 10));
+
+        return response()->json([
+            'status' => 'success',
+            'data' => $grns,
         ]);
     }
 
@@ -128,9 +229,11 @@ class ProcurementApiController extends Controller
             'notes' => $validated['notes'] ?? 'Penerimaan via API',
         ]);
 
+        $po->update(['status' => 'received']);
+
         return response()->json([
             'status' => 'success',
-            'message' => 'Penerimaan Barang (GRN) berhasil dicatat!',
+            'message' => 'Penerimaan Barang (GRN) berhasil dicatat dan status PO telah diperbarui!',
             'data' => $grn,
         ], 201);
     }

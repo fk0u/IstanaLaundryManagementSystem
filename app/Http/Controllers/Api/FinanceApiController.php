@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\AccountingPeriod;
 use App\Models\ChartOfAccount;
 use App\Models\JournalEntry;
 use App\Models\JournalLine;
@@ -126,15 +127,75 @@ class FinanceApiController extends Controller
 
     public function incomeStatement(Request $request)
     {
-        $startDate = $request->query('start_date', now()->startOfMonth()->toDateString());
-        $endDate = $request->query('end_date', now()->endOfMonth()->toDateString());
+        $year = (int) $request->query('year', date('Y'));
+        $month = (int) $request->query('month', date('n'));
         $branchId = session('scoped_branch_id') ?? auth()->user()?->branch_id;
 
-        $statement = $this->reportService->generateIncomeStatement($startDate, $endDate, $branchId);
+        $statement = $this->reportService->getIncomeStatement($branchId, $year, $month);
 
         return response()->json([
             'status' => 'success',
             'data' => $statement,
+        ]);
+    }
+
+    public function balanceSheet(Request $request)
+    {
+        $year = (int) $request->query('year', date('Y'));
+        $month = (int) $request->query('month', date('n'));
+        $branchId = session('scoped_branch_id') ?? auth()->user()?->branch_id;
+
+        $sheet = $this->reportService->getBalanceSheet($branchId, $year, $month);
+
+        return response()->json([
+            'status' => 'success',
+            'data' => $sheet,
+        ]);
+    }
+
+    public function trialBalance(Request $request)
+    {
+        $year = (int) $request->query('year', date('Y'));
+        $month = (int) $request->query('month', date('n'));
+        $branchId = session('scoped_branch_id') ?? auth()->user()?->branch_id;
+
+        $tb = $this->reportService->getTrialBalance($branchId, $year, $month);
+
+        return response()->json([
+            'status' => 'success',
+            'data' => $tb,
+        ]);
+    }
+
+    public function accountingPeriods()
+    {
+        $periods = AccountingPeriod::orderBy('year', 'desc')->orderBy('month', 'desc')->get();
+
+        return response()->json([
+            'status' => 'success',
+            'data' => $periods,
+        ]);
+    }
+
+    public function closeAccountingPeriod(Request $request, AccountingPeriod $period)
+    {
+        if ($period->is_closed) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Periode akuntansi ini sudah dalam status Tutup Buku.',
+            ], 422);
+        }
+
+        $period->update([
+            'is_closed' => true,
+            'closed_at' => now(),
+            'closed_by' => auth()->id() ?? 1,
+        ]);
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Proses Tutup Buku periode ' . $period->year . '-' . sprintf('%02d', $period->month) . ' berhasil dilakukan!',
+            'data' => $period,
         ]);
     }
 }

@@ -62,6 +62,32 @@ class InventoryApiController extends Controller
         ], 201);
     }
 
+    public function show(InventoryItem $inventoryItem)
+    {
+        return response()->json([
+            'status' => 'success',
+            'data' => $inventoryItem,
+        ]);
+    }
+
+    public function update(Request $request, InventoryItem $inventoryItem)
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'category' => 'required|string|max:255',
+            'unit' => 'required|string|max:50',
+            'min_stock' => 'required|numeric|min:0',
+        ]);
+
+        $inventoryItem->update($validated);
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Data item inventori berhasil diperbarui!',
+            'data' => $inventoryItem,
+        ]);
+    }
+
     public function adjust(Request $request, InventoryItem $inventoryItem)
     {
         $validated = $request->validate([
@@ -74,6 +100,16 @@ class InventoryApiController extends Controller
             'status' => 'success',
             'message' => 'Stok inventori berhasil dikoreksi!',
             'data' => $inventoryItem,
+        ]);
+    }
+
+    public function destroy(InventoryItem $inventoryItem)
+    {
+        $inventoryItem->delete();
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Item inventori berhasil dihapus.',
         ]);
     }
 }

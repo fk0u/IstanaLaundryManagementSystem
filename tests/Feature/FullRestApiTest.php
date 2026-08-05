@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Branch;
+use App\Models\ChartOfAccount;
 use App\Models\Customer;
 use App\Models\InventoryItem;
 use App\Models\Order;
@@ -17,7 +18,6 @@ class FullRestApiTest extends TestCase
 
     protected Branch $branch;
     protected User $user;
-
     protected string $token;
 
     protected function setUp(): void
@@ -104,10 +104,58 @@ class FullRestApiTest extends TestCase
             ->assertJson(['status' => 'success']);
     }
 
-    public function test_finance_api_returns_coa_list()
+    public function test_finance_api_returns_coa_and_balance_sheet()
     {
         $response = $this->withHeader('Authorization', 'Bearer ' . $this->token)
             ->getJson(route('api.v1.finance.coa.index'));
+
+        $response->assertStatus(200)
+            ->assertJson(['status' => 'success']);
+
+        $sheet = $this->withHeader('Authorization', 'Bearer ' . $this->token)
+            ->getJson(route('api.v1.finance.reports.balance-sheet'));
+
+        $sheet->assertStatus(200)
+            ->assertJson(['status' => 'success']);
+    }
+
+    public function test_expense_api_can_create_operational_expense()
+    {
+        $coa = ChartOfAccount::create([
+            'code' => '5-5555',
+            'name' => 'Beban Listrik',
+            'type' => 'expense',
+            'normal_balance' => 'debit',
+            'level' => 1,
+            'is_active' => true,
+        ]);
+
+        $response = $this->withHeader('Authorization', 'Bearer ' . $this->token)
+            ->postJson(route('api.v1.finance.expenses.store'), [
+                'account_id' => $coa->id,
+                'amount' => 1500000,
+                'expense_date' => now()->toDateString(),
+                'payment_method' => 'cash',
+                'description' => 'Bayar listrik bulan ini',
+            ]);
+
+        $response->assertStatus(201)
+            ->assertJson(['status' => 'success']);
+    }
+
+    public function test_users_api_returns_staff_list()
+    {
+        $response = $this->withHeader('Authorization', 'Bearer ' . $this->token)
+            ->getJson(route('api.v1.users.index'));
+
+        $response->assertStatus(200)
+            ->assertJson(['status' => 'success']);
+    }
+
+    public function test_performance_api_returns_cashier_metrics()
+    {
+        $response = $this->withHeader('Authorization', 'Bearer ' . $this->token)
+            ->getJson(route('api.v1.performance.cashiers'));
 
         $response->assertStatus(200)
             ->assertJson(['status' => 'success']);
