@@ -1,8 +1,8 @@
 {
 	"info": {
 		"_postman_id": "a91b2c3d-4e5f-6a7b-8c9d-0e1f2a3b4c5d",
-		"name": "Istana Laundry Management System API",
-		"description": "Koleksi API resmi untuk Istana Laundry Management System Samarinda, mencakup Public API v1 (Compro & Online Order dengan koordinat GPS), POS Cashier API, dan Production Status API.",
+		"name": "Istana Laundry Management System Full REST API Engine",
+		"description": "Koleksi API resmi lengkap untuk Istana Laundry Management System Samarinda. Meliputi 10 modul backend ERP: Public, Auth, Dashboard, Orders, CRM Customers, Inventory, HR, Assets, Finance, Procurement, Shifts, dan Master Data.",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
 	"variable": [
@@ -25,146 +25,37 @@
 					"name": "Get Active Branches",
 					"request": {
 						"method": "GET",
-						"header": [
-							{
-								"key": "Accept",
-								"value": "application/json"
-							}
-						],
-						"url": {
-							"raw": "{{base_url}}/v1/branches",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"v1",
-								"branches"
-							]
-						},
-						"description": "Mengambil daftar seluruh outlet cabang aktif Istana Laundry."
-					},
-					"response": []
+						"header": [{ "key": "Accept", "value": "application/json" }],
+						"url": { "raw": "{{base_url}}/v1/branches", "host": ["{{base_url}}"], "path": ["v1", "branches"] }
+					}
 				},
 				{
 					"name": "Get Active Services & Pricing",
 					"request": {
 						"method": "GET",
-						"header": [
-							{
-								"key": "Accept",
-								"value": "application/json"
-							}
-						],
-						"url": {
-							"raw": "{{base_url}}/v1/services?branch_id=1",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"v1",
-								"services"
-							],
-							"query": [
-								{
-									"key": "branch_id",
-									"value": "1",
-									"description": "Filter harga khusus cabang"
-								}
-							]
-						},
-						"description": "Mengambil daftar jenis layanan laundry dan tarif per kg / pcs."
-					},
-					"response": []
+						"header": [{ "key": "Accept", "value": "application/json" }],
+						"url": { "raw": "{{base_url}}/v1/services?branch_id=1", "host": ["{{base_url}}"], "path": ["v1", "services"], "query": [{ "key": "branch_id", "value": "1" }] }
+					}
 				},
 				{
 					"name": "Track Order Status (GET)",
 					"request": {
 						"method": "GET",
-						"header": [
-							{
-								"key": "Accept",
-								"value": "application/json"
-							}
-						],
-						"url": {
-							"raw": "{{base_url}}/v1/track/WJK-202608-0001",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"v1",
-								"track",
-								"WJK-202608-0001"
-							]
-						},
-						"description": "Lacak status pengerjaan cucian berdasarkan nomor nota/order."
-					},
-					"response": []
-				},
-				{
-					"name": "Track Order Status (POST)",
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Accept",
-								"value": "application/json"
-							},
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"order_number\": \"WJK-202608-0001\"\n}"
-						},
-						"url": {
-							"raw": "{{base_url}}/v1/track",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"v1",
-								"track"
-							]
-						},
-						"description": "Endpoint alternatif tracking order via HTTP POST."
-					},
-					"response": []
+						"header": [{ "key": "Accept", "value": "application/json" }],
+						"url": { "raw": "{{base_url}}/v1/track/WJK-202608-0001", "host": ["{{base_url}}"], "path": ["v1", "track", "WJK-202608-0001"] }
+					}
 				},
 				{
 					"name": "Submit Online Order with GPS",
 					"request": {
 						"method": "POST",
-						"header": [
-							{
-								"key": "Accept",
-								"value": "application/json"
-							},
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							}
-						],
+						"header": [{ "key": "Accept", "value": "application/json" }, { "key": "Content-Type", "value": "application/json" }],
 						"body": {
 							"mode": "raw",
 							"raw": "{\n  \"branch_code\": \"WJK\",\n  \"customer_name\": \"Bpk. Ghani\",\n  \"customer_phone\": \"081234567890\",\n  \"delivery_address\": \"Jl. Air Hitam No. 88, Samarinda\",\n  \"latitude\": -0.4851234,\n  \"longitude\": 117.1423456,\n  \"service_id\": 1,\n  \"quantity\": 5,\n  \"notes\": \"Jemput di pagar hitam depan pos satpam\"\n}"
 						},
-						"url": {
-							"raw": "{{base_url}}/v1/orders/online",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"v1",
-								"orders",
-								"online"
-							]
-						},
-						"description": "Submit pemesanan penjemputan online baru dengan koordinat titik lokasi GPS."
-					},
-					"response": []
+						"url": { "raw": "{{base_url}}/v1/orders/online", "host": ["{{base_url}}"], "path": ["v1", "orders", "online"] }
+					}
 				}
 			]
 		},
@@ -182,7 +73,6 @@
 									"    var jsonData = pm.response.json();",
 									"    if (jsonData.token) {",
 									"        pm.collectionVariables.set('bearer_token', jsonData.token);",
-									"        console.log('Bearer Token updated successfully');",
 									"    }",
 									"}"
 								],
@@ -192,334 +82,181 @@
 					],
 					"request": {
 						"method": "POST",
-						"header": [
-							{
-								"key": "Accept",
-								"value": "application/json"
-							},
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							}
-						],
+						"header": [{ "key": "Accept", "value": "application/json" }, { "key": "Content-Type", "value": "application/json" }],
 						"body": {
 							"mode": "raw",
 							"raw": "{\n  \"email\": \"kasir@istanalaundry.com\",\n  \"password\": \"password\"\n}"
 						},
-						"url": {
-							"raw": "{{base_url}}/login",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"login"
-							]
-						},
-						"description": "Login staf kasir/admin untuk mendapatkan token Bearer Sanctum."
-					},
-					"response": []
+						"url": { "raw": "{{base_url}}/login", "host": ["{{base_url}}"], "path": ["login"] }
+					}
 				},
 				{
 					"name": "Get Authenticated User Profile",
 					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{bearer_token}}",
-									"type": "string"
-								}
-							]
-						},
+						"auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{bearer_token}}", "type": "string" }] },
 						"method": "GET",
-						"header": [
-							{
-								"key": "Accept",
-								"value": "application/json"
-							}
-						],
-						"url": {
-							"raw": "{{base_url}}/me",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"me"
-							]
-						},
-						"description": "Mengambil profil pengguna dan informasi cabang tempat staf bertugas."
-					},
-					"response": []
-				},
-				{
-					"name": "Staff Logout",
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{bearer_token}}",
-									"type": "string"
-								}
-							]
-						},
-						"method": "POST",
-						"header": [
-							{
-								"key": "Accept",
-								"value": "application/json"
-							}
-						],
-						"url": {
-							"raw": "{{base_url}}/logout",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"logout"
-							]
-						},
-						"description": "Menghapus token autentikasi Sanctum."
-					},
-					"response": []
+						"header": [{ "key": "Accept", "value": "application/json" }],
+						"url": { "raw": "{{base_url}}/me", "host": ["{{base_url}}"], "path": ["me"] }
+					}
 				}
 			]
 		},
 		{
-			"name": "3. POS Cashier API",
+			"name": "3. Dashboard & Analytics API",
 			"item": [
 				{
-					"name": "Get POS Services Catalog",
+					"name": "Executive KPI Stats",
 					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{bearer_token}}",
-									"type": "string"
-								}
-							]
-						},
+						"auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{bearer_token}}", "type": "string" }] },
 						"method": "GET",
-						"header": [
-							{
-								"key": "Accept",
-								"value": "application/json"
-							}
-						],
-						"url": {
-							"raw": "{{base_url}}/pos/services",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"pos",
-								"services"
-							]
-						},
-						"description": "Mengambil katalog layanan untuk aplikasi kasir POS."
-					},
-					"response": []
+						"header": [{ "key": "Accept", "value": "application/json" }],
+						"url": { "raw": "{{base_url}}/v1/dashboard/stats", "host": ["{{base_url}}"], "path": ["v1", "dashboard", "stats"] }
+					}
 				},
 				{
-					"name": "Get / Search Customers",
+					"name": "Monthly Sales Charts",
 					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{bearer_token}}",
-									"type": "string"
-								}
-							]
-						},
+						"auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{bearer_token}}", "type": "string" }] },
 						"method": "GET",
-						"header": [
-							{
-								"key": "Accept",
-								"value": "application/json"
-							}
-						],
-						"url": {
-							"raw": "{{base_url}}/pos/customers?search=Ghani",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"pos",
-								"customers"
-							],
-							"query": [
-								{
-									"key": "search",
-									"value": "Ghani"
-								}
-							]
-						},
-						"description": "Mencari data pelanggan berdasarkan nama/nomor telepon untuk POS."
-					},
-					"response": []
-				},
-				{
-					"name": "Create POS Transaction Order",
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{bearer_token}}",
-									"type": "string"
-								}
-							]
-						},
-						"method": "POST",
-						"header": [
-							{
-								"key": "Accept",
-								"value": "application/json"
-							},
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"customer_id\": 1,\n  \"order_type\": \"outlet\",\n  \"payment_method\": \"cash\",\n  \"items\": [\n    {\n      \"service_id\": 1,\n      \"quantity\": 5,\n      \"unit_price\": 18000\n    }\n  ],\n  \"paid_amount\": 90000\n}"
-						},
-						"url": {
-							"raw": "{{base_url}}/pos/orders",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"pos",
-								"orders"
-							]
-						},
-						"description": "Membuat transaksi order nota baru dari aplikasi kasir."
-					},
-					"response": []
+						"header": [{ "key": "Accept", "value": "application/json" }],
+						"url": { "raw": "{{base_url}}/v1/dashboard/charts", "host": ["{{base_url}}"], "path": ["v1", "dashboard", "charts"] }
+					}
 				}
 			]
 		},
 		{
-			"name": "4. Production Workshop API",
+			"name": "4. Orders & Transactions API",
 			"item": [
 				{
-					"name": "Get Production Orders Queue",
+					"name": "Get Paginated Orders List",
 					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{bearer_token}}",
-									"type": "string"
-								}
-							]
-						},
+						"auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{bearer_token}}", "type": "string" }] },
 						"method": "GET",
-						"header": [
-							{
-								"key": "Accept",
-								"value": "application/json"
-							}
-						],
-						"url": {
-							"raw": "{{base_url}}/production",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"production"
-							]
-						},
-						"description": "Mengambil antrean order di workshop produksi."
-					},
-					"response": []
+						"header": [{ "key": "Accept", "value": "application/json" }],
+						"url": { "raw": "{{base_url}}/v1/orders?per_page=15", "host": ["{{base_url}}"], "path": ["v1", "orders"], "query": [{ "key": "per_page", "value": "15" }] }
+					}
 				},
 				{
-					"name": "Get Production Order Detail",
+					"name": "Add Order Payment Settlement",
 					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{bearer_token}}",
-									"type": "string"
-								}
-							]
-						},
-						"method": "GET",
-						"header": [
-							{
-								"key": "Accept",
-								"value": "application/json"
-							}
-						],
-						"url": {
-							"raw": "{{base_url}}/production/1",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"production",
-								"1"
-							]
-						},
-						"description": "Mengambil detail order produksi berdasarkan ID."
-					},
-					"response": []
-				},
-				{
-					"name": "Update Production Status Stage",
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{bearer_token}}",
-									"type": "string"
-								}
-							]
-						},
-						"method": "PATCH",
-						"header": [
-							{
-								"key": "Accept",
-								"value": "application/json"
-							},
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							}
-						],
+						"auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{bearer_token}}", "type": "string" }] },
+						"method": "POST",
+						"header": [{ "key": "Accept", "value": "application/json" }, { "key": "Content-Type", "value": "application/json" }],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"status\": \"CUCI\",\n  \"notes\": \"Diproses di mesin cuci washer #2\"\n}"
+							"raw": "{\n  \"amount\": 50000,\n  \"payment_method\": \"cash\",\n  \"notes\": \"Pelunasan via Postman\"\n}"
 						},
-						"url": {
-							"raw": "{{base_url}}/production/1/status",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"production",
-								"1",
-								"status"
-							]
+						"url": { "raw": "{{base_url}}/v1/orders/1/payments", "host": ["{{base_url}}"], "path": ["v1", "orders", "1", "payments"] }
+					}
+				}
+			]
+		},
+		{
+			"name": "5. CRM Customers API",
+			"item": [
+				{
+					"name": "Get & Search Customers",
+					"request": {
+						"auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{bearer_token}}", "type": "string" }] },
+						"method": "GET",
+						"header": [{ "key": "Accept", "value": "application/json" }],
+						"url": { "raw": "{{base_url}}/v1/customers?search=Ghani", "host": ["{{base_url}}"], "path": ["v1", "customers"], "query": [{ "key": "search", "value": "Ghani" }] }
+					}
+				},
+				{
+					"name": "Create New Member",
+					"request": {
+						"auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{bearer_token}}", "type": "string" }] },
+						"method": "POST",
+						"header": [{ "key": "Accept", "value": "application/json" }, { "key": "Content-Type", "value": "application/json" }],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Bpk. Ahmad\",\n  \"phone\": \"081299988877\",\n  \"address\": \"Samarinda Seberang\"\n}"
 						},
-						"description": "Memperbarui status pengerjaan cucian (TERIMA, PILAH, CUCI, KERING, LIPAT, CEK, SIAP, DIAMBIL)."
-					},
-					"response": []
+						"url": { "raw": "{{base_url}}/v1/customers", "host": ["{{base_url}}"], "path": ["v1", "customers"] }
+					}
+				}
+			]
+		},
+		{
+			"name": "6. Inventory API",
+			"item": [
+				{
+					"name": "Get Stock & Low Stock Items",
+					"request": {
+						"auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{bearer_token}}", "type": "string" }] },
+						"method": "GET",
+						"header": [{ "key": "Accept", "value": "application/json" }],
+						"url": { "raw": "{{base_url}}/v1/inventory?low_stock=true", "host": ["{{base_url}}"], "path": ["v1", "inventory"], "query": [{ "key": "low_stock", "value": "true" }] }
+					}
+				}
+			]
+		},
+		{
+			"name": "7. HR & Payroll API",
+			"item": [
+				{
+					"name": "Get Active Employees List",
+					"request": {
+						"auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{bearer_token}}", "type": "string" }] },
+						"method": "GET",
+						"header": [{ "key": "Accept", "value": "application/json" }],
+						"url": { "raw": "{{base_url}}/v1/hr/employees", "host": ["{{base_url}}"], "path": ["v1", "hr", "employees"] }
+					}
+				}
+			]
+		},
+		{
+			"name": "8. Finance & COA API",
+			"item": [
+				{
+					"name": "Get Chart of Accounts",
+					"request": {
+						"auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{bearer_token}}", "type": "string" }] },
+						"method": "GET",
+						"header": [{ "key": "Accept", "value": "application/json" }],
+						"url": { "raw": "{{base_url}}/v1/finance/coa", "host": ["{{base_url}}"], "path": ["v1", "finance", "coa"] }
+					}
+				},
+				{
+					"name": "Get Income Statement Report",
+					"request": {
+						"auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{bearer_token}}", "type": "string" }] },
+						"method": "GET",
+						"header": [{ "key": "Accept", "value": "application/json" }],
+						"url": { "raw": "{{base_url}}/v1/finance/reports/income-statement", "host": ["{{base_url}}"], "path": ["v1", "finance", "reports", "income-statement"] }
+					}
+				}
+			]
+		},
+		{
+			"name": "9. Cashier Shifts API",
+			"item": [
+				{
+					"name": "Open Cashier Shift",
+					"request": {
+						"auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{bearer_token}}", "type": "string" }] },
+						"method": "POST",
+						"header": [{ "key": "Accept", "value": "application/json" }, { "key": "Content-Type", "value": "application/json" }],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"start_cash\": 200000\n}"
+						},
+						"url": { "raw": "{{base_url}}/v1/shifts/open", "host": ["{{base_url}}"], "path": ["v1", "shifts", "open"] }
+					}
+				},
+				{
+					"name": "Close Cashier Shift & Audit",
+					"request": {
+						"auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{bearer_token}}", "type": "string" }] },
+						"method": "POST",
+						"header": [{ "key": "Accept", "value": "application/json" }, { "key": "Content-Type", "value": "application/json" }],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"actual_end_cash\": 750000,\n  \"notes\": \"Tutup shift malam\"\n}"
+						},
+						"url": { "raw": "{{base_url}}/v1/shifts/close", "host": ["{{base_url}}"], "path": ["v1", "shifts", "close"] }
+					}
 				}
 			]
 		}

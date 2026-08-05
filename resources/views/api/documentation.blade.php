@@ -24,7 +24,7 @@
         .swagger-header {
             background: rgba(15, 23, 42, 0.95);
             backdrop-filter: blur(16px);
-            border-b: 1px solid rgba(255, 255, 255, 0.1);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
             padding: 16px 24px;
             display: flex;
             align-items: center;
@@ -89,9 +89,8 @@
             border-color: #FF6600;
         }
 
-        /* Swagger Custom Dark Theme Tweaks */
         .swagger-ui {
-            max-w: 1200px;
+            max-width: 1200px;
             margin: 0 auto;
             padding: 24px 16px 64px 16px;
             filter: invert(88%) hue-rotate(180deg) brightness(95%) contrast(90%);
@@ -107,7 +106,7 @@
         <a href="{{ url('/') }}" class="brand-box">
             <img src="{{ asset('images/logo.webp') }}" alt="Istana Laundry" class="brand-logo" />
             <span class="brand-title">ISTANA LAUNDRY</span>
-            <span class="brand-badge">Interactive API Spec v1.0</span>
+            <span class="brand-badge">Full RESTful API Engine v1.0</span>
         </a>
         <div class="header-actions">
             <a href="{{ asset('docs/api/IstanaLaundry_Postman_Collection.json') }}" download class="btn-action">Download Postman JSON</a>
@@ -124,9 +123,9 @@
         const spec = {
             "openapi": "3.0.3",
             "info": {
-                "title": "Istana Laundry Management System API",
+                "title": "Istana Laundry Management System Full REST API",
                 "version": "1.0.0",
-                "description": "Dokumentasi API interaktif resmi untuk Istana Laundry Management System Samarinda. Mendukung integrasi Web Company Profile, Mobile Apps, POS Tablet Kasir, dan Layanan Pemesanan Online berbasis titik GPS presisi."
+                "description": "Dokumentasi RESTful API menyeluruh untuk Istana Laundry Management System Samarinda. Meliputi 10 modul backend ERP: Public, Auth, Dashboard, Orders, CRM, Inventory, HR, Assets, Finance, Procurement, Shifts, dan Master Data."
             },
             "servers": [
                 {
@@ -153,211 +152,176 @@
                     "get": {
                         "tags": ["1. Public API v1"],
                         "summary": "Daftar Outlet Cabang",
-                        "description": "Mengambil daftar seluruh outlet cabang aktif Istana Laundry beserta alamat dan kontak HP.",
-                        "responses": {
-                            "200": {
-                                "description": "Berhasil mengambil data cabang",
-                                "content": {
-                                    "application/json": {
-                                        "example": {
-                                            "status": "success",
-                                            "data": [
-                                                { "id": 1, "name": "Istana Laundry Samarinda Pusat", "code": "WJK", "phone": "08115550001", "address": "Jl. Wijaya Kusuma Blok V-C Gg. Rina, Air Hitam" }
-                                            ]
-                                        }
-                                    }
-                                }
-                            }
-                        }
+                        "responses": { "200": { "description": "Daftar cabang aktif" } }
                     }
                 },
                 "/v1/services": {
                     "get": {
                         "tags": ["1. Public API v1"],
                         "summary": "Daftar Layanan & Tarif",
-                        "description": "Mengambil daftar jenis layanan laundry, satuan, dan harga.",
-                        "parameters": [
-                            {
-                                "name": "branch_id",
-                                "in": "query",
-                                "required": false,
-                                "schema": { "type": "integer" },
-                                "description": "ID Cabang khusus untuk penyesuaian tarif lokal"
-                            }
-                        ],
-                        "responses": {
-                            "200": {
-                                "description": "Berhasil mengambil data layanan",
-                                "content": {
-                                    "application/json": {
-                                        "example": {
-                                            "status": "success",
-                                            "data": [
-                                                { "id": 1, "name": "Cuci Kiloan Express", "type": "kilogram", "unit": "kg", "price": 18000, "description": "Selesai 24 jam" }
-                                            ]
-                                        }
-                                    }
-                                }
-                            }
-                        }
+                        "responses": { "200": { "description": "Daftar layanan & harga" } }
                     }
                 },
                 "/v1/track/{orderNumber}": {
                     "get": {
                         "tags": ["1. Public API v1"],
                         "summary": "Lacak Status Order (GET)",
-                        "description": "Lacak status pengerjaan cucian dan timeline berdasarkan nomor nota.",
-                        "parameters": [
-                            {
-                                "name": "orderNumber",
-                                "in": "path",
-                                "required": true,
-                                "schema": { "type": "string" },
-                                "example": "WJK-202608-0001"
-                            }
-                        ],
-                        "responses": {
-                            "200": { "description": "Detail status order ditemukan" },
-                            "404": { "description": "Nomor nota tidak ditemukan" }
-                        }
+                        "parameters": [{ "name": "orderNumber", "in": "path", "required": true, "schema": { "type": "string" } }],
+                        "responses": { "200": { "description": "Detail status order & timeline WITA" } }
                     }
                 },
                 "/v1/orders/online": {
                     "post": {
                         "tags": ["1. Public API v1"],
-                        "summary": "Submit Online Order Presisi GPS",
-                        "description": "Pemesanan penjemputan online baru dari website dengan koordinat Latitude dan Longitude presisi.",
-                        "requestBody": {
-                            "required": true,
-                            "content": {
-                                "application/json": {
-                                    "schema": {
-                                        "type": "object",
-                                        "required": ["customer_name", "customer_phone", "delivery_address"],
-                                        "properties": {
-                                            "branch_code": { "type": "string", "example": "WJK" },
-                                            "customer_name": { "type": "string", "example": "Bpk. Ghani" },
-                                            "customer_phone": { "type": "string", "example": "081234567890" },
-                                            "delivery_address": { "type": "string", "example": "Jl. Air Hitam No. 88, Samarinda" },
-                                            "latitude": { "type": "number", "example": -0.4851234 },
-                                            "longitude": { "type": "number", "example": 117.1423456 },
-                                            "service_id": { "type": "integer", "example": 1 },
-                                            "quantity": { "type": "number", "example": 5 },
-                                            "notes": { "type": "string", "example": "Jemput di pagar hitam" }
-                                        }
-                                    }
-                                }
-                            }
-                        },
-                        "responses": {
-                            "201": { "description": "Order online berhasil dibuat" }
-                        }
+                        "summary": "Submit Online Order dengan Koordinat GPS",
+                        "responses": { "201": { "description": "Order online berhasil dibuat" } }
                     }
                 },
                 "/login": {
                     "post": {
                         "tags": ["2. Staff Authentication"],
-                        "summary": "Login Staf (Kasir / Admin)",
-                        "description": "Mendapatkan token Bearer Sanctum.",
-                        "requestBody": {
-                            "required": true,
-                            "content": {
-                                "application/json": {
-                                    "schema": {
-                                        "type": "object",
-                                        "required": ["email", "password"],
-                                        "properties": {
-                                            "email": { "type": "string", "example": "kasir@istanalaundry.com" },
-                                            "password": { "type": "string", "example": "password" }
-                                        }
-                                    }
-                                }
-                            }
-                        },
-                        "responses": {
-                            "200": { "description": "Login berhasil, mengembalikan token Bearer" }
-                        }
+                        "summary": "Staff Login",
+                        "responses": { "200": { "description": "Mengembalikan token Bearer Sanctum" } }
                     }
                 },
                 "/me": {
                     "get": {
                         "tags": ["2. Staff Authentication"],
-                        "summary": "Profil Staf Terautentikasi",
+                        "summary": "Profil User Staf Login",
                         "security": [{ "BearerAuth": [] }],
-                        "responses": {
-                            "200": { "description": "Informasi staf login" }
-                        }
+                        "responses": { "200": { "description": "Data user staf" } }
                     }
                 },
-                "/pos/orders": {
+                "/v1/dashboard/stats": {
+                    "get": {
+                        "tags": ["3. Dashboard & Analytics"],
+                        "summary": "Executive KPI Stats",
+                        "security": [{ "BearerAuth": [] }],
+                        "responses": { "200": { "description": "Omzet hari ini, order aktif, dan siap ambil" } }
+                    }
+                },
+                "/v1/dashboard/charts": {
+                    "get": {
+                        "tags": ["3. Dashboard & Analytics"],
+                        "summary": "Grafik Omzet Bulanan",
+                        "security": [{ "BearerAuth": [] }],
+                        "responses": { "200": { "description": "Data omzet per bulan" } }
+                    }
+                },
+                "/v1/orders": {
+                    "get": {
+                        "tags": ["4. Orders & Transactions"],
+                        "summary": "Daftar Transaksi Order (Filter & Pagination)",
+                        "security": [{ "BearerAuth": [] }],
+                        "responses": { "200": { "description": "List transaksi order" } }
+                    }
+                },
+                "/v1/orders/{order}": {
+                    "get": {
+                        "tags": ["4. Orders & Transactions"],
+                        "summary": "Detail Transaksi Order",
+                        "security": [{ "BearerAuth": [] }],
+                        "parameters": [{ "name": "order", "in": "path", "required": true, "schema": { "type": "integer" } }],
+                        "responses": { "200": { "description": "Detail transaksi" } }
+                    }
+                },
+                "/v1/orders/{order}/payments": {
                     "post": {
-                        "tags": ["3. POS Cashier API"],
-                        "summary": "Buat Order Transaksi POS Kasir",
+                        "tags": ["4. Orders & Transactions"],
+                        "summary": "Pelunasan / Cicilan Pembayaran Order",
                         "security": [{ "BearerAuth": [] }],
-                        "requestBody": {
-                            "required": true,
-                            "content": {
-                                "application/json": {
-                                    "schema": {
-                                        "type": "object",
-                                        "required": ["order_type", "payment_method", "items"],
-                                        "properties": {
-                                            "customer_id": { "type": "integer", "example": 1 },
-                                            "order_type": { "type": "string", "example": "outlet" },
-                                            "payment_method": { "type": "string", "example": "cash" },
-                                            "items": {
-                                                "type": "array",
-                                                "items": {
-                                                    "type": "object",
-                                                    "properties": {
-                                                        "service_id": { "type": "integer", "example": 1 },
-                                                        "quantity": { "type": "number", "example": 5 },
-                                                        "unit_price": { "type": "number", "example": 18000 }
-                                                    }
-                                                }
-                                            },
-                                            "paid_amount": { "type": "number", "example": 90000 }
-                                        }
-                                    }
-                                }
-                            }
-                        },
-                        "responses": {
-                            "201": { "description": "Order POS berhasil dibuat" }
-                        }
+                        "parameters": [{ "name": "order", "in": "path", "required": true, "schema": { "type": "integer" } }],
+                        "responses": { "200": { "description": "Pembayaran berhasil dicatat" } }
                     }
                 },
-                "/production/{id}/status": {
-                    "patch": {
-                        "tags": ["4. Production Workshop API"],
-                        "summary": "Update Status Tahapan Produksi",
+                "/v1/customers": {
+                    "get": {
+                        "tags": ["5. CRM Customers & Loyalty"],
+                        "summary": "Daftar & Cari Member Pelanggan",
                         "security": [{ "BearerAuth": [] }],
-                        "parameters": [
-                            {
-                                "name": "id",
-                                "in": "path",
-                                "required": true,
-                                "schema": { "type": "integer" }
-                            }
-                        ],
-                        "requestBody": {
-                            "required": true,
-                            "content": {
-                                "application/json": {
-                                    "schema": {
-                                        "type": "object",
-                                        "required": ["status"],
-                                        "properties": {
-                                            "status": { "type": "string", "enum": ["TERIMA", "PILAH", "CUCI", "KERING", "LIPAT", "CEK", "SIAP", "DIAMBIL"], "example": "CUCI" },
-                                            "notes": { "type": "string", "example": "Mesin cuci #1 selesai pengerjaan" }
-                                        }
-                                    }
-                                }
-                            }
-                        },
-                        "responses": {
-                            "200": { "description": "Status produksi berhasil diperbarui" }
-                        }
+                        "responses": { "200": { "description": "List pelanggan" } }
+                    },
+                    "post": {
+                        "tags": ["5. CRM Customers & Loyalty"],
+                        "summary": "Daftarkan Member Baru",
+                        "security": [{ "BearerAuth": [] }],
+                        "responses": { "201": { "description": "Member baru dibuat" } }
+                    }
+                },
+                "/v1/inventory": {
+                    "get": {
+                        "tags": ["6. Inventory & Stock"],
+                        "summary": "Daftar Stok Bahan & Low Stock Warning",
+                        "security": [{ "BearerAuth": [] }],
+                        "responses": { "200": { "description": "Stok barang" } }
+                    },
+                    "post": {
+                        "tags": ["6. Inventory & Stock"],
+                        "summary": "Tambah Item Stok Baru",
+                        "security": [{ "BearerAuth": [] }],
+                        "responses": { "201": { "description": "Item stok dibuat" } }
+                    }
+                },
+                "/v1/hr/employees": {
+                    "get": {
+                        "tags": ["7. HR & Payroll"],
+                        "summary": "Daftar Karyawan",
+                        "security": [{ "BearerAuth": [] }],
+                        "responses": { "200": { "description": "List karyawan" } }
+                    },
+                    "post": {
+                        "tags": ["7. HR & Payroll"],
+                        "summary": "Tambah Karyawan Baru",
+                        "security": [{ "BearerAuth": [] }],
+                        "responses": { "201": { "description": "Karyawan baru dibuat" } }
+                    }
+                },
+                "/v1/assets": {
+                    "get": {
+                        "tags": ["8. Fixed Assets"],
+                        "summary": "Daftar Aset Tetap & Nilai Buku",
+                        "security": [{ "BearerAuth": [] }],
+                        "responses": { "200": { "description": "List aset tetap" } }
+                    }
+                },
+                "/v1/finance/coa": {
+                    "get": {
+                        "tags": ["9. Finance & Accounting"],
+                        "summary": "Chart of Accounts (COA)",
+                        "security": [{ "BearerAuth": [] }],
+                        "responses": { "200": { "description": "Daftar akun perkiraan" } }
+                    }
+                },
+                "/v1/finance/reports/income-statement": {
+                    "get": {
+                        "tags": ["9. Finance & Accounting"],
+                        "summary": "Laporan Laba Rugi Real-Time",
+                        "security": [{ "BearerAuth": [] }],
+                        "responses": { "200": { "description": "Financial income statement" } }
+                    }
+                },
+                "/v1/procurement/suppliers": {
+                    "get": {
+                        "tags": ["10. Procurement"],
+                        "summary": "Daftar Supplier Pemasok",
+                        "security": [{ "BearerAuth": [] }],
+                        "responses": { "200": { "description": "List supplier" } }
+                    }
+                },
+                "/v1/shifts/open": {
+                    "post": {
+                        "tags": ["11. Cashier Shifts"],
+                        "summary": "Buka Shift Kasir Baru",
+                        "security": [{ "BearerAuth": [] }],
+                        "responses": { "201": { "description": "Shift kasir dibuka" } }
+                    }
+                },
+                "/v1/shifts/close": {
+                    "post": {
+                        "tags": ["11. Cashier Shifts"],
+                        "summary": "Tutup Shift Kasir & Audit Kas",
+                        "security": [{ "BearerAuth": [] }],
+                        "responses": { "200": { "description": "Shift kasir ditutup" } }
                     }
                 }
             }
