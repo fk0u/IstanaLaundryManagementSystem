@@ -168,9 +168,7 @@
         <nav class="flex justify-between items-center px-4 sm:px-8 lg:px-12 py-3.5 max-w-7xl mx-auto">
             <!-- Brand Logo -->
             <a href="{{ url('/') }}" class="flex items-center gap-3 group">
-                <div class="w-10 h-10 rounded-2xl bg-gradient-to-br from-[#FF6600] to-amber-500 flex items-center justify-center text-white shadow-lg shadow-orange-500/30 group-hover:rotate-6 transition-transform">
-                    <span class="material-symbols-outlined text-2xl font-bold">local_laundry_service</span>
-                </div>
+                <img src="{{ asset('images/logo.webp') }}" alt="Istana Laundry" class="h-9 w-auto object-contain transition-transform group-hover:scale-105">
                 <div class="flex flex-col">
                     <span class="font-black font-display text-xl text-slate-900 dark:text-white tracking-tight leading-none">ISTANA LAUNDRY</span>
                     <span class="text-[10px] font-bold tracking-widest uppercase text-[#FF6600] mt-0.5">Enterprise Garment Care</span>
@@ -919,9 +917,7 @@
     <footer class="bg-slate-950 text-white border-t border-slate-900 py-16 transition-colors">
         <div class="max-w-7xl mx-auto px-4 sm:px-8 lg:px-12 flex flex-col items-center justify-center space-y-8">
             <div class="flex items-center gap-3">
-                <div class="w-8 h-8 rounded-xl bg-[#FF6600] flex items-center justify-center text-white">
-                    <span class="material-symbols-outlined text-lg font-bold">local_laundry_service</span>
-                </div>
+                <img src="{{ asset('images/logo.webp') }}" alt="Istana Laundry" class="h-8 w-auto object-contain">
                 <span class="font-black font-display text-xl tracking-tight">ISTANA LAUNDRY</span>
             </div>
             

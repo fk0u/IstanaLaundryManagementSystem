@@ -38,6 +38,10 @@ Route::get('/', function () {
     return view('welcome');
 });
 
+Route::get('/api/documentation', function () {
+    return view('api.documentation');
+})->name('api.documentation');
+
 Route::get('/track', function (Request $request) {
     $orderNumber = $request->input('order_number');
 
