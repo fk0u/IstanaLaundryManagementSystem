@@ -1,11 +1,15 @@
 # Session Briefing — Istana Laundry Management System
 
-**Last Updated:** 2026-08-05 23:25 WITA
+**Last Updated:** 2026-08-05 23:35 WITA
 
 ## Current Status
-- **Web UI & REST API for Profile, 2FA, & WebP Avatar Live**:
-  - **Web Profile Page (`/profile`)**: Completely updated with modern UI hero banner, active 2FA badge status, interactive Google Authenticator QR Code setup modal/form, and one-click photo upload.
-  - **Image Processing**: `ImageCompressionService` automatically converts uploaded photos to WebP (with GD JPEG fallback if WebP function missing) and dynamically compresses them under **200KB** (guaranteed file size).
-  - **2FA TOTP**: Integrated RFC 6238 TOTP with QR Code generation and 8 emergency recovery codes.
-- **Database Migrations**: Executed `2026_08_05_231500_add_2fa_and_profile_photo_to_users_table.php` on both production VPS and local Docker environment (`db` container).
-- **Timezone**: All timestamps formatted in WITA (UTC+8 / Asia/Singapore).
+- **2FA Login Challenge Flow (Web + API) — LIVE**:
+  - User yang mengaktifkan 2FA akan diminta kode TOTP saat login melalui halaman `/two-factor-challenge`.
+  - Opsi **"Trust This Device"** — perangkat dipercaya selama 30 hari via cookie `2fa_device_trust`.
+  - Tabel `user_trusted_devices` menyimpan token hash SHA-256 dengan expiry 30 hari.
+  - API Login mendukung 2FA melalui field `two_factor_code` / `recovery_code` dan header `X-Device-Trust-Token`.
+- **Foto Profil di Topbar & Sidebar**:
+  - Avatar foto profil (WebP <200KB) kini muncul di topbar button, topbar dropdown, dan sidebar footer.
+  - Jika belum ada foto, tampil fallback initials.
+- **Testing**: 7/7 test PASSED (47 assertions) di `TwoFactorAuthenticationTest`.
+- **Deployed**: Git pushed & VPS migration executed.
