@@ -758,25 +758,25 @@
          x-transition:leave="transition ease-in duration-200"
          x-transition:leave-start="opacity-100 scale-100"
          x-transition:leave-end="opacity-0 scale-95"
-         class="fixed inset-0 z-50 overflow-y-auto bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 sm:p-6"
+         class="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 dark:bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 sm:p-6"
          style="display: none;">
         
-        <div class="bg-slate-900 text-white rounded-3xl max-w-xl w-full border border-slate-800 shadow-2xl overflow-hidden relative"
+        <div class="bg-white dark:bg-slate-900 text-slate-900 dark:text-white rounded-3xl max-w-xl w-full border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden relative"
              @click.away="orderModalOpen = false">
             
             <!-- Modal Header -->
-            <div class="p-6 border-b border-slate-800 flex items-center justify-between bg-slate-950/50">
+            <div class="p-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/80 dark:bg-slate-950/50">
                 <div class="flex items-center gap-3">
                     <div class="w-10 h-10 rounded-2xl bg-[#FF6600] flex items-center justify-center text-white font-black text-sm shadow-md shadow-orange-500/30">
                         <span x-text="modalStep"></span>
                     </div>
                     <div>
-                        <h3 class="text-base font-black text-white">Form Pemesanan Online</h3>
-                        <p class="text-[11px] text-slate-400" x-text="modalStep === 1 ? 'Langkah 1: Pilih Cabang Target' : (modalStep === 2 ? 'Langkah 2: Konfigurasi Pakaian' : 'Langkah 3: Data Pemesan & Alamat')"></p>
+                        <h3 class="text-base font-black text-slate-900 dark:text-white">Form Pemesanan Online</h3>
+                        <p class="text-[11px] text-slate-500 dark:text-slate-400" x-text="modalStep === 1 ? 'Langkah 1: Pilih Cabang Target' : (modalStep === 2 ? 'Langkah 2: Konfigurasi Pakaian' : 'Langkah 3: Data Pemesan & Alamat')"></p>
                     </div>
                 </div>
 
-                <button @click="orderModalOpen = false" class="w-8 h-8 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center transition-colors">
+                <button @click="orderModalOpen = false" class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white flex items-center justify-center transition-colors">
                     <span class="material-symbols-outlined text-lg">close</span>
                 </button>
             </div>
@@ -785,22 +785,22 @@
             <div class="p-6 space-y-6">
                 <!-- STEP 1: SELECT BRANCH -->
                 <div x-show="modalStep === 1" class="space-y-4">
-                    <label class="block text-xs font-black uppercase tracking-wider text-slate-300">Pilih Outlet Cabang Terdekat</label>
+                    <label class="block text-xs font-black uppercase tracking-wider text-slate-600 dark:text-slate-300">Pilih Outlet Cabang Terdekat</label>
                     <div class="space-y-2.5 max-h-[300px] overflow-y-auto pr-1">
                         <template x-for="(b, code) in branches" :key="code">
                             <div @click="selectedBranch = code" 
-                                 :class="selectedBranch === code ? 'border-[#FF6600] bg-orange-500/10' : 'border-slate-800 bg-slate-950/60 hover:border-slate-700'"
+                                 :class="selectedBranch === code ? 'border-[#FF6600] bg-orange-50/80 dark:bg-orange-500/10' : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950/60 hover:border-slate-300 dark:hover:border-slate-700'"
                                  class="p-3.5 rounded-2xl border cursor-pointer transition-all flex items-center justify-between">
                                 <div class="flex items-center gap-3">
-                                    <div class="w-8 h-8 rounded-xl bg-orange-500/20 text-[#FF6600] flex items-center justify-center font-bold text-xs">
+                                    <div class="w-8 h-8 rounded-xl bg-orange-500/15 text-[#FF6600] flex items-center justify-center font-bold text-xs">
                                         <span class="material-symbols-outlined text-base">storefront</span>
                                     </div>
                                     <div>
-                                        <span class="block text-xs font-extrabold text-white" x-text="b.name"></span>
-                                        <span class="block text-[10px] text-slate-400" x-text="b.address"></span>
+                                        <span class="block text-xs font-extrabold text-slate-900 dark:text-white" x-text="b.name"></span>
+                                        <span class="block text-[10px] text-slate-500 dark:text-slate-400" x-text="b.address"></span>
                                     </div>
                                 </div>
-                                <span class="material-symbols-outlined text-base" :class="selectedBranch === code ? 'text-[#FF6600]' : 'text-slate-600'">
+                                <span class="material-symbols-outlined text-base" :class="selectedBranch === code ? 'text-[#FF6600]' : 'text-slate-400 dark:text-slate-600'">
                                     <span x-text="selectedBranch === code ? 'radio_button_checked' : 'radio_button_unchecked'"></span>
                                 </span>
                             </div>
@@ -811,30 +811,30 @@
                 <!-- STEP 2: SERVICE CONFIGURATION -->
                 <div x-show="modalStep === 2" class="space-y-4">
                     <div>
-                        <label class="block text-xs font-black uppercase tracking-wider text-slate-300 mb-2">Layanan &amp; Jumlah Pakaian</label>
+                        <label class="block text-xs font-black uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-2">Layanan &amp; Jumlah Pakaian</label>
                         <div class="grid grid-cols-2 gap-2 mb-3">
-                            <select x-model="serviceType" class="bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs font-bold text-white focus:ring-2 focus:ring-[#FF6600]">
+                            <select x-model="serviceType" class="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-2.5 text-xs font-bold text-slate-900 dark:text-white focus:ring-2 focus:ring-[#FF6600]">
                                 <option value="kiloan">Cuci Kiloan (Rp 10k/kg)</option>
                                 <option value="dry_clean">Dry Clean Jas/Kebaya (Rp 35k/pcs)</option>
                                 <option value="shoes_bag">Sepatu / Tas Spa (Rp 45k/pair)</option>
                                 <option value="bed_cover">Bed Cover (Rp 30k/pcs)</option>
                                 <option value="curtain">Gorden (Rp 15k/m²)</option>
                             </select>
-                            <input type="number" min="1" max="100" x-model.number="qty" placeholder="Jumlah" class="bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs font-bold text-white focus:ring-2 focus:ring-[#FF6600]" />
+                            <input type="number" min="1" max="100" x-model.number="qty" placeholder="Jumlah" class="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-2.5 text-xs font-bold text-slate-900 dark:text-white focus:ring-2 focus:ring-[#FF6600]" />
                         </div>
                     </div>
 
                     <div>
-                        <label class="block text-xs font-black uppercase tracking-wider text-slate-300 mb-2">Kecepatan Pengerjaan</label>
+                        <label class="block text-xs font-black uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-2">Kecepatan Pengerjaan</label>
                         <div class="grid grid-cols-3 gap-2">
-                            <button type="button" @click="speed = 'regular'" :class="speed === 'regular' ? 'bg-[#FF6600] text-white' : 'bg-slate-950 text-slate-400 border border-slate-800'" class="p-2 rounded-xl text-2xs font-bold">Reguler (48h)</button>
-                            <button type="button" @click="speed = 'express'" :class="speed === 'express' ? 'bg-[#FF6600] text-white' : 'bg-slate-950 text-slate-400 border border-slate-800'" class="p-2 rounded-xl text-2xs font-bold">Express (24h)</button>
-                            <button type="button" @click="speed = 'flash'" :class="speed === 'flash' ? 'bg-[#FF6600] text-white' : 'bg-slate-950 text-slate-400 border border-slate-800'" class="p-2 rounded-xl text-2xs font-bold">Flash (6h)</button>
+                            <button type="button" @click="speed = 'regular'" :class="speed === 'regular' ? 'bg-[#FF6600] text-white shadow-md shadow-orange-500/20' : 'bg-slate-50 dark:bg-slate-950 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-900'" class="p-2 rounded-xl text-2xs font-bold transition-all">Reguler (48h)</button>
+                            <button type="button" @click="speed = 'express'" :class="speed === 'express' ? 'bg-[#FF6600] text-white shadow-md shadow-orange-500/20' : 'bg-slate-50 dark:bg-slate-950 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-900'" class="p-2 rounded-xl text-2xs font-bold transition-all">Express (24h)</button>
+                            <button type="button" @click="speed = 'flash'" :class="speed === 'flash' ? 'bg-[#FF6600] text-white shadow-md shadow-orange-500/20' : 'bg-slate-50 dark:bg-slate-950 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-900'" class="p-2 rounded-xl text-2xs font-bold transition-all">Flash (6h)</button>
                         </div>
                     </div>
 
-                    <div class="p-4 bg-slate-950 rounded-2xl border border-slate-800 flex justify-between items-center">
-                        <span class="text-xs text-slate-400 font-bold">Estimasi Total Biaya</span>
+                    <div class="p-4 bg-orange-50/60 dark:bg-slate-950 rounded-2xl border border-orange-100 dark:border-slate-800 flex justify-between items-center">
+                        <span class="text-xs text-slate-600 dark:text-slate-400 font-bold">Estimasi Total Biaya</span>
                         <span class="text-lg font-black text-[#FF6600]" x-text="'Rp ' + calculatedTotal.toLocaleString('id-ID')"></span>
                     </div>
                 </div>
@@ -842,38 +842,38 @@
                 <!-- STEP 3: CUSTOMER DETAILS & PICKUP ADDRESS -->
                 <div x-show="modalStep === 3" class="space-y-4">
                     <div class="grid grid-cols-2 gap-2 mb-3">
-                        <button type="button" @click="deliveryMethod = 'pickup'" :class="deliveryMethod === 'pickup' ? 'bg-[#FF6600] text-white' : 'bg-slate-950 text-slate-400 border border-slate-800'" class="p-2.5 rounded-xl text-xs font-bold">Antar-Jemput Kurir</button>
-                        <button type="button" @click="deliveryMethod = 'dropoff'" :class="deliveryMethod === 'dropoff' ? 'bg-[#FF6600] text-white' : 'bg-slate-950 text-slate-400 border border-slate-800'" class="p-2.5 rounded-xl text-xs font-bold">Antar Sendiri ke Outlet</button>
+                        <button type="button" @click="deliveryMethod = 'pickup'" :class="deliveryMethod === 'pickup' ? 'bg-[#FF6600] text-white shadow-md shadow-orange-500/20' : 'bg-slate-50 dark:bg-slate-950 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-900'" class="p-2.5 rounded-xl text-xs font-bold transition-all">Antar-Jemput Kurir</button>
+                        <button type="button" @click="deliveryMethod = 'dropoff'" :class="deliveryMethod === 'dropoff' ? 'bg-[#FF6600] text-white shadow-md shadow-orange-500/20' : 'bg-slate-50 dark:bg-slate-950 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-900'" class="p-2.5 rounded-xl text-xs font-bold transition-all">Antar Sendiri ke Outlet</button>
                     </div>
 
                     <div>
-                        <label class="block text-2xs font-black uppercase tracking-wider text-slate-300 mb-1">Nama Lengkap</label>
-                        <input type="text" x-model="customerName" placeholder="Masukkan Nama Lengkap Anda..." class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white focus:ring-2 focus:ring-[#FF6600]" />
+                        <label class="block text-2xs font-black uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1">Nama Lengkap</label>
+                        <input type="text" x-model="customerName" placeholder="Masukkan Nama Lengkap Anda..." class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-2.5 text-xs text-slate-900 dark:text-white placeholder:text-slate-400 focus:ring-2 focus:ring-[#FF6600]" />
                     </div>
 
                     <div>
-                        <label class="block text-2xs font-black uppercase tracking-wider text-slate-300 mb-1">Nomor WhatsApp Active</label>
-                        <input type="text" x-model="customerPhone" placeholder="Contoh: 081234567890..." class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white focus:ring-2 focus:ring-[#FF6600]" />
+                        <label class="block text-2xs font-black uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1">Nomor WhatsApp Active</label>
+                        <input type="text" x-model="customerPhone" placeholder="Contoh: 081234567890..." class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-2.5 text-xs text-slate-900 dark:text-white placeholder:text-slate-400 focus:ring-2 focus:ring-[#FF6600]" />
                     </div>
 
                     <div x-show="deliveryMethod === 'pickup'">
-                        <label class="block text-2xs font-black uppercase tracking-wider text-slate-300 mb-1">Alamat Penjemputan di Samarinda</label>
-                        <textarea x-model="customerAddress" rows="2" placeholder="Jl. Pelita No. 12, RT 05, Samarinda..." class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white focus:ring-2 focus:ring-[#FF6600]"></textarea>
+                        <label class="block text-2xs font-black uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1">Alamat Penjemputan di Samarinda</label>
+                        <textarea x-model="customerAddress" rows="2" placeholder="Jl. Pelita No. 12, RT 05, Samarinda..." class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-2.5 text-xs text-slate-900 dark:text-white placeholder:text-slate-400 focus:ring-2 focus:ring-[#FF6600]"></textarea>
                     </div>
 
                     <div>
-                        <label class="block text-2xs font-black uppercase tracking-wider text-slate-300 mb-1">Catatan Pakaian (Opsional)</label>
-                        <input type="text" x-model="customerNotes" placeholder="Contoh: Jangan disetrika panas jas sutra..." class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white focus:ring-2 focus:ring-[#FF6600]" />
+                        <label class="block text-2xs font-black uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1">Catatan Pakaian (Opsional)</label>
+                        <input type="text" x-model="customerNotes" placeholder="Contoh: Jangan disetrika panas jas sutra..." class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-2.5 text-xs text-slate-900 dark:text-white placeholder:text-slate-400 focus:ring-2 focus:ring-[#FF6600]" />
                     </div>
                 </div>
             </div>
 
             <!-- Modal Footer Controls -->
-            <div class="p-5 border-t border-slate-800 bg-slate-950/60 flex items-center justify-between">
+            <div class="p-5 border-t border-slate-100 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-950/60 flex items-center justify-between">
                 <button type="button" 
                         x-show="modalStep > 1" 
                         @click="modalStep--" 
-                        class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs rounded-xl flex items-center gap-1 transition-colors">
+                        class="px-4 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold text-xs rounded-xl flex items-center gap-1 transition-colors">
                     <span class="material-symbols-outlined text-sm">arrow_back</span>
                     <span>Kembali</span>
                 </button>
@@ -882,7 +882,7 @@
                     <button type="button" 
                             x-show="modalStep < 3" 
                             @click="modalStep++" 
-                            class="px-5 py-2.5 bg-[#FF6600] hover:bg-orange-600 text-white font-black text-xs rounded-xl flex items-center gap-1.5 transition-colors">
+                            class="px-5 py-2.5 bg-[#FF6600] hover:bg-orange-600 text-white font-black text-xs rounded-xl flex items-center gap-1.5 transition-colors shadow-md shadow-orange-500/20">
                         <span>Lanjut</span>
                         <span class="material-symbols-outlined text-sm">arrow_forward</span>
                     </button>
