@@ -29,6 +29,8 @@ class FixTimezoneWita extends Command
     {
         $this->info('Memulai penyesuaian timestamp database dari WIB ke WITA (+1 Jam)...');
 
+        $driver = DB::getDriverName();
+
         $tables = [
             'orders' => ['created_at', 'updated_at', 'paid_at', 'estimated_done_at', 'pickup_scheduled_at'],
             'order_items' => ['created_at', 'updated_at'],
@@ -45,28 +47,24 @@ class FixTimezoneWita extends Command
                 continue;
             }
 
-            $count = 0;
-            $rows = DB::table($table)->get();
+            $validCols = array_filter($columns, fn ($col) => DB::getSchemaBuilder()->hasColumn($table, $col));
+            if (empty($validCols)) {
+                continue;
+            }
 
-            foreach ($rows as $row) {
-                $updates = [];
-                foreach ($columns as $col) {
-                    if (isset($row->$col) && $row->$col) {
-                        try {
-                            $updates[$col] = Carbon::parse($row->$col)->addHour()->toDateTimeString();
-                        } catch (\Throwable $e) {
-                            // ignore invalid dates
-                        }
-                    }
-                }
-
-                if (! empty($updates)) {
-                    DB::table($table)->where('id', $row->id)->update($updates);
-                    $count++;
+            $setExprs = [];
+            foreach ($validCols as $col) {
+                if ($driver === 'sqlite') {
+                    $setExprs[] = "{$col} = datetime({$col}, '+1 hour')";
+                } else {
+                    $setExprs[] = "{$col} = DATE_ADD({$col}, INTERVAL 1 HOUR)";
                 }
             }
 
-            $this->info("Berhasil meng-update {$count} data pada tabel '{$table}'.");
+            $sql = "UPDATE {$table} SET ".implode(', ', $setExprs)." WHERE ".implode(' IS NOT NULL OR ', $validCols).' IS NOT NULL';
+            $affected = DB::update($sql);
+
+            $this->info("Berhasil meng-update {$affected} baris pada tabel '{$table}'.");
         }
 
         $this->info('Penyesuaian zona waktu WITA (+1 Jam) selesai!');
