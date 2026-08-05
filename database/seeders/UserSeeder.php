@@ -14,6 +14,10 @@ class UserSeeder extends Seeder
      */
     public function run(): void
     {
+        if (! Branch::where('code', 'WJK')->exists()) {
+            $this->call(BranchSeeder::class);
+        }
+
         $branchWjk = Branch::where('code', 'WJK')->first();
         $branchSut = Branch::where('code', 'SUT')->first();
         $branchHid = Branch::where('code', 'HID')->first();

@@ -133,14 +133,18 @@ class AssetController extends Controller
             $bookValue = max($salvage, $cost - $accumulated);
             $periodDate = $startDate->copy()->addMonths($i - 1);
 
-            DepreciationSchedule::create([
-                'asset_id' => $asset->id,
-                'period_date' => $periodDate->format('Y-m-d'),
-                'depreciation_amount' => round($monthlyDep, 2),
-                'accumulated' => round($accumulated, 2),
-                'book_value' => round($bookValue, 2),
-                'is_posted' => $periodDate->isPast() || $periodDate->isSameMonth(now()),
-            ]);
+            DepreciationSchedule::firstOrCreate(
+                [
+                    'asset_id' => $asset->id,
+                    'period_date' => $periodDate->format('Y-m-d'),
+                ],
+                [
+                    'depreciation_amount' => round($monthlyDep, 2),
+                    'accumulated' => round($accumulated, 2),
+                    'book_value' => round($bookValue, 2),
+                    'is_posted' => $periodDate->isPast() || $periodDate->isSameMonth(now()),
+                ]
+            );
         }
 
         $postedAccumulated = DepreciationSchedule::where('asset_id', $asset->id)
