@@ -57,7 +57,7 @@ class ERPDataSeeder extends Seeder
         // ---------------------------------------------------------
         $settings = [
             ['key' => 'company_name', 'value' => 'Istana Laundry Management System'],
-            ['key' => 'company_phone', 'value' => '0811-5555-9999'],
+            ['key' => 'company_phone', 'value' => '+62 811-5599-199'],
             ['key' => 'company_address', 'value' => 'Jl. Wijaya Kusuma Blok V-C Gg. Rina, Samarinda'],
             ['key' => 'tax_percentage', 'value' => '11'],
             ['key' => 'loyalty_point_rate', 'value' => '1000'],

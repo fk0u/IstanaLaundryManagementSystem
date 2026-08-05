@@ -905,7 +905,7 @@
             <span class="material-symbols-outlined text-3xl">shopping_cart_checkout</span>
         </button>
 
-        <a href="https://wa.me/628115550001?text=Halo%20Istana%20Laundry%2C%20saya%20butuh%20bantuan%20layanan" 
+        <a href="https://wa.me/628115599199?text=Halo%20Istana%20Laundry%2C%20saya%20butuh%20bantuan%20layanan" 
            target="_blank"
            class="w-14 h-14 bg-[#25D366] hover:bg-[#1DA851] text-white rounded-full flex items-center justify-center shadow-2xl hover:scale-110 transition-transform active:scale-95"
            title="Hubungi Customer Care WhatsApp">
