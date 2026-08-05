@@ -77,6 +77,11 @@ class User extends Authenticatable
         return $this->hasOne(Employee::class);
     }
 
+    public function trustedDevices(): HasMany
+    {
+        return $this->hasMany(UserTrustedDevice::class);
+    }
+
     public function isOwner(): bool
     {
         return $this->hasAnyRole(['Owner', 'Developer']);

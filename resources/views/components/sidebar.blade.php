@@ -685,9 +685,13 @@
         <!-- Footer / Profile & Logout -->
         <div class="mt-3 border-t border-surface-outline/30 dark:border-slate-800 pt-3 px-3">
             <div class="flex items-center gap-3 mb-2 group relative" :class="{ 'justify-center': !desktopSidebarOpen }">
-                <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-primary to-amber-500 text-white flex items-center justify-center font-black font-display shrink-0 text-sm shadow-md hover:scale-105 transition-transform cursor-pointer">
-                    {{ strtoupper(substr(auth()->user()->name, 0, 2)) }}
-                </div>
+                @if(auth()->user()->avatar_path)
+                    <img src="{{ asset('storage/' . auth()->user()->avatar_path) }}" alt="{{ auth()->user()->name }}" class="w-10 h-10 rounded-2xl object-cover shrink-0 shadow-md hover:scale-105 transition-transform cursor-pointer">
+                @else
+                    <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-primary to-amber-500 text-white flex items-center justify-center font-black font-display shrink-0 text-sm shadow-md hover:scale-105 transition-transform cursor-pointer">
+                        {{ strtoupper(substr(auth()->user()->name, 0, 2)) }}
+                    </div>
+                @endif
                 <div class="overflow-hidden flex-1 min-w-0" x-show="desktopSidebarOpen">
                     <span class="block text-xs font-black font-display text-slate-800 dark:text-slate-200 truncate leading-tight">{{ auth()->user()->name }}</span>
                     <span class="block text-[10px] font-bold text-slate-400 truncate mt-0.5">{{ auth()->user()->getRoleNames()->first() }}</span>

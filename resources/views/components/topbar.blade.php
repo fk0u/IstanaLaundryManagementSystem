@@ -238,9 +238,13 @@
             <div class="relative" @click.away="showProfileMenu = false">
                 <button @click="showProfileMenu = !showProfileMenu; showNotifications = false; showQuickAction = false; showSupportMenu = false"
                         class="flex items-center gap-2 cursor-pointer p-1 rounded-2xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-all">
-                    <div class="w-8.5 h-8.5 md:w-9 md:h-9 rounded-2xl bg-gradient-to-tr from-primary to-amber-500 text-white flex items-center justify-center font-black font-display text-xs md:text-sm shrink-0 shadow-xs border border-orange-300/40 dark:border-slate-700">
-                        {{ strtoupper(substr(auth()->user()->name, 0, 2)) }}
-                    </div>
+                    @if(auth()->user()->avatar_path)
+                        <img src="{{ asset('storage/' . auth()->user()->avatar_path) }}" alt="{{ auth()->user()->name }}" class="w-8.5 h-8.5 md:w-9 md:h-9 rounded-2xl object-cover shrink-0 shadow-xs border border-orange-300/40 dark:border-slate-700">
+                    @else
+                        <div class="w-8.5 h-8.5 md:w-9 md:h-9 rounded-2xl bg-gradient-to-tr from-primary to-amber-500 text-white flex items-center justify-center font-black font-display text-xs md:text-sm shrink-0 shadow-xs border border-orange-300/40 dark:border-slate-700">
+                            {{ strtoupper(substr(auth()->user()->name, 0, 2)) }}
+                        </div>
+                    @endif
                     <div class="hidden xl:block text-left pr-1">
                         <span class="block text-xs font-black font-display text-slate-800 dark:text-slate-200 leading-none truncate max-w-[130px]">{{ auth()->user()->name }}</span>
                         <span class="block text-[9px] font-bold text-slate-400 mt-0.5 leading-none truncate">{{ auth()->user()->getRoleNames()->first() ?? 'User' }}</span>
@@ -258,9 +262,13 @@
                      class="absolute right-0 mt-2.5 w-68 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-expressive shadow-md3-3 z-50 p-4 space-y-3"
                      x-cloak>
                     <div class="pb-3 border-b border-slate-100 dark:border-slate-800 flex items-center gap-3">
-                        <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-primary to-amber-500 text-white flex items-center justify-center font-black font-display shrink-0 text-sm shadow-md">
-                            {{ strtoupper(substr(auth()->user()->name, 0, 2)) }}
-                        </div>
+                        @if(auth()->user()->avatar_path)
+                            <img src="{{ asset('storage/' . auth()->user()->avatar_path) }}" alt="{{ auth()->user()->name }}" class="w-10 h-10 rounded-2xl object-cover shrink-0 shadow-md">
+                        @else
+                            <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-primary to-amber-500 text-white flex items-center justify-center font-black font-display shrink-0 text-sm shadow-md">
+                                {{ strtoupper(substr(auth()->user()->name, 0, 2)) }}
+                            </div>
+                        @endif
                         <div class="min-w-0 flex-1">
                             <p class="font-black font-display text-sm text-slate-800 dark:text-slate-100 truncate">{{ auth()->user()->name }}</p>
                             <p class="text-2xs font-semibold text-slate-400 truncate mb-1">{{ auth()->user()->email }}</p>

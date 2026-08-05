@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Models\User;
+use App\Models\UserTrustedDevice;
 use App\Services\AuditLogService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -48,11 +49,9 @@ class AuthenticatedSessionController extends Controller
             ]);
         }
 
-        // 3. Authenticate
-        try {
-            $request->authenticate();
-        } catch (ValidationException $e) {
-            // Failed login attempt
+        // 3. Authenticate credentials without logging in immediately
+        $credentials = $request->only('email', 'password');
+        if (! Auth::validate($credentials)) {
             RateLimiter::hit($ipThrottleKey, 60);
 
             if ($user) {
@@ -62,28 +61,58 @@ class AuthenticatedSessionController extends Controller
                         'locked_until' => now()->addMinutes(15),
                     ]);
 
-                    // Audit log: Lockout
                     app(AuditLogService::class)->log('lockout', $user);
                 } else {
-                    // Audit log: Failed login
                     app(AuditLogService::class)->log('failed_login', $user);
                 }
             }
 
-            throw $e;
+            throw ValidationException::withMessages([
+                'email' => trans('auth.failed'),
+            ]);
         }
 
-        // Success login
+        // Check active user
+        if ($user && ! $user->is_active) {
+            throw ValidationException::withMessages([
+                'email' => 'Akun Anda tidak aktif. Hubungi administrator.',
+            ]);
+        }
+
         RateLimiter::clear($ipThrottleKey);
 
-        $user = Auth::user();
+        // 4. Check 2FA requirement
+        if ($user && $user->two_factor_confirmed_at) {
+            $rawToken = $request->cookie('2fa_device_trust');
+            $isDeviceTrusted = false;
+
+            if ($rawToken) {
+                $isDeviceTrusted = UserTrustedDevice::where('user_id', $user->id)
+                    ->where('device_token', hash('sha256', $rawToken))
+                    ->where('expires_at', '>', now())
+                    ->exists();
+            }
+
+            if (! $isDeviceTrusted) {
+                // Store pending login in session and redirect to 2FA challenge
+                $request->session()->put([
+                    'login.id' => $user->id,
+                    'login.remember' => $request->boolean('remember'),
+                ]);
+
+                return redirect()->route('two-factor.login');
+            }
+        }
+
+        // Success login without 2FA or with trusted device
+        Auth::login($user, $request->boolean('remember'));
+
         $user->update([
             'login_attempts' => 0,
             'locked_until' => null,
             'last_login_at' => now(),
         ]);
 
-        // Audit log: Success login
         app(AuditLogService::class)->log('login', $user);
 
         $request->session()->regenerate();

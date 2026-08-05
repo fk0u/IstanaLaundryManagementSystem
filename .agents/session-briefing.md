@@ -1,13 +1,11 @@
 # Session Briefing — Istana Laundry Management System
 
-**Last Updated:** 2026-08-05 23:15 WITA
+**Last Updated:** 2026-08-05 23:25 WITA
 
 ## Current Status
-- **Top-Tier Security Hardening & 2FA Built & Live on VPS**:
-  - **Security Headers Middleware**: Implemented HSTS, X-Frame-Options (SAMEORIGIN), X-Content-Type-Options (nosniff), Referrer-Policy, and Permissions-Policy.
-  - **Strict Rate Limiting**: 30 req/min for public API, 120 req/min for authenticated API.
-  - **Two-Factor Authentication (2FA TOTP)**: Integrated RFC 6238 TOTP 2FA compatible with Google Authenticator, Authy, and 1Password (`/profile/2fa/enable`, `/profile/2fa/confirm`, `/profile/2fa/disable`) with 8 emergency recovery codes.
-  - **Profile Avatar WebP Auto-Compression (<200KB)**: Implemented `ImageCompressionService` resizing avatar images to 500x500px, converting to WebP, and dynamically reducing quality to guarantee file size is strictly **<= 200 KB**.
-- **Database**: Migration `2026_08_05_231500_add_2fa_and_profile_photo_to_users_table.php` executed on production VPS.
-- **Testing**: 100% pass rate on `tests/Feature/SecurityAndProfileTest.php` (3/3 tests, 26 assertions).
+- **Web UI & REST API for Profile, 2FA, & WebP Avatar Live**:
+  - **Web Profile Page (`/profile`)**: Completely updated with modern UI hero banner, active 2FA badge status, interactive Google Authenticator QR Code setup modal/form, and one-click photo upload.
+  - **Image Processing**: `ImageCompressionService` automatically converts uploaded photos to WebP (with GD JPEG fallback if WebP function missing) and dynamically compresses them under **200KB** (guaranteed file size).
+  - **2FA TOTP**: Integrated RFC 6238 TOTP with QR Code generation and 8 emergency recovery codes.
+- **Database Migrations**: Executed `2026_08_05_231500_add_2fa_and_profile_photo_to_users_table.php` on both production VPS and local Docker environment (`db` container).
 - **Timezone**: All timestamps formatted in WITA (UTC+8 / Asia/Singapore).
