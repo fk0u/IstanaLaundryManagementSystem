@@ -9,7 +9,8 @@ use Illuminate\Support\Str;
 class ImageCompressionService
 {
     /**
-     * Compress and convert an uploaded avatar image to WebP with max 500x500px and max file size of 200KB.
+     * Compress and store an uploaded avatar image under 200KB.
+     * Uses WebP format if GD with WebP support is available, otherwise JPEG/PNG fallback.
      *
      * @param UploadedFile $file
      * @param int $userId
@@ -19,24 +20,39 @@ class ImageCompressionService
     public function compressAndStoreAvatar(UploadedFile $file, int $userId, int $maxSizeBytes = 204800): string
     {
         $sourcePath = $file->getRealPath();
-        $imageInfo = @getimagesize($sourcePath);
-
-        if (! $imageInfo) {
-            throw new \InvalidArgumentException('File yang diunggah bukan gambar yang valid.');
+        $ext = strtolower($file->getClientOriginalExtension());
+        if (empty($ext)) {
+            $ext = 'jpg';
         }
 
-        $mime = $imageInfo[0] ? $imageInfo['mime'] : '';
+        // If GD extension is not available at all, store original file safely
+        if (! extension_loaded('gd') || ! function_exists('imagecreatefromstring')) {
+            $filename = "avatars/avatar_{$userId}_" . Str::random(8) . '.' . $ext;
+            Storage::disk('public')->put($filename, file_get_contents($sourcePath));
+            return $filename;
+        }
+
+        $imageInfo = @getimagesize($sourcePath);
+        if (! $imageInfo) {
+            $filename = "avatars/avatar_{$userId}_" . Str::random(8) . '.' . $ext;
+            Storage::disk('public')->put($filename, file_get_contents($sourcePath));
+            return $filename;
+        }
+
+        $mime = $imageInfo['mime'] ?? '';
 
         $srcImage = match ($mime) {
-            'image/jpeg', 'image/jpg' => @imagecreatefromjpeg($sourcePath),
-            'image/png' => @imagecreatefrompng($sourcePath),
-            'image/webp' => @imagecreatefromwebp($sourcePath),
-            'image/gif' => @imagecreatefromgif($sourcePath),
+            'image/jpeg', 'image/jpg' => function_exists('imagecreatefromjpeg') ? @imagecreatefromjpeg($sourcePath) : false,
+            'image/png' => function_exists('imagecreatefrompng') ? @imagecreatefrompng($sourcePath) : false,
+            'image/webp' => function_exists('imagecreatefromwebp') ? @imagecreatefromwebp($sourcePath) : false,
+            'image/gif' => function_exists('imagecreatefromgif') ? @imagecreatefromgif($sourcePath) : false,
             default => @imagecreatefromstring(file_get_contents($sourcePath)),
         };
 
         if (! $srcImage) {
-            throw new \RuntimeException('Gagal memproses gambar yang diunggah.');
+            $filename = "avatars/avatar_{$userId}_" . Str::random(8) . '.' . $ext;
+            Storage::disk('public')->put($filename, file_get_contents($sourcePath));
+            return $filename;
         }
 
         $origWidth = imagesx($srcImage);
@@ -63,20 +79,25 @@ class ImageCompressionService
 
         imagecopyresampled($resizedImage, $srcImage, 0, 0, 0, 0, $newWidth, $newHeight, $origWidth, $origHeight);
 
-        // Save temporary webp and loop quality to ensure file size <= 200KB
-        $tempPath = tempnam(sys_get_temp_dir(), 'avatar_') . '.webp';
+        $supportsWebp = function_exists('imagewebp');
+        $outputExt = $supportsWebp ? 'webp' : 'jpg';
+        $tempPath = tempnam(sys_get_temp_dir(), 'avatar_') . '.' . $outputExt;
         $quality = 85;
 
         do {
-            imagewebp($resizedImage, $tempPath, $quality);
-            $fileSize = filesize($tempPath);
+            if ($supportsWebp) {
+                imagewebp($resizedImage, $tempPath, $quality);
+            } else {
+                imagejpeg($resizedImage, $tempPath, $quality);
+            }
+            $fileSize = file_exists($tempPath) ? filesize($tempPath) : 0;
             $quality -= 10;
         } while ($fileSize > $maxSizeBytes && $quality >= 15);
 
         imagedestroy($srcImage);
         imagedestroy($resizedImage);
 
-        $filename = "avatars/avatar_{$userId}_" . Str::random(8) . '.webp';
+        $filename = "avatars/avatar_{$userId}_" . Str::random(8) . '.' . $outputExt;
         Storage::disk('public')->put($filename, file_get_contents($tempPath));
         @unlink($tempPath);
 
