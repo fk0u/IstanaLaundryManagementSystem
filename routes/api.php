@@ -6,17 +6,30 @@ use App\Http\Controllers\Api\ProductionController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
+use App\Http\Controllers\Api\PublicApiController;
+
 Route::get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:sanctum');
 
-// Public
+// Public API Endpoints
 Route::post('/login', [AuthController::class, 'login'])
     ->middleware('throttle:10,1')
     ->name('api.login');
 Route::get('/track/{orderNumber}', [OrderTrackingController::class, 'show'])
     ->middleware('throttle:30,1')
     ->name('api.track');
+
+// Public API v1 for Company Profile (Tracking & Online Order with GPS)
+Route::prefix('v1')->group(function () {
+    Route::get('/branches', [PublicApiController::class, 'branches'])->name('api.v1.branches');
+    Route::get('/services', [PublicApiController::class, 'services'])->name('api.v1.services');
+    Route::get('/track/{orderNumber?}', [PublicApiController::class, 'track'])->name('api.v1.track');
+    Route::post('/track', [PublicApiController::class, 'track'])->name('api.v1.track.post');
+    Route::post('/orders/online', [PublicApiController::class, 'storeOnlineOrder'])
+        ->middleware('throttle:10,1')
+        ->name('api.v1.orders.online');
+});
 
 // Authenticated (Sanctum token)
 Route::middleware('auth:sanctum')->group(function () {
