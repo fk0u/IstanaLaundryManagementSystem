@@ -9,11 +9,19 @@ use App\Models\PurchaseOrder;
 use App\Models\PurchaseOrderItem;
 use App\Models\PurchaseRequest;
 use App\Models\Supplier;
+use App\Services\WhatsAppService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class PurchaseOrderController extends Controller
 {
+    protected WhatsAppService $whatsAppService;
+
+    public function __construct(WhatsAppService $whatsAppService)
+    {
+        $this->whatsAppService = $whatsAppService;
+    }
+
     public function index()
     {
         $purchaseOrders = PurchaseOrder::with(['supplier', 'pr', 'items.item'])
@@ -29,12 +37,12 @@ class PurchaseOrderController extends Controller
             ->whereNotExists(function ($query) {
                 $query->select(DB::raw(1))
                     ->from('purchase_orders')
-                    ->whereColumn('purchase_orders.pr_id', 'purchase_requests.id');
+                    ->whereColumn('purchase_orders.purchase_request_id', 'purchase_requests.id');
             })
-            ->orderBy('pr_number', 'asc')
+            ->orderBy('id', 'desc')
             ->get();
 
-        $inventoryItems = InventoryItem::orderBy('name', 'asc')->get();
+        $inventoryItems = InventoryItem::where('is_active', true)->orderBy('name', 'asc')->get();
 
         return view('procurement.purchase_orders.index', compact('purchaseOrders', 'suppliers', 'approvedPrs', 'inventoryItems'));
     }
@@ -43,69 +51,50 @@ class PurchaseOrderController extends Controller
     {
         $request->validate([
             'supplier_id' => 'required|exists:suppliers,id',
-            'pr_id' => 'nullable|exists:purchase_requests,id',
-            'expected_date' => 'required|date|after_or_equal:today',
+            'order_date' => 'required|date',
+            'expected_date' => 'nullable|date|after_or_equal:order_date',
+            'purchase_request_id' => 'nullable|exists:purchase_requests,id',
             'items' => 'required|array|min:1',
             'items.*.item_id' => 'required|exists:inventory_items,id',
             'items.*.quantity' => 'required|numeric|min:0.01',
             'items.*.unit_cost' => 'required|numeric|min:0',
         ]);
 
-        DB::transaction(function () use ($request) {
-            $branchId = session('scoped_branch_id') ?? auth()->user()?->branch_id;
-            if (! $branchId || ! Branch::where('id', $branchId)->exists()) {
-                $branchId = Branch::first()?->id;
-            }
-            $branchCode = Branch::find($branchId)?->code ?? 'HQ';
-            $yearMonth = now()->format('Ym');
+        $subtotal = 0;
+        foreach ($request->items as $itemData) {
+            $subtotal += $itemData['quantity'] * $itemData['unit_cost'];
+        }
 
-            // Generate PO number
-            $count = PurchaseOrder::withoutGlobalScopes()
-                ->where('branch_id', $branchId)
-                ->whereYear('created_at', now()->year)
-                ->whereMonth('created_at', now()->month)
-                ->count();
-            $seqStr = str_pad($count + 1, 4, '0', STR_PAD_LEFT);
-            $poNumber = "PO-{$branchCode}-{$yearMonth}-{$seqStr}";
+        $taxAmount = $subtotal * 0.11; // Standard PPN 11%
+        $total = $subtotal + $taxAmount;
 
-            // Calculate totals
-            $subtotal = 0;
-            foreach ($request->items as $item) {
-                $subtotal += (float) $item['quantity'] * (float) $item['unit_cost'];
-            }
-            $taxAmount = $subtotal * 0.11; // 11% PPN standard tax
-            $total = $subtotal + $taxAmount;
+        $poNumber = 'PO-'.date('Ymd').'-'.str_pad(mt_rand(1, 9999), 4, '0', STR_PAD_LEFT);
+        $branchId = session('branch_id') ?? auth()->user()->branch_id ?? 1;
 
-            $po = PurchaseOrder::create([
-                'pr_id' => $request->pr_id,
-                'branch_id' => $branchId,
-                'po_number' => $poNumber,
-                'supplier_id' => $request->supplier_id,
-                'status' => 'draft',
-                'subtotal' => $subtotal,
-                'tax_amount' => $taxAmount,
-                'total' => $total,
-                'order_date' => now()->toDateString(),
-                'expected_date' => $request->expected_date,
+        $po = PurchaseOrder::create([
+            'po_number' => $poNumber,
+            'purchase_request_id' => $request->purchase_request_id,
+            'supplier_id' => $request->supplier_id,
+            'branch_id' => $branchId,
+            'status' => 'draft',
+            'order_date' => $request->order_date,
+            'expected_date' => $request->expected_date,
+            'subtotal' => $subtotal,
+            'tax_amount' => $taxAmount,
+            'total' => $total,
+            'created_by' => auth()->id(),
+        ]);
+
+        foreach ($request->items as $itemData) {
+            $itemSubtotal = $itemData['quantity'] * $itemData['unit_cost'];
+            PurchaseOrderItem::create([
+                'purchase_order_id' => $po->id,
+                'item_id' => $itemData['item_id'],
+                'quantity' => $itemData['quantity'],
+                'unit_cost' => $itemData['unit_cost'],
+                'subtotal' => $itemSubtotal,
             ]);
-
-            foreach ($request->items as $item) {
-                $itemSubtotal = (float) $item['quantity'] * (float) $item['unit_cost'];
-                PurchaseOrderItem::create([
-                    'po_id' => $po->id,
-                    'item_id' => $item['item_id'],
-                    'quantity' => $item['quantity'],
-                    'unit_cost' => $item['unit_cost'],
-                    'subtotal' => $itemSubtotal,
-                    'received_qty' => 0,
-                ]);
-            }
-
-            // If PR is linked, update its status to ordered
-            if ($request->pr_id) {
-                PurchaseRequest::find($request->pr_id)?->update(['status' => 'ordered']);
-            }
-        });
+        }
 
         return redirect()->back()->with('success', 'Purchase Order (PO) berhasil dibuat sebagai draft.');
     }
@@ -114,44 +103,12 @@ class PurchaseOrderController extends Controller
     {
         $po = PurchaseOrder::with(['supplier', 'pr.requestedBy', 'branch', 'items.item'])->findOrFail($id);
 
-        $phone = preg_replace('/[^0-9]/', '', $po->supplier?->phone ?? '');
-        if (str_starts_with($phone, '0')) {
-            $phone = '62' . substr($phone, 1);
-        }
-
-        $itemsText = "";
-        foreach ($po->items as $idx => $item) {
-            $n = $idx + 1;
-            $name = $item->item?->name ?? 'Barang #' . $item->item_id;
-            $unit = $item->item?->unit ?? 'unit';
-            $qty = number_format($item->quantity, 0, ',', '.');
-            $cost = 'Rp ' . number_format($item->unit_cost, 0, ',', '.');
-            $sub = 'Rp ' . number_format($item->subtotal, 0, ',', '.');
-            $itemsText .= "{$n}. {$name} x {$qty} {$unit} ({$cost}) = {$sub}\n";
-        }
+        $phone = $po->supplier?->phone ?? '';
+        $message = $this->whatsAppService->generatePurchaseOrderMessage($po);
+        $waUrl = ! empty($phone) ? $this->whatsAppService->generateWhatsAppUrl($phone, $message) : null;
 
         $orderDateStr = $po->order_date ? $po->order_date->format('d/m/Y') : date('d/m/Y');
         $expectedDateStr = $po->expected_date ? $po->expected_date->format('d/m/Y') : '-';
-        $subtotalStr = 'Rp ' . number_format($po->subtotal, 0, ',', '.');
-        $taxStr = 'Rp ' . number_format($po->tax_amount, 0, ',', '.');
-        $totalStr = 'Rp ' . number_format($po->total, 0, ',', '.');
-
-        $message = "*PURCHASE ORDER (PO)* - Istana Laundry\n"
-            . "-----------------------------------\n"
-            . "*No PO:* {$po->po_number}\n"
-            . "*Supplier:* {$po->supplier?->name}\n"
-            . "*Tanggal Order:* {$orderDateStr}\n"
-            . "*Estimasi Diterima:* {$expectedDateStr}\n"
-            . "*Cabang Tujuan:* {$po->branch?->name}\n\n"
-            . "*DETAIL BARANG PESANAN:*\n"
-            . $itemsText . "\n"
-            . "-----------------------------------\n"
-            . "*Subtotal:* {$subtotalStr}\n"
-            . "*PPN (11%):* {$taxStr}\n"
-            . "*GRAND TOTAL PO:* {$totalStr}\n\n"
-            . "Mohon dapat dikonfirmasi & diproses pengirimannya. Terima kasih!";
-
-        $waUrl = $phone ? ("https://wa.me/{$phone}?text=" . urlencode($message)) : null;
 
         if (request()->wantsJson() || request()->ajax()) {
             return response()->json([
@@ -198,48 +155,13 @@ class PurchaseOrderController extends Controller
             $po->update(['status' => 'sent']);
         }
 
-        $phone = preg_replace('/[^0-9]/', '', $po->supplier?->phone ?? '');
-        if (str_starts_with($phone, '0')) {
-            $phone = '62' . substr($phone, 1);
-        }
-
-        $itemsText = "";
-        foreach ($po->items as $idx => $item) {
-            $n = $idx + 1;
-            $name = $item->item?->name ?? 'Barang #' . $item->item_id;
-            $unit = $item->item?->unit ?? 'unit';
-            $qty = number_format($item->quantity, 0, ',', '.');
-            $cost = 'Rp ' . number_format($item->unit_cost, 0, ',', '.');
-            $sub = 'Rp ' . number_format($item->subtotal, 0, ',', '.');
-            $itemsText .= "{$n}. {$name} x {$qty} {$unit} ({$cost}) = {$sub}\n";
-        }
-
-        $orderDateStr = $po->order_date ? $po->order_date->format('d/m/Y') : date('d/m/Y');
-        $expectedDateStr = $po->expected_date ? $po->expected_date->format('d/m/Y') : '-';
-        $subtotalStr = 'Rp ' . number_format($po->subtotal, 0, ',', '.');
-        $taxStr = 'Rp ' . number_format($po->tax_amount, 0, ',', '.');
-        $totalStr = 'Rp ' . number_format($po->total, 0, ',', '.');
-
-        $message = "*PURCHASE ORDER (PO)* - Istana Laundry\n"
-            . "-----------------------------------\n"
-            . "*No PO:* {$po->po_number}\n"
-            . "*Supplier:* {$po->supplier?->name}\n"
-            . "*Tanggal Order:* {$orderDateStr}\n"
-            . "*Estimasi Diterima:* {$expectedDateStr}\n"
-            . "*Cabang Tujuan:* {$po->branch?->name}\n\n"
-            . "*DETAIL BARANG PESANAN:*\n"
-            . $itemsText . "\n"
-            . "-----------------------------------\n"
-            . "*Subtotal:* {$subtotalStr}\n"
-            . "*PPN (11%):* {$taxStr}\n"
-            . "*GRAND TOTAL PO:* {$totalStr}\n\n"
-            . "Mohon dapat dikonfirmasi & diproses pengirimannya. Terima kasih!";
-
+        $phone = $po->supplier?->phone ?? '';
         if (! $phone) {
             return redirect()->back()->with('error', 'Supplier ini belum memiliki nomor telepon / WhatsApp yang valid.');
         }
 
-        $waUrl = "https://wa.me/{$phone}?text=" . urlencode($message);
+        $message = $this->whatsAppService->generatePurchaseOrderMessage($po);
+        $waUrl = $this->whatsAppService->generateWhatsAppUrl($phone, $message);
 
         return redirect()->away($waUrl);
     }

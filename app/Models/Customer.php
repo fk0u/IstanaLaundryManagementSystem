@@ -71,4 +71,12 @@ class Customer extends Model
 
         return $phone;
     }
+
+    public function getWaUrlAttribute(): string
+    {
+        $service = app(\App\Services\WhatsAppService::class);
+        $message = $service->generateCustomerGreetingMessage($this, $this->branch);
+
+        return $service->generateWhatsAppUrl($this->phone ?? '', $message);
+    }
 }

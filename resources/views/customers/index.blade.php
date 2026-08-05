@@ -114,7 +114,7 @@
                                             <div class="flex items-center gap-1.5">
                                                 <span class="font-semibold">{{ $customer->phone }}</span>
                                                 @if($customer->phone)
-                                                    <a href="https://wa.me/{{ $customer->formatted_wa_phone }}?text={{ urlencode('Halo Kak ' . $customer->name . ', terima kasih telah mencuci di Istana Laundry!') }}" 
+                                                    <a href="{{ $customer->wa_url }}" 
                                                        target="_blank" 
                                                        class="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/40 text-[#25D366] font-bold text-[10px] hover:bg-emerald-100 transition-colors"
                                                        title="Follow-up via WhatsApp">
@@ -219,7 +219,7 @@
                                         {{ $customer->phone }}
                                     </span>
                                     @if($customer->phone)
-                                        <a href="https://wa.me/{{ $customer->formatted_wa_phone }}?text={{ urlencode('Halo Kak ' . $customer->name . ', terima kasih telah mencuci di Istana Laundry!') }}" 
+                                        <a href="{{ $customer->wa_url }}" 
                                            target="_blank" 
                                            class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 text-[#25D366] font-bold text-2xs hover:bg-emerald-100 transition-colors">
                                             <span class="material-symbols-outlined text-xs">chat</span> WA Follow-up

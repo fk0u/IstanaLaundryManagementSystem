@@ -18,6 +18,7 @@ return new class extends Migration
             $table->text('address');
             $table->string('phone');
             $table->string('email')->nullable();
+            $table->string('google_maps_url')->nullable();
             $table->decimal('lat', 10, 8)->nullable();
             $table->decimal('lng', 11, 8)->nullable();
             $table->boolean('is_active')->default(true)->index();

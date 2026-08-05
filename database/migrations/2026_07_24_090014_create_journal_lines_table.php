@@ -22,9 +22,13 @@ return new class extends Migration
             $table->timestamps();
         });
 
-        // Add check constraint using raw SQL for MySQL (SQLite doesn't support ALTER TABLE check constraints)
-        if (config('database.default') === 'mysql') {
-            DB::statement('ALTER TABLE journal_lines ADD CONSTRAINT chk_debit_credit CHECK (debit = 0 OR credit = 0)');
+        // Add check constraint using raw SQL for MySQL/MariaDB if supported
+        if (in_array(DB::getDriverName(), ['mysql', 'mariadb'])) {
+            try {
+                DB::statement('ALTER TABLE journal_lines ADD CONSTRAINT chk_debit_credit CHECK (debit = 0 OR credit = 0)');
+            } catch (\Throwable $e) {
+                // Ignore if constraint already exists or not supported by MariaDB version
+            }
         }
     }
 

@@ -28,10 +28,11 @@ class AnalyticsAndScheduleSeeder extends Seeder
      */
     public function run(): void
     {
-        $branches = Branch::all();
-        $services = Service::all();
-        $promotions = Promotion::all();
-        $journalService = app(JournalService::class);
+        DB::transaction(function () {
+            $branches = Branch::all();
+            $services = Service::all();
+            $promotions = Promotion::all();
+            $journalService = app(JournalService::class);
 
         // ---------------------------------------------------------
         // 1. Hourly Weight Distribution (Jam Tersibuk 00:00 — 23:00)
@@ -287,5 +288,6 @@ class AnalyticsAndScheduleSeeder extends Seeder
                 }
             }
         }
+        });
     }
 }

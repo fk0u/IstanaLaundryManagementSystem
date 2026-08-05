@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Cache;
 
-#[Fillable(['code', 'name', 'address', 'phone', 'email', 'lat', 'lng', 'is_active'])]
+#[Fillable(['code', 'name', 'address', 'phone', 'email', 'google_maps_url', 'lat', 'lng', 'is_active'])]
 class Branch extends Model
 {
     use HasFactory, SoftDeletes;

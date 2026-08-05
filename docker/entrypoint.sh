@@ -40,11 +40,17 @@ echo "[5/6] Menjalankan migrasi database..."
 php artisan migrate --force
 echo "      ✓ Migrasi selesai."
 
-echo "[6/6] Menyemai data awal..."
-# Only seed in non-production environments to prevent data overwrites
+echo "[6/6] Memeriksa data awal..."
+# Only seed if database is unseeded to prevent startup delays and 502 Bad Gateway
 if [ "$APP_ENV" != "production" ]; then
-    php artisan db:seed --force
-    echo "      ✓ Data awal berhasil disemai."
+    USER_COUNT=$(php -r "require 'vendor/autoload.php'; \$app = require_once 'bootstrap/app.php'; \$kernel = \$app->make(Illuminate\Contracts\Console\Kernel::class); \$kernel->bootstrap(); echo \App\Models\User::count();" 2>/dev/null || echo "0")
+    if [ "$USER_COUNT" -eq "0" ]; then
+        echo "      Database belum terisi. Menjalankan db:seed..."
+        php artisan db:seed --force
+        echo "      ✓ Data awal berhasil disemai."
+    else
+        echo "      ✓ Database sudah terisi ($USER_COUNT user). Skipping db:seed."
+    fi
 else
     echo "      ⚠ Skipping db:seed in production environment."
 fi

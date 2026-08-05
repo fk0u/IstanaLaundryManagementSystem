@@ -42,9 +42,10 @@ class InvoiceController extends Controller
     {
         $order->load(['items.service', 'customer', 'branch', 'cashier']);
 
-        // Get phone number: from request, from customer, or prompt
+        // Get phone number: from request, from customer, or delivery phone
         $phone = $request->query('phone')
                  ?? $order->customer?->phone
+                 ?? $order->delivery_phone
                  ?? null;
 
         if (! $phone) {
@@ -64,7 +65,7 @@ class InvoiceController extends Controller
     {
         $order->load(['customer', 'branch']);
 
-        $phone = $request->query('phone') ?? $order->customer?->phone ?? null;
+        $phone = $request->query('phone') ?? $order->customer?->phone ?? $order->delivery_phone ?? null;
 
         if (! $phone) {
             return redirect()->back()->with('error', 'Nomor telepon pelanggan tidak tersedia.');
