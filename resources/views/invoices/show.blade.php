@@ -4,7 +4,7 @@
         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-6">
             <div>
                 <h1 class="text-xl md:text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight">Invoice #{{ $order->order_number }}</h1>
-                <p class="text-xs text-slate-500 mt-0.5">{{ $order->created_at->format('d F Y, H:i') }} WIB</p>
+                <p class="text-xs text-slate-500 mt-0.5">{{ $order->created_at->format('d F Y, H:i') }} (UTC+8)</p>
             </div>
             <div class="flex gap-2 flex-wrap no-print">
                 <a href="{{ route('invoices.receipt', $order) }}" class="btn-touch px-4 py-2 bg-primary hover:bg-primary-hover text-white rounded-xl text-xs font-bold gap-1.5 transition-all active:scale-95 shadow-sm">

@@ -26,22 +26,22 @@ class WhatsAppService
         $invoiceUrl = url('/invoices/'.$order->id);
 
         $lines = [];
-        $lines[] = '*[ISTANA LAUNDRY — NOTA TRANSAKSI]*';
+        $lines[] = '*[ISTANA LAUNDRY - NOTA TRANSAKSI]*';
         $lines[] = '=================================';
-        $lines[] = "📍 *Outlet:* {$branchName}";
+        $lines[] = "*Outlet:* {$branchName}";
         if ($branchAddress) {
-            $lines[] = "🏢 *Alamat:* {$branchAddress}";
+            $lines[] = "*Alamat:* {$branchAddress}";
         }
         if ($branchPhone && $branchPhone !== '-') {
-            $lines[] = "📞 *Kontak:* {$branchPhone}";
+            $lines[] = "*Kontak:* {$branchPhone}";
         }
         $lines[] = '---------------------------------';
-        $lines[] = "🧾 *No. Order:* {$order->order_number}";
-        $lines[] = '📅 *Tanggal:* '.$order->created_at->format('d/m/Y H:i');
-        $lines[] = "👤 *Pelanggan:* {$customerName}";
-        $lines[] = "👨‍💼 *Kasir:* {$cashierName}";
+        $lines[] = "*No. Order:* {$order->order_number}";
+        $lines[] = '*Tanggal:* '.$order->created_at->format('d/m/Y H:i').' (UTC+8)';
+        $lines[] = "*Pelanggan:* {$customerName}";
+        $lines[] = "*Kasir:* {$cashierName}";
         $lines[] = '---------------------------------';
-        $lines[] = '📦 *DETAIL LAYANAN:*';
+        $lines[] = '*DETAIL LAYANAN:*';
 
         foreach ($order->items as $idx => $item) {
             $n = $idx + 1;
@@ -76,17 +76,17 @@ class WhatsAppService
         }
 
         $lines[] = '---------------------------------';
-        $lines[] = '💳 *Pembayaran:* '.strtoupper($order->payment_method);
-        $lines[] = '🏷️ *Status:* '.($order->payment_status === 'paid' ? '✅ LUNAS' : '⚠️ '.strtoupper($order->payment_status));
+        $lines[] = '*Pembayaran:* '.strtoupper($order->payment_method);
+        $lines[] = '*Status:* '.($order->payment_status === 'paid' ? '[LUNAS]' : '['.strtoupper($order->payment_status).']');
 
         if ($order->estimated_done_at) {
-            $lines[] = '⏳ *Est. Selesai:* '.$order->estimated_done_at->format('d M Y H:i');
+            $lines[] = '*Est. Selesai:* '.$order->estimated_done_at->format('d M Y H:i').' (UTC+8)';
         }
 
         $lines[] = '=================================';
-        $lines[] = '🔘 *AKSI & PELACAKAN CEPAT:*';
-        $lines[] = "🔗 *Lacak Cucian:* {$trackUrl}";
-        $lines[] = "📄 *Struk Digital:* {$invoiceUrl}";
+        $lines[] = '*AKSI & PELACAKAN CEPAT:*';
+        $lines[] = "> *Lacak Cucian:* {$trackUrl}";
+        $lines[] = "> *Struk Digital:* {$invoiceUrl}";
         $lines[] = '=================================';
         $lines[] = 'Terima kasih telah mempercayakan laundry Anda kepada Istana Laundry!';
 
@@ -108,25 +108,25 @@ class WhatsAppService
         $unpaidAmount = max(0, $order->total - $order->paid_amount);
 
         $lines = [];
-        $lines[] = "*[ISTANA LAUNDRY — NOTIFIKASI CUCIAN SELESAI]*";
+        $lines[] = '*[ISTANA LAUNDRY - NOTIFIKASI CUCIAN SELESAI]*';
         $lines[] = '=================================';
         $lines[] = "Halo Kak *{$customerName}*,";
         $lines[] = 'Cucian Anda telah *SELESAI DIPROSES & SIAP DIAMBIL!*';
         $lines[] = '---------------------------------';
-        $lines[] = "🧾 *No. Nota:* {$order->order_number}";
-        $lines[] = "📍 *Outlet:* {$branchName}";
-        $lines[] = '💰 *Total Tagihan:* Rp '.number_format($order->total, 0, ',', '.');
+        $lines[] = "*No. Nota:* {$order->order_number}";
+        $lines[] = "*Outlet:* {$branchName}";
+        $lines[] = '*Total Tagihan:* Rp '.number_format($order->total, 0, ',', '.');
 
         if ($order->payment_status === 'paid') {
-            $lines[] = '💳 *Status Bayar:* ✅ LUNAS';
+            $lines[] = '*Status Bayar:* [LUNAS]';
         } else {
-            $lines[] = '💳 *Status Bayar:* ⚠️ BELUM LUNAS (Sisa Tagihan: Rp '.number_format($unpaidAmount, 0, ',', '.').')';
+            $lines[] = '*Status Bayar:* [BELUM LUNAS] (Sisa Tagihan: Rp '.number_format($unpaidAmount, 0, ',', '.').')';
         }
 
         $lines[] = '---------------------------------';
-        $lines[] = '🔘 *AKSI & PELACAKAN CEPAT:*';
-        $lines[] = "🔗 *Lacak Detail Order:* {$trackUrl}";
-        $lines[] = "📄 *Lihat Struk Digital:* {$invoiceUrl}";
+        $lines[] = '*AKSI & PELACAKAN CEPAT:*';
+        $lines[] = "> *Lacak Detail Order:* {$trackUrl}";
+        $lines[] = "> *Lihat Struk Digital:* {$invoiceUrl}";
         $lines[] = '=================================';
         $lines[] = 'Silakan datang ke outlet untuk pengambilan. Terima kasih telah memilih layanan Istana Laundry!';
 
@@ -146,17 +146,17 @@ class WhatsAppService
         $expectedDateStr = $po->expected_date ? $po->expected_date->format('d/m/Y') : '-';
 
         $lines = [];
-        $lines[] = '*[ISTANA LAUNDRY — OFFICIAL PURCHASE ORDER]*';
+        $lines[] = '*[ISTANA LAUNDRY - OFFICIAL PURCHASE ORDER]*';
         $lines[] = '=================================';
         $lines[] = "Yth. *{$supplierName}*,";
         $lines[] = 'Berikut adalah rincian Purchase Order (PO) resmi dari Istana Laundry:';
         $lines[] = '---------------------------------';
-        $lines[] = "📑 *No. PO:* {$po->po_number}";
-        $lines[] = "📅 *Tanggal PO:* {$orderDateStr}";
-        $lines[] = "🚚 *Estimasi Diterima:* {$expectedDateStr}";
-        $lines[] = "📍 *Cabang Tujuan:* {$branchName}";
+        $lines[] = "*No. PO:* {$po->po_number}";
+        $lines[] = "*Tanggal PO:* {$orderDateStr}";
+        $lines[] = "*Estimasi Diterima:* {$expectedDateStr}";
+        $lines[] = "*Cabang Tujuan:* {$branchName}";
         $lines[] = '---------------------------------';
-        $lines[] = '📦 *DETAIL BARANG PESANAN:*';
+        $lines[] = '*DETAIL BARANG PESANAN:*';
 
         foreach ($po->items as $idx => $item) {
             $n = $idx + 1;
@@ -191,13 +191,13 @@ class WhatsAppService
         $tierName = strtoupper($customer->member_tier ?? 'BRONZE');
 
         $lines = [];
-        $lines[] = "*[ISTANA LAUNDRY — INFORMASI MEMBER]*";
+        $lines[] = '*[ISTANA LAUNDRY - INFORMASI MEMBER]*';
         $lines[] = '=================================';
         $lines[] = "Halo Kak *{$customer->name}*,";
         $lines[] = "Terima kasih telah menjadi pelanggan setia {$branchName}!";
         $lines[] = '---------------------------------';
-        $lines[] = "⭐ *Tier Member:* {$tierName}";
-        $lines[] = "🎁 *Saldo Poin:* ".number_format($customer->loyalty_points, 0, ',', '.')." Poin";
+        $lines[] = "*Tier Member:* {$tierName}";
+        $lines[] = '*Saldo Poin:* '.number_format($customer->loyalty_points, 0, ',', '.').' Poin';
         $lines[] = '---------------------------------';
         $lines[] = 'Nikmati berbagai kemudahan cuci, promo menarik, dan layanan cuci antar-jemput kami!';
         $lines[] = '=================================';
@@ -212,7 +212,8 @@ class WhatsAppService
     public function generateWhatsAppUrl(string $phone, string $message): string
     {
         $normalizedPhone = $this->normalizePhoneNumber($phone);
-        $encodedMessage = rawurlencode($message);
+        $normalizedMessage = str_replace(["\r\n", "\r"], "\n", $message);
+        $encodedMessage = rawurlencode($normalizedMessage);
 
         return "https://wa.me/{$normalizedPhone}?text={$encodedMessage}";
     }

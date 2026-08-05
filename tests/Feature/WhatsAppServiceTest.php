@@ -117,13 +117,13 @@ class WhatsAppServiceTest extends TestCase
 
         $message = $this->service->generateReceiptMessage($order);
 
-        $this->assertStringContainsString('*[ISTANA LAUNDRY — NOTA TRANSAKSI]*', $message);
+        $this->assertStringContainsString('*[ISTANA LAUNDRY - NOTA TRANSAKSI]*', $message);
         $this->assertStringContainsString('Outlet Wijaya Kusuma', $message);
         $this->assertStringContainsString('ORD-WJK-20260805-0001', $message);
         $this->assertStringContainsString('Kos Putri Annisa', $message);
         $this->assertStringContainsString('Cuci Lipat Premium', $message);
         $this->assertStringContainsString('Rp 45.000', $message);
-        $this->assertStringContainsString('✅ LUNAS', $message);
+        $this->assertStringContainsString('[LUNAS]', $message);
         $this->assertStringContainsString('track?order_number=ORD-WJK-20260805-0001', $message);
     }
 
@@ -146,7 +146,7 @@ class WhatsAppServiceTest extends TestCase
 
         $message = $this->service->generateReadyNotificationMessage($order);
 
-        $this->assertStringContainsString('*[ISTANA LAUNDRY — NOTIFIKASI CUCIAN SELESAI]*', $message);
+        $this->assertStringContainsString('*[ISTANA LAUNDRY - NOTIFIKASI CUCIAN SELESAI]*', $message);
         $this->assertStringContainsString('Kos Putri Annisa', $message);
         $this->assertStringContainsString('ORD-WJK-20260805-0002', $message);
         $this->assertStringContainsString('SELESAI DIPROSES & SIAP DIAMBIL!', $message);
@@ -197,7 +197,7 @@ class WhatsAppServiceTest extends TestCase
 
         $message = $this->service->generatePurchaseOrderMessage($po);
 
-        $this->assertStringContainsString('*[ISTANA LAUNDRY — OFFICIAL PURCHASE ORDER]*', $message);
+        $this->assertStringContainsString('*[ISTANA LAUNDRY - OFFICIAL PURCHASE ORDER]*', $message);
         $this->assertStringContainsString('PT Deterjen Sentosa', $message);
         $this->assertStringContainsString('PO-WJK-20260805-0001', $message);
         $this->assertStringContainsString('Deterjen Laundry 5L', $message);
@@ -208,7 +208,7 @@ class WhatsAppServiceTest extends TestCase
     {
         $message = $this->service->generateCustomerGreetingMessage($this->customer, $this->branch);
 
-        $this->assertStringContainsString('*[ISTANA LAUNDRY — INFORMASI MEMBER]*', $message);
+        $this->assertStringContainsString('*[ISTANA LAUNDRY - INFORMASI MEMBER]*', $message);
         $this->assertStringContainsString('Kos Putri Annisa', $message);
         $this->assertStringContainsString('250 Poin', $message);
     }

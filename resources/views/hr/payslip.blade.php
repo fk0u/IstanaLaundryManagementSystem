@@ -522,7 +522,7 @@
                 <span>Dokumen ini divalidasi secara digital & sah tanpa tanda tangan basah.</span>
             </div>
             <div>
-                Dicetak: {{ date('d/m/Y H:i') }} WIB • Istana Laundry System
+                Dicetak: {{ date('d/m/Y H:i') }} (UTC+8) • Istana Laundry System
             </div>
         </div>
 
