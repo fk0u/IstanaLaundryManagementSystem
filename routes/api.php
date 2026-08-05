@@ -15,10 +15,12 @@ use App\Http\Controllers\Api\PerformanceApiController;
 use App\Http\Controllers\Api\PosTabletController;
 use App\Http\Controllers\Api\ProcurementApiController;
 use App\Http\Controllers\Api\ProductionController;
+use App\Http\Controllers\Api\ProfileApiController;
 use App\Http\Controllers\Api\PublicApiController;
 use App\Http\Controllers\Api\ShiftApiController;
 use App\Http\Controllers\Api\SupplierPaymentApiController;
 use App\Http\Controllers\Api\UserApiController;
+use App\Http\Middleware\SecurityHeadersMiddleware;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -26,27 +28,25 @@ Route::get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:sanctum');
 
-// Public API Endpoints
-Route::post('/login', [AuthController::class, 'login'])
-    ->middleware('throttle:10,1')
-    ->name('api.login');
-Route::get('/track/{orderNumber}', [OrderTrackingController::class, 'show'])
-    ->middleware('throttle:30,1')
-    ->name('api.track');
+// Public API Endpoints with Security Headers & Rate Limiting
+Route::middleware([SecurityHeadersMiddleware::class, 'throttle:30,1'])->group(function () {
+    Route::post('/login', [AuthController::class, 'login'])->name('api.login');
+    Route::get('/track/{orderNumber}', [OrderTrackingController::class, 'show'])->name('api.track');
 
-// Public API v1 for Company Profile & Online Orders with GPS
-Route::prefix('v1')->group(function () {
-    Route::get('/branches', [PublicApiController::class, 'branches'])->name('api.v1.branches');
-    Route::get('/services', [PublicApiController::class, 'services'])->name('api.v1.services');
-    Route::get('/track/{orderNumber?}', [PublicApiController::class, 'track'])->name('api.v1.track');
-    Route::post('/track', [PublicApiController::class, 'track'])->name('api.v1.track.post');
-    Route::post('/orders/online', [PublicApiController::class, 'storeOnlineOrder'])
-        ->middleware('throttle:10,1')
-        ->name('api.v1.orders.online');
+    // Public API v1 for Company Profile & Online Orders with GPS
+    Route::prefix('v1')->group(function () {
+        Route::get('/branches', [PublicApiController::class, 'branches'])->name('api.v1.branches');
+        Route::get('/services', [PublicApiController::class, 'services'])->name('api.v1.services');
+        Route::get('/track/{orderNumber?}', [PublicApiController::class, 'track'])->name('api.v1.track');
+        Route::post('/track', [PublicApiController::class, 'track'])->name('api.v1.track.post');
+        Route::post('/orders/online', [PublicApiController::class, 'storeOnlineOrder'])
+            ->middleware('throttle:10,1')
+            ->name('api.v1.orders.online');
+    });
 });
 
-// Authenticated 100% Feature-Complete RESTful API Engine (Sanctum Token + Branch Scope)
-Route::middleware(['auth:sanctum', 'branch.scope'])->group(function () {
+// Authenticated 100% Feature-Complete RESTful API Engine (Sanctum Token + Branch Scope + Security Headers)
+Route::middleware([SecurityHeadersMiddleware::class, 'auth:sanctum', 'branch.scope', 'throttle:120,1'])->group(function () {
     Route::post('/logout', [AuthController::class, 'logout'])->name('api.logout');
     Route::get('/me', [AuthController::class, 'me'])->name('api.me');
 
@@ -62,6 +62,14 @@ Route::middleware(['auth:sanctum', 'branch.scope'])->group(function () {
 
     // RESTful API v1 Modules
     Route::prefix('v1')->group(function () {
+        // User Profile & 2FA Security
+        Route::get('/profile', [ProfileApiController::class, 'show'])->name('api.v1.profile.show');
+        Route::put('/profile', [ProfileApiController::class, 'update'])->name('api.v1.profile.update');
+        Route::post('/profile/avatar', [ProfileApiController::class, 'uploadAvatar'])->name('api.v1.profile.avatar');
+        Route::post('/profile/2fa/enable', [ProfileApiController::class, 'enable2FA'])->name('api.v1.profile.2fa.enable');
+        Route::post('/profile/2fa/confirm', [ProfileApiController::class, 'confirm2FA'])->name('api.v1.profile.2fa.confirm');
+        Route::post('/profile/2fa/disable', [ProfileApiController::class, 'disable2FA'])->name('api.v1.profile.2fa.disable');
+
         // 1. Dashboard & KPI Analytics
         Route::get('/dashboard/stats', [DashboardApiController::class, 'stats'])->name('api.v1.dashboard.stats');
         Route::get('/dashboard/charts', [DashboardApiController::class, 'charts'])->name('api.v1.dashboard.charts');

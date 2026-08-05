@@ -29,6 +29,10 @@ use Spatie\Permission\Traits\HasRoles;
     'last_login_at',
     'login_attempts',
     'locked_until',
+    'two_factor_secret',
+    'two_factor_recovery_codes',
+    'two_factor_confirmed_at',
+    'avatar_path',
 ])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable

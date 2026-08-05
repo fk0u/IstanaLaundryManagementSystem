@@ -106,7 +106,7 @@
         <a href="{{ url('/') }}" class="brand-box">
             <img src="{{ asset('images/logo.webp') }}" alt="Istana Laundry" class="brand-logo" />
             <span class="brand-title">ISTANA LAUNDRY</span>
-            <span class="brand-badge">100% Complete RESTful API v1.0</span>
+            <span class="brand-badge">Advanced Security & 2FA API v1.0</span>
         </a>
         <div class="header-actions">
             <a href="{{ asset('docs/api/IstanaLaundry_Postman_Collection.json') }}" download class="btn-action">Download Postman JSON</a>
@@ -123,9 +123,9 @@
         const spec = {
             "openapi": "3.0.3",
             "info": {
-                "title": "Istana Laundry 100% Feature-Complete RESTful API",
+                "title": "Istana Laundry Advanced Security & 2FA RESTful API",
                 "version": "1.0.0",
-                "description": "Dokumentasi RESTful API 100% lengkap untuk Istana Laundry Management System. Meliputi seluruh modul ERP: Public, Auth, Dashboard, Orders, Refunds, Struk Thermal, CRM, Inventory, HR, Assets & Depresiasi, Finance, Expenses, Supplier Debt, Procurement & Approvals, Cashier Shifts, Master Data, User/RBAC, dan Performance KPIs."
+                "description": "Dokumentasi RESTful API dengan proteksi Security Hardening (HSTS, CSP, X-Frame-Options), 2FA TOTP Google Authenticator, dan Upload Foto Profil WebP (<200KB)."
             },
             "servers": [
                 {
@@ -148,6 +148,22 @@
                 }
             },
             "paths": {
+                "/v1/profile": {
+                    "get": { "tags": ["0. Profile & 2FA Security"], "summary": "Detail Profil & Status 2FA User", "security": [{ "BearerAuth": [] }], "responses": { "200": { "description": "Success" } } },
+                    "put": { "tags": ["0. Profile & 2FA Security"], "summary": "Update Nama, Email & Password", "security": [{ "BearerAuth": [] }], "responses": { "200": { "description": "Success" } } }
+                },
+                "/v1/profile/avatar": {
+                    "post": { "tags": ["0. Profile & 2FA Security"], "summary": "Upload Foto Profil (Auto-Convert WebP & Kompresi <200KB)", "security": [{ "BearerAuth": [] }], "responses": { "200": { "description": "Success" } } }
+                },
+                "/v1/profile/2fa/enable": {
+                    "post": { "tags": ["0. Profile & 2FA Security"], "summary": "Generate 2FA Secret Key & QR Code URL", "security": [{ "BearerAuth": [] }], "responses": { "200": { "description": "Success" } } }
+                },
+                "/v1/profile/2fa/confirm": {
+                    "post": { "tags": ["0. Profile & 2FA Security"], "summary": "Konfirmasi & Aktifkan 2FA dengan 6 Digit OTP", "security": [{ "BearerAuth": [] }], "responses": { "200": { "description": "Success" } } }
+                },
+                "/v1/profile/2fa/disable": {
+                    "post": { "tags": ["0. Profile & 2FA Security"], "summary": "Nonaktifkan 2FA", "security": [{ "BearerAuth": [] }], "responses": { "200": { "description": "Success" } } }
+                },
                 "/v1/branches": {
                     "get": { "tags": ["1. Public API v1"], "summary": "Daftar Outlet Cabang Aktif", "responses": { "200": { "description": "Success" } } }
                 },
@@ -191,11 +207,6 @@
                     "get": { "tags": ["5. CRM Customers"], "summary": "List & Cari Member Pelanggan", "security": [{ "BearerAuth": [] }], "responses": { "200": { "description": "Success" } } },
                     "post": { "tags": ["5. CRM Customers"], "summary": "Daftarkan Member Baru", "security": [{ "BearerAuth": [] }], "responses": { "201": { "description": "Created" } } }
                 },
-                "/v1/customers/{customer}": {
-                    "get": { "tags": ["5. CRM Customers"], "summary": "Detail Member & Histori Poin", "security": [{ "BearerAuth": [] }], "responses": { "200": { "description": "Success" } } },
-                    "put": { "tags": ["5. CRM Customers"], "summary": "Update Profil Member", "security": [{ "BearerAuth": [] }], "responses": { "200": { "description": "Success" } } },
-                    "delete": { "tags": ["5. CRM Customers"], "summary": "Hapus Member", "security": [{ "BearerAuth": [] }], "responses": { "200": { "description": "Success" } } }
-                },
                 "/v1/inventory": {
                     "get": { "tags": ["6. Inventory & Stock"], "summary": "List Stok Bahan & Low Stock Alert", "security": [{ "BearerAuth": [] }], "responses": { "200": { "description": "Success" } } },
                     "post": { "tags": ["6. Inventory & Stock"], "summary": "Tambah Item Stok", "security": [{ "BearerAuth": [] }], "responses": { "201": { "description": "Created" } } }
@@ -204,16 +215,9 @@
                     "get": { "tags": ["7. HR & Payroll"], "summary": "List Karyawan Aktif", "security": [{ "BearerAuth": [] }], "responses": { "200": { "description": "Success" } } },
                     "post": { "tags": ["7. HR & Payroll"], "summary": "Tambah Karyawan Baru", "security": [{ "BearerAuth": [] }], "responses": { "201": { "description": "Created" } } }
                 },
-                "/v1/hr/payrolls": {
-                    "get": { "tags": ["7. HR & Payroll"], "summary": "Histori Penggajian", "security": [{ "BearerAuth": [] }], "responses": { "200": { "description": "Success" } } },
-                    "post": { "tags": ["7. HR & Payroll"], "summary": "Generate Slip Gaji Bulanan", "security": [{ "BearerAuth": [] }], "responses": { "201": { "description": "Created" } } }
-                },
                 "/v1/assets": {
                     "get": { "tags": ["8. Fixed Assets"], "summary": "List Aset Tetap & Nilai Buku", "security": [{ "BearerAuth": [] }], "responses": { "200": { "description": "Success" } } },
                     "post": { "tags": ["8. Fixed Assets"], "summary": "Registrasi Aset Tetap Baru", "security": [{ "BearerAuth": [] }], "responses": { "201": { "description": "Created" } } }
-                },
-                "/v1/assets/depreciate": {
-                    "post": { "tags": ["8. Fixed Assets"], "summary": "Eksekusi Jurnal Depresiasi Bulanan", "security": [{ "BearerAuth": [] }], "responses": { "200": { "description": "Success" } } }
                 },
                 "/v1/finance/coa": {
                     "get": { "tags": ["9. Finance & Accounting"], "summary": "Chart of Accounts (COA)", "security": [{ "BearerAuth": [] }], "responses": { "200": { "description": "Success" } } },
@@ -223,22 +227,8 @@
                     "get": { "tags": ["9. Finance & Accounting"], "summary": "List Pengeluaran Operasional", "security": [{ "BearerAuth": [] }], "responses": { "200": { "description": "Success" } } },
                     "post": { "tags": ["9. Finance & Accounting"], "summary": "Pencatatan Beban Operasional Baru", "security": [{ "BearerAuth": [] }], "responses": { "201": { "description": "Created" } } }
                 },
-                "/v1/finance/supplier-payments": {
-                    "get": { "tags": ["9. Finance & Accounting"], "summary": "List Pembayaran Utang Supplier", "security": [{ "BearerAuth": [] }], "responses": { "200": { "description": "Success" } } },
-                    "post": { "tags": ["9. Finance & Accounting"], "summary": "Catat Pelunasan Utang Supplier", "security": [{ "BearerAuth": [] }], "responses": { "201": { "description": "Created" } } }
-                },
-                "/v1/finance/reports/income-statement": {
-                    "get": { "tags": ["9. Finance & Accounting"], "summary": "Laporan Laba Rugi Real-Time", "security": [{ "BearerAuth": [] }], "responses": { "200": { "description": "Success" } } }
-                },
-                "/v1/finance/reports/balance-sheet": {
-                    "get": { "tags": ["9. Finance & Accounting"], "summary": "Laporan Neraca Keuangan", "security": [{ "BearerAuth": [] }], "responses": { "200": { "description": "Success" } } }
-                },
                 "/v1/procurement/purchase-requests/{purchaseRequest}/approve": {
                     "put": { "tags": ["10. Procurement & Approvals"], "summary": "Persetujuan / Penolakan PR", "security": [{ "BearerAuth": [] }], "responses": { "200": { "description": "Success" } } }
-                },
-                "/v1/procurement/purchase-orders": {
-                    "get": { "tags": ["10. Procurement & Approvals"], "summary": "List Purchase Order (PO)", "security": [{ "BearerAuth": [] }], "responses": { "200": { "description": "Success" } } },
-                    "post": { "tags": ["10. Procurement & Approvals"], "summary": "Buat PO Baru dari PR", "security": [{ "BearerAuth": [] }], "responses": { "201": { "description": "Created" } } }
                 },
                 "/v1/shifts/open": {
                     "post": { "tags": ["11. Cashier Shifts"], "summary": "Buka Shift Kasir Baru", "security": [{ "BearerAuth": [] }], "responses": { "201": { "description": "Created" } } }
@@ -247,14 +237,10 @@
                     "post": { "tags": ["11. Cashier Shifts"], "summary": "Tutup Shift Kasir & Audit Setoran", "security": [{ "BearerAuth": [] }], "responses": { "200": { "description": "Success" } } }
                 },
                 "/v1/users": {
-                    "get": { "tags": ["12. User & RBAC Management"], "summary": "List Akun Staf User", "security": [{ "BearerAuth": [] }], "responses": { "200": { "description": "Success" } } },
-                    "post": { "tags": ["12. User & RBAC Management"], "summary": "Buat Akun Staf Baru", "security": [{ "BearerAuth": [] }], "responses": { "201": { "description": "Created" } } }
+                    "get": { "tags": ["12. User & RBAC Management"], "summary": "List Akun Staf User", "security": [{ "BearerAuth": [] }], "responses": { "200": { "description": "Success" } } }
                 },
                 "/v1/performance/cashiers": {
                     "get": { "tags": ["13. Performance Metrics"], "summary": "Statistik KPI Performa Kasir", "security": [{ "BearerAuth": [] }], "responses": { "200": { "description": "Success" } } }
-                },
-                "/v1/audit-logs": {
-                    "get": { "tags": ["13. Performance Metrics"], "summary": "Audit Trail Aktivitas Sistem", "security": [{ "BearerAuth": [] }], "responses": { "200": { "description": "Success" } } }
                 }
             }
         };

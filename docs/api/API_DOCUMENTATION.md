@@ -1,132 +1,74 @@
-# Istana Laundry Management System — 100% Feature-Complete RESTful API v1 Reference
+# Istana Laundry Management System — Top-Tier Security, TOTP 2FA & WebP Avatar Reference
 
-Dokumentasi lengkap RESTful API v1 untuk **Istana Laundry Management System Samarinda**. API ini melingkupi 100% seluruh modul backend ERP (Public, Auth, Dashboard, Orders & Refunds, Thermal Receipts, CRM Customers, Inventory, HR & Payroll, Fixed Assets & Depreciation, Akuntansi/Finance, Operational Expenses, Supplier Debt Payments, Procurement & Approvals, Cashier Shifts, Master Data Services/Branches, User & RBAC Management, serta Performance Metrics & Audit Trail).
+Dokumentasi lengkap RESTful API v1 untuk **Istana Laundry Management System Samarinda**. API ini dilengkapi dengan **Top-Tier Security Hardening** (HSTS, CSP, X-Frame-Options, Rate Limiting), **Two-Factor Authentication (2FA TOTP)** Google Authenticator, serta **Upload Foto Profil dengan Konversi & Kompresi WebP (Maksimal 200KB)**.
 
 ---
 
-## 📌 Base URL & Headers
+## 🛡️ Security Headers & Hardening
 
-* **Production:** `https://istanasystem.alk-tech.my.id/api`
-* **Local:** `http://localhost:8000/api`
-* **Timezone:** **WITA (UTC+8 / Asia/Singapore)**
-* **Headers:**
-  ```http
-  Accept: application/json
-  Content-Type: application/json
-  Authorization: Bearer {sanctum_token}
+Setiap response API dilindungi oleh HTTP Security Headers berikut:
+* `Strict-Transport-Security: max-age=31536000; includeSubDomains; preload`
+* `X-Frame-Options: SAMEORIGIN`
+* `X-Content-Type-Options: nosniff`
+* `X-XSS-Protection: 1; mode=block`
+* `Referrer-Policy: strict-origin-when-cross-origin`
+* `Permissions-Policy: camera=(), microphone=(), geolocation=(self)`
+
+---
+
+## 🔐 Profile & 2FA Security Endpoints (`/api/v1/profile`)
+
+### 1. View User Profile
+* **Endpoint:** `GET /v1/profile`
+* **Headers:** `Authorization: Bearer {token}`
+* **Response 200:**
+  ```json
+  {
+    "status": "success",
+    "data": {
+      "id": 1,
+      "name": "Super Admin",
+      "email": "admin@istanalaundry.com",
+      "branch": "Samarinda Utama",
+      "role": "Super_Admin",
+      "avatar_url": "https://istanasystem.alk-tech.my.id/storage/avatars/avatar_1_x89a2b.webp",
+      "two_factor_enabled": true
+    }
+  }
   ```
 
----
+### 2. Upload & Compress Avatar Photo (WebP < 200KB)
+* **Endpoint:** `POST /v1/profile/avatar`
+* **Content-Type:** `multipart/form-data`
+* **Body:** `avatar` (file JPEG, PNG, WEBP)
+* **Features:** Resizes image to 500x500px, converts to `.webp`, and compresses dynamically to guarantee file size <= 200KB.
+* **Response 200:**
+  ```json
+  {
+    "status": "success",
+    "message": "Foto profil berhasil diunggah, dikonversi ke WebP, dan dikompresi di bawah 200KB!",
+    "data": {
+      "avatar_path": "avatars/avatar_1_x89a2b.webp",
+      "avatar_url": "https://istanasystem.alk-tech.my.id/storage/avatars/avatar_1_x89a2b.webp",
+      "file_size_bytes": 45120,
+      "file_size_kb": "44.06 KB"
+    }
+  }
+  ```
 
-## 🚀 Ringkasan Seluruh Endpoint API v1
+### 3. Enable 2FA TOTP (Google Authenticator)
+* **Endpoint:** `POST /v1/profile/2fa/enable`
+* **Response 200:** Generates a 16-character Base32 secret key and `otpauth://` URL for scanning QR code in Google Authenticator or Authy.
 
-### 1. Public API v1 (Company Profile & Online Order)
-* `GET /v1/branches`: List cabang aktif & alamat lokasi.
-* `GET /v1/services`: List tarif & jenis layanan laundry.
-* `GET /v1/track/{orderNumber}`: Lacak status nota & timeline pengerjaan WITA.
-* `POST /v1/orders/online`: Form order online dengan koordinat presisi Latitude & Longitude GPS.
+### 4. Confirm & Activate 2FA
+* **Endpoint:** `POST /v1/profile/2fa/confirm`
+* **Body:** `{ "code": "123456" }`
+* **Response 200:** Validates initial 6-digit OTP code and returns 8 emergency recovery codes.
 
-### 2. Staff Authentication
-* `POST /login`: Staff Login (Dapatkan Token Bearer Sanctum).
-* `GET /me`: Detail profil staf login.
-* `POST /logout`: Revoke token Sanctum.
-
-### 3. Dashboard & Executive Analytics
-* `GET /v1/dashboard/stats`: KPI penjualan, omzet hari ini, order aktif, dan siap ambil.
-* `GET /v1/dashboard/charts`: Grafik omzet bulanan real-time.
-
-### 4. Orders, Payments, Refunds, & Struk Thermal
-* `GET /v1/orders`: List transaksi order (filter status, payment, tanggal, cabang).
-* `GET /v1/orders/{id}`: Detail transaksi order lengkap (items, pembayaran, log status).
-* `POST /v1/orders/{id}/payments`: Pelunasan / bayar cicilan transaksi.
-* `POST /v1/orders/{id}/refund`: Permohonan refund / pembatalan order.
-* `GET /v1/orders/{id}/receipt-data`: Data terstruktur JSON untuk printer thermal Bluetooth (ESC/POS).
-
-### 5. CRM Customers & Loyalty Member
-* `GET /v1/customers`: List & pencarian pelanggan/member.
-* `POST /v1/customers`: Registrasi member baru.
-* `GET /v1/customers/{id}`: Detail member & histori loyalty poin.
-* `PUT /v1/customers/{id}`: Update profil member.
-* `DELETE /v1/customers/{id}`: Hapus data member.
-* `POST /v1/customers/{id}/adjust-points`: Koreksi poin loyalitas.
-
-### 6. Inventory & Stock Management
-* `GET /v1/inventory`: List stok bahan & filter *low stock warning*.
-* `POST /v1/inventory`: Tambah item stok baru.
-* `GET /v1/inventory/{id}`: Detail item stok.
-* `PUT /v1/inventory/{id}`: Update info item stok.
-* `PUT /v1/inventory/{id}/adjust`: Penyesuaian stok opname manual.
-* `DELETE /v1/inventory/{id}`: Hapus item stok.
-
-### 7. HR, Employees, & Payroll
-* `GET /v1/hr/employees`: List karyawan aktif.
-* `POST /v1/hr/employees`: Tambah karyawan baru.
-* `PUT /v1/hr/employees/{id}`: Edit data karyawan.
-* `GET /v1/hr/payrolls`: Histori laporan penggajian.
-* `POST /v1/hr/payrolls`: Generate slip gaji bulanan.
-
-### 8. Fixed Assets & Monthly Depreciation
-* `GET /v1/assets`: List aset tetap & nilai buku.
-* `POST /v1/assets`: Pendaftaran aset baru.
-* `GET /v1/assets/{id}`: Detail aset tetap.
-* `PUT /v1/assets/{id}`: Edit info aset.
-* `POST /v1/assets/depreciate`: Eksekusi jurnal depresiasi garis lurus bulanan.
-
-### 9. Finance, COA, Expenses, & Accounting Reports
-* `GET /v1/finance/coa`: Chart of Accounts.
-* `POST /v1/finance/coa`: Tambah akun perkiraan baru.
-* `GET /v1/finance/journals`: Jurnal Umum & entri mutasi.
-* `POST /v1/finance/journals`: Buat entri jurnal manual berimbang (Debit/Kredit).
-* `GET /v1/finance/expenses`: List pengeluaran operasional (listrik, air, dll).
-* `POST /v1/finance/expenses`: Pencatatan beban operasional baru.
-* `GET /v1/finance/supplier-payments`: List pembayaran utang supplier.
-* `POST /v1/finance/supplier-payments`: Pelunasan pembayaran supplier.
-* `GET /v1/finance/reports/income-statement`: Laporan Laba Rugi real-time.
-* `GET /v1/finance/reports/balance-sheet`: Laporan Neraca Keuangan.
-* `GET /v1/finance/reports/trial-balance`: Neraca Saldo (Trial Balance).
-* `GET /v1/finance/accounting-periods`: Daftar periode akuntansi bulanan.
-* `POST /v1/finance/accounting-periods/{id}/close`: Proses Tutup Buku bulanan.
-
-### 10. Procurement & Approval Workflow
-* `GET /v1/procurement/suppliers`: List supplier pemasok.
-* `POST /v1/procurement/suppliers`: Tambah supplier baru.
-* `GET /v1/procurement/purchase-requests`: List Purchase Request (PR).
-* `GET /v1/procurement/purchase-requests/{id}`: Detail PR.
-* `POST /v1/procurement/purchase-requests`: Pengajuan PR baru.
-* `PUT /v1/procurement/purchase-requests/{id}/approve`: Persetujuan / Penolakan PR.
-* `GET /v1/procurement/purchase-orders`: List Purchase Order (PO).
-* `GET /v1/procurement/purchase-orders/{id}`: Detail PO.
-* `POST /v1/procurement/purchase-orders`: Buat PO baru dari PR.
-* `GET /v1/procurement/grns`: List Goods Received Notes.
-* `POST /v1/procurement/grns`: Penerimaan barang & update stok.
-
-### 11. Cashier Shifts & Settlement
-* `GET /v1/shifts`: Histori shift & audit selisih kas (*variance*).
-* `POST /v1/shifts/open`: Buka shift kasir baru.
-* `POST /v1/shifts/close`: Tutup shift & laporan setoran kasir.
-
-### 12. Master Data Services & Branches
-* `GET /v1/master/services/{id}`: Detail layanan & harga per cabang.
-* `POST /v1/master/services`: Tambah jenis layanan baru.
-* `PUT /v1/master/services/{id}`: Update layanan & tarif cabang.
-* `DELETE /v1/master/services/{id}`: Hapus layanan.
-* `GET /v1/master/branches/{id}`: Detail cabang.
-* `POST /v1/master/branches`: Registrasi cabang baru.
-* `PUT /v1/master/branches/{id}`: Edit data cabang.
-* `DELETE /v1/master/branches/{id}`: Hapus cabang.
-
-### 13. User Management & Spatie RBAC
-* `GET /v1/users`: List akun staf user & cabang.
-* `POST /v1/users`: Buat akun staf baru.
-* `GET /v1/users/{id}`: Detail user & role.
-* `PUT /v1/users/{id}`: Update akun & role user.
-* `GET /v1/roles`: List Spatie Permission roles & permissions.
-
-### 14. Performance Metrics & Audit Trail
-* `GET /v1/performance/cashiers`: Statistik performa kasir & rata-rata nilai order.
-* `GET /v1/performance/branches`: Perbandingan omzet antar cabang.
-* `GET /v1/audit-logs`: Audit trail aktivitas sistem.
+### 5. Disable 2FA
+* **Endpoint:** `POST /v1/profile/2fa/disable`
+* **Body:** `{ "current_password": "password" }`
 
 ---
 
-*Hak Cipta © 2026 Istana Laundry Management System — Technical RESTful API Engine.*
+*Hak Cipta © 2026 Istana Laundry Management System — Security & Profile API Reference.*
