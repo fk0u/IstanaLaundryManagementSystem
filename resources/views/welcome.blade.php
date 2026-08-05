@@ -940,9 +940,6 @@
         </div>
     </footer>
 
-    <!-- Leaflet.js Interactive Map Initialization Script -->
-    <script>
-        let map;
     <!-- Leaflet.js Interactive Map with Google Maps Tiles Initialization Script -->
     <script>
         let map;
