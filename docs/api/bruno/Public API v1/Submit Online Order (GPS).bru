@@ -1,0 +1,30 @@
+meta {
+  name: Submit Online Order (GPS)
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{base_url}}/v1/orders/online
+  body: json
+  auth: none
+}
+
+headers {
+  Accept: application/json
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "branch_code": "WJK",
+    "customer_name": "Bpk. Ghani",
+    "customer_phone": "081234567890",
+    "delivery_address": "Jl. Air Hitam No. 88, Samarinda",
+    "latitude": -0.4851234,
+    "longitude": 117.1423456,
+    "service_id": 1,
+    "quantity": 5,
+    "notes": "Jemput di pagar hitam depan pos satpam"
+  }
+}

@@ -1,0 +1,36 @@
+meta {
+  name: Create POS Order
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{base_url}}/pos/orders
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{bearer_token}}
+}
+
+headers {
+  Accept: application/json
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "customer_id": 1,
+    "order_type": "outlet",
+    "payment_method": "cash",
+    "items": [
+      {
+        "service_id": 1,
+        "quantity": 5,
+        "unit_price": 18000
+      }
+    ],
+    "paid_amount": 90000
+  }
+}

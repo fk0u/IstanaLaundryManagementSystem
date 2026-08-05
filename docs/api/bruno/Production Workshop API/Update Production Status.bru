@@ -1,0 +1,27 @@
+meta {
+  name: Update Production Status
+  type: http
+  seq: 1
+}
+
+patch {
+  url: {{base_url}}/production/1/status
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{bearer_token}}
+}
+
+headers {
+  Accept: application/json
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "status": "CUCI",
+    "notes": "Diproses di mesin cuci washer #2"
+  }
+}

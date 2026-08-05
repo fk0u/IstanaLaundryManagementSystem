@@ -1,0 +1,9 @@
+{
+  "version": "1",
+  "name": "Istana Laundry Management System",
+  "type": "collection",
+  "ignore": [
+    "node_modules",
+    ".git"
+  ]
+}
