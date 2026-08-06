@@ -14,11 +14,7 @@
     <div x-data="{ 
         showPassword: false,
         email: '{{ old('email') }}',
-        password: '',
-        fillCredentials(roleEmail) {
-            this.email = roleEmail;
-            this.password = 'password';
-        }
+        password: ''
     }" class="flex flex-col gap-6">
         
         <form method="POST" action="{{ route('login') }}" class="flex flex-col gap-5">
@@ -91,36 +87,7 @@
             </button>
         </form>
 
-        <!-- Quick Demo Credentials for Dev & Testing -->
-        <div class="mt-4 p-5 rounded-expressive border border-surface-outline/30 bg-surface-container-low">
-            <div class="flex items-center gap-2 mb-3">
-                <span class="material-symbols-outlined text-amber-500 text-xl">verified_user</span>
-                <span class="text-2xs font-black font-sans text-slate-600 tracking-widest uppercase">Quick Demo Login</span>
-            </div>
-            
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                <button @click="fillCredentials('owner@istanalaundry.com')" class="flex flex-col items-start p-3 text-left bg-white border border-slate-200/80 rounded-2xl hover:border-primary hover:bg-orange-50/50 transition-all focus:outline-none shadow-sm">
-                    <span class="text-[10px] font-black text-indigo-600 uppercase tracking-widest">Owner (Pusat)</span>
-                    <span class="text-2xs font-bold text-slate-800 truncate w-full mt-0.5">owner@istanalaundry.com</span>
-                </button>
-                
-                <button @click="fillCredentials('admin.wjk@istanalaundry.com')" class="flex flex-col items-start p-3 text-left bg-white border border-slate-200/80 rounded-2xl hover:border-primary hover:bg-orange-50/50 transition-all focus:outline-none shadow-sm">
-                    <span class="text-[10px] font-black text-emerald-600 uppercase tracking-widest">Admin (Wijaya K.)</span>
-                    <span class="text-2xs font-bold text-slate-800 truncate w-full mt-0.5">admin.wjk@istanalaundry.com</span>
-                </button>
 
-                <button @click="fillCredentials('cashier.wjk@istanalaundry.com')" class="flex flex-col items-start p-3 text-left bg-white border border-slate-200/80 rounded-2xl hover:border-primary hover:bg-orange-50/50 transition-all focus:outline-none shadow-sm">
-                    <span class="text-[10px] font-black text-amber-600 uppercase tracking-widest">Kasir (Wijaya K.)</span>
-                    <span class="text-2xs font-bold text-slate-800 truncate w-full mt-0.5">cashier.wjk@istanalaundry.com</span>
-                </button>
-
-                <button @click="fillCredentials('staff.wjk@istanalaundry.com')" class="flex flex-col items-start p-3 text-left bg-white border border-slate-200/80 rounded-2xl hover:border-primary hover:bg-orange-50/50 transition-all focus:outline-none shadow-sm">
-                    <span class="text-[10px] font-black text-teal-600 uppercase tracking-widest">Staff (Wijaya K.)</span>
-                    <span class="text-2xs font-bold text-slate-800 truncate w-full mt-0.5">staff.wjk@istanalaundry.com</span>
-                </button>
-            </div>
-            <p class="text-[10px] text-slate-400 font-semibold text-center mt-3">Klik salah satu akun di atas untuk mengisi form secara otomatis (Password: password)</p>
-        </div>
     </div>
 
     <div class="mt-8 pt-4 border-t border-slate-100 flex justify-center text-center">
