@@ -7,53 +7,51 @@
     </script>
     <div x-data="posApp()" class="min-h-[calc(100vh-100px)] flex flex-col gap-6">
         
-        <x-page-header title="Point of Sale (POS)" :breadcrumbs="['POS' => '/pos']">
+        <x-page-header title="Point of Sale (POS)" :breadcrumbs="['POS' => '/pos']" class="mb-4">
             <x-slot:actions>
-                <div class="flex items-center gap-3 flex-wrap">
+                <div class="flex items-center gap-2 flex-nowrap overflow-x-auto no-scrollbar py-1 max-w-full">
                     <!-- Shift Status & Quick Action Ribbon -->
                     @if($activeShift)
-                        <div class="flex items-center gap-2 bg-emerald-50 dark:bg-slate-800/80 border border-emerald-200 dark:border-slate-700 px-3.5 py-1.5 rounded-xl shadow-xs">
-                            <span class="relative flex h-3 w-3">
+                        <div class="h-9 px-3 flex items-center gap-2 bg-emerald-50 dark:bg-slate-800/90 border border-emerald-200/80 dark:border-slate-700 rounded-xl shadow-2xs shrink-0">
+                            <span class="relative flex h-2.5 w-2.5 shrink-0">
                               <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                              <span class="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+                              <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
                             </span>
-                            <div class="text-xs">
-                                <span class="text-slate-400 block text-[9px] font-extrabold uppercase leading-none">Shift Active #{{ $activeShift->id }}</span>
-                                <span class="font-extrabold text-slate-800 dark:text-slate-100">Modal: Rp {{ number_format($activeShift->opening_cash, 0, ',', '.') }}</span>
+                            <div class="text-xs flex items-center gap-1.5 whitespace-nowrap">
+                                <span class="text-emerald-700 dark:text-emerald-400 font-extrabold text-[11px]">Shift #{{ $activeShift->id }}</span>
+                                <span class="text-slate-300 dark:text-slate-600">•</span>
+                                <span class="font-bold text-slate-700 dark:text-slate-200 text-xs">Rp {{ number_format($activeShift->opening_cash, 0, ',', '.') }}</span>
                             </div>
                         </div>
 
                         <!-- Action Buttons -->
-                        <button type="button" @click="showPettyCashModal = true" class="btn-touch px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:text-primary text-2xs font-extrabold flex items-center gap-1.5 transition-all cursor-pointer">
-                            <span class="material-symbols-outlined text-sm text-rose-500">payments</span>
-                            Kas Kecil
+                        <button type="button" @click="showPettyCashModal = true" class="h-9 btn-touch px-3 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200/80 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:text-primary text-xs font-extrabold flex items-center gap-1.5 transition-all cursor-pointer shrink-0 whitespace-nowrap">
+                            <span class="material-symbols-outlined text-base text-rose-500">payments</span>
+                            <span>Kas Kecil</span>
                         </button>
 
-                        <button type="button" @click="showDraftModal = true" class="btn-touch px-3 py-1.5 rounded-xl bg-orange-50 dark:bg-slate-800 border border-orange-200 dark:border-slate-700 text-primary dark:text-orange-400 text-2xs font-extrabold flex items-center gap-1.5 transition-all cursor-pointer">
-                            <span class="material-symbols-outlined text-sm">pending_actions</span>
-                            Hold Order
-                            <span class="px-1.5 py-0.2 rounded-full bg-primary text-white text-[10px]" x-text="draftOrders.length">0</span>
+                        <button type="button" @click="showDraftModal = true" class="h-9 btn-touch px-3 rounded-xl bg-orange-50 dark:bg-slate-800 hover:bg-orange-100 dark:hover:bg-slate-750 border border-orange-200/80 dark:border-slate-700 text-primary dark:text-orange-400 text-xs font-extrabold flex items-center gap-1.5 transition-all cursor-pointer shrink-0 whitespace-nowrap">
+                            <span class="material-symbols-outlined text-base">pending_actions</span>
+                            <span>Hold Order</span>
+                            <span class="px-1.5 py-0.2 rounded-full bg-primary text-white text-[10px] font-black" x-text="draftOrders.length">0</span>
                         </button>
 
-                        <button type="button" @click="showCloseShiftModal = true" class="btn-touch px-3 py-1.5 rounded-xl bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-900/50 text-rose-600 dark:text-rose-400 text-2xs font-extrabold flex items-center gap-1.5 transition-all cursor-pointer">
-                            <span class="material-symbols-outlined text-sm">lock_clock</span>
-                            Tutup Shift
+                        <button type="button" @click="showCloseShiftModal = true" class="h-9 btn-touch px-3 rounded-xl bg-rose-50 dark:bg-rose-950/30 hover:bg-rose-100 dark:hover:bg-rose-900/40 border border-rose-200/80 dark:border-rose-900/50 text-rose-600 dark:text-rose-400 text-xs font-extrabold flex items-center gap-1.5 transition-all cursor-pointer shrink-0 whitespace-nowrap">
+                            <span class="material-symbols-outlined text-base">lock_clock</span>
+                            <span>Tutup Shift</span>
                         </button>
                     @else
-                        <button type="button" @click="showOpenShiftModal = true" class="btn-touch px-4 py-2 rounded-xl bg-gradient-to-r from-primary to-orange-600 text-white font-extrabold text-xs flex items-center gap-1.5 shadow-md shadow-primary/20 transition-all cursor-pointer">
+                        <button type="button" @click="showOpenShiftModal = true" class="h-9 btn-touch px-3.5 rounded-xl bg-gradient-to-r from-primary to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-extrabold text-xs flex items-center gap-1.5 shadow-md shadow-primary/20 transition-all cursor-pointer shrink-0 whitespace-nowrap">
                             <span class="material-symbols-outlined text-base">key</span>
-                            Buka Shift Kasir Sekarang
+                            <span>Buka Shift Kasir Sekarang</span>
                         </button>
                     @endif
 
                     @if(auth()->user()->hasAnyRole(['Developer', 'Owner', 'Super_Admin', 'Finance']))
-                        <div class="flex items-center gap-2 bg-orange-50 dark:bg-slate-800 border border-orange-200 dark:border-slate-700 px-3 py-1.5 rounded-xl">
+                        <div class="h-9 flex items-center gap-1.5 bg-orange-50 dark:bg-slate-800 border border-orange-200/80 dark:border-slate-700 px-3 rounded-xl shrink-0 whitespace-nowrap">
                             <span class="material-symbols-outlined text-primary text-base">storefront</span>
-                            <div class="text-xs">
-                                <span class="text-slate-400 block text-[10px] font-bold uppercase leading-none">Cabang Aktif</span>
-                                <span class="font-extrabold text-slate-800 dark:text-slate-200">{{ $branch?->name ?? 'Semua Cabang' }}</span>
-                            </div>
-                            <button type="button" @click="showBranchScopeModal = true" class="ml-2 btn-touch text-2xs font-bold text-primary hover:underline cursor-pointer">
+                            <span class="text-xs font-extrabold text-slate-800 dark:text-slate-200">{{ $branch?->name ?? 'Semua Cabang' }}</span>
+                            <button type="button" @click="showBranchScopeModal = true" class="ml-1 px-1.5 py-0.5 rounded-md bg-orange-100 dark:bg-slate-700 hover:bg-primary hover:text-white dark:hover:bg-primary dark:hover:text-white text-primary dark:text-orange-400 text-[10px] font-black transition-all cursor-pointer">
                                 Ganti
                             </button>
                         </div>

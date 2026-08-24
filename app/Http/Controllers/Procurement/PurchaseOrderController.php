@@ -37,7 +37,7 @@ class PurchaseOrderController extends Controller
             ->whereNotExists(function ($query) {
                 $query->select(DB::raw(1))
                     ->from('purchase_orders')
-                    ->whereColumn('purchase_orders.purchase_request_id', 'purchase_requests.id');
+                    ->whereColumn('purchase_orders.pr_id', 'purchase_requests.id');
             })
             ->orderBy('id', 'desc')
             ->get();
@@ -51,8 +51,9 @@ class PurchaseOrderController extends Controller
     {
         $request->validate([
             'supplier_id' => 'required|exists:suppliers,id',
-            'order_date' => 'required|date',
+            'order_date' => 'nullable|date',
             'expected_date' => 'nullable|date|after_or_equal:order_date',
+            'pr_id' => 'nullable|exists:purchase_requests,id',
             'purchase_request_id' => 'nullable|exists:purchase_requests,id',
             'items' => 'required|array|min:1',
             'items.*.item_id' => 'required|exists:inventory_items,id',
@@ -69,26 +70,25 @@ class PurchaseOrderController extends Controller
         $total = $subtotal + $taxAmount;
 
         $poNumber = 'PO-'.date('Ymd').'-'.str_pad(mt_rand(1, 9999), 4, '0', STR_PAD_LEFT);
-        $branchId = session('branch_id') ?? auth()->user()->branch_id ?? 1;
+        $branchId = session('scoped_branch_id') ?? session('branch_id') ?? auth()->user()?->branch_id ?? 1;
 
         $po = PurchaseOrder::create([
             'po_number' => $poNumber,
-            'purchase_request_id' => $request->purchase_request_id,
+            'pr_id' => $request->pr_id ?? $request->purchase_request_id,
             'supplier_id' => $request->supplier_id,
             'branch_id' => $branchId,
             'status' => 'draft',
-            'order_date' => $request->order_date,
+            'order_date' => $request->order_date ?? now()->toDateString(),
             'expected_date' => $request->expected_date,
             'subtotal' => $subtotal,
             'tax_amount' => $taxAmount,
             'total' => $total,
-            'created_by' => auth()->id(),
         ]);
 
         foreach ($request->items as $itemData) {
             $itemSubtotal = $itemData['quantity'] * $itemData['unit_cost'];
             PurchaseOrderItem::create([
-                'purchase_order_id' => $po->id,
+                'po_id' => $po->id,
                 'item_id' => $itemData['item_id'],
                 'quantity' => $itemData['quantity'],
                 'unit_cost' => $itemData['unit_cost'],
