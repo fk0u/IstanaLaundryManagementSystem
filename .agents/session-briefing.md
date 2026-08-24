@@ -10,6 +10,7 @@
   - API Login mendukung 2FA melalui field `two_factor_code` / `recovery_code` dan header `X-Device-Trust-Token`.
 - **Purchase Order (PO) Error 500 Fix**:
   - Memperbaiki kolom relasi di `PurchaseOrderController@index` (`whereColumn('purchase_orders.pr_id', 'purchase_requests.id')` sebelumnya `purchase_request_id` yang menyebabkan SQL column not found).
+  - Menghapus klausa `where('is_active', true)` pada model `InventoryItem` di controller index karena tabel `inventory_items` tidak memiliki kolom `is_active`.
   - Memperbaiki pemetaan kolom input pada `PurchaseOrderController@store` (`pr_id`, default `order_date`, dan `po_id` untuk `PurchaseOrderItem`).
   - Menambahkan template `resources/views/procurement/purchase_orders/show.blade.php` untuk direct web view.
 - **Tampilan Toolbar PoS Header Inline (Segaris)**:
