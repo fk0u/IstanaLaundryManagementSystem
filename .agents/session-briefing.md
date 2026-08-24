@@ -14,3 +14,7 @@
   - Menambahkan template `resources/views/procurement/purchase_orders/show.blade.php` untuk direct web view.
 - **Tampilan Toolbar PoS Header Inline (Segaris)**:
   - Tombol-tombol aksi atas pada halaman PoS (`/pos`): status shift aktif, Kas Kecil, Hold Order, Tutup/Buka Shift, dan Cabang diratakan dalam satu baris (single line, `flex-nowrap`, `overflow-x-auto`, unified `h-9` buttons) sehingga tidak pecah baris di berbagai resolusi layar.
+- **VPS Deployment & Auto-Sync**:
+  - Repo GitHub `master` & `main` sudah sinkron dan dipush ke `https://github.com/fk0u/IstanaLaundryManagementSystem.git`.
+  - VPS (`157.10.161.42`) telah diupdate ke commit terbaru (`main`), dependency dikunci ke platform PHP 8.3.6, asset frontend di-compile dengan Vite (`npm run build`), migration & cache optimization dijalankan (HTTP 200 OK di `https://istanasystem.alk-tech.my.id`).
+  - Auto-sync cron job (`*/5 * * * * deploy.sh`) aktif di VPS untuk mendeteksi commit baru di `origin/main` setiap 5 menit.
