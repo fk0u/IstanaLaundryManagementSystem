@@ -42,7 +42,7 @@ class PurchaseOrderController extends Controller
             ->orderBy('id', 'desc')
             ->get();
 
-        $inventoryItems = InventoryItem::where('is_active', true)->orderBy('name', 'asc')->get();
+        $inventoryItems = InventoryItem::orderBy('name', 'asc')->get();
 
         return view('procurement.purchase_orders.index', compact('purchaseOrders', 'suppliers', 'approvedPrs', 'inventoryItems'));
     }
