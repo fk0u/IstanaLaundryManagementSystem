@@ -133,6 +133,7 @@ class ServerTelemetryService
             FROM information_schema.tables 
             WHERE table_schema = database()
         ')[0] ?? null;
+        $dbSizeArray = array_change_key_case((array) ($dbSizeData ?? []), CASE_LOWER);
 
         // Global Status
         $dbStatus = [];
@@ -141,21 +142,25 @@ class ServerTelemetryService
                 'Threads_connected', 'Uptime', 'Slow_queries', 'Questions', 'Innodb_buffer_pool_reads', 'Innodb_buffer_pool_read_requests'
             )");
             foreach ($statusRows as $row) {
-                $dbStatus[$row->Variable_name] = $row->Value;
+                $r = array_change_key_case((array) $row, CASE_LOWER);
+                $varName = $r['variable_name'] ?? '';
+                if ($varName) {
+                    $dbStatus[$varName] = $r['value'] ?? '';
+                }
             }
         } catch (\Exception $e) {
             // Ignore if restricted
         }
 
         // MySQL Uptime
-        $mysqlUptimeSec = (int) ($dbStatus['Uptime'] ?? 0);
+        $mysqlUptimeSec = (int) ($dbStatus['Uptime'] ?? $dbStatus['uptime'] ?? 0);
         $mDays = floor($mysqlUptimeSec / 86400);
         $mHours = floor(($mysqlUptimeSec % 86400) / 3600);
         $mysqlUptimeStr = "{$mDays}d {$mHours}h";
 
         // Buffer Pool Hit Ratio
-        $bufferReads = (int) ($dbStatus['Innodb_buffer_pool_reads'] ?? 0);
-        $bufferRequests = (int) ($dbStatus['Innodb_buffer_pool_read_requests'] ?? 1);
+        $bufferReads = (int) ($dbStatus['Innodb_buffer_pool_reads'] ?? $dbStatus['innodb_buffer_pool_reads'] ?? 0);
+        $bufferRequests = (int) ($dbStatus['Innodb_buffer_pool_read_requests'] ?? $dbStatus['innodb_buffer_pool_read_requests'] ?? 1);
         $bufferHitRate = $bufferRequests > 0 ? round((1 - ($bufferReads / $bufferRequests)) * 100, 2) : 100;
 
         // Detailed Table Inspection
@@ -174,12 +179,14 @@ class ServerTelemetryService
         ');
 
         $totalRows = 0;
-        $tables = collect($tablesRaw)->map(function ($t) use (&$totalRows) {
-            $totalRows += (int) $t->table_rows;
+        $tables = collect($tablesRaw)->map(function ($row) use (&$totalRows) {
+            $t = array_change_key_case((array) $row, CASE_LOWER);
+            $rows = (int) ($t['table_rows'] ?? 0);
+            $totalRows += $rows;
 
             // Categorize table
             $cat = 'Operational';
-            $name = $t->table_name;
+            $name = $t['table_name'] ?? '';
             if (in_array($name, ['users', 'roles', 'permissions', 'model_has_roles', 'model_has_permissions', 'role_has_permissions', 'migrations'])) {
                 $cat = 'System & Auth';
             } elseif (in_array($name, ['branches', 'workshops', 'employees', 'chart_of_accounts', 'services', 'service_branch_prices', 'suppliers', 'system_settings', 'inventory_items'])) {
@@ -197,12 +204,12 @@ class ServerTelemetryService
             return [
                 'name' => $name,
                 'category' => $cat,
-                'rows' => (int) $t->table_rows,
-                'data_kb' => (float) $t->data_kb,
-                'index_kb' => (float) $t->index_kb,
-                'total_kb' => (float) $t->total_kb,
-                'engine' => $t->engine ?? 'InnoDB',
-                'updated_at' => $t->update_time ? date('Y-m-d H:i', strtotime($t->update_time)) : '-',
+                'rows' => $rows,
+                'data_kb' => (float) ($t['data_kb'] ?? 0),
+                'index_kb' => (float) ($t['index_kb'] ?? 0),
+                'total_kb' => (float) ($t['total_kb'] ?? 0),
+                'engine' => $t['engine'] ?? 'InnoDB',
+                'updated_at' => ! empty($t['update_time']) ? date('Y-m-d H:i', strtotime($t['update_time'])) : '-',
             ];
         });
 
@@ -212,13 +219,13 @@ class ServerTelemetryService
             'host' => $host,
             'database' => $dbName,
             'ping_ms' => $pingMs,
-            'total_size_mb' => $dbSizeData->total_mb ?? 0,
-            'data_size_mb' => $dbSizeData->data_mb ?? 0,
-            'index_size_mb' => $dbSizeData->index_mb ?? 0,
-            'table_count' => $dbSizeData->table_count ?? count($tables),
+            'total_size_mb' => (float) ($dbSizeArray['total_mb'] ?? 0),
+            'data_size_mb' => (float) ($dbSizeArray['data_mb'] ?? 0),
+            'index_size_mb' => (float) ($dbSizeArray['index_mb'] ?? 0),
+            'table_count' => (int) ($dbSizeArray['table_count'] ?? count($tables)),
             'total_rows' => $totalRows,
-            'threads_connected' => $dbStatus['Threads_connected'] ?? '1',
-            'slow_queries' => $dbStatus['Slow_queries'] ?? '0',
+            'threads_connected' => $dbStatus['Threads_connected'] ?? $dbStatus['threads_connected'] ?? '1',
+            'slow_queries' => $dbStatus['Slow_queries'] ?? $dbStatus['slow_queries'] ?? '0',
             'uptime_str' => $mysqlUptimeStr,
             'buffer_hit_rate' => $bufferHitRate,
             'tables' => $tables,
