@@ -20,6 +20,11 @@ class ServerTelemetryService
             'application' => $this->getApplicationMetrics(),
             'git' => $this->getGitMetrics(),
             'security' => $this->getSecurityMetrics(),
+            'processes' => $this->getTopProcesses(),
+            'services' => $this->getServiceStatuses(),
+            'users' => $this->getUsersList(),
+            'environment_config' => $this->getEnvironmentConfig(),
+            'queue_scheduler' => $this->getQueueAndScheduler(),
         ];
     }
 
@@ -41,6 +46,11 @@ class ServerTelemetryService
         // Memory
         $totalMem = 0;
         $availMem = 0;
+        $freeMem = 0;
+        $cachedMem = 0;
+        $swapTotal = 0;
+        $swapUsed = 0;
+
         if (PHP_OS_FAMILY === 'Linux' && file_exists('/proc/meminfo')) {
             $memInfo = [];
             foreach (file('/proc/meminfo') as $line) {
@@ -49,15 +59,21 @@ class ServerTelemetryService
                 }
             }
             $totalMem = round(($memInfo['MemTotal'] ?? 0) / 1024, 1);
+            $freeMem = round(($memInfo['MemFree'] ?? 0) / 1024, 1);
             $availMem = round(($memInfo['MemAvailable'] ?? 0) / 1024, 1);
+            $cachedMem = round((($memInfo['Buffers'] ?? 0) + ($memInfo['Cached'] ?? 0)) / 1024, 1);
             $usedMem = round($totalMem - $availMem, 1);
             $memPct = $totalMem > 0 ? round(($usedMem / $totalMem) * 100, 1) : 0;
+            $swapTotal = round(($memInfo['SwapTotal'] ?? 0) / 1024, 1);
+            $swapFree = round(($memInfo['SwapFree'] ?? 0) / 1024, 1);
+            $swapUsed = round($swapTotal - $swapFree, 1);
         } else {
             // Fallback for Windows/local
             $usedBytes = memory_get_usage(true);
             $usedMem = round($usedBytes / (1024 * 1024), 1);
-            $totalMem = 4096; // fallback 4GB display
-            $availMem = round($totalMem - $usedMem, 1);
+            $totalMem = 4096;
+            $freeMem = round($totalMem - $usedMem, 1);
+            $availMem = $freeMem;
             $memPct = round(($usedMem / $totalMem) * 100, 1);
         }
 
@@ -70,6 +86,7 @@ class ServerTelemetryService
 
         // Uptime
         $uptimeStr = 'N/A';
+        $uptimeSeconds = 0;
         if (file_exists('/proc/uptime')) {
             $uptimeSeconds = (int) explode(' ', file_get_contents('/proc/uptime'))[0];
             $days = floor($uptimeSeconds / 86400);
@@ -89,8 +106,12 @@ class ServerTelemetryService
             'architecture' => php_uname('m'),
             'memory_used_mb' => $usedMem,
             'memory_total_mb' => $totalMem,
+            'memory_free_mb' => $freeMem,
             'memory_available_mb' => $availMem,
+            'memory_cached_mb' => $cachedMem,
             'memory_pct' => $memPct,
+            'swap_total_mb' => $swapTotal,
+            'swap_used_mb' => $swapUsed,
             'php_memory_mb' => round(memory_get_usage(true) / (1024 * 1024), 2),
             'php_peak_memory_mb' => round(memory_get_peak_usage(true) / (1024 * 1024), 2),
             'php_memory_limit' => ini_get('memory_limit'),
@@ -102,9 +123,75 @@ class ServerTelemetryService
             'hostname' => gethostname(),
             'server_ip' => request()->server('SERVER_ADDR') ?? '127.0.0.1',
             'uptime' => $uptimeStr,
-            'server_time' => now()->format('d M Y, H:i:s T'),
+            'uptime_seconds' => $uptimeSeconds,
+            'server_time' => now()->format('Y-m-d H:i:s T'),
             'timezone' => config('app.timezone', 'Asia/Makassar'),
         ];
+    }
+
+    /**
+     * Top running processes on the host.
+     */
+    public function getTopProcesses(): array
+    {
+        $processes = [];
+        if (PHP_OS_FAMILY === 'Linux') {
+            try {
+                $psOutput = shell_exec('ps aux --sort=-%cpu 2>/dev/null | head -n 11');
+                if ($psOutput) {
+                    $lines = explode("\n", trim($psOutput));
+                    foreach (array_slice($lines, 1) as $line) {
+                        $cols = preg_split('/\s+/', trim($line), 11);
+                        if (count($cols) >= 11) {
+                            $processes[] = [
+                                'user' => $cols[0],
+                                'pid' => $cols[1],
+                                'cpu' => $cols[2],
+                                'mem' => $cols[3],
+                                'time' => $cols[9],
+                                'command' => $cols[10],
+                            ];
+                        }
+                    }
+                }
+            } catch (\Exception $e) {
+                // Ignore
+            }
+        }
+        return $processes;
+    }
+
+    /**
+     * Linux services status (Nginx, MySQL, PHP-FPM).
+     */
+    public function getServiceStatuses(): array
+    {
+        $services = [
+            'nginx' => ['name' => 'Nginx Web Server', 'status' => 'UNKNOWN', 'port' => 80],
+            'mysql' => ['name' => 'MySQL Database Server', 'status' => 'UNKNOWN', 'port' => 3306],
+            'php_fpm' => ['name' => 'PHP 8.3 FPM', 'status' => 'UNKNOWN', 'port' => 9000],
+        ];
+
+        if (PHP_OS_FAMILY === 'Linux') {
+            try {
+                $nginxCheck = trim(shell_exec('systemctl is-active nginx 2>/dev/null') ?? '');
+                $services['nginx']['status'] = $nginxCheck === 'active' ? 'RUNNING' : ($nginxCheck ?: 'INACTIVE');
+
+                $mysqlCheck = trim(shell_exec('systemctl is-active mysql 2>/dev/null') ?? '');
+                $services['mysql']['status'] = $mysqlCheck === 'active' ? 'RUNNING' : ($mysqlCheck ?: 'INACTIVE');
+
+                $phpCheck = trim(shell_exec('systemctl is-active php8.3-fpm 2>/dev/null') ?? '');
+                $services['php_fpm']['status'] = $phpCheck === 'active' ? 'RUNNING' : ($phpCheck ?: 'INACTIVE');
+            } catch (\Exception $e) {
+                // Ignore
+            }
+        } else {
+            $services['nginx']['status'] = 'N/A (Windows)';
+            $services['mysql']['status'] = 'RUNNING';
+            $services['php_fpm']['status'] = 'N/A';
+        }
+
+        return $services;
     }
 
     /**
@@ -139,7 +226,7 @@ class ServerTelemetryService
         $dbStatus = [];
         try {
             $statusRows = DB::select("SHOW GLOBAL STATUS WHERE Variable_name IN (
-                'Threads_connected', 'Uptime', 'Slow_queries', 'Questions', 'Innodb_buffer_pool_reads', 'Innodb_buffer_pool_read_requests'
+                'Threads_connected', 'Uptime', 'Slow_queries', 'Questions', 'Innodb_buffer_pool_reads', 'Innodb_buffer_pool_read_requests', 'Max_used_connections', 'Aborted_connects'
             )");
             foreach ($statusRows as $row) {
                 $r = array_change_key_case((array) $row, CASE_LOWER);
@@ -172,6 +259,7 @@ class ServerTelemetryService
                 ROUND(index_length / 1024, 1) as index_kb,
                 ROUND((data_length + index_length) / 1024, 1) as total_kb,
                 engine,
+                table_collation,
                 update_time
             FROM information_schema.tables 
             WHERE table_schema = database()
@@ -209,7 +297,8 @@ class ServerTelemetryService
                 'index_kb' => (float) ($t['index_kb'] ?? 0),
                 'total_kb' => (float) ($t['total_kb'] ?? 0),
                 'engine' => $t['engine'] ?? 'InnoDB',
-                'updated_at' => ! empty($t['update_time']) ? date('Y-m-d H:i', strtotime($t['update_time'])) : '-',
+                'collation' => $t['table_collation'] ?? 'utf8mb4_unicode_ci',
+                'updated_at' => ! empty($t['update_time']) ? date('Y-m-d H:i:s', strtotime($t['update_time'])) : '-',
             ];
         });
 
@@ -225,11 +314,39 @@ class ServerTelemetryService
             'table_count' => (int) ($dbSizeArray['table_count'] ?? count($tables)),
             'total_rows' => $totalRows,
             'threads_connected' => $dbStatus['Threads_connected'] ?? $dbStatus['threads_connected'] ?? '1',
+            'max_used_connections' => $dbStatus['Max_used_connections'] ?? $dbStatus['max_used_connections'] ?? '1',
             'slow_queries' => $dbStatus['Slow_queries'] ?? $dbStatus['slow_queries'] ?? '0',
+            'total_questions' => $dbStatus['Questions'] ?? $dbStatus['questions'] ?? '0',
             'uptime_str' => $mysqlUptimeStr,
             'buffer_hit_rate' => $bufferHitRate,
             'tables' => $tables,
         ];
+    }
+
+    /**
+     * Complete list of all accounts for Developer management.
+     */
+    public function getUsersList(): array
+    {
+        return User::with(['roles', 'branch'])
+            ->orderBy('id')
+            ->get()
+            ->map(function ($u) {
+                return [
+                    'id' => $u->id,
+                    'name' => $u->name,
+                    'email' => $u->email,
+                    'role' => $u->roles->first()?->name ?? 'None',
+                    'branch' => $u->branch?->name ?? 'Global / Semua Cabang',
+                    'is_active' => (bool) $u->is_active,
+                    'login_attempts' => (int) $u->login_attempts,
+                    'is_locked' => $u->locked_until && $u->locked_until->isFuture(),
+                    'locked_until' => $u->locked_until ? $u->locked_until->format('Y-m-d H:i:s') : null,
+                    'has_2fa' => ! empty($u->two_factor_confirmed_at),
+                    'created_at' => $u->created_at ? $u->created_at->format('Y-m-d H:i') : '-',
+                ];
+            })
+            ->toArray();
     }
 
     /**
@@ -239,9 +356,14 @@ class ServerTelemetryService
     {
         $opcacheEnabled = function_exists('opcache_get_status') && is_array(opcache_get_status(false));
         $opcacheHitRate = 0;
+        $opcacheMemUsed = 0;
+        $opcacheMemFree = 0;
+
         if ($opcacheEnabled) {
             $opStatus = opcache_get_status(false);
             $opcacheHitRate = round($opStatus['opcache_statistics']['opcache_hit_rate'] ?? 0, 1);
+            $opcacheMemUsed = round(($opStatus['memory_usage']['used_memory'] ?? 0) / 1024 / 1024, 1);
+            $opcacheMemFree = round(($opStatus['memory_usage']['free_memory'] ?? 0) / 1024 / 1024, 1);
         }
 
         // Check write permissions
@@ -249,18 +371,11 @@ class ServerTelemetryService
         $bootstrapCacheWritable = is_writable(base_path('bootstrap/cache'));
         $logsWritable = is_writable(storage_path('logs'));
 
-        // Queues & Jobs
-        $pendingJobs = 0;
-        $failedJobs = 0;
-        try {
-            if (DB::getSchemaBuilder()->hasTable('jobs')) {
-                $pendingJobs = DB::table('jobs')->count();
-            }
-            if (DB::getSchemaBuilder()->hasTable('failed_jobs')) {
-                $failedJobs = DB::table('failed_jobs')->count();
-            }
-        } catch (\Exception $e) {
-            // Ignore
+        // Storage sizes
+        $logsSizeMb = 0;
+        $logFile = storage_path('logs/laravel.log');
+        if (file_exists($logFile)) {
+            $logsSizeMb = round(filesize($logFile) / 1024 / 1024, 2);
         }
 
         return [
@@ -274,11 +389,90 @@ class ServerTelemetryService
             'queue_driver' => config('queue.default'),
             'opcache_enabled' => $opcacheEnabled,
             'opcache_hit_rate' => $opcacheHitRate,
+            'opcache_mem_used_mb' => $opcacheMemUsed,
+            'opcache_mem_free_mb' => $opcacheMemFree,
             'storage_writable' => $storageWritable,
             'bootstrap_cache_writable' => $bootstrapCacheWritable,
             'logs_writable' => $logsWritable,
+            'logs_size_mb' => $logsSizeMb,
+            'maintenance_mode' => app()->isDownForMaintenance(),
+        ];
+    }
+
+    /**
+     * Safe whitelisted environment config parameters.
+     */
+    public function getEnvironmentConfig(): array
+    {
+        return [
+            'APP_NAME' => config('app.name'),
+            'APP_ENV' => config('app.env'),
+            'APP_DEBUG' => config('app.debug') ? 'true' : 'false',
+            'APP_URL' => config('app.url'),
+            'APP_TIMEZONE' => config('app.timezone'),
+            'APP_LOCALE' => config('app.locale'),
+            'DB_CONNECTION' => config('database.default'),
+            'DB_HOST' => config('database.connections.' . config('database.default') . '.host'),
+            'DB_PORT' => config('database.connections.' . config('database.default') . '.port'),
+            'DB_DATABASE' => config('database.connections.' . config('database.default') . '.database'),
+            'CACHE_STORE' => config('cache.default'),
+            'SESSION_DRIVER' => config('session.driver'),
+            'SESSION_LIFETIME' => config('session.lifetime') . ' minutes',
+            'QUEUE_CONNECTION' => config('queue.default'),
+            'LOG_CHANNEL' => config('logging.default'),
+            'LOG_LEVEL' => config('logging.channels.' . config('logging.default') . '.level', 'debug'),
+        ];
+    }
+
+    /**
+     * Queue workers & cron scheduler status.
+     */
+    public function getQueueAndScheduler(): array
+    {
+        $pendingJobs = 0;
+        $failedJobs = 0;
+        $failedJobsList = [];
+
+        try {
+            if (DB::getSchemaBuilder()->hasTable('jobs')) {
+                $pendingJobs = DB::table('jobs')->count();
+            }
+            if (DB::getSchemaBuilder()->hasTable('failed_jobs')) {
+                $failedJobs = DB::table('failed_jobs')->count();
+                $failedJobsList = DB::table('failed_jobs')
+                    ->latest()
+                    ->take(5)
+                    ->get()
+                    ->map(function ($j) {
+                        return [
+                            'id' => $j->id,
+                            'connection' => $j->connection,
+                            'queue' => $j->queue,
+                            'failed_at' => $j->failed_at,
+                            'exception' => substr($j->exception, 0, 120) . '...',
+                        ];
+                    })
+                    ->toArray();
+            }
+        } catch (\Exception $e) {
+            // Ignore
+        }
+
+        // Host Cron
+        $crontab = 'N/A';
+        if (PHP_OS_FAMILY === 'Linux') {
+            try {
+                $crontab = trim(shell_exec('crontab -l 2>/dev/null') ?? 'No crontab installed');
+            } catch (\Exception $e) {
+                // Ignore
+            }
+        }
+
+        return [
             'pending_jobs' => $pendingJobs,
             'failed_jobs' => $failedJobs,
+            'failed_jobs_list' => $failedJobsList,
+            'crontab' => $crontab,
         ];
     }
 
@@ -291,22 +485,27 @@ class ServerTelemetryService
         $commitHash = 'N/A';
         $commitDate = 'N/A';
         $commitMessage = 'N/A';
+        $author = 'N/A';
 
         try {
             $branch = trim(shell_exec('git rev-parse --abbrev-ref HEAD 2>/dev/null') ?? 'main');
-            $commitHash = trim(shell_exec('git log -1 --format="%h" 2>/dev/null') ?? 'N/A');
-            $commitDate = trim(shell_exec('git log -1 --format="%cd" --date=relative 2>/dev/null') ?? 'N/A');
+            $commitHash = trim(shell_exec('git log -1 --format="%H" 2>/dev/null') ?? 'N/A');
+            $commitShort = substr($commitHash, 0, 7);
+            $commitDate = trim(shell_exec('git log -1 --format="%cd" --date=iso 2>/dev/null') ?? 'N/A');
+            $author = trim(shell_exec('git log -1 --format="%an" 2>/dev/null') ?? 'N/A');
             $commitMessage = trim(shell_exec('git log -1 --format="%s" 2>/dev/null') ?? 'N/A');
         } catch (\Exception $e) {
-            // fallback
+            $commitShort = 'N/A';
         }
 
         return [
             'branch' => $branch ?: 'main',
-            'commit_hash' => $commitHash ?: '1c50e19',
-            'commit_date' => $commitDate ?: 'just now',
+            'commit_hash' => $commitHash,
+            'commit_short' => $commitShort ?? 'N/A',
+            'commit_date' => $commitDate ?: 'N/A',
+            'author' => $author ?: 'N/A',
             'commit_message' => $commitMessage ?: 'Production build ready',
-            'auto_sync_status' => 'Active (Cron */5m)',
+            'auto_sync_status' => 'ACTIVE (deploy.sh via cron every 5 min)',
         ];
     }
 
@@ -326,15 +525,15 @@ class ServerTelemetryService
             if (DB::getSchemaBuilder()->hasTable('audit_logs')) {
                 $recentAuditLogs = AuditLog::with('user')
                     ->latest()
-                    ->take(10)
+                    ->take(15)
                     ->get()
                     ->map(function ($log) {
                         return [
                             'id' => $log->id,
-                            'user' => $log->user?->name ?? 'System',
+                            'user' => $log->user?->name ?? 'System / Anonymous',
                             'action' => $log->action,
                             'ip_address' => $log->ip_address,
-                            'created_at' => $log->created_at?->diffForHumans() ?? '-',
+                            'created_at' => $log->created_at ? $log->created_at->format('Y-m-d H:i:s') : '-',
                         ];
                     });
             }
@@ -342,11 +541,11 @@ class ServerTelemetryService
             // Ignore
         }
 
-        // Read last 15 lines of laravel.log
+        // Read last 40 lines of laravel.log
         $recentErrorLogs = [];
         $logPath = storage_path('logs/laravel.log');
         if (file_exists($logPath)) {
-            $lines = array_slice(file($logPath), -25);
+            $lines = array_slice(file($logPath), -40);
             foreach ($lines as $line) {
                 if (trim($line)) {
                     $recentErrorLogs[] = trim($line);

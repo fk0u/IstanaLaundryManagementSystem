@@ -70,8 +70,9 @@ Route::get('/dashboard', [DashboardController::class, 'index'])
     ->name('dashboard');
 
 Route::middleware(['auth', 'role:Developer'])->prefix('dashboard/developer')->name('dashboard.developer.')->group(function () {
-    Route::post('/clear-cache', [DashboardController::class, 'developerClearCache'])->name('clear-cache');
-    Route::post('/db-ping', [DashboardController::class, 'developerDbPing'])->name('db-ping');
+    Route::post('/action', [DashboardController::class, 'developerAction'])->name('action');
+    Route::post('/clear-cache', [DashboardController::class, 'developerAction'])->defaults('action', 'clear_cache')->name('clear-cache');
+    Route::post('/db-ping', [DashboardController::class, 'developerAction'])->defaults('action', 'db_ping')->name('db-ping');
 });
 
 Route::middleware('auth')->group(function () {

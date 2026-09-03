@@ -49,39 +49,87 @@ class DashboardController extends Controller
     }
 
     /**
-     * Clear application cache from developer dashboard.
+     * Handle comprehensive developer administrative actions.
      */
-    public function developerClearCache()
+    public function developerAction(\Illuminate\Http\Request $request)
     {
         abort_unless(Auth::user()->hasRole('Developer'), 403);
-        \Illuminate\Support\Facades\Artisan::call('optimize:clear');
-        \Illuminate\Support\Facades\Artisan::call('config:cache');
-        \Illuminate\Support\Facades\Artisan::call('route:cache');
-        \Illuminate\Support\Facades\Artisan::call('view:cache');
+        $action = $request->input('action');
 
-        if (request()->wantsJson()) {
-            return response()->json(['success' => true, 'message' => 'Cache aplikasi berhasil dibersihkan dan dioptimasi!']);
+        switch ($action) {
+            case 'db_ping':
+                $start = microtime(true);
+                \Illuminate\Support\Facades\DB::select('SELECT 1');
+                $latency = round((microtime(true) - $start) * 1000, 2);
+                return response()->json([
+                    'success' => true,
+                    'message' => "Database ping berhasil: {$latency} ms",
+                    'latency_ms' => $latency,
+                    'timestamp' => now()->format('H:i:s'),
+                ]);
+
+            case 'clear_cache':
+                \Illuminate\Support\Facades\Artisan::call('optimize:clear');
+                return response()->json(['success' => true, 'message' => 'Seluruh cache aplikasi (optimize:clear) berhasil dibersihkan!']);
+
+            case 'optimize_all':
+                \Illuminate\Support\Facades\Artisan::call('optimize');
+                return response()->json(['success' => true, 'message' => 'Aplikasi berhasil dioptimasi (config, routes, views cached)!']);
+
+            case 'cache_config':
+                \Illuminate\Support\Facades\Artisan::call('config:cache');
+                return response()->json(['success' => true, 'message' => 'Konfigurasi aplikasi berhasil di-cache!']);
+
+            case 'cache_routes':
+                \Illuminate\Support\Facades\Artisan::call('route:cache');
+                return response()->json(['success' => true, 'message' => 'Route URL aplikasi berhasil di-cache!']);
+
+            case 'cache_views':
+                \Illuminate\Support\Facades\Artisan::call('view:cache');
+                return response()->json(['success' => true, 'message' => 'Template blade berhasil di-compile & cache!']);
+
+            case 'clear_logs':
+                $logFile = storage_path('logs/laravel.log');
+                if (file_exists($logFile)) {
+                    file_put_contents($logFile, '');
+                }
+                return response()->json(['success' => true, 'message' => 'File laravel.log berhasil dikosongkan!']);
+
+            case 'unlock_user':
+                $user = \App\Models\User::findOrFail($request->input('user_id'));
+                $user->update([
+                    'login_attempts' => 0,
+                    'locked_until' => null,
+                ]);
+                return response()->json(['success' => true, 'message' => "Akun {$user->name} ({$user->email}) berhasil dibuka kuncinya!"]);
+
+            case 'toggle_user_active':
+                $user = \App\Models\User::findOrFail($request->input('user_id'));
+                if ($user->id === Auth::id()) {
+                    return response()->json(['success' => false, 'message' => 'Anda tidak dapat menonaktifkan akun Anda sendiri!'], 422);
+                }
+                $user->update(['is_active' => ! $user->is_active]);
+                $statusStr = $user->is_active ? 'diaktifkan' : 'dinonaktifkan';
+                return response()->json(['success' => true, 'message' => "Akun {$user->name} berhasil {$statusStr}!"]);
+
+            case 'reset_user_password':
+                $user = \App\Models\User::findOrFail($request->input('user_id'));
+                $newPassword = $request->input('new_password') ?: 'Istana@2026!';
+                $user->update([
+                    'password' => \Illuminate\Support\Facades\Hash::make($newPassword),
+                    'login_attempts' => 0,
+                    'locked_until' => null,
+                ]);
+                return response()->json(['success' => true, 'message' => "Password akun {$user->email} berhasil diubah menjadi: {$newPassword}"]);
+
+            case 'optimize_table':
+                $table = preg_replace('/[^a-zA-Z0-9_]/', '', $request->input('table'));
+                \Illuminate\Support\Facades\DB::statement("OPTIMIZE TABLE `{$table}`");
+                return response()->json(['success' => true, 'message' => "Tabel {$table} berhasil dioptimasi (OPTIMIZE TABLE)!"]);
+
+            default:
+                return response()->json(['success' => false, 'message' => "Aksi '{$action}' tidak dikenali."], 400);
         }
-
-        return back()->with('success', 'Cache aplikasi berhasil dibersihkan dan dioptimasi!');
-    }
-
-    /**
-     * Test database latency ping.
-     */
-    public function developerDbPing()
-    {
-        abort_unless(Auth::user()->hasRole('Developer'), 403);
-        $start = microtime(true);
-        \Illuminate\Support\Facades\DB::select('SELECT 1');
-        $latency = round((microtime(true) - $start) * 1000, 2);
-
-        return response()->json([
-            'success' => true,
-            'latency_ms' => $latency,
-            'status' => 'Connected',
-            'timestamp' => now()->format('H:i:s'),
-        ]);
     }
 
     /**
