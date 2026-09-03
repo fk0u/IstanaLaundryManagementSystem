@@ -43,7 +43,7 @@ class AuthenticatedSessionController extends Controller
 
         // 2. Check DB lockout (15 minutes)
         if ($user && $user->locked_until && $user->locked_until->isFuture()) {
-            $minutes = $user->locked_until->diffInMinutes(now()) + 1;
+            $minutes = max(1, (int) ceil(now()->diffInSeconds($user->locked_until) / 60));
             throw ValidationException::withMessages([
                 'email' => "Akun Anda terkunci karena terlalu banyak kesalahan sandi. Silakan coba lagi dalam {$minutes} menit.",
             ]);

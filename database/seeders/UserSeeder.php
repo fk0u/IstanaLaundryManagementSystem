@@ -28,7 +28,7 @@ class UserSeeder extends Seeder
             [
                 'name' => 'Rian Ardiansyah (Developer)',
                 'email' => 'developer@istanalaundry.com',
-                'password' => 'password',
+                'password' => 'Istana@2026!',
                 'branch_id' => null,
                 'role' => 'Developer',
                 'nik' => 'NIK-DEV-0001',
@@ -38,7 +38,7 @@ class UserSeeder extends Seeder
             [
                 'name' => 'H. Bambang Setiawan, S.E. (Owner)',
                 'email' => 'owner@istanalaundry.com',
-                'password' => 'password',
+                'password' => 'Istana@2026!',
                 'branch_id' => null,
                 'role' => 'Owner',
                 'nik' => 'NIK-OWN-0001',
@@ -48,7 +48,7 @@ class UserSeeder extends Seeder
             [
                 'name' => 'Siti Nurhaliza, M.M. (Super Admin)',
                 'email' => 'superadmin@istanalaundry.com',
-                'password' => 'password',
+                'password' => 'Istana@2026!',
                 'branch_id' => null,
                 'role' => 'Super_Admin',
                 'nik' => 'NIK-ADM-0001',
@@ -60,7 +60,7 @@ class UserSeeder extends Seeder
             [
                 'name' => 'Rahmat Hidayat',
                 'email' => 'admin.wjk@istanalaundry.com',
-                'password' => 'password',
+                'password' => 'Istana@2026!',
                 'branch_id' => $branchWjk->id,
                 'role' => 'Branch_Admin',
                 'nik' => 'NIK-WJK-0001',
@@ -70,7 +70,7 @@ class UserSeeder extends Seeder
             [
                 'name' => 'Dewi Anggraini',
                 'email' => 'cashier.wjk@istanalaundry.com',
-                'password' => 'password',
+                'password' => 'Istana@2026!',
                 'branch_id' => $branchWjk->id,
                 'role' => 'Cashier',
                 'nik' => 'NIK-WJK-0002',
@@ -80,7 +80,7 @@ class UserSeeder extends Seeder
             [
                 'name' => 'Agus Prasetyo',
                 'email' => 'workshop.admin.wjk@istanalaundry.com',
-                'password' => 'password',
+                'password' => 'Istana@2026!',
                 'branch_id' => $branchWjk->id,
                 'role' => 'Workshop_Admin',
                 'nik' => 'NIK-WJK-0003',
@@ -90,7 +90,7 @@ class UserSeeder extends Seeder
             [
                 'name' => 'Budi Santoso',
                 'email' => 'staff.wjk@istanalaundry.com',
-                'password' => 'password',
+                'password' => 'Istana@2026!',
                 'branch_id' => $branchWjk->id,
                 'role' => 'Workshop_Staff',
                 'nik' => 'NIK-WJK-0004',
@@ -100,7 +100,7 @@ class UserSeeder extends Seeder
             [
                 'name' => 'Indah Permatasari',
                 'email' => 'marketing.wjk@istanalaundry.com',
-                'password' => 'password',
+                'password' => 'Istana@2026!',
                 'branch_id' => $branchWjk->id,
                 'role' => 'CS_Marketing',
                 'nik' => 'NIK-WJK-0005',
@@ -110,7 +110,7 @@ class UserSeeder extends Seeder
             [
                 'name' => 'Sri Wahyuni, A.Md.',
                 'email' => 'finance.wjk@istanalaundry.com',
-                'password' => 'password',
+                'password' => 'Istana@2026!',
                 'branch_id' => $branchWjk->id,
                 'role' => 'Finance',
                 'nik' => 'NIK-WJK-0006',
@@ -122,7 +122,7 @@ class UserSeeder extends Seeder
             [
                 'name' => 'Eko Kurniawan',
                 'email' => 'admin.sut@istanalaundry.com',
-                'password' => 'password',
+                'password' => 'Istana@2026!',
                 'branch_id' => $branchSut->id,
                 'role' => 'Branch_Admin',
                 'nik' => 'NIK-SUT-0001',
@@ -132,7 +132,7 @@ class UserSeeder extends Seeder
             [
                 'name' => 'Nia Ramadhani',
                 'email' => 'cashier.sut@istanalaundry.com',
-                'password' => 'password',
+                'password' => 'Istana@2026!',
                 'branch_id' => $branchSut->id,
                 'role' => 'Cashier',
                 'nik' => 'NIK-SUT-0002',
@@ -142,7 +142,7 @@ class UserSeeder extends Seeder
             [
                 'name' => 'Dedi Kurnia',
                 'email' => 'staff.sut@istanalaundry.com',
-                'password' => 'password',
+                'password' => 'Istana@2026!',
                 'branch_id' => $branchSut->id,
                 'role' => 'Workshop_Staff',
                 'nik' => 'NIK-SUT-0003',
@@ -154,7 +154,7 @@ class UserSeeder extends Seeder
             [
                 'name' => 'Fajar Nugraha',
                 'email' => 'admin.hid@istanalaundry.com',
-                'password' => 'password',
+                'password' => 'Istana@2026!',
                 'branch_id' => $branchHid->id,
                 'role' => 'Branch_Admin',
                 'nik' => 'NIK-HID-0001',
@@ -164,7 +164,7 @@ class UserSeeder extends Seeder
             [
                 'name' => 'Rina Astuti',
                 'email' => 'cashier.hid@istanalaundry.com',
-                'password' => 'password',
+                'password' => 'Istana@2026!',
                 'branch_id' => $branchHid->id,
                 'role' => 'Cashier',
                 'nik' => 'NIK-HID-0002',
@@ -174,7 +174,7 @@ class UserSeeder extends Seeder
             [
                 'name' => 'Ahmad Fauzi',
                 'email' => 'staff.hid@istanalaundry.com',
-                'password' => 'password',
+                'password' => 'Istana@2026!',
                 'branch_id' => $branchHid->id,
                 'role' => 'Workshop_Staff',
                 'nik' => 'NIK-HID-0003',
@@ -186,7 +186,7 @@ class UserSeeder extends Seeder
             [
                 'name' => 'Hendra Kusuma',
                 'email' => 'admin.lmg@istanalaundry.com',
-                'password' => 'password',
+                'password' => 'Istana@2026!',
                 'branch_id' => $branchLmg->id,
                 'role' => 'Branch_Admin',
                 'nik' => 'NIK-LMG-0001',
@@ -196,7 +196,7 @@ class UserSeeder extends Seeder
             [
                 'name' => 'Maya Safitri',
                 'email' => 'cashier.lmg@istanalaundry.com',
-                'password' => 'password',
+                'password' => 'Istana@2026!',
                 'branch_id' => $branchLmg->id,
                 'role' => 'Cashier',
                 'nik' => 'NIK-LMG-0002',
@@ -206,7 +206,7 @@ class UserSeeder extends Seeder
             [
                 'name' => 'Rizky Febrian',
                 'email' => 'staff.lmg@istanalaundry.com',
-                'password' => 'password',
+                'password' => 'Istana@2026!',
                 'branch_id' => $branchLmg->id,
                 'role' => 'Workshop_Staff',
                 'nik' => 'NIK-LMG-0003',
@@ -229,6 +229,7 @@ class UserSeeder extends Seeder
             // Update name and properties if user already exists
             $user->update([
                 'name' => $userData['name'],
+                'password' => Hash::make($userData['password']),
                 'is_active' => true,
             ]);
 
