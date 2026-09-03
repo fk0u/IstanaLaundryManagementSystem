@@ -1,8 +1,17 @@
 # Session Briefing — Istana Laundry Management System
 
-**Last Updated:** 2026-09-03 23:15 WITA
+**Last Updated:** 2026-09-03 23:45 WITA
 
 ## Current Status
+- **Developer System Control & Telemetry Dashboard — LIVE**:
+  - Dihadirkan Dashboard khusus peran **Developer** (`app/Services/System/ServerTelemetryService.php` dan `resources/views/dashboard/developer.blade.php`).
+  - **Server Performance Telemetry**: Real-time CPU Load average (1m, 5m, 15m) & core utilization, RAM/Memory consumption (Total, Used, Free, PHP Memory Limit & Peak Allocation), NVMe Disk usage & free capacity, Uptime host (134 hari), OS platform info (`Ubuntu 24.04.1 LTS`).
+  - **Database Engine & Metrics Deep Dive**: Versi MySQL (8.0.46), ukuran total DB (22.3 MB data + index), active threads connected, slow queries counter, buffer pool hit rate (100%), dan latensi ping query real-time.
+  - **Database Tables Inspector**: Modul interaktif untuk memeriksa ke-57 tabel database `db_istanasystem` lengkap dengan filter kategori, pencarian, jumlah baris riil, data size, index size, storage engine (InnoDB), dan waktu update.
+  - **Git & Infrastructure Health**: Git branch (`main`), commit hash aktif (`61011d0`), author, auto-deploy sync status (`deploy.sh` cron */5m), permission direktori `storage/` dan `bootstrap/cache/` (777 Writable), queue pending & failed jobs monitor.
+  - **Security & Live Logs**: Status akun terkunci, 10 aktivitas audit log terbaru (`audit_logs`), serta terminal log viewer terintegrasi untuk memantau error/warning langsung dari `storage/logs/laravel.log`.
+  - **Interactive Quick Tools**: Tombol AJAX live "Ping DB" (latency ms) dan "Clear Cache" (`optimize:clear` & re-cache).
+  - **View Switcher**: Tab switcher untuk berpindah mulus antara *System Telemetry* (Developer) dan *Business Executive View* (`/dashboard?view=business`).
 - **Sanitasi Database VPS Production (db_istanasystem) — LIVE & CLEAN**:
   - Database production di VPS (`157.10.161.42`) telah dibersihkan untuk persiapan operasional riil (*production go-live*).
   - **Data Mandatory Dipertahankan**: 18 Akun Pengguna (`users`), 18 Karyawan (`employees`), 5 Cabang (`branches`), 5 Unit Workshop (`workshops`), 9 Roles & 35 Permissions (Spatie), 59 Bagan Akun (`chart_of_accounts`), 10 Katalog Layanan (`services`), 5 Vendor (`suppliers`), 10 Pengaturan Sistem (`system_settings`), 40 Katalog Inventaris (`inventory_items`, stok di-reset ke 0), dan 5 Periode Akuntansi Aktif (`accounting_periods`, September 2026).
