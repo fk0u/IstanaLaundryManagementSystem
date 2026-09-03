@@ -19,7 +19,12 @@ class DashboardController extends Controller
     {
         $user = Auth::user();
 
-        if ($user->hasAnyRole(['Developer', 'Owner', 'Super_Admin', 'Finance', 'CS_Marketing'])) {
+        if ($user->hasRole('Developer')) {
+            if (request('view') === 'business') {
+                return $this->ownerDashboard();
+            }
+            return $this->developerDashboard();
+        } elseif ($user->hasAnyRole(['Owner', 'Super_Admin', 'Finance', 'CS_Marketing'])) {
             return $this->ownerDashboard();
         } elseif ($user->hasRole('Branch_Admin')) {
             return $this->branchAdminDashboard();
@@ -30,6 +35,53 @@ class DashboardController extends Controller
         }
 
         abort(403, 'Peran Anda tidak dikenali oleh sistem.');
+    }
+
+    /**
+     * Comprehensive Developer Telemetry & System Operations Dashboard.
+     */
+    protected function developerDashboard()
+    {
+        $telemetryService = app(\App\Services\System\ServerTelemetryService::class);
+        $telemetry = $telemetryService->getTelemetryData();
+
+        return view('dashboard.developer', compact('telemetry'));
+    }
+
+    /**
+     * Clear application cache from developer dashboard.
+     */
+    public function developerClearCache()
+    {
+        abort_unless(Auth::user()->hasRole('Developer'), 403);
+        \Illuminate\Support\Facades\Artisan::call('optimize:clear');
+        \Illuminate\Support\Facades\Artisan::call('config:cache');
+        \Illuminate\Support\Facades\Artisan::call('route:cache');
+        \Illuminate\Support\Facades\Artisan::call('view:cache');
+
+        if (request()->wantsJson()) {
+            return response()->json(['success' => true, 'message' => 'Cache aplikasi berhasil dibersihkan dan dioptimasi!']);
+        }
+
+        return back()->with('success', 'Cache aplikasi berhasil dibersihkan dan dioptimasi!');
+    }
+
+    /**
+     * Test database latency ping.
+     */
+    public function developerDbPing()
+    {
+        abort_unless(Auth::user()->hasRole('Developer'), 403);
+        $start = microtime(true);
+        \Illuminate\Support\Facades\DB::select('SELECT 1');
+        $latency = round((microtime(true) - $start) * 1000, 2);
+
+        return response()->json([
+            'success' => true,
+            'latency_ms' => $latency,
+            'status' => 'Connected',
+            'timestamp' => now()->format('H:i:s'),
+        ]);
     }
 
     /**

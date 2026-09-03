@@ -69,6 +69,11 @@ Route::get('/dashboard', [DashboardController::class, 'index'])
     ->middleware(['auth', 'verified', 'branch.scope'])
     ->name('dashboard');
 
+Route::middleware(['auth', 'role:Developer'])->prefix('dashboard/developer')->name('dashboard.developer.')->group(function () {
+    Route::post('/clear-cache', [DashboardController::class, 'developerClearCache'])->name('clear-cache');
+    Route::post('/db-ping', [DashboardController::class, 'developerDbPing'])->name('db-ping');
+});
+
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
