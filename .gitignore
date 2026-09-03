@@ -37,3 +37,7 @@ coverage/
 .cache/
 graphify-out/
 graphify-obsidian/
+
+# Agent
+.agents/session-briefing.md
+.agents/walkthrough.md
