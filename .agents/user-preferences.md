@@ -14,3 +14,7 @@ Preferensi pengguna untuk gaya pengkodean dan interaksi.
 - Menggunakan arsitektur 3-layer (Presentation, Business Logic, Data Layer).
 - Repository Pattern, Service Layer Pattern, dan Observer Pattern.
 - Laravel 13 + PHP 8.4+.
+
+## Keamanan & Kredensial Server (PENTING)
+- JANGAN PERNAH membocorkan, menuliskan, atau menyertakan IP server, password VPS, kredensial SSH, atau password database ke dalam file source code, git repository, atau dokumentasi publik.
+- Selalu gunakan placeholder/redaksi lingkungan (`[REDACTED_HOST]`, `.env`) dan pastikan seluruh kredensial bersifat rahasia.
