@@ -110,6 +110,15 @@
                 @if(session('error'))
                     window.dispatchEvent(new CustomEvent('toast', { detail: { message: @js(session('error')), type: 'error' } }));
                 @endif
+                @if(session('status'))
+                    window.dispatchEvent(new CustomEvent('toast', { detail: { message: @js(session('status')), type: 'info' } }));
+                @endif
+                @if(session('warning'))
+                    window.dispatchEvent(new CustomEvent('toast', { detail: { message: @js(session('warning')), type: 'warning' } }));
+                @endif
+                @if($errors->any())
+                    window.dispatchEvent(new CustomEvent('toast', { detail: { message: @js($errors->first()), type: 'error' } }));
+                @endif
             });
 
             // Global scope reference for branch-mismatch warnings in forms

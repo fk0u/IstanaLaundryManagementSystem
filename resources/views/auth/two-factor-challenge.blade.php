@@ -8,8 +8,56 @@
         </p>
     </div>
 
-    <!-- Session Status & Errors -->
-    <x-auth-session-status class="mb-4" :status="session('status')" />
+    <!-- Alert Banner (Validation Errors / Failed 2FA) -->
+    @if ($errors->any())
+        <div x-data="{ show: true }" x-show="show" x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95" class="mb-6 p-4 rounded-2xl bg-rose-50 border border-rose-200/80 flex items-start gap-3.5 text-rose-900 shadow-sm">
+            <div class="w-8 h-8 rounded-xl bg-rose-100 text-rose-600 flex items-center justify-center shrink-0 mt-0.5">
+                <span class="material-symbols-outlined text-xl" style="font-variation-settings: 'FILL' 1;">error</span>
+            </div>
+            <div class="flex-1 min-w-0 text-xs">
+                <p class="font-bold text-rose-900 text-sm tracking-tight mb-0.5">Verifikasi Gagal</p>
+                <p class="text-rose-700 font-medium leading-relaxed">
+                    {{ $errors->first() }}
+                </p>
+            </div>
+            <button @click="show = false" type="button" class="text-rose-400 hover:text-rose-600 p-1 rounded-lg hover:bg-rose-100/50 transition-colors focus:outline-none" title="Tutup">
+                <span class="material-symbols-outlined text-base">close</span>
+            </button>
+        </div>
+    @elseif (session('error'))
+        <div x-data="{ show: true }" x-show="show" x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95" class="mb-6 p-4 rounded-2xl bg-rose-50 border border-rose-200/80 flex items-start gap-3.5 text-rose-900 shadow-sm">
+            <div class="w-8 h-8 rounded-xl bg-rose-100 text-rose-600 flex items-center justify-center shrink-0 mt-0.5">
+                <span class="material-symbols-outlined text-xl" style="font-variation-settings: 'FILL' 1;">error</span>
+            </div>
+            <div class="flex-1 min-w-0 text-xs">
+                <p class="font-bold text-rose-900 text-sm tracking-tight mb-0.5">Terjadi Kesalahan</p>
+                <p class="text-rose-700 font-medium leading-relaxed">
+                    {{ session('error') }}
+                </p>
+            </div>
+            <button @click="show = false" type="button" class="text-rose-400 hover:text-rose-600 p-1 rounded-lg hover:bg-rose-100/50 transition-colors focus:outline-none" title="Tutup">
+                <span class="material-symbols-outlined text-base">close</span>
+            </button>
+        </div>
+    @endif
+
+    <!-- Alert Banner (Status / Informational) -->
+    @if (session('status'))
+        <div x-data="{ show: true }" x-show="show" x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95" class="mb-6 p-4 rounded-2xl bg-emerald-50 border border-emerald-200/80 flex items-start gap-3.5 text-emerald-900 shadow-sm">
+            <div class="w-8 h-8 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0 mt-0.5">
+                <span class="material-symbols-outlined text-xl" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+            </div>
+            <div class="flex-1 min-w-0 text-xs">
+                <p class="font-bold text-emerald-900 text-sm tracking-tight mb-0.5">Pemberitahuan</p>
+                <p class="text-emerald-700 font-medium leading-relaxed">
+                    {{ session('status') }}
+                </p>
+            </div>
+            <button @click="show = false" type="button" class="text-emerald-400 hover:text-emerald-600 p-1 rounded-lg hover:bg-emerald-100/50 transition-colors focus:outline-none" title="Tutup">
+                <span class="material-symbols-outlined text-base">close</span>
+            </button>
+        </div>
+    @endif
 
     <div x-data="{ recovery: false }" class="flex flex-col gap-6">
         <form method="POST" action="{{ route('two-factor.verify') }}" class="flex flex-col gap-5">

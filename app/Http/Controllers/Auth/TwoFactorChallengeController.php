@@ -101,7 +101,8 @@ class TwoFactorChallengeController extends Controller
 
         app(AuditLogService::class)->log('login_2fa', $user);
 
-        $response = redirect()->intended(route('dashboard', absolute: false));
+        $response = redirect()->intended(route('dashboard', absolute: false))
+            ->with('success', 'Verifikasi 2FA berhasil! Selamat datang kembali, ' . $user->name . '.');
 
         if ($request->boolean('trust_device')) {
             $rawToken = Str::random(40);
